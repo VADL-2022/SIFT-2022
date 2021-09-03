@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/Volumes/MyTestVolume/SeniorSemester1_Vanderbilt_University/RocketTeam/MyWorkspaceAndTempFiles/MyDocuments/SIFT_articleAndImplementation/sift_anatomy_20141201/bin/sift_cli "$@"

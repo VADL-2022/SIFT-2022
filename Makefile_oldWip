@@ -1,0 +1,35 @@
+CFLAGS += -O2 -Wall `pkg-config --cflags opencv4`
+LFLAGS += -lpthread -ljpeg -lrt -lm
+LDFLAGS = `pkg-config --libs opencv4`
+
+CC := clang -std=c99
+#SIFT_SRC := /Volumes/MyTestVolume/SeniorSemester1_Vanderbilt_University/RocketTeam/MyWorkspaceAndTempFiles/MyDocuments/SIFT_articleAndImplementation/sift_anatomy_20141201/src
+SIFT := sift_anatomy_20141201
+SIFT_SRC := ./$(SIFT)/src
+OBJ := obj
+
+SOURCES := $(wildcard $(SIFT_SRC)/*.c) example2.c
+OBJECTS := $(patsubst $(SIFT_SRC)/%.c, $(OBJ)/$(SIFT)/%.o, $(SOURCES))
+
+EXECUTABLE_RESULT=example
+
+all: $(EXECUTABLE_RESULT)
+# gcc -std=c99 -o example example2.c $(SIFT)/lib_sift.o $(SIFT)/lib_sift_anatomy.o \
+# $(SIFT)/lib_keypoint.o  $(SIFT)/lib_scalespace.o $(SIFT)/lib_description.o \
+# $(SIFT)/lib_discrete.o $(SIFT)/lib_util.o -lm -I$(SIFT)
+
+setup:
+	mkdir -p $(OBJ)/$(SIFT)
+
+$(EXECUTABLE_RESULT): $(OBJECTS)
+	$(CC) $^ -o $@ $(LIBS) $(LDFLAGS)
+
+$(OBJ)/$(SIFT)/%.o: $(SIFT_SRC)/%.c
+	$(CC) $(CFLAGS) -I$(SRC) -c $< -o $@
+
+$(OBJ)/%.o: $(SIFT_SRC)/%.c
+	$(CC) $(CFLAGS) -I$(SRC) -c $< -o $@
+
+.PHONY: clean
+clean:
+	rm -f $(OBJECTS) $(EXECUTABLE_RESULT)
