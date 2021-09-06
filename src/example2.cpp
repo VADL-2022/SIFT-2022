@@ -10,9 +10,7 @@
 
 #include "my_sift_additions.h"
 
-#include <filesystem>
-namespace fs = std::filesystem;
-#include <set>
+#include "io.h"
 
 // Based on https://stackoverflow.com/questions/31658132/c-opencv-not-drawing-circles-on-mat-image and https://stackoverflow.com/questions/19400376/how-to-draw-circles-with-random-colors-in-opencv/19401384
 cv::RNG rng(12345); // Random number generator
@@ -50,20 +48,11 @@ void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degr
 int main(int argc, char **argv)
 {
 	// For each output image, loop through it
-	std::string path = "outFrames";
-	
-	// https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
-	//--- filenames are unique so we can use a set
-	std::set<fs::path> sorted_by_name;
-	for (const auto & entry : fs::directory_iterator(path))
-		sorted_by_name.insert(entry.path());
-	//--- print the files sorted by filename
-	for (auto &path : sorted_by_name) {
-		std::cout << path << std::endl;
-
+	const char* path = "outFrames";
+	return forEachInDir(path, [](const char* fname) {
 		// Loading image
 		size_t w, h;
-		float* x = io_png_read_f32_gray(path.c_str(), &w, &h);
+		float* x = io_png_read_f32_gray(fname, &w, &h);
 		for(int i=0; i < w*h; i++)
 			x[i] /=256.;
 
@@ -99,7 +88,5 @@ int main(int argc, char **argv)
 		//free(k);
 		free(x);
 
-	}
-	
-	return 0;
+	});
 }
