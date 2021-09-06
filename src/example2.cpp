@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 		//sift_write_to_file("/dev/stdout", k, n);
 
 		// cleanup
-		//free(k);
+		free(k);
 		free(x);
 
 		// Save keypoints
