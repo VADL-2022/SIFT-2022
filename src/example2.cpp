@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 			// //
 		}
 		
-		imshow("test2", backtorgb);
+		imshow(path, backtorgb);
 		cv::waitKey(0);
 	
 		// write to standard output
