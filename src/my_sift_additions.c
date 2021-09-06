@@ -6,7 +6,7 @@
  *
  *
  */
-struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h, int *n)
+struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h, int *n, struct sift_keypoints** outKeypoints)
 {
 
     /** assign default parameters **/
@@ -44,7 +44,7 @@ struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h,
 
     /* memory deallocation */
     xfree(p);
-    sift_free_keypoints(keys);
+    *outKeypoints = keys; //sift_free_keypoints(keys);
     for(int i = 0; i < 6; i++){
         sift_free_keypoints(kk[i]);
     }
