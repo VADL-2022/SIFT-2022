@@ -19,15 +19,17 @@ namespace fs = std::filesystem;
 // Based on https://stackoverflow.com/questions/31658132/c-opencv-not-drawing-circles-on-mat-image and https://stackoverflow.com/questions/19400376/how-to-draw-circles-with-random-colors-in-opencv/19401384
 #define RNG_SEED 12345
 cv::RNG rng(RNG_SEED); // Random number generator
+cv::Scalar lastColor;
 void resetRNG() {
 	rng = cv::RNG(RNG_SEED);
 }
 cv::Scalar nextRNGColor() {
 	//return cv::Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255)); // Most of these are rendered as close to white for some reason..
 	//return cv::Scalar(0,0,255); // BGR color value (not RGB)
-	return cv::Scalar(rng.uniform(0, 255) / rng.uniform(1, 255),
-			  rng.uniform(0, 255) / rng.uniform(1, 255),
-			  rng.uniform(0, 255) / rng.uniform(1, 255));
+	lastColor = cv::Scalar(rng.uniform(0, 255) / rng.uniform(1, 255),
+			       rng.uniform(0, 255) / rng.uniform(1, 255),
+			       rng.uniform(0, 255) / rng.uniform(1, 255));
+	return lastColor;
 }
 void drawCircle(cv::Mat& img, cv::Point cp, int radius)
 {
@@ -69,7 +71,9 @@ int main(int argc, char **argv)
 	
 	//--- print the files sorted by filename
 	std::vector<struct sift_keypoints*> computedKeypoints;
-	for (auto &path : files) {
+	size_t skip = 100;//38;//0;
+	for (size_t i = skip; i < files.size(); i++) {
+		auto& path = files[i];
 		std::cout << path << std::endl;
 
 		// Loading image
@@ -122,7 +126,7 @@ int main(int argc, char **argv)
 
 			// Draw matches
 			struct sift_keypoints* k1 = out_k1;
-			printf("k1->size: %d\n", k1->size);
+			printf("Number of matching keypoints: %d\n", k1->size);
 			if (k1->size > 0){
 
 				int n_hist = k1->list[0]->n_hist;
@@ -135,8 +139,9 @@ int main(int argc, char **argv)
 					// fprintf_one_keypoint(f, k2A->list[i], dim, n_bins, 2);
 					// fprintf_one_keypoint(f, k2B->list[i], dim, n_bins, 2);
 					// fprintf(f, "\n");
-					
+
 					drawSquare(backtorgb, cv::Point(k1->list[i]->x, k1->list[i]->y), k1->list[i]->sigma, k1->list[i]->theta, 2);
+					cv::line(backtorgb, cv::Point(out_k1->list[i]->x, out_k1->list[i]->y), cv::Point(out_k2A->list[i]->x, out_k2A->list[i]->y), lastColor, 1);
 				}
 			}
 
