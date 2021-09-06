@@ -12,10 +12,11 @@ Not supported unless you manually install OpenCV and a compiler that supports Ma
 
 # Running
 
-1. macOS or Linux: Run `nix-shell` in the project root. Proceed with this shell for the remaining steps.
-2. `make -j4` to compile.
-3. `./example` to run.
-4. When a window comes up, press any key to advance to the next frame and show the matching features.
+1. To have all git submodules, ensure you cloned the repo with `git clone --recursive`. If not, run `git submodule update --init --recursive` in the project root to fix it.
+2. macOS or Linux: Run `nix-shell` in the project root. Proceed with this shell for the remaining steps.
+3. `make -j4` to compile.
+4. `./example` to run.
+5. When a window comes up, press any key to advance to the next frame and show the matching features.
 
 # Screenshots
 
