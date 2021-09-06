@@ -23,10 +23,10 @@ int main(int argc, char **argv)
 
 	// compute sift keypoints
 	int n;
-	struct sift_keypoint_std *k = sift_compute_features(x, w, h, &n);
+	//struct sift_keypoint_std *k = sift_compute_features(x, w, h, &n);
 
 	// Make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
-	cv::Mat mat(w, h, CV_32F, x);
+	cv::Mat mat(h, w, CV_32F, x);
 	imshow("test2", mat);
 	cv::waitKey(0);
 	
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 	//sift_write_to_file("/dev/stdout", k, n);
 
 	// cleanup
-	free(k);
+	//free(k);
 	free(x);
 	return 0;
 }
