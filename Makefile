@@ -1,8 +1,9 @@
-CXXFLAGS += -g3 -Wall -pedantic -std=c++11 -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4`
-LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
+CFLAGS += -O3 -g3 -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` -I$(SIFT_SRC)
+CXXFLAGS += -std=c++17 $(CFLAGS)
+LFLAGS += -lpng -lm -lpthread -lc++fs #-ljpeg -lrt -lm
 LDFLAGS = `pkg-config --libs opencv4`
 
-CC := clang++
+CC := clang
 SRC := src
 OBJ := obj
 
@@ -11,7 +12,9 @@ SIFT := sift_anatomy_20141201
 SIFT_SRC := ./$(SIFT)/src
 
 SOURCES := $(wildcard $(SRC)/*.cpp)
-OBJECTS := $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SOURCES))
+SOURCES_C := $(wildcard $(SRC)/*.c)
+OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
+$(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile
 
 EXECUTABLE_RESULT=example
 
@@ -25,10 +28,7 @@ setup:
 
 $(EXECUTABLE_RESULT): $(OBJECTS)
 	cd $(SIFT) && $(MAKE)
-	$(CC) $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
-
-$(OBJ)/%.o: $(SRC)/%.cpp
-	$(CC) $(CXXFLAGS) -I$(SIFT_SRC) -c $< -o $@
+	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
 .PHONY: clean
 clean:
