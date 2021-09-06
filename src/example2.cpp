@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 	
 	//--- print the files sorted by filename
 	std::vector<struct sift_keypoints*> computedKeypoints;
-	size_t skip = 60;//100;//38;//0;
+	size_t skip = 100;//60;//100;//38;//0;
 	for (size_t i = skip; i < files.size(); i++) {
 		auto& path = files[i];
 		std::cout << path << std::endl;
