@@ -1,8 +1,8 @@
-CFLAGS += -O2 -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4`
+CXXFLAGS += -g3 -Wall -pedantic -std=c++11 -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4`
 LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
 LDFLAGS = `pkg-config --libs opencv4`
 
-CC := clang
+CC := clang++
 SRC := src
 OBJ := obj
 
@@ -10,8 +10,8 @@ OBJ := obj
 SIFT := sift_anatomy_20141201
 SIFT_SRC := ./$(SIFT)/src
 
-SOURCES := $(wildcard $(SRC)/*.c)
-OBJECTS := $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SOURCES))
+SOURCES := $(wildcard $(SRC)/*.cpp)
+OBJECTS := $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SOURCES))
 
 EXECUTABLE_RESULT=example
 
@@ -27,8 +27,8 @@ $(EXECUTABLE_RESULT): $(OBJECTS)
 	cd $(SIFT) && $(MAKE)
 	$(CC) $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
-$(OBJ)/%.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) -I$(SIFT_SRC) -c $< -o $@
+$(OBJ)/%.o: $(SRC)/%.cpp
+	$(CC) $(CXXFLAGS) -I$(SIFT_SRC) -c $< -o $@
 
 .PHONY: clean
 clean:
