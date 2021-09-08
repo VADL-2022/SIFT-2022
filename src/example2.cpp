@@ -179,8 +179,8 @@ int main(int argc, char **argv)
 			scene.reserve(k1->size);
 			// TODO: reuse memory of k1 instead of copying?
 			for (size_t i = 0; i < k1->size; i++) {
-				obj.emplace_back(out_k1->list[i]->x, out_k1->list[i]->y); // B = obj
-				scene.emplace_back(out_k2A->list[i]->x, out_k2A->list[i]->y); // A = scene
+				obj.emplace_back(out_k2A->list[i]->x, out_k2A->list[i]->y);
+				scene.emplace_back(out_k1->list[i]->x, out_k1->list[i]->y);
 			}
 			cv::Mat H = cv::findHomography( obj, scene, cv::RANSAC );
 			
