@@ -55,6 +55,31 @@ void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degr
 	drawRect(img, center, cv::Size2f(size, size), orientation_degrees, thickness);
 }
 
+// https://stackoverflow.com/questions/10167534/how-to-find-out-what-type-of-a-mat-object-is-with-mattype-in-opencv
+// Usage: type2str(cvMat.type())
+std::string type2str(int type) {
+  std::string r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  uchar chans = 1 + (type >> CV_CN_SHIFT); // Number of channels
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  r += "C"; // C = number of channels (for example, RGB has 3 channels because it has three values per pixel, RGBA has 4 channels, etc.)
+  r += (chans+'0'); // Number of channels
+
+  return r;
+}
+
 int main(int argc, char **argv)
 {
 	// For each output image, loop through it
@@ -71,7 +96,7 @@ int main(int argc, char **argv)
 	
 	//--- print the files sorted by filename
 	std::vector<struct sift_keypoints*> computedKeypoints;
-	size_t skip = 100;//60;//100;//38;//0;
+	size_t skip = 120;//60;//100;//38;//0;
 	for (size_t i = skip; i < files.size(); i++) {
 		auto& path = files[i];
 		std::cout << path << std::endl;
@@ -144,6 +169,50 @@ int main(int argc, char **argv)
 					cv::line(backtorgb, cv::Point(out_k1->list[i]->x, out_k1->list[i]->y), cv::Point(out_k2A->list[i]->x, out_k2A->list[i]->y), lastColor, 1);
 				}
 			}
+
+			// Find the homography matrix between the previous and current image ( https://docs.opencv.org/4.5.2/d1/de0/tutorial_py_feature_homography.html )
+			//const int MIN_MATCH_COUNT = 10
+			// https://docs.opencv.org/3.4/d7/dff/tutorial_feature_homography.html
+			std::vector<cv::Point2f> obj; // The `obj` is the current image's keypoints
+			std::vector<cv::Point2f> scene; // The `scene` is the previous image's keypoints. "Scene" means the area within which we are finding `obj` and this is since we want to find the previous image in the current image since we're falling down and therefore "zooming in" so the current image should be within the previous one.
+			obj.reserve(k1->size);
+			scene.reserve(k1->size);
+			// TODO: reuse memory of k1 instead of copying?
+			for (size_t i = 0; i < k1->size; i++) {
+				obj.emplace_back(out_k2B->list[i]->x, out_k2B->list[i]->y); // B = obj
+				scene.emplace_back(out_k2A->list[i]->x, out_k2A->list[i]->y); // A = scene
+			}
+			//cv::Mat H = cv::findHomography( obj, scene, cv::RANSAC );
+			
+			// //-- Get the corners from the image_1 ( the object to be "detected" )
+			cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
+			// std::vector<cv::Point2f> obj_corners(4);
+			// obj_corners[0] = cv::Point2f(0, 0);
+			// obj_corners[1] = cv::Point2f( (float)img_object.cols, 0 );
+			// obj_corners[2] = cv::Point2f( (float)img_object.cols, (float)img_object.rows );
+			// obj_corners[3] = cv::Point2f( 0, (float)img_object.rows );
+			// std::vector<cv::Point2f> scene_corners(4);
+
+			// cv::perspectiveTransform( obj_corners, scene_corners, H);
+
+			// //-- Draw lines between the corners of the "object" (the mapped object in the scene - image_2 )
+			cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
+			// cv::line( img_matches, scene_corners[0] + cv::Point2f((float)img_object.cols, 0),
+			//       scene_corners[1] + cv::Point2f((float)img_object.cols, 0), cv::Scalar(0, 255, 0), 4 );
+			// cv::line( img_matches, scene_corners[1] + cv::Point2f((float)img_object.cols, 0),
+			//       scene_corners[2] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+			// cv::line( img_matches, scene_corners[2] + cv::Point2f((float)img_object.cols, 0),
+			//       scene_corners[3] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+			// cv::line( img_matches, scene_corners[3] + cv::Point2f((float)img_object.cols, 0),
+			//       scene_corners[0] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+
+			// std::string t1, t2;
+			// t1 = type2str(img_matches.type());
+			// t2 = type2str(img_object.type());
+			// printf("img_matches type: %s, img_object type: %s\n", t1.c_str(), t2.c_str());
+			cv::Mat M = cv::findHomography( scene, obj, cv::RANSAC ); //cv::Mat& M = H; // 3x3 transformation matrix for warpPerspective ( https://docs.opencv.org/4.5.2/da/d54/group__imgproc__transform.html#gaf73673a7e8e18ec6963e3774e6a94b87 )
+			// https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
+			cv::warpPerspective(img_object, img_matches /* <-- destination */, M, img_matches.size());
 
 			// Cleanup //
 			sift_free_keypoints(out_k1);
