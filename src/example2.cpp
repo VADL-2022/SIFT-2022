@@ -18,6 +18,8 @@ namespace fs = std::filesystem;
 
 #include "opencv2/highgui.hpp"
 #include <optional>
+#include <cinttypes>
+#include <iostream>
 
 // https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
 const int alpha_slider_max = 2;
@@ -96,6 +98,27 @@ std::string type2str(int type) {
 
 int main(int argc, char **argv)
 {
+	// Set the default "skip"
+	size_t skip = 38;//120;//60;//100;//38;//0;
+	if(argc >= 2){
+		// Use given skip (selects the first image to show)
+		char* endptr;
+		std::uintmax_t skip_ = std::strtoumax(argv[1], &endptr, 0); // https://en.cppreference.com/w/cpp/string/byte/strtoimax
+		// Check for overflow
+		auto max = std::numeric_limits<size_t>::max();
+		if (skip_ > max || ERANGE == errno) {
+			std::cout << "Argument (\"" << skip_ << "\") is too large for size_t (max value is " << max << "). Exiting." << std::endl;
+			return 1;
+		}
+		// Check for conversion failures ( https://wiki.sei.cmu.edu/confluence/display/c/ERR34-C.+Detect+errors+when+converting+a+string+to+a+number )
+		else if (endptr == argv[1]) {
+			std::cout << "Argument (\"" << argv[1] << "\") could not be converted to an unsigned integer. Exiting." << std::endl;
+			return 2;
+		}
+		skip = skip_;
+		printf("Using skip %zu\n", skip); // Note: if you give a negative number: "If the minus sign was part of the input sequence, the numeric value calculated from the sequence of digits is negated as if by unary minus in the result type." ( https://en.cppreference.com/w/c/string/byte/strtoimax )
+	}
+	
 	// For each output image, loop through it
 	std::string path = "outFrames";
 	
@@ -110,7 +133,6 @@ int main(int argc, char **argv)
 	
 	//--- print the files sorted by filename
 	std::vector<struct sift_keypoints*> computedKeypoints;
-	size_t skip = 38;//120;//60;//100;//38;//0;
 	cv::Mat canvas;
 	std::vector<cv::Mat> allTransformations;
 	std::optional<std::string> prevWindowTitle;
