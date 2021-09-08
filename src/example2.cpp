@@ -179,10 +179,10 @@ int main(int argc, char **argv)
 			scene.reserve(k1->size);
 			// TODO: reuse memory of k1 instead of copying?
 			for (size_t i = 0; i < k1->size; i++) {
-				obj.emplace_back(out_k2B->list[i]->x, out_k2B->list[i]->y); // B = obj
+				obj.emplace_back(out_k1->list[i]->x, out_k1->list[i]->y); // B = obj
 				scene.emplace_back(out_k2A->list[i]->x, out_k2A->list[i]->y); // A = scene
 			}
-			//cv::Mat H = cv::findHomography( obj, scene, cv::RANSAC );
+			cv::Mat H = cv::findHomography( obj, scene, cv::RANSAC );
 			
 			// //-- Get the corners from the image_1 ( the object to be "detected" )
 			cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 			// t1 = type2str(img_matches.type());
 			// t2 = type2str(img_object.type());
 			// printf("img_matches type: %s, img_object type: %s\n", t1.c_str(), t2.c_str());
-			cv::Mat M = cv::findHomography( scene, obj, cv::RANSAC ); //cv::Mat& M = H; // 3x3 transformation matrix for warpPerspective ( https://docs.opencv.org/4.5.2/da/d54/group__imgproc__transform.html#gaf73673a7e8e18ec6963e3774e6a94b87 )
+			cv::Mat& M = H; // 3x3 transformation matrix for warpPerspective ( https://docs.opencv.org/4.5.2/da/d54/group__imgproc__transform.html#gaf73673a7e8e18ec6963e3774e6a94b87 )
 			// https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
 			cv::warpPerspective(img_object, img_matches /* <-- destination */, M, img_matches.size());
 
