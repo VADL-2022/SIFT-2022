@@ -219,10 +219,10 @@ int main(int argc, char **argv)
 			// printf("img_matches type: %s, img_object type: %s\n", t1.c_str(), t2.c_str());
 			cv::Mat& M = H; // 3x3 transformation matrix for warpPerspective ( https://docs.opencv.org/4.5.2/da/d54/group__imgproc__transform.html#gaf73673a7e8e18ec6963e3774e6a94b87 )
 			// https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
-			cv::warpPerspective(img_object, img_matches /* <-- destination */, M, img_matches.size());
+			cv::warpPerspective(img_object, canvas /* <-- destination */, M, img_matches.size());
 
-			// Save to canvas
-			img_matches.copyTo(canvas);
+			// // Save to canvas
+			// img_matches.copyTo(canvas);
 
 			// Cleanup //
 			sift_free_keypoints(out_k1);
