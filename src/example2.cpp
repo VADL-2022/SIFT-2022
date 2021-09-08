@@ -96,7 +96,8 @@ int main(int argc, char **argv)
 	
 	//--- print the files sorted by filename
 	std::vector<struct sift_keypoints*> computedKeypoints;
-	size_t skip = 120;//60;//100;//38;//0;
+	size_t skip = 38;//120;//60;//100;//38;//0;
+	cv::Mat canvas;
 	for (size_t i = skip; i < files.size(); i++) {
 		auto& path = files[i];
 		std::cout << path << std::endl;
@@ -106,6 +107,12 @@ int main(int argc, char **argv)
 		float* x = io_png_read_f32_gray(path.c_str(), &w, &h);
 		for(int i=0; i < w*h; i++)
 			x[i] /=256.; // TODO: why do we do this?
+
+		// Initialize canvas if needed
+		if (canvas.data == nullptr) {
+			puts("Init canvas");
+			canvas = cv::Mat(h, w, CV_32F);
+		}
 
 		// compute sift keypoints
 		int n; // Number of keypoints
@@ -214,6 +221,9 @@ int main(int argc, char **argv)
 			// https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
 			cv::warpPerspective(img_object, img_matches /* <-- destination */, M, img_matches.size());
 
+			// Save to canvas
+			img_matches.copyTo(canvas);
+
 			// Cleanup //
 			sift_free_keypoints(out_k1);
 			sift_free_keypoints(out_k2A);
@@ -223,8 +233,13 @@ int main(int argc, char **argv)
 			computedKeypoints.pop_back();
 			// //
 		}
+		else {
+			// Save to canvas
+			backtorgb.copyTo(canvas);
+		}
 		
-		imshow(path, backtorgb);
+		//imshow(path, backtorgb);
+		imshow(path, canvas);
 		cv::waitKey(0);
 	
 		// write to standard output
