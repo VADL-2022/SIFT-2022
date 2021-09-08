@@ -301,6 +301,7 @@ int main(int argc, char **argv)
 		imshow(path, canvas);
 		int keycode = cv::waitKey(0);
 		bool exit;
+		size_t currentTransformation = 0;
 		do {
 			exit = true;
 			switch (keycode) {
@@ -318,12 +319,20 @@ int main(int argc, char **argv)
 				// Check preconditions
 				if (allTransformations.size() > 0 && firstImage.data != nullptr) {
 					puts("Showing transformations of firstImage");
-					cv::Mat M = allTransformations[0];
-					// Apply all transformations to the first image (future todo: condense all transformations in `allTransformations` into one matrix as we process each image)
-					for (auto it = allTransformations.begin() + 1; it != allTransformations.end(); ++it) {
-						M *= *it;
+					// cv::Mat M = allTransformations[0];
+					// // Apply all transformations to the first image (future todo: condense all transformations in `allTransformations` into one matrix as we process each image)
+					// for (auto it = allTransformations.begin() + 1; it != allTransformations.end(); ++it) {
+					// 	M *= *it;
+					// }
+					if (currentTransformation >= allTransformations.size()) {
+						puts("No transformations left");
 					}
-					cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
+					else {
+						printf("Applying transformation %zu\n", currentTransformation);
+						cv::Mat M = allTransformations[currentTransformation];
+						currentTransformation++;
+						cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
+					}
 			
 					imshow(path, canvas);
 					keycode = cv::waitKey(0);
