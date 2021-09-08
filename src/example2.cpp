@@ -16,6 +16,20 @@
 namespace fs = std::filesystem;
 #include "strnatcmp.hpp"
 
+#include "opencv2/highgui.hpp"
+#include <optional>
+
+// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
+const int alpha_slider_max = 2;
+int alpha_slider = 0;
+double alpha;
+double beta;
+static void on_trackbar( int, void* )
+{
+   alpha = (double) alpha_slider/alpha_slider_max ;
+}
+
+
 // Based on https://stackoverflow.com/questions/31658132/c-opencv-not-drawing-circles-on-mat-image and https://stackoverflow.com/questions/19400376/how-to-draw-circles-with-random-colors-in-opencv/19401384
 #define RNG_SEED 12345
 cv::RNG rng(RNG_SEED); // Random number generator
@@ -98,6 +112,9 @@ int main(int argc, char **argv)
 	std::vector<struct sift_keypoints*> computedKeypoints;
 	size_t skip = 38;//120;//60;//100;//38;//0;
 	cv::Mat canvas;
+	std::vector<cv::Mat> allTransformations;
+	std::optional<std::string> prevWindowTitle;
+	cv::Mat firstImage;
 	for (size_t i = skip; i < files.size(); i++) {
 		auto& path = files[i];
 		std::cout << path << std::endl;
@@ -125,6 +142,10 @@ int main(int argc, char **argv)
 		// Make the black and white OpenCV matrix into color but still black and white (we do this so we can draw colored rectangles on it later)
 		cv::Mat backtorgb;
 		cv::cvtColor(mat, backtorgb, cv::COLOR_GRAY2RGB); // https://stackoverflow.com/questions/21596281/how-does-one-convert-a-grayscale-image-to-rgb-in-opencv-python
+		if (i == skip) {
+			puts("Init firstImage");
+			firstImage = backtorgb;
+		}
 
 		// Draw keypoints on `mat`
 		for(int i=0; i<n; i++){
@@ -189,7 +210,10 @@ int main(int argc, char **argv)
 				obj.emplace_back(out_k2A->list[i]->x, out_k2A->list[i]->y);
 				scene.emplace_back(out_k1->list[i]->x, out_k1->list[i]->y);
 			}
-			cv::Mat H = cv::findHomography( obj, scene, cv::RANSAC );
+			
+			// Make a matrix in transformations history
+			allTransformations.emplace_back(cv::findHomography( obj, scene, cv::RANSAC ));
+			cv::Mat& H = allTransformations.back();
 			
 			// //-- Get the corners from the image_1 ( the object to be "detected" )
 			cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
@@ -223,7 +247,7 @@ int main(int argc, char **argv)
 
 			// // Save to canvas
 			// img_matches.copyTo(canvas);
-
+			
 			// Cleanup //
 			sift_free_keypoints(out_k1);
 			sift_free_keypoints(out_k2A);
@@ -239,8 +263,57 @@ int main(int argc, char **argv)
 		}
 		
 		//imshow(path, backtorgb);
+		if (!prevWindowTitle) {
+			cv::namedWindow(path, cv::WINDOW_AUTOSIZE); // Create Window
+		}
+		else {
+			// Rename window
+			cv::setWindowTitle(*prevWindowTitle, path);
+		}
+		// Set up window
+		char TrackbarName[50];
+		sprintf( TrackbarName, "Alpha x %d", alpha_slider_max );
+		cv::createTrackbar( TrackbarName, path, &alpha_slider, alpha_slider_max, on_trackbar );
+		on_trackbar( alpha_slider, 0 );
+
 		imshow(path, canvas);
-		cv::waitKey(0);
+		int keycode = cv::waitKey(0);
+		bool exit;
+		do {
+			exit = true;
+			switch (keycode) {
+			case 'a':
+				// Go to previous image
+				i -= 2;
+				break;
+			case 'd':
+				// Go to next image
+				// (Nothing to do since i++ will happen in the for-loop update)
+				break;
+			case 's':
+				// Show transformations so far
+				
+				// Check preconditions
+				if (allTransformations.size() > 0 && firstImage.data != nullptr) {
+					puts("Showing transformations of firstImage");
+					cv::Mat M = allTransformations[0];
+					// Apply all transformations to the first image (future todo: condense all transformations in `allTransformations` into one matrix as we process each image)
+					for (auto it = allTransformations.begin() + 1; it != allTransformations.end(); ++it) {
+						M *= *it;
+					}
+					cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
+			
+					imshow(path, canvas);
+					keycode = cv::waitKey(0);
+					exit = false;
+				}
+				else {
+					puts("No transformations or firstImage yet");
+				}
+				break;
+			}
+		} while (!exit);
+		prevWindowTitle = path;
 	
 		// write to standard output
 		//sift_write_to_file("/dev/stdout", k, n);
