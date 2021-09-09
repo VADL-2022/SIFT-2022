@@ -301,7 +301,8 @@ int main(int argc, char **argv)
 		imshow(path, canvas);
 		int keycode = cv::waitKey(0);
 		bool exit;
-		size_t currentTransformation = 0;
+		size_t currentTransformation = allTransformations.size() - 1;
+		cv::Mat M = allTransformations.size() > 0 ? allTransformations[currentTransformation] : cv::Mat();
 		do {
 			exit = true;
 			switch (keycode) {
@@ -329,8 +330,8 @@ int main(int argc, char **argv)
 					}
 					else {
 						printf("Applying transformation %zu\n", currentTransformation);
-						cv::Mat M = allTransformations[currentTransformation];
-						currentTransformation++;
+						M *= allTransformations[currentTransformation];
+						currentTransformation--; // Underflow means we reach a value always >= allTransformations.size() so we are considered finished.
 						cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
 					}
 			
