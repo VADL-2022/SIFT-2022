@@ -235,40 +235,10 @@ int main(int argc, char **argv)
 			
 			// Make a matrix in transformations history
 			allTransformations.emplace_back(cv::findHomography( obj, scene, cv::RANSAC ));
-			cv::Mat& H = allTransformations.back();
 			
-			// //-- Get the corners from the image_1 ( the object to be "detected" )
-			cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
-			// std::vector<cv::Point2f> obj_corners(4);
-			// obj_corners[0] = cv::Point2f(0, 0);
-			// obj_corners[1] = cv::Point2f( (float)img_object.cols, 0 );
-			// obj_corners[2] = cv::Point2f( (float)img_object.cols, (float)img_object.rows );
-			// obj_corners[3] = cv::Point2f( 0, (float)img_object.rows );
-			// std::vector<cv::Point2f> scene_corners(4);
-
-			// cv::perspectiveTransform( obj_corners, scene_corners, H);
-
-			// //-- Draw lines between the corners of the "object" (the mapped object in the scene - image_2 )
+			// Save to canvas
 			cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
-			// cv::line( img_matches, scene_corners[0] + cv::Point2f((float)img_object.cols, 0),
-			//       scene_corners[1] + cv::Point2f((float)img_object.cols, 0), cv::Scalar(0, 255, 0), 4 );
-			// cv::line( img_matches, scene_corners[1] + cv::Point2f((float)img_object.cols, 0),
-			//       scene_corners[2] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
-			// cv::line( img_matches, scene_corners[2] + cv::Point2f((float)img_object.cols, 0),
-			//       scene_corners[3] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
-			// cv::line( img_matches, scene_corners[3] + cv::Point2f((float)img_object.cols, 0),
-			//       scene_corners[0] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
-
-			// std::string t1, t2;
-			// t1 = type2str(img_matches.type());
-			// t2 = type2str(img_object.type());
-			// printf("img_matches type: %s, img_object type: %s\n", t1.c_str(), t2.c_str());
-			cv::Mat& M = H; // 3x3 transformation matrix for warpPerspective ( https://docs.opencv.org/4.5.2/da/d54/group__imgproc__transform.html#gaf73673a7e8e18ec6963e3774e6a94b87 )
-			// https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
-			cv::warpPerspective(img_object, canvas /* <-- destination */, M, img_matches.size());
-
-			// // Save to canvas
-			// img_matches.copyTo(canvas);
+			img_matches.copyTo(canvas);
 			
 			// Cleanup //
 			sift_free_keypoints(out_k1);
@@ -303,6 +273,9 @@ int main(int argc, char **argv)
 		bool exit;
 		size_t currentTransformation = allTransformations.size() - 1;
 		cv::Mat M = allTransformations.size() > 0 ? allTransformations[currentTransformation] : cv::Mat();
+		cv::Mat* H;
+		cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
+		cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
 		do {
 			exit = true;
 			switch (keycode) {
@@ -314,12 +287,55 @@ int main(int argc, char **argv)
 				// Go to next image
 				// (Nothing to do since i++ will happen in the for-loop update)
 				break;
+			case 't': // FIXME: This case's code may be broken
+				// Show current transformation
+				
+				// Check preconditions
+				if (allTransformations.size() > 0 && firstImage.data != nullptr) {
+					puts("Showing current transformation");
+					
+					H = &allTransformations.back();
+			
+					// //-- Get the corners from the image_1 ( the object to be "detected" )
+					// std::vector<cv::Point2f> obj_corners(4);
+					// obj_corners[0] = cv::Point2f(0, 0);
+					// obj_corners[1] = cv::Point2f( (float)img_object.cols, 0 );
+					// obj_corners[2] = cv::Point2f( (float)img_object.cols, (float)img_object.rows );
+					// obj_corners[3] = cv::Point2f( 0, (float)img_object.rows );
+					// std::vector<cv::Point2f> scene_corners(4);
+
+					// cv::perspectiveTransform( obj_corners, scene_corners, H);
+
+					// //-- Draw lines between the corners of the "object" (the mapped object in the scene - image_2 )
+					// cv::line( img_matches, scene_corners[0] + cv::Point2f((float)img_object.cols, 0),
+					//       scene_corners[1] + cv::Point2f((float)img_object.cols, 0), cv::Scalar(0, 255, 0), 4 );
+					// cv::line( img_matches, scene_corners[1] + cv::Point2f((float)img_object.cols, 0),
+					//       scene_corners[2] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+					// cv::line( img_matches, scene_corners[2] + cv::Point2f((float)img_object.cols, 0),
+					//       scene_corners[3] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+					// cv::line( img_matches, scene_corners[3] + cv::Point2f((float)img_object.cols, 0),
+					//       scene_corners[0] + cv::Point2f((float)img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+
+					// std::string t1, t2;
+					// t1 = type2str(img_matches.type());
+					// t2 = type2str(img_object.type());
+					// printf("img_matches type: %s, img_object type: %s\n", t1.c_str(), t2.c_str());
+					// https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
+					cv::warpPerspective(img_object, canvas /* <-- destination */, *H /* aka "M" */, img_matches.size());
+					imshow(path, canvas);
+					keycode = cv::waitKey(0);
+					exit = false;
+				}
+				else {
+					puts("No transformations or firstImage yet");
+				}
+				break;
 			case 's':
 				// Show transformations so far
 				
 				// Check preconditions
 				if (allTransformations.size() > 0 && firstImage.data != nullptr) {
-					puts("Showing transformations of firstImage");
+					puts("Showing transformation of current image that eventually leads to firstImage");
 					// cv::Mat M = allTransformations[0];
 					// // Apply all transformations to the first image (future todo: condense all transformations in `allTransformations` into one matrix as we process each image)
 					// for (auto it = allTransformations.begin() + 1; it != allTransformations.end(); ++it) {
