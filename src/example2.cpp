@@ -348,7 +348,17 @@ int main(int argc, char **argv)
 						printf("Applying transformation %zu\n", currentTransformation);
 						M *= allTransformations[currentTransformation];
 						currentTransformation--; // Underflow means we reach a value always >= allTransformations.size() so we are considered finished.
-						cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
+						// FIXME: Maybe the issue here is that the error accumulates because we transform a slightly different image each time?
+						// Realized I was using `firstImage` instead of `canvas` below...
+						/* // From Google slides:
+						  Applied last transformation
+						  Seems to zoom in too much (strangely looks like the first image even though this is one transformation based on only two frames of data)
+						  Need to control roll more (previous slide shows strange nonlinear motion)
+
+						  Next few slides will be applying the rest of the saved transformations to this image one by one
+
+						 */
+						cv::warpPerspective(canvas, canvas /* <-- destination */, M, canvas.size());
 					}
 			
 					imshow(path, canvas);
