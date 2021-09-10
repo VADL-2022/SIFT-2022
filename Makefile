@@ -1,6 +1,10 @@
 CFLAGS += -O3 -g3 -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` -I$(SIFT_SRC)
 CXXFLAGS += -std=c++17 $(CFLAGS)
-LFLAGS += -lpng -lm -lpthread -lc++fs #-ljpeg -lrt -lm
+CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*) .*/\1/') # https://stackoverflow.com/questions/5188267/checking-the-gcc-version-in-a-makefile
+ifeq "$(CLANGVERSION)" "7.1.0" # TODO: check if version less than or equal to this
+    LFLAGS += -lc++fs
+endif
+LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
 LDFLAGS = `pkg-config --libs opencv4`
 
 CC := clang
