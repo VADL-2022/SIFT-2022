@@ -20,10 +20,10 @@ mkShell {
   buildInputs = [ #my-python-packages
     opencv clang pkgconfig libpng
 
-    bear # Optional, for generating emacs compile_commands.json
+    #bear # Optional, for generating emacs compile_commands.json
 
     llvmPackages.libstdcxxClang
-    ginac # https://www.ginac.de/tutorial/#A-comparison-with-other-CAS
+    #ginac # https://www.ginac.de/tutorial/#A-comparison-with-other-CAS
     
     #(callPackage ./webscraping.nix {})
   ]; # Note: for macos need this: write this into the path indicated:
