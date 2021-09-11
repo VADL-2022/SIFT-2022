@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 	}
 	
 	// For each output image, loop through it
-	std::string path = "outFrames";
+	std::string path = "testFrames1";//"outFrames";
 	
 	// https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
 	//--- filenames are unique so we can use a set
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 			}
 			
 			// Make a matrix in transformations history
-			allTransformations.emplace_back(cv::findHomography( obj, scene, cv::RANSAC ));
+			allTransformations.emplace_back(cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ ));
 			
 			// Save to canvas
 			cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)

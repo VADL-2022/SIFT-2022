@@ -11,11 +11,44 @@ struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h,
 
     /** assign default parameters **/
     struct sift_parameters* p = sift_assign_default_parameters();
-    p->n_oct = 2;
-    p->n_spo = 1;
-    p->delta_min=1;
-    p->sigma_in=1.1;
-    p->sigma_min=1.1;
+    /* p->n_oct = 2; */
+    /* p->n_spo = 1; */
+    /* p->delta_min=1; */
+    /* p->sigma_in=1.1; */
+    /* p->sigma_min=1.1; */
+
+    // Defaults:
+    /* p->n_oct = 8; */
+    /* p->n_spo = 3; */
+    /* p->sigma_min = 0.8; */
+    /* p->delta_min = 0.5; */
+    /* p->sigma_in = 0.5; */
+    /* p->C_DoG = 0.013333333;  // = 0.04/3 */
+    /* p->C_edge = 10; */
+    /* p->n_bins = 36; */
+    /* p->lambda_ori = 1.5; */
+    /* p->t = 0.80; */
+    /* p->n_hist = 4; */
+    /* p->n_ori = 8; */
+    /* p->lambda_descr = 6; */
+    /* p->itermax = 5; */
+
+    
+    p->n_oct = 8;
+    p->n_spo = 3;
+    p->sigma_min = 0.8;
+    p->delta_min = 0.3;
+    p->sigma_in = 0.5;
+    p->C_DoG = 0.013333333;  // = 0.04/3
+    p->C_edge = 10;
+    p->n_bins = 36;
+    p->lambda_ori = 1.5;
+    p->t = 0.80;
+    p->n_hist = 4;
+    p->n_ori = 8;
+    p->lambda_descr = 6;
+    p->itermax = 5;
+    
 
     /** Memory dynamic allocation */
     // WARNING 6 lists of keypoints containing intermediary states of the algorithm
