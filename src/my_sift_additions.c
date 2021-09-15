@@ -34,12 +34,12 @@ struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h,
     /* p->itermax = 5; */
 
     
-    p->n_oct = 8;
-    p->n_spo = 3;
-    p->sigma_min = 0.8;
-    p->delta_min = 0.3;
+    p->n_oct = 10;
+    p->n_spo = 2;
+    p->sigma_min = 0.6;
+    p->delta_min = 0.4;
     p->sigma_in = 0.5;
-    p->C_DoG = 0.013333333;  // = 0.04/3
+    p->C_DoG = 0.023333333;  // = 0.04/3
     p->C_edge = 10;
     p->n_bins = 36;
     p->lambda_ori = 1.5;
