@@ -81,12 +81,7 @@ int main(int argc, char** argv)
   sigaction(SIGINT, &sigIntHandler, NULL);
 
 
-  // Double-buffered outputs
   cv::Mat output;
-  cv::Mat output2;
-  cv::Mat* outputWriter;
-  cv::Mat* outputReader;
-  
   cv::VideoCapture cap(cv::CAP_ANY);
 
   
@@ -97,8 +92,6 @@ int main(int argc, char** argv)
     }
 
   // Get first frame
-  outputReader = &output;
-  outputWriter = &output2;
   cap >> output;
   bool isColor = (output.type() == CV_8UC3);
   std::cout << "Started writing video... " << std::endl;
@@ -125,7 +118,6 @@ int main(int argc, char** argv)
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
     std::chrono::steady_clock::time_point now;
     long m_duration = 0;
-    bool showedNotReady = false;
     while(1) {
       // // https://stackoverflow.com/questions/62609167/how-to-use-cvvideocapturewaitany-in-opencv
       // // "VideoCapture::waitAny will wait for the specified timeout (1 microsecond) for the camera to produce a frame, and will return after this period. If the camera is ready, it will return true (and will also populate ready_index with the index of the ready camera. Since you only have a single camera, the vector will be either empty or non-empty)."
@@ -148,7 +140,6 @@ int main(int argc, char** argv)
       long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now - start).count();
       double dest = (1e9 / fps);
       if ((double)duration > dest) {
-        showedNotReady = false;
 	std::cout << "time off by: " << duration - dest << std::endl;
 	start = std::chrono::steady_clock::now();
 	m_duration += duration;
@@ -167,7 +158,7 @@ int main(int argc, char** argv)
 	//cap >> output;
 	
 	// Capture frame-by-frame
-        if(cap.grab()) { cap.retrieve(*outputWriter); } else { std::cout << "[thread] Continue\n"; continue; }
+        if(cap.grab()) { cap.retrieve(output); } else { std::cout << "[thread] Continue\n"; continue; }
     
 	cv::resize(output,xframe,sizeFrame);
 	writer.write(xframe);
@@ -179,30 +170,26 @@ int main(int argc, char** argv)
 	// signal the main proc back
 	smphSignalThreadToMain.release();
       }
-      else if (!showedNotReady) {
-	std::cout << "[thread] Duration not ready\n";
-        showedNotReady = true;
+      else {
+	//std::cout << "[thread] Duration not ready\n";
       }
     }
   });
   while(1){
     
     std::cout << "[main] Send the signal\n"; // message
-    
+ 
     // signal the worker thread to start working
     // by increasing the semaphore's count
     smphSignalMainToThread.release();
     
-    // imshow("webcam input", *outputReader);
+    // imshow("webcam input", output);
     // char c = (char)cv::waitKey(10);
     // if( c == 27 ) break;
 
     // wait until the worker thread is done doing the work
     // by attempting to decrement the semaphore's count
     smphSignalThreadToMain.acquire();
-    
-    // Swap reader and writer
-    std::swap(outputWriter, outputReader);
  
     std::cout << "[main] Got the signal\n"; // response message
   }
