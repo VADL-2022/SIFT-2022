@@ -1,4 +1,5 @@
 /example
+/quadcopter
 /obj/
 /compile_commands.json
 *.o

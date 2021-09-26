@@ -13,6 +13,7 @@
 #include "Semaphore.h"
 #include <cstring>
 #include <thread>
+#include <atomic>
 
 static unsigned int counter = 0;
 namespace std {
@@ -56,20 +57,14 @@ std::binary_semaphore
 	smphSignalThreadToMain(0);
 
 cv::VideoWriter writer;
+std::atomic<bool> ctrlC = false;
 
 void my_handler(int s){
            printf("Caught signal %d\n",s);
 	   
-	   // wait until the worker thread is done doing the work
-	   // by attempting to decrement the semaphore's count
-	   smphSignalThreadToMain.acquire();
+           ctrlC = true;
 
-	   std::cout << "[main: ctrl-c handler] Got the signal\n"; // response message
-
-	   // Save video
-	   writer.release();
-	   
-           exit(0);
+           //exit(0);
 }
 
 int main(int argc, char** argv)
@@ -167,10 +162,7 @@ int main(int argc, char** argv)
 	//cap >> output;
 	
 	// Capture frame-by-frame
-        if(cap.grab()) { cap.retrieve(*outputWriter); } else { std::cout << "[thread] Continue\n"; continue; }
-    
-	cv::resize(output,xframe,sizeFrame);
-	writer.write(xframe);
+        if(cap.grab()) { cap.retrieve(*outputReader); } else { std::cout << "[thread] Continue\n"; continue;}
 
       
       
@@ -185,6 +177,7 @@ int main(int argc, char** argv)
       }
     }
   });
+  bool first = true;
   while(1){
     
     std::cout << "[main] Send the signal\n"; // message
@@ -197,13 +190,30 @@ int main(int argc, char** argv)
     // char c = (char)cv::waitKey(10);
     // if( c == 27 ) break;
 
+    if (!first) {
+      cv::resize(*outputWriter,xframe,sizeFrame);
+      writer.write(xframe);
+    }
+    else {
+      first = false;
+    }
+
     // wait until the worker thread is done doing the work
     // by attempting to decrement the semaphore's count
     smphSignalThreadToMain.acquire();
-    
+        
     // Swap reader and writer
     std::swap(outputWriter, outputReader);
  
     std::cout << "[main] Got the signal\n"; // response message
+
+    if (ctrlC) {
+	   std::cout << "[main: ctrl-c handler] Got the signal\n"; // response message
+
+           // Save video
+	   writer.release();
+
+      break;
+    }
   }
 }
