@@ -26,7 +26,7 @@ namespace std {
 
     void acquire() {
       int retval = s.wait();
-      std::cout << "acquire returned " << retval << std::endl;
+      std::cout << name << ": acquire returned " << retval << std::endl;
       if (retval != 0) {
 	std::cout << std::strerror(errno) << std::endl;
 	exit(1);
@@ -35,7 +35,7 @@ namespace std {
 
     void release() {
       int retval = s.post();
-      std::cout << "release returned " << retval << std::endl;
+      std::cout << name << ": release returned " << retval << std::endl;
       if (retval != 0) {
 	std::cout << std::strerror(errno) << std::endl;
 	exit(1);
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
   // https://stackoverflow.com/questions/60204868/how-to-write-mp4-video-with-opencv-c
   int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
   //double fps = 29.97;
-  std::string filename = "live.mp4";
+  std::string filename = "live2.mp4";
   cv::Size sizeFrame(640,480);
   writer.open(filename, codec, fps, sizeFrame, isColor);
   
@@ -115,6 +115,9 @@ int main(int argc, char** argv)
   cv::Mat xframe;
   //std::atomic<bool> frameReady = false;
   std::thread videoCaptureThread([&](){
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point now;
+    long m_duration = 0;
     while(1) {
       // // https://stackoverflow.com/questions/62609167/how-to-use-cvvideocapturewaitany-in-opencv
       // // "VideoCapture::waitAny will wait for the specified timeout (1 microsecond) for the camera to produce a frame, and will return after this period. If the camera is ready, it will return true (and will also populate ready_index with the index of the ready camera. Since you only have a single camera, the vector will be either empty or non-empty)."
@@ -132,29 +135,44 @@ int main(int argc, char** argv)
       //   // Camera was not ready; do something else. 
       // }
 
+      // https://stackoverflow.com/questions/64173224/c-opencv-videowriter-frame-rate-synchronization
+      now = std::chrono::steady_clock::now();
+      long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now - start).count();
+      double dest = (1e9 / fps);
+      if ((double)duration > dest) {
+	std::cout << "time off by: " << duration - dest << std::endl;
+	start = std::chrono::steady_clock::now();
+	m_duration += duration;
 
-      // wait for a signal from the main proc
-      // by attempting to decrement the semaphore
-      smphSignalMainToThread.acquire();
+	// wait for a signal from the main proc
+	// by attempting to decrement the semaphore
+	smphSignalMainToThread.acquire();
  
-      // this call blocks until the semaphore's count
-      // is increased from the main proc
+	// this call blocks until the semaphore's count
+	// is increased from the main proc
  
-      std::cout << "[thread] Got the signal\n"; // response message
+	std::cout << "[thread] Got the signal\n"; // response message
 	
 
 
-      cap >> output;
+	//cap >> output;
+	
+	// Capture frame-by-frame
+        if(cap.grab()) { cap.retrieve(output); } else { std::cout << "[thread] Continue\n"; continue; }
     
-      cv::resize(output,xframe,sizeFrame);
-      writer.write(xframe);
+	cv::resize(output,xframe,sizeFrame);
+	writer.write(xframe);
 
       
       
-      std::cout << "[thread] Send the signal\n"; // message
+	std::cout << "[thread] Send the signal\n"; // message
  
-      // signal the main proc back
-      smphSignalThreadToMain.release();
+	// signal the main proc back
+	smphSignalThreadToMain.release();
+      }
+      else {
+	std::cout << "[thread] Duration not ready\n";
+      }
     }
   });
   while(1){
@@ -165,9 +183,9 @@ int main(int argc, char** argv)
     // by increasing the semaphore's count
     smphSignalMainToThread.release();
     
-    imshow("webcam input", output);
-    char c = (char)cv::waitKey(10);
-    if( c == 27 ) break;
+    // imshow("webcam input", output);
+    // char c = (char)cv::waitKey(10);
+    // if( c == 27 ) break;
 
     // wait until the worker thread is done doing the work
     // by attempting to decrement the semaphore's count
