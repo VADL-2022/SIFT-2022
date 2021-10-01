@@ -13,6 +13,7 @@
 #include "Semaphore.h"
 #include <cstring>
 #include <thread>
+#include <fstream>
 
 static unsigned int counter = 0;
 namespace std {
@@ -57,6 +58,7 @@ std::binary_semaphore
 
 cv::VideoWriter writer;
 
+  std::vector<std::time_t> times;
 void my_handler(int s){
            printf("Caught signal %d\n",s);
 	   
@@ -68,6 +70,13 @@ void my_handler(int s){
 
 	   // Save video
 	   writer.release();
+
+           // Save times
+           std::ofstream FILE("timestamps.txt", std::ios::out | std::ofstream::binary);
+           for (std::time_t time : times) {
+             FILE << std::to_string(time) << std::endl;
+           }
+           FILE.close();
 	   
            exit(0);
 }
@@ -159,6 +168,7 @@ int main(int argc, char** argv)
 	
 	// Capture frame-by-frame
         if(cap.grab()) { cap.retrieve(output); } else { std::cout << "[thread] Continue\n"; continue; }
+        times.push_back(std::time(NULL)); //std::chrono::steady_clock::to_time_t(std::chrono::steady_clock::now()));
     
 	cv::resize(output,xframe,sizeFrame);
 	writer.write(xframe);
@@ -171,7 +181,7 @@ int main(int argc, char** argv)
 	smphSignalThreadToMain.release();
       }
       else {
-	std::cout << "[thread] Duration not ready\n";
+	//std::cout << "[thread] Duration not ready\n";
       }
     }
   });
