@@ -15,6 +15,23 @@
 #include <thread>
 #include <atomic>
 
+std::mutex stdoutMutex;
+#define LOG_THREAD_INFO 0
+#if LOG_THREAD_INFO
+#define logNonMainThreadInfo(x) stdoutMutex.lock(); std::cout << "[thread] " << x << std::flush; stdoutMutex.unlock();
+#define logMainThreadInfo(x) stdoutMutex.lock(); std::cout << "[main] " << x << std::flush; stdoutMutex.unlock();
+#define logThreadInfo(x) stdoutMutex.lock(); std::cout << x << std::flush; stdoutMutex.unlock();
+#else
+#define logNonMainThreadInfo(x)
+#define logMainThreadInfo(x)
+#define logThreadInfo(x)
+#endif
+#define logNonMainThreadWarning(x) stdoutMutex.lock(); std::cout << "[thread] [warning] " << x << std::flush; stdoutMutex.unlock();
+#define logNonMainThreadError(x) stdoutMutex.lock(); std::cout << "[thread] [error] " << x << std::flush; stdoutMutex.unlock();
+#define logMainThreadGeneral(x) stdoutMutex.lock(); std::cout << "[main] " << x << std::flush; stdoutMutex.unlock();
+#define logMainThreadWarning(x) stdoutMutex.lock(); std::cout << "[main] [warning] " << x << std::flush; stdoutMutex.unlock();
+#define logMainThreadError(x) stdoutMutex.lock(); std::cout << "[main] [error] " << x << std::flush; stdoutMutex.unlock();
+
 static unsigned int counter = 0;
 namespace std {
   // Wrapper around Semaphore class from Semaphore.h to replicate parts of the C++20 binary_semaphore's interface.
@@ -27,7 +44,7 @@ namespace std {
 
     void acquire() {
       int retval = s.wait();
-      std::cout << name << ": acquire returned " << retval << std::endl;
+      logThreadInfo(name << ": acquire returned " << retval << std::endl);
       if (retval != 0) {
 	std::cout << std::strerror(errno) << std::endl;
 	exit(1);
@@ -36,7 +53,7 @@ namespace std {
 
     void release() {
       int retval = s.post();
-      std::cout << name << ": release returned " << retval << std::endl;
+      logThreadInfo(name << ": release returned " << retval << std::endl);
       if (retval != 0) {
 	std::cout << std::strerror(errno) << std::endl;
 	exit(1);
@@ -58,6 +75,8 @@ std::binary_semaphore
 
 cv::VideoWriter writer;
 std::atomic<bool> ctrlC = false;
+std::vector<std::time_t> times; // Logged timestamps
+
 
 void my_handler(int s){
            printf("Caught signal %d\n",s);
@@ -109,7 +128,8 @@ int main(int argc, char** argv)
   int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
   //double fps = 29.97;
   std::string filename = "live2.mp4";
-  cv::Size sizeFrame(640,480);
+  //cv::Size sizeFrame(640,480);
+  cv::Size sizeFrame(width,height);
   writer.open(filename, codec, fps, sizeFrame, isColor);
   
   constexpr int64 kTimeoutNs = 1000;
@@ -118,10 +138,10 @@ int main(int argc, char** argv)
   //std::atomic<bool> frameReady = false;
   std::thread videoCaptureThread([&](){
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point lastFrame = start;
     std::chrono::steady_clock::time_point now;
-    long m_duration = 0;
     bool showedNotReady = false;
-    while(1) {
+    while(!ctrlC) {
       // // https://stackoverflow.com/questions/62609167/how-to-use-cvvideocapturewaitany-in-opencv
       // // "VideoCapture::waitAny will wait for the specified timeout (1 microsecond) for the camera to produce a frame, and will return after this period. If the camera is ready, it will return true (and will also populate ready_index with the index of the ready camera. Since you only have a single camera, the vector will be either empty or non-empty)."
       // if (cv::VideoCapture::waitAny({cap}, ready_index, kTimeoutNs // "If a timeout is not provided (or equivalently, if it's set to 0), then the function blocks indefinitely until the frame is available. In a single-camera case, it is then similar to VideoCapture::grab()."
@@ -140,13 +160,15 @@ int main(int argc, char** argv)
 
       // https://stackoverflow.com/questions/64173224/c-opencv-videowriter-frame-rate-synchronization
       now = std::chrono::steady_clock::now();
-      long duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now - start).count();
+      auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(now - lastFrame).count();
       double dest = (1e9 / fps);
-      if ((double)duration > dest) {
+      //if (duration >= dest) {
         showedNotReady = false;
-	std::cout << "time off by: " << duration - dest << std::endl;
-	start = std::chrono::steady_clock::now();
-	m_duration += duration;
+        double EPSILON = 1e-9;
+        if ((duration - dest) > EPSILON) {
+          std::cout << "Capture time off by " << (duration - dest) / 1'000'000 << " milliseconds" << std::endl;
+        }
+	lastFrame = std::chrono::steady_clock::now();
 
 	// wait for a signal from the main proc
 	// by attempting to decrement the semaphore
@@ -155,32 +177,38 @@ int main(int argc, char** argv)
 	// this call blocks until the semaphore's count
 	// is increased from the main proc
  
-	std::cout << "[thread] Got the signal\n"; // response message
+	logNonMainThreadInfo("Got the signal\n"); // response message
 	
 
 
 	//cap >> output;
 	
 	// Capture frame-by-frame
-        if(cap.grab()) { cap.retrieve(*outputReader); } else { std::cout << "[thread] Continue\n"; continue;}
+        if(cap.grab()) {
+          auto elapsedTotal = std::chrono::duration_cast<std::chrono::nanoseconds>(now - start).count();
+          cap.retrieve(*outputReader);
+          times.push_back(elapsedTotal);
+        } else {
+          logNonMainThreadError("Continue\n"); continue;
+        }
 
       
       
-	std::cout << "[thread] Send the signal\n"; // message
+	logNonMainThreadInfo("Send the signal\n"); // message
  
 	// signal the main proc back
 	smphSignalThreadToMain.release();
-      }
-      else if (!showedNotReady) {
-	std::cout << "[thread] Duration not ready\n";
-        showedNotReady = true;
-      }
+      // }
+      // else if (!showedNotReady) {
+      //   logNonMainThreadWarning("Duration not ready\n");
+      //   showedNotReady = true;
+      // }
     }
   });
   bool first = true;
   while(1){
     
-    std::cout << "[main] Send the signal\n"; // message
+    logMainThreadInfo("Send the signal\n"); // message
     
     // signal the worker thread to start working
     // by increasing the semaphore's count
@@ -205,13 +233,16 @@ int main(int argc, char** argv)
     // Swap reader and writer
     std::swap(outputWriter, outputReader);
  
-    std::cout << "[main] Got the signal\n"; // response message
+    logMainThreadInfo("Got the signal\n"); // response message
 
     if (ctrlC) {
-	   std::cout << "[main: ctrl-c handler] Got the signal\n"; // response message
+      logMainThreadGeneral("[ctrl-c handler] Got the signal\n"); // response message
 
-           // Save video
-	   writer.release();
+      // Save video
+      writer.release();
+
+      // Wait for thread to finish
+      videoCaptureThread.join();
 
       break;
     }
