@@ -20,6 +20,7 @@ namespace fs = std::filesystem;
 #include <optional>
 #include <cinttypes>
 #include <iostream>
+#include "utils.hpp"
 
 // https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
 const int alpha_slider_max = 2;
@@ -69,31 +70,6 @@ void drawRect(cv::Mat& img, cv::Point center, cv::Size2f size, float orientation
 }
 void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degrees, int thickness = 2) {
 	drawRect(img, center, cv::Size2f(size, size), orientation_degrees, thickness);
-}
-
-// https://stackoverflow.com/questions/10167534/how-to-find-out-what-type-of-a-mat-object-is-with-mattype-in-opencv
-// Usage: type2str(cvMat.type())
-std::string type2str(int type) {
-  std::string r;
-
-  uchar depth = type & CV_MAT_DEPTH_MASK;
-  uchar chans = 1 + (type >> CV_CN_SHIFT); // Number of channels
-
-  switch ( depth ) {
-    case CV_8U:  r = "8U"; break;
-    case CV_8S:  r = "8S"; break;
-    case CV_16U: r = "16U"; break;
-    case CV_16S: r = "16S"; break;
-    case CV_32S: r = "32S"; break;
-    case CV_32F: r = "32F"; break;
-    case CV_64F: r = "64F"; break;
-    default:     r = "User"; break;
-  }
-
-  r += "C"; // C = number of channels (for example, RGB has 3 channels because it has three values per pixel, RGBA has 4 channels, etc.)
-  r += (chans+'0'); // Number of channels
-
-  return r;
 }
 
 int main(int argc, char **argv)

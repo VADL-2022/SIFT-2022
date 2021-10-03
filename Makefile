@@ -34,11 +34,11 @@ setup:
 common: $(OBJECTS)
 	cd $(SIFT) && $(MAKE)
 
-example: common src/example.o
-	$(CC)++ src/example.o -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
+example: $(OBJECTS) src/example.o
+	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
-quadcopter: common src/quadcopter.o
-	$(CC)++ src/Semaphore.cpp src/quadcopter.o -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
+quadcopter: $(OBJECTS) src/quadcopter.o
+	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
 .PHONY: clean
 clean:

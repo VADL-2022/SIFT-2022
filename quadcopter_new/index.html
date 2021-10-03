@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+	<head>
+		
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" >
+						 
+		<title>Concurrent C++ OpenCV Video Streaming &#8211; man made machines</title>
+<meta name='robots' content='max-image-preview:large' />
+<link rel='dns-prefetch' href='//s.w.org' />
+<link rel="alternate" type="application/rss+xml" title="man made machines &raquo; Feed" href="https://www.manmade2.com/feed/" />
+<link rel="alternate" type="application/rss+xml" title="man made machines &raquo; Comments Feed" href="https://www.manmade2.com/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="man made machines &raquo; Concurrent C++ OpenCV Video Streaming Comments Feed" href="https://www.manmade2.com/concurrent-c-opencv-video-streaming/feed/" />
+		<script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/13.1.0\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/13.1.0\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/www.manmade2.com\/wp-includes\/js\/wp-emoji-release.min.js?ver=5.8.1"}};
+			!function(e,a,t){var n,r,o,i=a.createElement("canvas"),p=i.getContext&&i.getContext("2d");function s(e,t){var a=String.fromCharCode;p.clearRect(0,0,i.width,i.height),p.fillText(a.apply(this,e),0,0);e=i.toDataURL();return p.clearRect(0,0,i.width,i.height),p.fillText(a.apply(this,t),0,0),e===i.toDataURL()}function c(e){var t=a.createElement("script");t.src=e,t.defer=t.type="text/javascript",a.getElementsByTagName("head")[0].appendChild(t)}for(o=Array("flag","emoji"),t.supports={everything:!0,everythingExceptFlag:!0},r=0;r<o.length;r++)t.supports[o[r]]=function(e){if(!p||!p.fillText)return!1;switch(p.textBaseline="top",p.font="600 32px Arial",e){case"flag":return s([127987,65039,8205,9895,65039],[127987,65039,8203,9895,65039])?!1:!s([55356,56826,55356,56819],[55356,56826,8203,55356,56819])&&!s([55356,57332,56128,56423,56128,56418,56128,56421,56128,56430,56128,56423,56128,56447],[55356,57332,8203,56128,56423,8203,56128,56418,8203,56128,56421,8203,56128,56430,8203,56128,56423,8203,56128,56447]);case"emoji":return!s([10084,65039,8205,55357,56613],[10084,65039,8203,55357,56613])}return!1}(o[r]),t.supports.everything=t.supports.everything&&t.supports[o[r]],"flag"!==o[r]&&(t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&t.supports[o[r]]);t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&!t.supports.flag,t.DOMReady=!1,t.readyCallback=function(){t.DOMReady=!0},t.supports.everything||(n=function(){t.readyCallback()},a.addEventListener?(a.addEventListener("DOMContentLoaded",n,!1),e.addEventListener("load",n,!1)):(e.attachEvent("onload",n),a.attachEvent("onreadystatechange",function(){"complete"===a.readyState&&t.readyCallback()})),(n=t.source||{}).concatemoji?c(n.concatemoji):n.wpemoji&&n.twemoji&&(c(n.twemoji),c(n.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+	<link rel='stylesheet' id='wp-block-library-css'  href='https://www.manmade2.com/wp-includes/css/dist/block-library/style.min.css?ver=5.8.1' type='text/css' media='all' />
+<link rel='stylesheet' id='baskerville_googleFonts-css'  href='//fonts.googleapis.com/css?family=Roboto+Slab%3A400%2C700%7CRoboto%3A400%2C400italic%2C700%2C700italic%2C300%7CPacifico%3A400&#038;ver=2.1.4' type='text/css' media='all' />
+<link rel='stylesheet' id='baskerville_style-css'  href='https://www.manmade2.com/wp-content/themes/baskerville/style.css?ver=2.1.4' type='text/css' media='all' />
+<script type='text/javascript' src='https://www.manmade2.com/wp-includes/js/jquery/jquery.min.js?ver=3.6.0' id='jquery-core-js'></script>
+<script type='text/javascript' src='https://www.manmade2.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.3.2' id='jquery-migrate-js'></script>
+<script type='text/javascript' src='https://www.manmade2.com/wp-includes/js/imagesloaded.min.js?ver=4.1.4' id='imagesloaded-js'></script>
+<script type='text/javascript' src='https://www.manmade2.com/wp-includes/js/masonry.min.js?ver=4.2.2' id='masonry-js'></script>
+<script type='text/javascript' src='https://www.manmade2.com/wp-content/themes/baskerville/js/jquery.flexslider-min.js?ver=2.7.2' id='baskerville_flexslider-js'></script>
+<script type='text/javascript' src='https://www.manmade2.com/wp-content/themes/baskerville/js/global.js?ver=2.1.4' id='baskerville_global-js'></script>
+<link rel="https://api.w.org/" href="https://www.manmade2.com/wp-json/" /><link rel="alternate" type="application/json" href="https://www.manmade2.com/wp-json/wp/v2/posts/1285" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://www.manmade2.com/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://www.manmade2.com/wp-includes/wlwmanifest.xml" /> 
+<meta name="generator" content="WordPress 5.8.1" />
+<link rel="canonical" href="https://www.manmade2.com/concurrent-c-opencv-video-streaming/" />
+<link rel='shortlink' href='https://www.manmade2.com/?p=1285' />
+<link rel="alternate" type="application/json+oembed" href="https://www.manmade2.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.manmade2.com%2Fconcurrent-c-opencv-video-streaming%2F" />
+<link rel="alternate" type="text/xml+oembed" href="https://www.manmade2.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.manmade2.com%2Fconcurrent-c-opencv-video-streaming%2F&#038;format=xml" />
+<style type="text/css">.recentcomments a{display:inline !important;padding:0 !important;margin:0 !important;}</style><style type="text/css" id="custom-background-css">
+body.custom-background { background-color: #ffffff; }
+</style>
+			<style type="text/css" id="wp-custom-css">
+			/*
+You can add your own CSS here.
+
+Click the help icon above to learn more.
+*/
+		</style>
+			
+	</head>
+	
+	<body class="post-template-default single single-post postid-1285 single-format-standard custom-background no-featured-image single single-post">
+
+		
+		<a class="skip-link button" href="#site-content">Skip to the content</a>
+	
+		<div class="header section small-padding bg-dark bg-image" style="background-image: url( https://www.manmade2.com/wp-content/uploads/2016/09/cropped-cropped-IMG_0415.jpg );">
+		
+			<div class="cover"></div>
+			
+			<div class="header-search-block bg-graphite hidden">
+				<form role="search"  method="get" class="searchform" action="https://www.manmade2.com/">
+	<label for="search-form-61593390f1e9e">
+		<span class="screen-reader-text">Search for:</span>
+		<input type="search" id="search-form-61593390f1e9e" class="search-field" placeholder="Search form" value="" name="s" />
+	</label>
+	<input type="submit" class="searchsubmit" value="Search" />
+</form>
+			</div><!-- .header-search-block -->
+					
+			<div class="header-inner section-inner">
+			
+				
+					<div class="blog-title">
+						<a class="logo" href="https://www.manmade2.com/" rel="home">
+							<img src="https://www.manmade2.com/wp-content/uploads/2016/09/manmademachines_logo_02-1-1-e1472958356622.png">
+							<span class="screen-reader-text">man made machines</span>
+						</a>
+					</div>
+		
+											
+			</div><!-- .header-inner -->
+						
+		</div><!-- .header -->
+		
+		<div class="navigation section no-padding bg-dark">
+		
+			<div class="navigation-inner section-inner">
+			
+				<button class="nav-toggle toggle fleft hidden">
+					
+					<div class="bar"></div>
+					<div class="bar"></div>
+					<div class="bar"></div>
+					
+				</button>
+						
+				<ul class="main-menu">
+				
+					<li id="menu-item-1605" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1605"><a href="https://www.manmade2.com/add-cooling-to-your-iot-system/"><p>Add Cooling to your IoT System</p></a></li>
+<li id="menu-item-1606" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1606"><a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-3-1-0-on-raspberry-pi-part-1/">Webcam Video Access with OpenCV on Raspberry Pi</a></li>
+<li id="menu-item-1607" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1607"><a href="https://www.manmade2.com/raspberry-pi-zero-setup-with-no-monitor/"><p>Raspberry Pi Zero Setup with no Monitor</p></a></li>
+<li id="menu-item-1608" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1608"><a href="https://www.manmade2.com/raspberry-pi-sprinkler-system/"><p>DIY Raspberry Pi Sprinkler System</p></a></li>
+<li id="menu-item-1609" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1609"><a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-python-and-raspberry-pi/"><div style="text-align: left;">Simple Home-Surveillance with OpenCV, Python and Flask on Raspberry Pi</div></a></li>
+											
+				</ul><!-- .main-menu -->
+				 
+				<button class="search-toggle toggle fright">
+					<span class="screen-reader-text">Toggle search field</span>
+				</button>
+				 
+				<div class="clear"></div>
+				 
+			</div><!-- .navigation-inner -->
+			
+		</div><!-- .navigation -->
+		
+		<div class="mobile-navigation section bg-graphite no-padding hidden">
+					
+			<ul class="mobile-menu">
+			
+				<li class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1605"><a href="https://www.manmade2.com/add-cooling-to-your-iot-system/"><p>Add Cooling to your IoT System</p></a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1606"><a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-3-1-0-on-raspberry-pi-part-1/">Webcam Video Access with OpenCV on Raspberry Pi</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1607"><a href="https://www.manmade2.com/raspberry-pi-zero-setup-with-no-monitor/"><p>Raspberry Pi Zero Setup with no Monitor</p></a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1608"><a href="https://www.manmade2.com/raspberry-pi-sprinkler-system/"><p>DIY Raspberry Pi Sprinkler System</p></a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-post menu-item-1609"><a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-python-and-raspberry-pi/"><div style="text-align: left;">Simple Home-Surveillance with OpenCV, Python and Flask on Raspberry Pi</div></a></li>
+										
+			 </ul><!-- .main-menu -->
+		
+		</div><!-- .mobile-navigation -->
+<div class="wrapper section medium-padding" id="site-content">
+										
+	<div class="section-inner">
+	
+		<div class="content fleft">
+												        
+									
+				<div id="post-1285" class="post-1285 post type-post status-publish format-standard hentry category-c-c tag-c tag-c11 tag-c14 tag-concurrent tag-opencv tag-raspberry tag-raspberry-pi tag-stream tag-threads tag-tread tag-video">
+
+									
+					<div class="post-header">
+
+												
+						    <h1 class="post-title"><a href="https://www.manmade2.com/concurrent-c-opencv-video-streaming/" rel="bookmark"><p>Concurrent C++ OpenCV Video Streaming</p></a></h1>
+
+											    
+					</div><!-- .post-header -->
+					
+																			                                    	    
+					<div class="post-content">
+						
+						<h1>Intro</h1>
+<p><img loading="lazy" src="https://www.manmade2.com/wp-content/uploads/2018/09/picture.png" alt="" width="914" height="458" class="aligncenter size-full wp-image-1327" srcset="https://www.manmade2.com/wp-content/uploads/2018/09/picture.png 914w, https://www.manmade2.com/wp-content/uploads/2018/09/picture-300x150.png 300w, https://www.manmade2.com/wp-content/uploads/2018/09/picture-768x385.png 768w, https://www.manmade2.com/wp-content/uploads/2018/09/picture-600x301.png 600w" sizes="(max-width: 914px) 100vw, 914px" /><br />
+The goal here is to have in C++ multiple threads running, with each doing only one (or few) image processing functions and get in this way high framerates combined with a large image size.<br />
+The reading of a frame from a camera is generally a &#8220;time-consuming&#8221; procedure (especially if it is a USB-connected webcam as in this post). So this step should definitely have its own thread to get the highest possible framerate at the largest possible video size.</p>
+<h1>Code</h1>
+<h2>Makefile</h2>
+<p>The code was developed on a Raspberry Pi (2) with the standard Raspbian OS. Hence to compile the C++ code requires a Makefile, such as the following:</p>
+<pre class="toolbar-delay:false show-lang:1 lang:C++ decode:true " title="Makefile for C++ compilation">
+IDIR = .  
+CC=g++
+CFLAGS=-I$(IDIR)
+ODIR=.
+LDIR=../lib
+
+LIBS=`pkg-config --cflags --libs opencv`
+
+DEPS = ./camLib.hpp
+_OBJ = camLib.o camera.o
+OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+%.o: %.cpp $(DEPS)
+	$(CC) -c -std=c++14 -pthread -o $@ $< $(LIBS) $(CFLAGS) 
+camera: $(OBJ)
+	$(CC) -std=c++14 -pthread -o $@ $^ $(LIBS) $(CFLAGS) 
+	
+.PHONY: clean
+clean:
+	rm -f *.o camera 
+</pre>
+<p>Note: In this Makefile I am assuming a flat hierarchy - i.e. the three files I am implementing are all in the same folder.<br />
+To get the highest frame-rate at the larges framesize on the now relatively "old" Raspberry Pi 2 it is really necessary to use threads to use all resources available (i.e. the 4 cores of the Raspberry Pi processor). Hence it is necessary to use the C++11 or C++14 (or later) Standard which introduces the threading functionality in C++. This is achieved by using in Makefile the flag -std=c++11 or -std=c++14, as is done in above Makefile in line 15 and line 17. The Makefile also links the OpenCV libraries to the compilation with the LIBS resources defined in line 7.<br />
+I usually clean the folder from previous compilations with the call <b>make clean</b> and then start a new copulation and linkage with the <b>make</b> call.</p>
+<p>With this Makefile it is now possible to compile the code.</p>
+<h2>Headerfile</h2>
+<p>Below is the header file, which defines the main camera class and its member functions. I am calling this header file camLib.hpp:</p>
+<pre class="toolbar-delay:false show-lang:1 lang:C++ decode:true " title="Header file camLib.hpp">
+#ifndef __IOSTREAM_INCLUDED__
+#define __IOSTREAM_INCLUDED__
+
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/opencv.hpp"
+#include <iostream>
+#include <vector>
+#include <unistd.h>
+#include <thread>
+
+using namespace cv;
+using namespace std;
+
+class Camera 
+{
+	public:
+		Camera(void);
+		~Camera(void);
+		Mat captureVideo(void);
+		
+	private:
+                Mat frame;
+		double dWidth;
+		double dHeight;
+		double fps;
+			
+};
+
+
+#endif	// __IOSTREAM_INCLUDED__
+
+</pre>
+<h2>Memberfunctions</h2>
+<p>This member function is declaring the constructor and destructor of the class Camera and one member function called captureVideo, which has no argument. It also declares a few (private) variables, such as the OpenCV matrix <em>frame</em>, which contains the latest captured frames.<br />
+The member functions are defined in the file camLib.cpp:</p>
+<pre class="toolbar-delay:false show-lang:1 lang:C++ decode:true " title="camLib.cpp">
+#include "./camLib.hpp" 
+
+using namespace std;
+
+VideoCapture cap(0);		// The openCV camera object...
+
+// The Constructor...
+Camera::Camera(void) {
+	//Check if opening the camera worked...
+	cout << " Camera warming up..." << endl;
+	int isrunning = 0;
+	usleep(10);
+	if (!cap.isOpened())  // if not success, exit program
+	{
+		cout << "Cannot open the video cam" << endl;
+	} else {
+		isrunning = 1;
+	}
+
+	if(isrunning == 0) {
+		cout << "Camara did not start up - Exiting..." << endl;
+		this->~Camera();
+	}
+	
+	// Determine camera output size automatically...
+	cap.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+	cap.set(CV_CAP_PROP_FPS, 30);
+	dWidth  = cap.get(CV_CAP_PROP_FRAME_WIDTH); 		// get the width of frames of the video
+    dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); 	// get the height of frames of the video
+    fps     = cap.get(CV_CAP_PROP_FPS);				// get frames-per-second of the video device
+	// Print values out...
+    cout << "Frame size : " << dWidth << " x " << dHeight << " --- fps: " << fps << endl;
+    
+    // Read in a new frame...
+	cap >> frame;		// This frame is furthre processed for the motion detection...	
+	//cout << "FIRST Height = " << frame.rows << " .. Width = " << frame.cols << endl;
+    
+}
+
+// The Destructor...
+Camera::~Camera(void)  {
+	cout << "Shutting down camera and closing files..." << endl;
+	cap.release();	
+}
+ 
+//----------------------------------------------------------------------
+ 
+// The camera access function... 
+Mat Camera::captureVideo(void) {
+	cap >> frame;		// This frame is furthre processed for the motion detection...	
+	//cout << "In VideoCapture Height = " << frame.rows << " .. Width = " << frame.cols << endl;
+   return frame;
+}
+
+</pre>
+<p>In this file the OpenCV VideoCapture instance is declared outside the class function in line 5. This allows the access to the <b>VideoCapture cap</b> instance from anywhere in the class. This has advantages and disadvantages. One advantage is the simplicity. A big disadvantage is that when the camera-assertion fails (which can happen), then the program needs to be <em>manually</em> restarted. Maybe even multiple times until finally the camera starts up. </p>
+<h2>Main file camera.cpp</h2>
+<p>The following, finally, is the main code <b>camera.cpp</b>. To get the highest possible frame rate, while applying some OpenCV functions on a Raspberry Pi 2, using threads is a good way to go.<br />
+The file <b>camera.cpp</b> contains three functions:</p>
+<ul>
+<li> main() </li>
+<li> grabFrame() </li>
+<li> processFrame() </li>
+</ul>
+<p>Some important variables are declared global in this code:</p>
+<ul>
+<li> <b>cam1</b>, which is an instance of the camera class, and needs to be accesible from main and from grabFrame().  </li>
+<li> <b>frameBuffer</b>, which is the specified max limit of frames that can go in the OpenCV Mat stack before the whole stack gets erased. </li>
+<li> <b>frameStack</b>, which is the OpenCV Mat frame stack containing the frames read from the camera (up to frameBuffer frames). </li>
+<li> <b>contourStack</b>, which is the OpenCV Mat frame stack containing the frames taken from the frameStack stack and processed using OpenCV functions. </li>
+<li> <b> stopSig</b>, which a flag that when set to 1 signals all threads to stop and return to the main routine.  </li>
+</ul>
+<pre class="toolbar-delay:false show-lang:1 lang:C++ decode:true " title="main code camera.cpp">
+
+#include "./camLib.hpp"
+
+using namespace cv;
+
+// Allocate memory for the frames to store and start the camera...
+Camera cam1;
+const int frameBuffer = 50;	// Frame buffer around motion ...
+vector<Mat> frameStack = *new vector<Mat> [frameBuffer*sizeof(cam1.captureVideo())];	
+vector<Mat> contourStack = *new vector<Mat> [frameBuffer*sizeof(cam1.captureVideo())];	
+int stopSig = 0;				// Global stop signal...
+
+
+void processFrame(void) {
+	Mat frame;
+	Mat gauss;
+	Mat gray;
+	Mat contour;
+    // Check if there is data in the frame buffer...
+    while(!::stopSig) {
+		// If the frame stack is not empty grab a frame w/o removing it for further processing...:
+		if(!::frameStack.empty())  {       // If the original video stack is not empty...
+			frame = ::frameStack.front();   // --> take a the first frame from the original stack w/o removing it...
+			
+			//----------------------------------OpenCV image manipulations---------------------------------------
+			//contour = frame;                            // --> Just pass the original frae through...
+			// https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html#threshold
+			//cvtColor(frame, gray, CV_RGB2GRAY);	      // Converts an image from one color space to another. -- 
+			GaussianBlur(frame, gauss, Size(5,5), 0, 0);  // https://www.bogotobogo.com/OpenCV/opencv_3_tutorial_imgproc_gausian_median_blur_bilateral_filter_image_smoothing.php
+			cvtColor(gauss, gray, CV_RGB2GRAY);	                 // Converts an image from one color space to another. -- 
+			//threshold(gauss, contour, 50,255,THRESH_BINARY);	// Applies a fixed-level threshold to each array element.
+			//Laplacian(gray, contour, 165, 3, 1, 0, BORDER_DEFAULT);
+			Canny(gray, contour, 50, 150, 3);
+			//---------------------------------------------------------------------------------------------------
+		}
+		
+		// 1. If the contour-stack has more then 2 frames remove the last frame (at back of the stack)...
+		if (::contourStack.size() > 2) {	// If the contour-stack has more then 2 frames...
+			// Remove the last frame from the stack...:
+			::contourStack.pop_back();	
+		}
+		// 2. If a new processed frame is available and the stack is not yet full..:
+		if(!contour.empty() && ::contourStack.size() < ::frameBuffer) {
+			// Put the new processed frame at the front location of the stack...:
+			::contourStack.push_back(contour);
+		} else if(::contourStack.size() >= ::frameBuffer) { // only in case the stack has run full...
+			// Clear the entire stack...:
+			::contourStack.clear();	
+		}
+			
+
+	}
+	cout << "processFrame: esc key is pressed by user" << endl;
+	return;
+}
+
+void grabFrame(void) {
+	Mat frame;
+	
+	::frameStack.clear();
+	while(!::stopSig) {
+		frame = ::cam1.captureVideo();			// Capture a frame from the live stream of camera...
+		// 1. Remove one frame from the back, if the stack has more then 2 frames...
+		if(::frameStack.size() > 2) {		//If the framestack has more then 2 frames...
+			// This line removes the last frame from the stack...
+			::frameStack.pop_back();
+		} 
+		// 2. Add a frame at the front of the stack if the stack is not full...
+		if (::frameStack.size() < ::frameBuffer) { 
+			// This line puts frame-by-frame at the back of the stack...
+			::frameStack.push_back(frame);	// Put new frame on stack on the computer's RAM...
+		} else {
+			// This line clears the stack when it is full...
+			::frameStack.clear();
+		}
+		
+	}
+	cout << "grabFrame: esc key is pressed by user" << endl;
+	return;
+}
+
+
+int main(int argc, char* argv[])
+{
+	Mat frame;					// Captured single frames...
+	Mat contour;				// Video stream showin countours of objects...
+
+	// Start endless loop to capture frames...
+	// This endless loop is stopped by user pressing the ESC key...
+	// Generate new file name with a time-stamp right after the sequence that was captures
+	::frameStack.clear();
+	::contourStack.clear();
+	thread t1(grabFrame);
+	thread t2(processFrame);
+	while(1) {
+		if(::contourStack.size() >= 2)  {
+			contour = ::contourStack.back();
+			imshow("Contour Video", contour);
+		}
+		
+		if (waitKey(1) == 27) 		//wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
+		{
+			cout << "Main: esc key is pressed by user" << endl;
+			::stopSig = 1;		// Signal to threads to end their run...
+			
+			frameStack.clear();
+			contourStack.clear();
+			break; 
+		}
+	}
+	t1.join();
+	t2.join();
+
+    return 0;
+}
+
+
+</pre>
+<p>In <b>camera.cpp</b> first the two OpenCV stacks frameStack and contourStack are cleared in lines 90 and 91 (they were defined in the lines 8 and 9. Then the two threads are started in lines 92 and 93.</p>
+<h1>Summary</h1>
+<p>In below picture I am trying to visualize the sequence of image processing through the three threads:<br />
+<img loading="lazy" src="https://www.manmade2.com/wp-content/uploads/2018/09/threads2.png" alt="" width="676" height="572" class="aligncenter size-full wp-image-1315" srcset="https://www.manmade2.com/wp-content/uploads/2018/09/threads2.png 676w, https://www.manmade2.com/wp-content/uploads/2018/09/threads2-300x254.png 300w, https://www.manmade2.com/wp-content/uploads/2018/09/threads2-600x508.png 600w" sizes="(max-width: 676px) 100vw, 676px" /></p>
+<ol>
+<li>  <b>grabFrame()</b> is symbolized as a conveyor belt,  whose only purpose is to grab frames from the camera and to store those frames on the <b>frameStack</b> stack. This function also makes sure that the stack does not flow over. In case the stack is full clear it and start from new. <b>Note:</b> A great place to look up the functions that can be used with the OpenCV stack is the <a href="https://www.geeksforgeeks.org/vectorpush_back-vectorpop_back-c-stl/">GeeksForGeeks </a>Website.</li>
+<li>  The function <b>processFrame()</b> is symbolized as a conveyor belt as well. This one read the last frame from the stack <b>frameStack</b> and applies some OpenCV functions on the image. In above code you can see a few different test functions I ran on the frames. The latest that is not commented out is the <a href="http://opencvexamples.blogspot.com/2013/10/void-canny-inputarray-image-outputarray.html">Canny </a>edge-detection (line 32). To have better results before applying the Canny function I am applying a Gaussian Blur in line 28 and transform the image from RGB to gray-scale in line 29. This function then saves the resulting frames in a second stack, called <b>contourStack</b>. </li>
+<li>  The third thread is the <b>main()</b> function. This function starts the two other threads and waits for the user to press the Esc key, at which point it sets <b> stopSig=1</b>, which signals the two other threads to stop and to join back in <b>main()</b>. The other job of <b>main()</b> is to display the resulting images from the threads. <b>Note:</b> The OpenCV functions <b>imshow</b> and <b>waitKey()</b> don't seem to really work if you try to use them in <em>sub-frames</em>. Stable results can be achieved only if using these two functions in the <b>main()</b> function.
+</li>
+</ol>
+<h1>Results</h1>
+<p>Below image shows the result of the Canny edge-detection running at 720p, 30fps on the Raspberry Pi 2 using a <a href="https://www.cnet.com/products/logitech-quickcam-pro-9000/specs/">Logitech QuickCam Pro 9000</a>.<br />
+<img loading="lazy" src="https://www.manmade2.com/wp-content/uploads/2018/09/result.png" alt="" width="2894" height="1631" class="aligncenter size-full wp-image-1320" srcset="https://www.manmade2.com/wp-content/uploads/2018/09/result.png 2894w, https://www.manmade2.com/wp-content/uploads/2018/09/result-300x169.png 300w, https://www.manmade2.com/wp-content/uploads/2018/09/result-768x433.png 768w, https://www.manmade2.com/wp-content/uploads/2018/09/result-1024x577.png 1024w, https://www.manmade2.com/wp-content/uploads/2018/09/result-945x533.png 945w, https://www.manmade2.com/wp-content/uploads/2018/09/result-600x338.png 600w" sizes="(max-width: 2894px) 100vw, 2894px" /></p>
+<p>This is already pretty nice with what I have. However it is also pretty much at the limit of what is possible with this hardware.<br />
+One major bottleneck is the USB 2.0 throughput of the Raspberry Pi 2 at 480Mb/s. The camera produces HD video with up to 1280x720=921,600 pixels, with each having 8bits, and that at 30 frames per second. That is 1280 x 720 x 8 x 30 = 221.184 Mb/s, which is close to max of what the USB port can accept.<br />
+So for this reason in the next step I am going to use the Raspberry Pi camera, which has a CSI-2 MIPI bus with 2 lanes allowing up to 1Gb/s, which should allow 1080p frames at higher framerates.</p>
+						
+						<div class="clear"></div>
+									        
+					</div><!-- .post-content -->
+					            					
+					<div class="post-meta-container">
+						
+						<div class="post-author">
+						
+							<div class="post-author-content">
+							
+								<h4>Arri</h4>
+								
+								<p>I am a big electronics and science enthusiast and try to spend as much time on these things as my day -time job and family allow.</p>
+								
+								<div class="author-links">
+									
+									<a class="author-link-posts" href="https://www.manmade2.com/author/araschdulcie/">Author archive</a>
+									
+																		
+								</div><!-- .author-links -->
+							
+							</div><!-- .post-author-content -->
+						
+						</div><!-- .post-author -->
+						
+						<div class="post-meta">
+						
+							<p class="post-date">September 9, 2018</p>
+							
+														
+							<p class="post-categories"><a href="https://www.manmade2.com/category/c-c/" rel="category tag">C/C++</a></p>
+							
+															<p class="post-tags"><a href="https://www.manmade2.com/tag/c/" rel="tag">C++</a>, <a href="https://www.manmade2.com/tag/c11/" rel="tag">C++11</a>, <a href="https://www.manmade2.com/tag/c14/" rel="tag">C++14</a>, <a href="https://www.manmade2.com/tag/concurrent/" rel="tag">concurrent</a>, <a href="https://www.manmade2.com/tag/opencv/" rel="tag">opencv</a>, <a href="https://www.manmade2.com/tag/raspberry/" rel="tag">Raspberry</a>, <a href="https://www.manmade2.com/tag/raspberry-pi/" rel="tag">Raspberry Pi</a>, <a href="https://www.manmade2.com/tag/stream/" rel="tag">stream</a>, <a href="https://www.manmade2.com/tag/threads/" rel="tag">threads</a>, <a href="https://www.manmade2.com/tag/tread/" rel="tag">tread</a>, <a href="https://www.manmade2.com/tag/video/" rel="tag">video</a></p>
+														
+							<div class="clear"></div>
+							
+							<div class="post-nav">
+							
+																
+									<a class="post-nav-prev" href="https://www.manmade2.com/add-cooling-to-your-iot-system/">Previous post</a>
+							
+																		
+									<a class="post-nav-next" href="https://www.manmade2.com/bit-banging-pwm-driver-using-a-kernel-module-on-raspberry-pi/">Next post</a>
+							
+																		
+								<div class="clear"></div>
+							
+							</div><!-- .post-nav -->
+						
+						</div><!-- .post-meta -->
+						
+						<div class="clear"></div>
+							
+					</div><!-- .post-meta-container -->
+																		
+					
+
+	<div id="respond" class="comment-respond">
+		<h3 id="reply-title" class="comment-reply-title">Leave a Reply <small><a rel="nofollow" id="cancel-comment-reply-link" href="/concurrent-c-opencv-video-streaming/#respond" style="display:none;">Cancel reply</a></small></h3><form action="https://www.manmade2.com/wp-comments-post.php" method="post" id="commentform" class="comment-form"><p class="comment-notes"><span id="email-notes">Your email address will not be published.</span> Required fields are marked <span class="required">*</span></p><p class="comment-form-comment"><label for="comment">Comment</label> <textarea id="comment" name="comment" cols="45" rows="8" maxlength="65525" required="required"></textarea></p><p class="comment-form-author"><label for="author">Name <span class="required">*</span></label> <input id="author" name="author" type="text" value="" size="30" maxlength="245" required='required' /></p>
+<p class="comment-form-email"><label for="email">Email <span class="required">*</span></label> <input id="email" name="email" type="text" value="" size="30" maxlength="100" aria-describedby="email-notes" required='required' /></p>
+<p class="comment-form-url"><label for="url">Website</label> <input id="url" name="url" type="text" value="" size="30" maxlength="200" /></p>
+<p class="form-submit"><input name="submit" type="submit" id="submit" class="submit" value="Post Comment" /> <input type='hidden' name='comment_post_ID' value='1285' id='comment_post_ID' />
+<input type='hidden' name='comment_parent' id='comment_parent' value='0' />
+</p><p style="display: none;"><input type="hidden" id="akismet_comment_nonce" name="akismet_comment_nonce" value="ec7b2abced" /></p><input type="hidden" id="ak_js" name="ak_js" value="143"/><textarea name="ak_hp_textarea" cols="45" rows="8" maxlength="100" style="display: none !important;"></textarea></form>	</div><!-- #respond -->
+	<p class="akismet_comment_form_privacy_notice">This site uses Akismet to reduce spam. <a href="https://akismet.com/privacy/" target="_blank" rel="nofollow noopener">Learn how your comment data is processed</a>.</p>												                        
+						
+			</div><!-- .post -->
+		
+		</div><!-- .content -->
+		
+		
+	<div class="sidebar fright" role="complementary">
+	
+		
+		<div class="widget widget_recent_entries"><div class="widget-content">
+		<h3 class="widget-title">Recent Posts</h3>
+		<ul>
+											<li>
+					<a href="https://www.manmade2.com/linux-kernel-pwm-driver-with-sysfs/"><p>Linux Kernel PWM Driver with SYSFS</p></a>
+									</li>
+											<li>
+					<a href="https://www.manmade2.com/pwm-driver-built-on-threads-in-linux-kernel-module-on-raspberry-pi/"><p>PWM Driver built on Threads in Linux Kernel Module&nbsp; on Raspberry Pi</p></a>
+									</li>
+											<li>
+					<a href="https://www.manmade2.com/the-autonomous-shipboard-cleaning-system-hardware-design/"><p>The Autonomous Shipboard Cleaning System &#8211; Hardware Design</p></a>
+									</li>
+											<li>
+					<a href="https://www.manmade2.com/bit-banging-pwm-driver-using-a-kernel-module-on-raspberry-pi/"><p>Bit Banging PWM Driver using a Kernel Module on Raspberry Pi</p></a>
+									</li>
+											<li>
+					<a href="https://www.manmade2.com/concurrent-c-opencv-video-streaming/" aria-current="page"><p>Concurrent C++ OpenCV Video Streaming</p></a>
+									</li>
+					</ul>
+
+		</div><div class="clear"></div></div>		
+	</div><!-- .sidebar -->
+
+		
+		<div class="clear"></div>
+		
+	</div><!-- .section-inner -->
+
+</div><!-- .wrapper -->
+		
+
+	<div class="footer section medium-padding bg-graphite">
+	
+		<div class="section-inner row">
+		
+						
+				<div class="column column-1 one-third">
+				
+					<div class="widgets">
+			
+						<div class="widget widget_recent_comments"><div class="widget-content"><h3 class="widget-title">Recent Comments</h3><ul id="recentcomments"><li class="recentcomments"><span class="comment-author-link">Rajiv Patnaik</span> on <a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-python-and-raspberry-pi/#comment-33457"><div style="text-align: left;">Simple Home-Surveillance with OpenCV, Python and Flask&nbsp;on Raspberry Pi</div></a></li><li class="recentcomments"><span class="comment-author-link"><a href='http://sas.com' rel='external nofollow ugc' class='url'>azad rashid</a></span> on <a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-python-and-raspberry-pi/#comment-5860"><div style="text-align: left;">Simple Home-Surveillance with OpenCV, Python and Flask&nbsp;on Raspberry Pi</div></a></li><li class="recentcomments"><span class="comment-author-link">retg96</span> on <a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-3-1-0-on-raspberry-pi-part-1/#comment-5856">Webcam Video Access with OpenCV on Raspberry Pi</a></li><li class="recentcomments"><span class="comment-author-link">Sergey Povarnin</span> on <a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-python-and-raspberry-pi/#comment-4915"><div style="text-align: left;">Simple Home-Surveillance with OpenCV, Python and Flask&nbsp;on Raspberry Pi</div></a></li><li class="recentcomments"><span class="comment-author-link">Muhammad bilal</span> on <a href="https://www.manmade2.com/simple-home-surveillance-with-opencv-python-and-raspberry-pi/#comment-4089"><div style="text-align: left;">Simple Home-Surveillance with OpenCV, Python and Flask&nbsp;on Raspberry Pi</div></a></li></ul></div><div class="clear"></div></div>											
+					</div>
+					
+				</div><!-- .column-1 -->
+				
+							
+						
+				<div class="column column-2 one-third">
+				
+					<div class="widgets">
+			
+																	
+					</div><!-- .widgets -->
+					
+				</div><!-- .column-2 -->
+				
+											
+						
+				<div class="column column-3 one-third">
+			
+					<div class="widgets">
+			
+																	
+					</div><!-- .widgets -->
+					
+				</div>
+				
+			<!-- .footer-c -->
+			
+			<div class="clear"></div>
+		
+		</div><!-- .section-inner -->
+
+	</div><!-- .footer -->
+
+
+<div class="credits section bg-dark small-padding">
+
+	<div class="credits-inner section-inner">
+
+		<p class="credits-left fleft">
+		
+			&copy; 2021 <a href="https://www.manmade2.com">man made machines</a><span> &mdash; Powered by <a href="http://www.wordpress.org">WordPress</a></span>
+		
+		</p>
+		
+		<p class="credits-right fright">
+			
+			<span>Theme by <a href="https://www.andersnoren.se">Anders Noren</a> &mdash; </span><a class="tothetop" href="#">Up &uarr;</a>
+			
+		</p>
+		
+		<div class="clear"></div>
+	
+	</div><!-- .credits-inner -->
+	
+</div><!-- .credits -->
+
+<script type='text/javascript' src='https://www.manmade2.com/wp-includes/js/comment-reply.min.js?ver=5.8.1' id='comment-reply-js'></script>
+<script type='text/javascript' src='https://www.manmade2.com/wp-includes/js/wp-embed.min.js?ver=5.8.1' id='wp-embed-js'></script>
+<script defer type='text/javascript' src='https://www.manmade2.com/wp-content/plugins/akismet/_inc/form.js?ver=4.1.12' id='akismet-form-js'></script>
+
+</body>
+</html>

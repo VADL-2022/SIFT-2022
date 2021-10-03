@@ -14,6 +14,7 @@
 #include <cstring>
 #include <thread>
 #include <atomic>
+#include "utils.hpp"
 
 std::mutex stdoutMutex;
 #define LOG_THREAD_INFO 0
@@ -26,11 +27,15 @@ std::mutex stdoutMutex;
 #define logMainThreadInfo(x)
 #define logThreadInfo(x)
 #endif
+#define logNonMainThreadGeneral(x) stdoutMutex.lock(); std::cout << "[thread] " << x << std::flush; stdoutMutex.unlock();
 #define logNonMainThreadWarning(x) stdoutMutex.lock(); std::cout << "[thread] [warning] " << x << std::flush; stdoutMutex.unlock();
 #define logNonMainThreadError(x) stdoutMutex.lock(); std::cout << "[thread] [error] " << x << std::flush; stdoutMutex.unlock();
 #define logMainThreadGeneral(x) stdoutMutex.lock(); std::cout << "[main] " << x << std::flush; stdoutMutex.unlock();
 #define logMainThreadWarning(x) stdoutMutex.lock(); std::cout << "[main] [warning] " << x << std::flush; stdoutMutex.unlock();
 #define logMainThreadError(x) stdoutMutex.lock(); std::cout << "[main] [error] " << x << std::flush; stdoutMutex.unlock();
+
+#define logInfo(x) stdoutMutex.lock(); std::cout << x << std::flush; stdoutMutex.unlock();
+#define logWarning(x) stdoutMutex.lock(); std::cout << "[warning] " << x << std::flush; stdoutMutex.unlock();
 
 static unsigned int counter = 0;
 namespace std {
@@ -66,17 +71,64 @@ namespace std {
   };
 }
 
-// global binary semaphore instances
-// object counts are set to zero
-// objects are in non-signaled state
-std::binary_semaphore
-	smphSignalMainToThread(0),
-	smphSignalThreadToMain(0);
-
 cv::VideoWriter writer;
 std::atomic<bool> ctrlC = false;
-std::vector<std::time_t> times; // Logged timestamps
+template<typename T> class Queue {
+public:
+  void reserve(size_t count) {
+    m_vec.resize(count);
+  }
 
+  template< class... Args >
+  void push( Args&&... args ) {
+    assert(!full());
+    m_vec[writeIndex++] = T(args...);
+    writeIndex = writeIndex % m_vec.size();
+    m_empty = false;
+    
+    // if (readIndex == writeIndex) {
+    //   // Grow
+    //   m_vec.resize(m_vec.capacity() * 2);
+    //   writeIndex = m_vec.size(); // Wrong, fix
+    // }
+  }
+  
+  T& back() {
+    logInfo("back: " << readIndex << " " << writeIndex << std::endl);
+    return m_vec[(writeIndex - 1) % m_vec.size()];
+  }
+
+  T& front() {
+    logInfo("front: " << readIndex << " " << writeIndex << std::endl);
+    return m_vec[readIndex];
+  }
+
+  void pop() {
+    assert(!empty());
+    readIndex++;
+    readIndex = readIndex % m_vec.size();
+    if (readIndex == writeIndex) {
+      m_empty = true;
+    }
+  }
+
+  bool empty() {
+    return readIndex == writeIndex && m_empty;
+  }
+  
+  bool full() {
+    return readIndex == writeIndex && !m_empty;
+  }
+  
+private:
+  std::vector<T> m_vec;
+  size_t writeIndex = 0;
+  size_t readIndex = 0;
+  bool m_empty = true;
+};
+Queue<cv::Mat> imageQueue; // Images are saved into this by one thread, and then saved into the VideoWriter by another thread.
+std::mutex imageQueueMutex;
+std::vector<std::time_t> times; // Logged timestamps
 
 void my_handler(int s){
            printf("Caught signal %d\n",s);
@@ -93,48 +145,38 @@ int main(int argc, char** argv)
   sigemptyset(&sigIntHandler.sa_mask);
   sigIntHandler.sa_flags = 0;
   sigaction(SIGINT, &sigIntHandler, NULL);
-
-
-  // Double-buffered outputs
-  cv::Mat output;
-  cv::Mat output2;
-  cv::Mat* outputWriter;
-  cv::Mat* outputReader;
   
   cv::VideoCapture cap(cv::CAP_ANY);
 
+  // Initial queue, etc. sizes
+  imageQueue.reserve(8);
+  times.reserve(8192);
   
   if( !cap.isOpened() )
     {
       std::cout << "Could not initialize capturing...\n";
       return 1;
     }
-
-  // Get first frame
-  outputReader = &output;
-  outputWriter = &output2;
-  cap >> output;
-  bool isColor = (output.type() == CV_8UC3);
-  std::cout << "Started writing video... " << std::endl;
   
   // https://learnopencv.com/how-to-find-frame-rate-or-frames-per-second-fps-in-opencv-python-cpp/
   // "For OpenCV 3, you can also use the following"
   double fps = cap.get(cv::CAP_PROP_FPS);
+  
+  cv::Size sizeFrame(640,480);
+  //cv::Size sizeFrame(1920,1080);
+  
+  cap.set(cv::CAP_PROP_FRAME_WIDTH, sizeFrame.width);
+  cap.set(cv::CAP_PROP_FRAME_HEIGHT, sizeFrame.height);
   double width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
   double height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-  std::cout << "Frames per second using video.get(CAP_PROP_FPS) : " << fps << "\nType: " << output.type() << "\nWidth: " << width << "\nHeight: " << height << std::endl;
+  std::cout << "Frames per second using video.get(CAP_PROP_FPS) : " << fps << "\nWidth: " << width << "\nHeight: " << height << std::endl;
 
   // https://stackoverflow.com/questions/60204868/how-to-write-mp4-video-with-opencv-c
   int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
   //double fps = 29.97;
   std::string filename = "live2.mp4";
-  //cv::Size sizeFrame(640,480);
-  cv::Size sizeFrame(width,height);
-  writer.open(filename, codec, fps, sizeFrame, isColor);
   
-  constexpr int64 kTimeoutNs = 1000;
-  std::vector<int> ready_index;
-  cv::Mat xframe;
+  //cv::Mat xframe;
   //std::atomic<bool> frameReady = false;
   std::thread videoCaptureThread([&](){
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
@@ -166,38 +208,29 @@ int main(int argc, char** argv)
         showedNotReady = false;
         double EPSILON = 1e-9;
         if ((duration - dest) > EPSILON) {
-          std::cout << "Capture time off by " << (duration - dest) / 1'000'000 << " milliseconds" << std::endl;
+          logWarning("Capture time off by " << (duration - dest) / 1'000'000 << " milliseconds" << std::endl);
         }
 	lastFrame = std::chrono::steady_clock::now();
-
-	// wait for a signal from the main proc
-	// by attempting to decrement the semaphore
-	smphSignalMainToThread.acquire();
- 
-	// this call blocks until the semaphore's count
-	// is increased from the main proc
- 
-	logNonMainThreadInfo("Got the signal\n"); // response message
-	
-
-
-	//cap >> output;
 	
 	// Capture frame-by-frame
         if(cap.grab()) {
           auto elapsedTotal = std::chrono::duration_cast<std::chrono::nanoseconds>(now - start).count();
-          cap.retrieve(*outputReader);
+          //imageQueueMutex.lock();
+          if (imageQueue.full()) {
+            logMainThreadWarning("Image queue full" << std::endl);
+            //imageQueueMutex.unlock();
+            continue;
+          }
+          imageQueue.push();
+          cv::Mat& output = imageQueue.back();
+          logNonMainThreadGeneral(&output << std::endl);
+          cap.retrieve(output);
+          //imageQueueMutex.unlock();
           times.push_back(elapsedTotal);
         } else {
           logNonMainThreadError("Continue\n"); continue;
         }
-
-      
-      
-	logNonMainThreadInfo("Send the signal\n"); // message
- 
-	// signal the main proc back
-	smphSignalThreadToMain.release();
+        
       // }
       // else if (!showedNotReady) {
       //   logNonMainThreadWarning("Duration not ready\n");
@@ -206,35 +239,36 @@ int main(int argc, char** argv)
     }
   });
   bool first = true;
+  std::cout << "Started writing video... " << std::endl;
   while(1){
-    
-    logMainThreadInfo("Send the signal\n"); // message
-    
-    // signal the worker thread to start working
-    // by increasing the semaphore's count
-    smphSignalMainToThread.release();
-    
     // imshow("webcam input", *outputReader);
     // char c = (char)cv::waitKey(10);
     // if( c == 27 ) break;
 
-    if (!first) {
-      cv::resize(*outputWriter,xframe,sizeFrame);
-      writer.write(xframe);
+    //imageQueueMutex.lock();
+    if (imageQueue.empty()) {
+      logMainThreadInfo("Image queue empty" << std::endl);
+      //imageQueueMutex.unlock();
+      continue;
     }
-    else {
+    cv::Mat& output = imageQueue.front();
+    logMainThreadGeneral(&output << std::endl);
+    if (first) {
       first = false;
+      
+      bool isColor = (output.type() == CV_8UC3);
+      std::cout << "Output type: " << type2str(output.type()) << "\nisColor: " << isColor << std::endl;
+      writer.open(filename, codec, fps, sizeFrame, isColor);
     }
 
-    // wait until the worker thread is done doing the work
-    // by attempting to decrement the semaphore's count
-    smphSignalThreadToMain.acquire();
-        
-    // Swap reader and writer
-    std::swap(outputWriter, outputReader);
- 
-    logMainThreadInfo("Got the signal\n"); // response message
+    assert(!output.empty());
+    //cv::resize(output,output,sizeFrame);
+    writer.write(output);
 
+    imageQueue.pop();
+
+    //imageQueueMutex.unlock();
+    
     if (ctrlC) {
       logMainThreadGeneral("[ctrl-c handler] Got the signal\n"); // response message
 
@@ -243,6 +277,8 @@ int main(int argc, char** argv)
 
       // Wait for thread to finish
       videoCaptureThread.join();
+
+      // TODO: save times
 
       break;
     }

@@ -3,3 +3,7 @@
 /obj/
 /compile_commands.json
 *.o
+/videos/
+/todo.md
+/live2.mp4
+/demo/
