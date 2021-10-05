@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <fstream>
 
 
 std::mutex stdoutMutex;
@@ -80,8 +81,8 @@ struct vpMutex {
 };
 
 double fps;
-//cv::Size sizeFrame(640,480);
-cv::Size sizeFrame(1920,1080);
+cv::Size sizeFrame(640,480);
+//cv::Size sizeFrame(1920,1080);
 std::string filename = "live2.mp4";
 
 template<typename T> class Queue {
@@ -162,6 +163,102 @@ private:
 };
 
 Queue<cv::Mat> imageQueue;
+enum LogEntryType {
+  Time,
+  EverythingExceptCVTime
+};
+struct LogEntry {
+  static std::chrono::time_point<std::chrono::steady_clock> start;
+  static bool first;
+  static std::mutex startMutex;
+  LogEntry(LogEntryType type, cv::VideoCapture* cap) {
+      auto now = std::chrono::steady_clock::now();
+      startMutex.lock();
+      if (first) {
+	start = now;
+	first = false;
+      }
+      startMutex.unlock();
+      std::chrono::nanoseconds::rep elapsedTotal = std::chrono::duration_cast<std::chrono::nanoseconds>(now - start).count();
+
+      // Save stuff
+      if (cap != nullptr)
+	this->cvTime = cap->get(cv::CAP_PROP_POS_MSEC);
+      this->steadyClockTime = elapsedTotal;
+
+      if (type != LogEntryType::Time) {
+	// Save temperature //
+	// https://www.raspberrypi.org/forums/viewtopic.php?t=252115
+	FILE *fp;
+	int temp = INT_MIN;
+	fp = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+	fscanf(fp, "%d", &temp);
+	auto celcius = temp / 1000.0;
+	//printf(">> CPU Temp: %.2f°C\n", celcius);
+	fclose(fp);
+	// //
+	// Save throttle status //
+	fp;
+	char chars[256];
+	int throttleStatus = INT_MIN; // Documentation for this: https://github.com/raspberrypi/firmware/blob/abc347435437f6e2e85b5f367e75a5114882eaa3/hardfp/opt/vc/man/man1/vcgencmd.1
+      
+	/* Open the command for reading. */
+	fp = popen("/usr/bin/vcgencmd measure_temp", "r");
+	if (fp == NULL) {
+	  printf("Failed to run command\n" );
+	  exit(1);
+	}
+
+	/* Read the output a line at a time - output it. */
+	while (fgets(chars, sizeof(chars), fp) != NULL) {
+	  //printf("%s", path);
+	  fscanf(fp, "throttled=%d", &throttleStatus);
+	  break;
+	}
+
+	/* close */
+	pclose(fp);
+	// //
+	// Save clock speed //
+	int clockSpeed = INT_MIN; // Hz
+
+	/* Open the command for reading. */
+	fp = popen("/usr/bin/vcgencmd measure_clock arm", "r");
+	if (fp == NULL) {
+	  printf("Failed to run command\n" );
+	  exit(1);
+	}
+
+	/* Read the output a line at a time - output it. */
+	while (fgets(chars, sizeof(chars), fp) != NULL) {
+	  //printf("%s", path);
+	  fscanf(fp, "frequency(48)=%d", &clockSpeed);
+	  break;
+	}
+
+	/* close */
+	pclose(fp);
+	// //
+
+	// Save stuff
+	this->celcius = temp;
+	this->throttleStatus = throttleStatus;
+	this->clockSpeed = clockSpeed;
+      }
+  }
+  LogEntryType type;
+  std::chrono::nanoseconds::rep steadyClockTime;
+  double cvTime;
+  int celcius;
+  int throttleStatus;
+  int clockSpeed;
+};
+std::chrono::time_point<std::chrono::steady_clock> LogEntry::start;
+bool LogEntry::first = true;
+std::mutex LogEntry::startMutex;
+
+std::vector<LogEntry> logs; // Logged timestamps, etc.
+std::mutex logsMutex;
 
 #define startTimer() std::chrono::high_resolution_clock::now()
 #define stopTimer(startTime) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()
@@ -204,6 +301,12 @@ vpThread::Return captureFunction(vpThread::Args args)
       imageQueue.push();
       cv::Mat& frame_ = imageQueue.back();
       cap >> frame_; // get a new frame from camera
+      // Save timestamp //
+      LogEntry o{LogEntryType::Time, &cap};
+      logsMutex.lock();
+      logs.push_back(o); // Save timestamp and other stuff
+      logsMutex.unlock();
+      // //
       imageQueue.unlock();
     }
     else {
@@ -338,7 +441,20 @@ vpThread::Return displayFunction(vpThread::Args args)
       // Save video
       writer.release();
 
-      // TODO: save times
+      // Save times
+      std::ofstream FILE("timestamps.csv", std::ios::out | std::ofstream::binary | std::ios_base::trunc);
+      FILE << "steadyClockTime,cvTime,celcius,throttleStatus,clockSpeed" << std::endl;
+      for (auto log : logs) {
+	switch (log.type) {
+	case Time:
+	  FILE << log.steadyClockTime << "," << log.cvTime << ",,," << std::endl;
+	  break;
+	case EverythingExceptCVTime:
+	  FILE << log.steadyClockTime << ",," << log.celcius << "," << log.throttleStatus << "," << log.clockSpeed << std::endl;
+	  break;
+	}
+      }
+      FILE.close();
 
       break;
     }
@@ -382,10 +498,18 @@ int main(int argc, const char *argv[])
   // Start the threads
   std::thread thread_capture((vpThread::Fn)captureFunction, (vpThread::Args)&cap);
   //std::thread thread_display((vpThread::Fn)displayFunction, (vpThread::Args)nullptr);
+  std::thread thread_logger([](){
+    LogEntry o{LogEntryType::EverythingExceptCVTime, nullptr};
+    logsMutex.lock();
+    logs.push_back(o); // Save timestamp and other stuff
+    logsMutex.unlock();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  });
   displayFunction(nullptr);
 
   // Wait until thread ends up
   thread_capture.join();
+  thread_logger.join();
   //thread_display.join();
 
   return 0;
