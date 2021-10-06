@@ -1,7 +1,8 @@
 # https://www.manmade2.com/concurrent-c-opencv-video-streaming/
 
 IDIR = .  
-CC=g++
+#CC=g++
+CC=clang++
 CFLAGS=-I$(IDIR) `pkg-config --cflags opencv4` -g3
 ODIR=.
 #LDIR=../lib

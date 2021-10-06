@@ -20,7 +20,8 @@ in
 mkShell {
   buildInputs = [ my-python-packages
     opencv clang pkgconfig libpng
-
+    lldb
+    
     #bear # Optional, for generating emacs compile_commands.json
 
     llvmPackages.libstdcxxClang

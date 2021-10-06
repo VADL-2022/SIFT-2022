@@ -499,6 +499,7 @@ int main(int argc, const char *argv[])
   std::thread thread_capture((vpThread::Fn)captureFunction, (vpThread::Args)&cap);
   //std::thread thread_display((vpThread::Fn)displayFunction, (vpThread::Args)nullptr);
   std::thread thread_logger([](){
+    logNonMainThreadGeneral("log");
     LogEntry o{LogEntryType::EverythingExceptCVTime, nullptr};
     logsMutex.lock();
     logs.push_back(o); // Save timestamp and other stuff
