@@ -24,8 +24,8 @@ for file in get_all_filepaths('./heatTest10-7-2021/', '.csv'):
     print(df)
     # Modify the df:
     # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.assign.html
-    df = df.assign(steadyClockTime=lambda x: x.steadyClockTime / 1e9) # Convert to seconds frmo nanoseconds
-    df = df.assign(celcius=lambda x: x.celcius / 1000) # Convert to celcius frmo thousands
+    df = df.assign(steadyClockTime=lambda x: x.steadyClockTime / 1e9) # Convert to seconds from nanoseconds
+    df = df.assign(celcius=lambda x: x.celcius / 1000) # Convert to celcius from thousands
     
     subplot = plt.subplot(1, # x dimension
                           1, # y dimension
