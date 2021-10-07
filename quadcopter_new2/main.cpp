@@ -204,8 +204,8 @@ struct LogEntry {
 	int throttleStatus = INT_MIN; // Documentation for this: https://github.com/raspberrypi/firmware/blob/abc347435437f6e2e85b5f367e75a5114882eaa3/hardfp/opt/vc/man/man1/vcgencmd.1
       
 	/* Open the command for reading. */
-	//fp = popen("/usr/bin/vcgencmd get_throttled", "r"); //popen("/usr/bin/vcgencmd measure_temp", "r");
-	fp = popen("echo throttled=0x23", "r");
+	fp = popen("/usr/bin/vcgencmd get_throttled", "r"); //popen("/usr/bin/vcgencmd measure_temp", "r");
+	//fp = popen("echo throttled=0x23", "r");
 	if (fp == NULL) {
 	  printf("Failed to run command\n" );
 	  exit(1);
@@ -215,7 +215,7 @@ struct LogEntry {
 	//while (fgets(chars, sizeof(chars), fp) != NULL) {
 	  //printf("%s", path);
 	  if (fscanf(fp, "throttled=%i", &throttleStatus) <= 0) {
-	    printf("Failed to read in throttle status in fscanf: %s\n", chars);
+	    perror("Failed to read in throttle status in fscanf");
 	    exit(1);
 	  }
 	  // break;
@@ -237,8 +237,10 @@ struct LogEntry {
 	/* Read the output a line at a time - output it. */
 	//while (fgets(chars, sizeof(chars), fp) != NULL) {
 	  //printf("%s", path);
-	  if (fscanf(fp, "frequency(48)=%d", &clockSpeed) <= 0) {
-	    printf("Failed to read in frequency in fscanf: %s\n", chars);
+	int retval = fscanf(fp, "frequency(48)=%d", &clockSpeed);
+	//std::cout << "Returned " << retval << std::endl;
+	  if (retval <= 0) {
+	    perror("Failed to read in frequency in fscanf");
 	    exit(1);
 	  }
 	  // break;
