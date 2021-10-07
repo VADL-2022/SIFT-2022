@@ -561,7 +561,7 @@ int main(int argc, const char *argv[])
     // steadyClockTime: nanoseconds since start of logging
     // cvTime: milliseconds of each frame (timestamp) of video recording
     // celcius: integer that you have to divide by 1000.0 to get actual celcius value
-    // throttleStatus: See https://github.com/raspberrypi/firmware/blob/abc347435437f6e2e85b5f367e75a5114882eaa3/hardfp/opt/vc/man/man1/vcgencmd.1 -- it states:
+    // throttleStatus: See https://github.com/raspberrypi/firmware/blob/abc347435437f6e2e85b5f367e75a5114882eaa3/hardfp/opt/vc/man/man1/vcgencmd.1 -- it states: {"
     // Bit|Meaning
     // 0  |Under-voltage detected
     // 1  |Arm frequency capped
@@ -571,6 +571,7 @@ int main(int argc, const char *argv[])
     // 17 |Arm frequency capping has occurred
     // 18 |Throttling has occurred
     // 19 |Soft temperature limit has occurred
+    // "} -- "Throttling has occurred" maybe means since boot.
     // clockSpeed: in Hz
     FILE << "steadyClockTime,cvTime,celcius,throttleStatus,clockSpeed" << std::endl;
     for (auto log : logs) {
