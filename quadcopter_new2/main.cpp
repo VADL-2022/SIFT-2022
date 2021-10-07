@@ -204,7 +204,8 @@ struct LogEntry {
 	int throttleStatus = INT_MIN; // Documentation for this: https://github.com/raspberrypi/firmware/blob/abc347435437f6e2e85b5f367e75a5114882eaa3/hardfp/opt/vc/man/man1/vcgencmd.1
       
 	/* Open the command for reading. */
-	fp = popen("/usr/bin/vcgencmd get_throttled", "r"); //popen("/usr/bin/vcgencmd measure_temp", "r");
+	//fp = popen("/usr/bin/vcgencmd get_throttled", "r"); //popen("/usr/bin/vcgencmd measure_temp", "r");
+	fp = popen("echo throttled=0x23", "r");
 	if (fp == NULL) {
 	  printf("Failed to run command\n" );
 	  exit(1);
@@ -449,7 +450,7 @@ vpThread::Return displayFunction(vpThread::Args args)
 }
 //! [capture-multi-threaded displayFunction]
 
-#define RunOptionsStruct()				\
+#define RunOptionsStruct				\
 struct RunOptions {					\
   union {						\
     struct {						\
@@ -461,7 +462,7 @@ struct RunOptions {					\
   };							\
 };
 #define str(s) #s
-RunOptionsStruct()
+RunOptionsStruct
 //! [capture-multi-threaded mainFunction]
 int main(int argc, const char *argv[])
 {
@@ -476,7 +477,7 @@ int main(int argc, const char *argv[])
   // Command line options
   RunOptions runOptions = {1, 1, 1};
   std::cout << runOptions.integerValue << std::endl;
-  for (int i = 0; i < argc; i++) {
+  for (int i = 1; i < argc; i++) {
     if (std::string(argv[i]) == "--camera_device")
       opt_device = atoi(argv[i + 1]);
     else if (std::string(argv[i]) == "--run_options") {
@@ -492,9 +493,11 @@ int main(int argc, const char *argv[])
       
       unsigned long result = std::stoul(s.c_str(), nullptr, 2);
       runOptions.integerValue = result;
+      i++;
     }
     else { //if (std::string(argv[i]) == "--help") {
-      std::cout << "Usage: " << argv[0] << " [--camera_device <camera device (default: 0)> --run_options <bitset like 010: " str(RunOptionsStruct()) "\n>] [--help]" << std::endl;
+      std::cout << argv[i] << std::endl;
+      std::cout << "Usage: " << argv[0] << " [--camera_device <camera device (default: 0)>] [--run_options <bitset like 010: " str(RunOptionsStruct) "\n>] [--help]" << std::endl;
       return 1;
     }
   }
