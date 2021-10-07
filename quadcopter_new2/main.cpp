@@ -208,7 +208,7 @@ struct LogEntry {
 	//fp = popen("echo throttled=0x23", "r");
 	if (fp == NULL) {
 	  printf("Failed to run command\n" );
-	  exit(1);
+	  //exit(1);
 	}
 
 	/* Read the output a line at a time - output it. */
@@ -216,7 +216,7 @@ struct LogEntry {
 	  //printf("%s", path);
 	  if (fscanf(fp, "throttled=%i", &throttleStatus) <= 0) {
 	    perror("Failed to read in throttle status in fscanf");
-	    exit(1);
+	    //exit(1);
 	  }
 	  // break;
 	// }
@@ -231,7 +231,7 @@ struct LogEntry {
 	fp = popen("/usr/bin/vcgencmd measure_clock arm", "r");
 	if (fp == NULL) {
 	  printf("Failed to run command\n" );
-	  exit(1);
+	  //exit(1);
 	}
 
 	/* Read the output a line at a time - output it. */
@@ -241,7 +241,7 @@ struct LogEntry {
 	//std::cout << "Returned " << retval << std::endl;
 	  if (retval <= 0) {
 	    perror("Failed to read in frequency in fscanf");
-	    exit(1);
+	    //exit(1);
 	  }
 	  // break;
 	// }
