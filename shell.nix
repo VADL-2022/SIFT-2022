@@ -32,4 +32,8 @@ mkShell {
   #   { allowUnsupportedSystem = true; }
   # to ~/.config/nixpkgs/config.nix.
   # ^^^^^^^^^^^^^^^^^^ This doesn't work, use `brew install cartr/qt4/pyqt` instead.
+  
+  shellHook = ''
+    export INCLUDE_PATHS_FROM_CFLAGS=$(./makeIncludePathsFromCFlags.sh)
+  '';
 }

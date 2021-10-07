@@ -182,6 +182,7 @@ struct LogEntry {
       std::chrono::nanoseconds::rep elapsedTotal = std::chrono::duration_cast<std::chrono::nanoseconds>(now - start).count();
 
       // Save stuff
+      this->type = type;
       if (cap != nullptr)
 	this->cvTime = cap->get(cv::CAP_PROP_POS_MSEC);
       this->steadyClockTime = elapsedTotal;
@@ -203,18 +204,21 @@ struct LogEntry {
 	int throttleStatus = INT_MIN; // Documentation for this: https://github.com/raspberrypi/firmware/blob/abc347435437f6e2e85b5f367e75a5114882eaa3/hardfp/opt/vc/man/man1/vcgencmd.1
       
 	/* Open the command for reading. */
-	fp = popen("/usr/bin/vcgencmd measure_temp", "r");
+	fp = popen("/usr/bin/vcgencmd get_throttled", "r"); //popen("/usr/bin/vcgencmd measure_temp", "r");
 	if (fp == NULL) {
 	  printf("Failed to run command\n" );
 	  exit(1);
 	}
 
 	/* Read the output a line at a time - output it. */
-	while (fgets(chars, sizeof(chars), fp) != NULL) {
+	//while (fgets(chars, sizeof(chars), fp) != NULL) {
 	  //printf("%s", path);
-	  fscanf(fp, "throttled=%d", &throttleStatus);
-	  break;
-	}
+	  if (fscanf(fp, "throttled=%i", &throttleStatus) <= 0) {
+	    printf("Failed to read in throttle status in fscanf: %s\n", chars);
+	    exit(1);
+	  }
+	  // break;
+	// }
 
 	/* close */
 	pclose(fp);
@@ -230,11 +234,14 @@ struct LogEntry {
 	}
 
 	/* Read the output a line at a time - output it. */
-	while (fgets(chars, sizeof(chars), fp) != NULL) {
+	//while (fgets(chars, sizeof(chars), fp) != NULL) {
 	  //printf("%s", path);
-	  fscanf(fp, "frequency(48)=%d", &clockSpeed);
-	  break;
-	}
+	  if (fscanf(fp, "frequency(48)=%d", &clockSpeed) <= 0) {
+	    printf("Failed to read in frequency in fscanf: %s\n", chars);
+	    exit(1);
+	  }
+	  // break;
+	// }
 
 	/* close */
 	pclose(fp);
@@ -338,6 +345,8 @@ vpThread::Return captureFunction(vpThread::Args args)
 }
 //! [capture-multi-threaded captureFunction]
 
+cv::VideoWriter writer;
+
 //! [capture-multi-threaded displayFunction]
 vpThread::Return displayFunction(vpThread::Args args)
 {
@@ -352,7 +361,6 @@ vpThread::Return displayFunction(vpThread::Args args)
   vpDisplayGDI *d_ = NULL;
 #endif
 
-  cv::VideoWriter writer;
    int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
    bool first = true;
   do {
@@ -430,36 +438,7 @@ vpThread::Return displayFunction(vpThread::Args args)
     //std::this_thread::sleep_for(std::chrono::milliseconds(1200));
     auto duration = stopTimer(start);
     //logMainThreadGeneral(duration << " milliseconds" << std::endl);
-    
-    if (ctrlC) {
-      std::cout << ("[ctrl-c handler] Got the signal\n"); // response message
-
-      s_mutex_capture.lock();
-      s_capture_state = capture_stopped;
-      s_mutex_capture.unlock();
-      
-      // Save video
-      writer.release();
-
-      // Save times
-      std::ofstream FILE("timestamps.csv", std::ios::out | std::ofstream::binary | std::ios_base::trunc);
-      FILE << "steadyClockTime,cvTime,celcius,throttleStatus,clockSpeed" << std::endl;
-      for (auto log : logs) {
-	switch (log.type) {
-	case Time:
-	  FILE << log.steadyClockTime << "," << log.cvTime << ",,," << std::endl;
-	  break;
-	case EverythingExceptCVTime:
-	  FILE << log.steadyClockTime << ",," << log.celcius << "," << log.throttleStatus << "," << log.clockSpeed << std::endl;
-	  break;
-	}
-      }
-      FILE.close();
-
-      break;
-    }
-
-  } while (capture_state_ != capture_stopped);
+  } while (capture_state_ != capture_stopped && !ctrlC);
 
 #if defined(VISP_HAVE_X11) || defined(VISP_HAVE_GDI)
   delete d_;
@@ -470,6 +449,19 @@ vpThread::Return displayFunction(vpThread::Args args)
 }
 //! [capture-multi-threaded displayFunction]
 
+#define RunOptionsStruct()				\
+struct RunOptions {					\
+  union {						\
+    struct {						\
+	unsigned long enableCaptureThread: 1;		\
+	unsigned long enableVideoSavingThread: 1;	\
+	unsigned long enableLoggerThread: 1;		\
+    };							\
+    unsigned long integerValue;				\
+  };							\
+};
+#define str(s) #s
+RunOptionsStruct()
 //! [capture-multi-threaded mainFunction]
 int main(int argc, const char *argv[])
 {
@@ -482,36 +474,100 @@ int main(int argc, const char *argv[])
   int opt_device = 0;
 
   // Command line options
+  RunOptions runOptions = {1, 1, 1};
+  std::cout << runOptions.integerValue << std::endl;
   for (int i = 0; i < argc; i++) {
     if (std::string(argv[i]) == "--camera_device")
       opt_device = atoi(argv[i + 1]);
-    else if (std::string(argv[i]) == "--help") {
-      std::cout << "Usage: " << argv[0] << " [--camera_device <camera device (default: 0)>] [--help]" << std::endl;
-      return 0;
+    else if (std::string(argv[i]) == "--run_options") {
+      // Implementation-specific thing is causing the bits to need to be reversed, else the bitset is set in reversed order.
+      #ifdef __aarch64__
+      std::string s = argv[i + 1];
+      std::reverse(s.begin(), s.end());
+#elif defined(__amd64___)
+      std::string s = argv[i + 1];
+      #else
+      #error "Not yet implemented platform"
+      #endif
+      
+      unsigned long result = std::stoul(s.c_str(), nullptr, 2);
+      runOptions.integerValue = result;
+    }
+    else { //if (std::string(argv[i]) == "--help") {
+      std::cout << "Usage: " << argv[0] << " [--camera_device <camera device (default: 0)> --run_options <bitset like 010: " str(RunOptionsStruct()) "\n>] [--help]" << std::endl;
+      return 1;
     }
   }
+  std::cout << runOptions.integerValue << std::endl;
+  // std::cout << runOptions.enableCaptureThread << std::endl;
+  // std::cout << runOptions.enableVideoSavingThread << std::endl;
+  // std::cout << runOptions.enableLoggerThread << std::endl;
 
   // Instanciate the capture
   cv::VideoCapture cap;
-  cap.open(opt_device);
+  if (runOptions.enableCaptureThread) {
+    cap.open(opt_device);
+  }
 
   // Start the threads
-  std::thread thread_capture((vpThread::Fn)captureFunction, (vpThread::Args)&cap);
+  std::thread thread_capture;
+  if (runOptions.enableCaptureThread) {
+    thread_capture = std::thread((vpThread::Fn)captureFunction, (vpThread::Args)&cap);
+  }
   //std::thread thread_display((vpThread::Fn)displayFunction, (vpThread::Args)nullptr);
-  std::thread thread_logger([](){
-    logNonMainThreadGeneral("log");
-    LogEntry o{LogEntryType::EverythingExceptCVTime, nullptr};
-    logsMutex.lock();
-    logs.push_back(o); // Save timestamp and other stuff
-    logsMutex.unlock();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  });
-  displayFunction(nullptr);
+  std::thread thread_logger;
+  if (runOptions.enableLoggerThread) {
+    thread_logger = std::thread([](){
+      while (!ctrlC) {
+	//logNonMainThreadGeneral("log\n");
+	LogEntry o{LogEntryType::EverythingExceptCVTime, nullptr};
+	logsMutex.lock();
+	logs.push_back(o); // Save timestamp and other stuff
+	logsMutex.unlock();
+	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    });
+  }
+  if (runOptions.enableVideoSavingThread) {
+    displayFunction(nullptr);
+  }
 
   // Wait until thread ends up
-  thread_capture.join();
-  thread_logger.join();
+  if (runOptions.enableCaptureThread) {
+    thread_capture.join();
+  }
+  if (runOptions.enableLoggerThread) {
+    thread_logger.join();
+  }
   //thread_display.join();
+
+  if (ctrlC) {
+    std::cout << ("[ctrl-c handler] Got the signal\n"); // response message
+
+    s_mutex_capture.lock();
+    s_capture_state = capture_stopped;
+    s_mutex_capture.unlock();
+      
+    // Save video
+    writer.release();
+
+    // Save times
+    std::ofstream FILE("timestamps.csv", std::ios::out | std::ofstream::binary | std::ios_base::trunc);
+    FILE << "steadyClockTime,cvTime,celcius,throttleStatus,clockSpeed" << std::endl;
+    for (auto log : logs) {
+      switch (log.type) {
+      case Time:
+	FILE << log.steadyClockTime << "," << log.cvTime << ",,," << std::endl;
+	break;
+      case EverythingExceptCVTime:
+	FILE << log.steadyClockTime << ",," << log.celcius << "," << log.throttleStatus << "," << log.clockSpeed << std::endl;
+	break;
+      }
+    }
+    FILE.close();
+
+    //break;
+  }
 
   return 0;
 }

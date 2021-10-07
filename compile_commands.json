@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "arguments": [
+      "/nix/store/517vap9ngbb898hvmmk2lzjc29qfd98l-clang-wrapper-7.1.0/bin/clang++",
+      "-std=c++17",
+      "-O3",
+      "-g3",
+      "-Wall",
+      "-pedantic",
+      "-D_POSIX_C_SOURCE=200809L",
+      "-I/nix/store/gzmldcqhy7scwriamp4jlvqzhm6s2kqg-opencv-4.5.2/include/opencv4",
+      "-I./sift_anatomy_20141201/src",
+      "-c",
+      "-o",
+      "src/Semaphore.o",
+      "src/Semaphore.cpp"
+    ],
+    "directory": "/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam",
+    "file": "/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/src/Semaphore.cpp",
+    "output": "/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/src/Semaphore.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/517vap9ngbb898hvmmk2lzjc29qfd98l-clang-wrapper-7.1.0/bin/clang++",
+      "-std=c++17",
+      "-O3",
+      "-g3",
+      "-Wall",
+      "-pedantic",
+      "-D_POSIX_C_SOURCE=200809L",
+      "-I/nix/store/gzmldcqhy7scwriamp4jlvqzhm6s2kqg-opencv-4.5.2/include/opencv4",
+      "-I./sift_anatomy_20141201/src",
+      "-c",
+      "-o",
+      "src/utils.o",
+      "src/utils.cpp"
+    ],
+    "directory": "/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam",
+    "file": "/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/src/utils.cpp",
+    "output": "/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/src/utils.o"
+  }
+]

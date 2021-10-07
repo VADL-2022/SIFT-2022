@@ -2,21 +2,7 @@
 #include <lib_sift_anatomy.h>
 #include <lib_util.h>
 
-/** @brief Extracts oriented keypoints (without description
- *
- *
- */
-struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h, int *n, struct sift_keypoints** outKeypoints)
-{
-
-    /** assign default parameters **/
-    struct sift_parameters* p = sift_assign_default_parameters();
-    /* p->n_oct = 2; */
-    /* p->n_spo = 1; */
-    /* p->delta_min=1; */
-    /* p->sigma_in=1.1; */
-    /* p->sigma_min=1.1; */
-
+//void defaultParams(struct sift_parameters* p) {
     // Defaults:
     /* p->n_oct = 8; */
     /* p->n_spo = 3; */
@@ -32,8 +18,18 @@ struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h,
     /* p->n_ori = 8; */
     /* p->lambda_descr = 6; */
     /* p->itermax = 5; */
+//}
 
-    
+void v1Params(struct sift_parameters* p) {
+    p->n_oct = 2;
+    p->n_spo = 1;
+    p->delta_min=1;
+    p->sigma_in=1.1;
+    p->sigma_min=1.1;
+}
+// White background high contrast
+void v2Params(struct sift_parameters* p) {
+    // Lots of points show up with these parameters:
     p->n_oct = 10;
     p->n_spo = 2;
     p->sigma_min = 0.6;
@@ -48,8 +44,27 @@ struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h,
     p->n_ori = 8;
     p->lambda_descr = 6;
     p->itermax = 5;
-    
+}
+// Based off v1 params, similar
+void v3Params(struct sift_parameters* p) {
+    p->n_oct = 1;
+    p->n_spo = 1;
+    p->delta_min=1;
+    p->sigma_in=1.1;
+    p->sigma_min=1.1;
+}
 
+/** @brief Extracts oriented keypoints (without description
+ *
+ *
+ */
+struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h, int *n, struct sift_keypoints** outKeypoints)
+{
+
+    /** assign default parameters **/
+    struct sift_parameters* p = sift_assign_default_parameters();
+    v3Params(p);
+    
     /** Memory dynamic allocation */
     // WARNING 6 lists of keypoints containing intermediary states of the algorithm
     struct sift_keypoints **kk = xmalloc(6*sizeof(struct sift_keypoints*));

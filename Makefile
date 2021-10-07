@@ -4,7 +4,7 @@ CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*
 $(info $(CLANGVERSION)) # Example: "7.1.0 "
 SHELL := /bin/bash
 ifeq ($(shell foo="$(CLANGVERSION)"; if [ "$${foo//./}" -le 710 ]; then echo 0; fi),0) #ifeq ($(shell foo="$(CLANGVERSION)"; test ${foo//./} -le 710; echo $$?),0) # TODO: check if version less than or equal to this
-    #LFLAGS += -lc++fs
+    LFLAGS += -lc++fs
 endif
 $(info $(LFLAGS))
 LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
@@ -34,7 +34,7 @@ setup:
 common: $(OBJECTS)
 	cd $(SIFT) && $(MAKE)
 
-example: $(OBJECTS) src/example.o
+example: $(OBJECTS) src/example2.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
 quadcopter: $(OBJECTS) src/quadcopter.o
