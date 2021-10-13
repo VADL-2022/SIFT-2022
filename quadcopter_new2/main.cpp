@@ -57,6 +57,41 @@ void my_handler(int s){
            //exit(0);
 }
 
+// Throws if fails
+std::string openFileWithUniqueName(std::string name, std::string extension) {
+  // Based on https://stackoverflow.com/questions/13108973/creating-file-names-automatically-c
+  
+  std::ofstream ofile;
+
+  std::string fname;
+  for(unsigned int n = 0; ; ++ n)
+    {
+      fname = name + std::to_string(n) + extension;
+
+      std::ifstream ifile;
+      ifile.open(fname.c_str());
+
+      if(ifile.is_open())
+	{
+	}
+      else
+	{
+	  ofile.open(fname.c_str());
+	  break;
+	}
+
+      ifile.close();
+    }
+
+  if(!ofile.is_open())
+    {
+      //return "";
+      throw "";
+    }
+
+  return fname;
+}
+
 // Shared vars
 typedef enum { capture_waiting, capture_started, capture_stopped } t_CaptureState;
 t_CaptureState s_capture_state = capture_waiting;
@@ -83,7 +118,7 @@ struct vpMutex {
 double fps;
 cv::Size sizeFrame(640,480);
 //cv::Size sizeFrame(1920,1080);
-std::string filename = "live2.mp4";
+std::string filenameNoExt = "live";
 
 template<typename T> class Queue {
 public:
@@ -411,6 +446,7 @@ vpThread::Return displayFunction(vpThread::Args args)
 	
 	  bool isColor = (s_frame.type() == CV_8UC3);
 	  std::cout << "Output type: " << type2str(s_frame.type()) << "\nisColor: " << isColor << std::endl;
+	  std::string filename = openFileWithUniqueName(filenameNoExt, ".mp4");
 	  writer.open(filename, codec, fps, sizeFrame, isColor);
 	}
 	
@@ -452,6 +488,71 @@ vpThread::Return displayFunction(vpThread::Args args)
 }
 //! [capture-multi-threaded displayFunction]
 
+int captureImage(int device) {
+  // https://riptutorial.com/opencv/example/21401/get-image-from-webcam :
+  
+  // open the first webcam plugged in the computer
+  cv::VideoCapture camera(device);
+  if (!camera.isOpened()) {
+    std::cerr << "ERROR: Could not open camera" << std::endl;
+    return 1;
+  }
+
+  // create a window to display the images from the webcam
+  //cv::namedWindow("Webcam", CV_WINDOW_AUTOSIZE);
+
+  // this will contain the image from the webcam
+  cv::Mat frame;
+        
+  // capture the next frame from the webcam
+  camera >> frame;
+
+  // // display the frame until you press a key
+  //     while (1) {
+  //         // show the image on the window
+  //         cv::imshow("Webcam", frame);
+  //         // wait (10ms) for a key to be pressed
+  //         if (cv::waitKey(10) >= 0)
+  //             break;
+  //     }
+    
+  // https://www.geeksforgeeks.org/opencv-saving-an-image/ :
+  
+  using namespace cv;
+  using namespace std;
+  
+  // writing the image to a defined location as JPEG
+  bool check = imwrite(openFileWithUniqueName("MyImage", ".jpg"), frame);
+  
+  // if the image is not saved
+  if (check == false) {
+    cout << "Saving the image FAILED" << endl;
+  
+    // // wait for any key to be pressed
+    // cin.get();
+    return 1;
+  }
+  
+  cout << "Successfully saved the image. " << endl;
+  
+  // // Naming the window
+  // String geek_window = "MY SAVED IMAGE";
+  
+  // // Creating a window
+  // namedWindow(geek_window);
+  
+  // // Showing the image in the defined window
+  // imshow(geek_window, frame);
+  
+  // // waiting for any key to be pressed
+  // waitKey(0);
+  
+  // // destroying the creating window
+  // destroyWindow(geek_window);
+  
+  return 0;
+}
+
 #define RunOptionsStruct				\
 struct RunOptions {					\
   union {						\
@@ -479,6 +580,7 @@ int main(int argc, const char *argv[])
   // Command line options
   RunOptions runOptions = {1, 1, 1};
   std::cout << runOptions.integerValue << std::endl;
+  bool captureImage_ = false;
   for (int i = 1; i < argc; i++) {
     if (std::string(argv[i]) == "--camera_device")
       opt_device = atoi(argv[i + 1]);
@@ -497,11 +599,24 @@ int main(int argc, const char *argv[])
       runOptions.integerValue = result;
       i++;
     }
+    else if (std::string(argv[i]) == "--photo") {
+      captureImage_ = true;
+    }
     else { //if (std::string(argv[i]) == "--help") {
       std::cout << argv[i] << std::endl;
-      std::cout << "Usage: " << argv[0] << " [--camera_device <camera device (default: 0)>] [--run_options <bitset like 010: " str(RunOptionsStruct) "\n>] [--help]" << std::endl;
+      const char* usage = "Usage: ";
+      std::string spacingOnLeft(strlen(usage), ' ');
+      std::string newlineAndSpacingOnLeft = '\n' + spacingOnLeft;
+      std::cout << usage << argv[0]
+		<< newlineAndSpacingOnLeft << "[--camera_device <camera device (default: 0)>]"
+		<< newlineAndSpacingOnLeft << "[--run_options <bitset like 010: " str(RunOptionsStruct) "\n>]"
+		<< newlineAndSpacingOnLeft << "[--photo\t takes a photo instead of video]"
+		<< newlineAndSpacingOnLeft << "[--help]" << std::endl;
       return 1;
     }
+  }
+  if (captureImage_) {
+    return captureImage(opt_device);
   }
   std::cout << runOptions.integerValue << std::endl;
   // std::cout << runOptions.enableCaptureThread << std::endl;
@@ -557,7 +672,8 @@ int main(int argc, const char *argv[])
     writer.release();
 
     // Save times
-    std::ofstream FILE("timestamps.csv", std::ios::out | std::ofstream::binary | std::ios_base::trunc);
+    std::string filename = openFileWithUniqueName("timestamps", ".csv");
+    std::ofstream FILE(filename, std::ios::out | std::ofstream::binary | std::ios_base::trunc);
     // steadyClockTime: nanoseconds since start of logging
     // cvTime: milliseconds of each frame (timestamp) of video recording
     // celcius: integer that you have to divide by 1000.0 to get actual celcius value

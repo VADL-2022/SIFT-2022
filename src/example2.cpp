@@ -96,8 +96,8 @@ int main(int argc, char **argv)
 	}
 	
 	// For each output image, loop through it
-	//std::string path = "testFrames1";
-	std::string path = "outFrames";
+	std::string path = "testFrames1";
+	//std::string path = "outFrames";
 	
 	// https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
 	//--- filenames are unique so we can use a set

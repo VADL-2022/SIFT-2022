@@ -63,7 +63,8 @@ struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h,
 
     /** assign default parameters **/
     struct sift_parameters* p = sift_assign_default_parameters();
-    v3Params(p);
+    //v3Params(p);
+    v2Params(p);
     
     /** Memory dynamic allocation */
     // WARNING 6 lists of keypoints containing intermediary states of the algorithm
