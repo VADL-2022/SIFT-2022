@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fstream>
+#include <condition_variable>
 
 
 std::mutex stdoutMutex;
@@ -97,6 +98,7 @@ typedef enum { capture_waiting, capture_started, capture_stopped } t_CaptureStat
 t_CaptureState s_capture_state = capture_waiting;
 //cv::Mat s_frame;
 std::mutex s_mutex_capture; //vpMutex s_mutex_capture;
+std::condition_variable onImageReady;
 //! [capture-multi-threaded declaration]
 
 struct vpThread {
@@ -189,8 +191,8 @@ public:
   void unlock() {
     m_mtx.unlock();
   }
-private:
   std::mutex m_mtx;
+private:
   std::vector<T> m_vec;
   size_t writeIndex = 0;
   size_t readIndex = 0;
@@ -346,6 +348,7 @@ vpThread::Return captureFunction(vpThread::Args args)
       imageQueue.push();
       cv::Mat& frame_ = imageQueue.back();
       cap >> frame_; // get a new frame from camera
+      //onImageReady.notify_one();
       // Save timestamp //
       LogEntry o{LogEntryType::Time, &cap};
       logsMutex.lock();
@@ -370,7 +373,10 @@ vpThread::Return captureFunction(vpThread::Args args)
     }
     //std::this_thread::sleep_for(std::chrono::milliseconds(1200));
     auto duration = stopTimer(start);
-    logNonMainThreadGeneral(duration << " milliseconds" << std::endl);
+    static const double target = 1.0/fps * 1000.0;
+    if (duration > target) {
+      logNonMainThreadGeneral(duration - target << " milliseconds behind" << std::endl);
+    }
   }
 
   {
@@ -498,6 +504,10 @@ int captureImage(int device) {
     return 1;
   }
 
+  cv::Size sizeFrame(3280,2464); // 8 megapixels, should be the maximum
+  camera.set(cv::CAP_PROP_FRAME_WIDTH, sizeFrame.width);
+  camera.set(cv::CAP_PROP_FRAME_HEIGHT, sizeFrame.height);
+
   // create a window to display the images from the webcam
   //cv::namedWindow("Webcam", CV_WINDOW_AUTOSIZE);
 
@@ -506,6 +516,7 @@ int captureImage(int device) {
         
   // capture the next frame from the webcam
   camera >> frame;
+  //onImageReady.notify_one();
 
   // // display the frame until you press a key
   //     while (1) {
@@ -520,7 +531,8 @@ int captureImage(int device) {
   
   using namespace cv;
   using namespace std;
-  
+
+  std::cout << frame.empty() << std::endl;
   // writing the image to a defined location as JPEG
   bool check = imwrite(openFileWithUniqueName("MyImage", ".jpg"), frame);
   
@@ -560,6 +572,7 @@ struct RunOptions {					\
 	unsigned long enableCaptureThread: 1;		\
 	unsigned long enableVideoSavingThread: 1;	\
 	unsigned long enableLoggerThread: 1;		\
+	unsigned long enableVideoPreviewThread: 1;      \
     };							\
     unsigned long integerValue;				\
   };							\
@@ -589,7 +602,7 @@ int main(int argc, const char *argv[])
       #ifdef __aarch64__
       std::string s = argv[i + 1];
       std::reverse(s.begin(), s.end());
-#elif defined(__amd64___)
+#elif defined(__x86_64__)
       std::string s = argv[i + 1];
       #else
       #error "Not yet implemented platform"
@@ -609,7 +622,7 @@ int main(int argc, const char *argv[])
       std::string newlineAndSpacingOnLeft = '\n' + spacingOnLeft;
       std::cout << usage << argv[0]
 		<< newlineAndSpacingOnLeft << "[--camera_device <camera device (default: 0)>]"
-		<< newlineAndSpacingOnLeft << "[--run_options <bitset like 010: " str(RunOptionsStruct) "\n>]"
+		<< newlineAndSpacingOnLeft << "[--run_options <bitset like 0100: " str(RunOptionsStruct) "\n>]"
 		<< newlineAndSpacingOnLeft << "[--photo\t takes a photo instead of video]"
 		<< newlineAndSpacingOnLeft << "[--help]" << std::endl;
       return 1;
@@ -648,9 +661,26 @@ int main(int argc, const char *argv[])
       }
     });
   }
+  std::thread videoSavingThread;
   if (runOptions.enableVideoSavingThread) {
+  //   videoSavingThread = std::thread([](){displayFunction(nullptr);});
     displayFunction(nullptr);
   }
+  
+  // if (runOptions.enableVideoPreviewThread) {
+  //   while (!ctrlC) {//BROKEN:
+  //     std::unique_lock<std::mutex> lk(imageQueue.m_mtx);
+  //     onImageReady.wait(lk);
+  //     cv::Mat& frame = imageQueue.front();
+  //     // show the image on the window
+  //     cv::imshow("Webcam", frame);
+  //     std::cout << "imshow" << std::endl;
+  //     // wait (1ms) for a key to be pressed
+  //     if (cv::waitKey(1) >= 0) {
+  //       break;
+  //     }
+  //   }
+  // }
 
   // Wait until thread ends up
   if (runOptions.enableCaptureThread) {
@@ -659,6 +689,9 @@ int main(int argc, const char *argv[])
   if (runOptions.enableLoggerThread) {
     thread_logger.join();
   }
+  // if (runOptions.enableVideoSavingThread) {
+  //   videoSavingThread.join();
+  // }
   //thread_display.join();
 
   if (ctrlC) {
