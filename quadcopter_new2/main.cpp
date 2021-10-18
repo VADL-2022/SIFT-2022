@@ -348,7 +348,7 @@ vpThread::Return captureFunction(vpThread::Args args)
       imageQueue.push();
       cv::Mat& frame_ = imageQueue.back();
       cap >> frame_; // get a new frame from camera
-      //onImageReady.notify_one();
+      onImageReady.notify_one();
       // Save timestamp //
       LogEntry o{LogEntryType::Time, &cap};
       logsMutex.lock();
@@ -516,7 +516,7 @@ int captureImage(int device) {
         
   // capture the next frame from the webcam
   camera >> frame;
-  //onImageReady.notify_one();
+  onImageReady.notify_one();
 
   // // display the frame until you press a key
   //     while (1) {
@@ -663,24 +663,23 @@ int main(int argc, const char *argv[])
   }
   std::thread videoSavingThread;
   if (runOptions.enableVideoSavingThread) {
-  //   videoSavingThread = std::thread([](){displayFunction(nullptr);});
-    displayFunction(nullptr);
+    videoSavingThread = std::thread([](){displayFunction(nullptr);});
   }
   
-  // if (runOptions.enableVideoPreviewThread) {
-  //   while (!ctrlC) {//BROKEN:
-  //     std::unique_lock<std::mutex> lk(imageQueue.m_mtx);
-  //     onImageReady.wait(lk);
-  //     cv::Mat& frame = imageQueue.front();
-  //     // show the image on the window
-  //     cv::imshow("Webcam", frame);
-  //     std::cout << "imshow" << std::endl;
-  //     // wait (1ms) for a key to be pressed
-  //     if (cv::waitKey(1) >= 0) {
-  //       break;
-  //     }
-  //   }
-  // }
+  if (runOptions.enableVideoPreviewThread) {
+    while (!ctrlC) {//BROKEN:
+      std::unique_lock<std::mutex> lk(imageQueue.m_mtx);
+      onImageReady.wait(lk);
+      cv::Mat& frame = imageQueue.front();
+      // show the image on the window
+      cv::imshow("Webcam", frame);
+      std::cout << "imshow" << std::endl;
+      // wait (1ms) for a key to be pressed
+      if (cv::waitKey(1) >= 0) {
+        break;
+      }
+    }
+  }
 
   // Wait until thread ends up
   if (runOptions.enableCaptureThread) {
@@ -689,9 +688,9 @@ int main(int argc, const char *argv[])
   if (runOptions.enableLoggerThread) {
     thread_logger.join();
   }
-  // if (runOptions.enableVideoSavingThread) {
-  //   videoSavingThread.join();
-  // }
+  if (runOptions.enableVideoSavingThread) {
+    videoSavingThread.join();
+  }
   //thread_display.join();
 
   if (ctrlC) {
