@@ -96,14 +96,19 @@ int main(int argc, char **argv)
 	}
 	
 	// For each output image, loop through it
-	std::string path = "testFrames2_cropped"; //"testFrames1";
-	//std::string path = "outFrames";
+	std::string folderPath = "testFrames2_cropped"; //"testFrames1";
+	//std::string folderPath = "outFrames";
 	
 	// https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
 	//--- filenames are unique so we can use a set
 	std::vector<std::string> files;
-	for (const auto & entry : fs::directory_iterator(path))
+	for (const auto & entry : fs::directory_iterator(folderPath)) {
+		// Ignore files we treat specially:
+		if (endsWith(entry.path().string(), ".keypoints.txt")) {
+			continue;
+		}
 		files.push_back(entry.path().string());
+	}
 
 	// https://stackoverflow.com/questions/9743485/natural-sort-of-directory-filenames-in-c
 	std::sort(files.begin(),files.end(),compareNat);
@@ -114,6 +119,8 @@ int main(int argc, char **argv)
 	std::vector<cv::Mat> allTransformations;
 	std::optional<std::string> prevWindowTitle;
 	cv::Mat firstImage;
+	struct sift_keypoint_std *loadedKeypoints = nullptr;
+	int loadedKeypointsSize = 0;
 	for (size_t i = skip; i < files.size(); i++) {
 		//for (size_t i = files.size() - 1 - skip; i < files.size() /*underflow of i will end the loop*/; i--) {
 		auto& path = files[i];
@@ -128,13 +135,23 @@ int main(int argc, char **argv)
 		// Initialize canvas if needed
 		if (canvas.data == nullptr) {
 			puts("Init canvas");
-			canvas = cv::Mat(h, w, CV_32F);
+			canvas = cv::Mat(h, w, CV_32FC4);
 		}
 
 		// compute sift keypoints
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
-		struct sift_keypoint_std *k = my_sift_compute_features(x, w, h, &n, &keypoints);
+		struct sift_keypoint_std *k;
+		if (loadedKeypoints == nullptr) {
+			k = my_sift_compute_features(x, w, h, &n, &keypoints);
+		}
+		else {
+			k = loadedKeypoints;
+			n = loadedKeypointsSize;
+			
+			// Reset the loaded ones so we don't reuse them accidentally:
+			loadedKeypoints = nullptr;
+		}
 
 		// Make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
 		cv::Mat mat(h, w, CV_32F, x); // Is black and white
@@ -255,6 +272,7 @@ int main(int argc, char **argv)
 		cv::Mat temp;
 		cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
 		cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
+		std::string fname = i + 1 >= files.size() ? "" : files[i+1] + ".keypoints.txt";
 		do {
 			int counter = 0;
 			exit = true;
@@ -262,6 +280,26 @@ int main(int argc, char **argv)
 			case 'a':
 				// Go to previous image
 				i -= 2;
+				break;
+			case 'f':
+				// 'f' for "file" writing
+				// Go to next image and save SIFT keypoints
+				
+				// Serialize to file
+				printf("Saving keypoints to %s\n", fname.c_str());
+				sift_write_to_file(fname.c_str(), k, n);
+				break;
+			case 'g':
+				// 'g' for "get"
+				// Go to next image and get its keypoints from a file
+				int numKeypoints;
+				if (fname.empty()) {
+					printf("No next keypoints file to load from\n");
+					break;
+				}
+				printf("Loading keypoints from next image's keypoints file %s\n", fname.c_str());
+				loadedKeypoints = sift_read_from_file(fname.c_str(), &numKeypoints);
+				loadedKeypointsSize = numKeypoints;
 				break;
 			case 'd':
 				// Go to next image
