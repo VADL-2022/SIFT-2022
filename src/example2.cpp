@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 	}
 	
 	// For each output image, loop through it
-	std::string path = "testFrames2"; //"testFrames1";
+	std::string path = "testFrames2_cropped"; //"testFrames1";
 	//std::string path = "outFrames";
 	
 	// https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
@@ -122,22 +122,8 @@ int main(int argc, char **argv)
 		// Loading image
 		size_t w, h;
 		float* x = io_png_read_f32_gray(path.c_str(), &w, &h);
-		float* x_orig = x;
-		// Stuff:
 		for(int i=0; i < w*h; i++)
 			x[i] /=256.; // TODO: why do we do this?
-		// Crop image
-		int x1 = w/5;
-		cv::Rect crop_region(x1, 0, 4*w/5- x1, h);
-		//Bad: x = &x[crop_region.x + crop_region.y * crop_region.height]; // Crop part 1
-
-		// Crop and make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
-		cv::Mat mat(h, w, CV_32F, x); // Is black and white
-		mat = mat(crop_region);
-		
-		// Crop part 2
-		w = crop_region.width;
-		h = crop_region.height;
 
 		// Initialize canvas if needed
 		if (canvas.data == nullptr) {
@@ -148,12 +134,14 @@ int main(int argc, char **argv)
 		// compute sift keypoints
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
-		struct sift_keypoint_std *k = my_sift_compute_features((float*)mat.data, w, h, &n, &keypoints);
+		struct sift_keypoint_std *k = my_sift_compute_features(x, w, h, &n, &keypoints);
 
+		// Make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
+		cv::Mat mat(h, w, CV_32F, x); // Is black and white
 
 		// Make the black and white OpenCV matrix into color but still black and white (we do this so we can draw colored rectangles on it later)
 		cv::Mat backtorgb;
-		cv::cvtColor(mat, backtorgb, cv::COLOR_GRAY2RGB); // https://stackoverflow.com/questions/21596281/how-does-one-convert-a-grayscale-image-to-rgb-in-opencv-python
+		cv::cvtColor(mat, backtorgb, cv::COLOR_GRAY2RGBA); // https://stackoverflow.com/questions/21596281/how-does-one-convert-a-grayscale-image-to-rgb-in-opencv-python
 		if (i == skip) {
 			puts("Init firstImage");
 			firstImage = backtorgb;
@@ -264,9 +252,11 @@ int main(int argc, char **argv)
 		size_t currentTransformation = allTransformations.size() - 1;
 		cv::Mat M = allTransformations.size() > 0 ? allTransformations[currentTransformation] : cv::Mat();
 		cv::Mat* H;
+		cv::Mat temp;
 		cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
 		cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
 		do {
+			int counter = 0;
 			exit = true;
 			switch (keycode) {
 			case 'a':
@@ -333,10 +323,11 @@ int main(int argc, char **argv)
 					// }
 					if (currentTransformation >= allTransformations.size()) {
 						puts("No transformations left");
+						imshow(path, canvas);
 					}
 					else {
 						printf("Applying transformation %zu ", currentTransformation);
-						M *= allTransformations[currentTransformation].inv();
+						M *= allTransformations[currentTransformation];
 						cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
 						fmt->set64fPrecision(4);
 						fmt->set32fPrecision(4);
@@ -354,9 +345,18 @@ int main(int argc, char **argv)
 
 						 */
 						cv::warpPerspective(canvas, canvas /* <-- destination */, M, canvas.size());
+						
+						//if (counter++ == 0) {
+							// Draw first image
+							firstImage.copyTo(temp);
+							//}
+
+						// Draw the canvas on temp
+						canvas.copyTo(temp);
+
+						imshow(path, temp);
 					}
-			
-					imshow(path, canvas);
+					
 					keycode = cv::waitKey(0);
 					exit = false;
 				}
@@ -373,7 +373,7 @@ int main(int argc, char **argv)
 
 		// cleanup
 		free(k);
-		free(x_orig);
+		free(x);
 
 		// Save keypoints
 		computedKeypoints.push_back(keypoints);
