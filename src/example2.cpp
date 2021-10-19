@@ -75,7 +75,7 @@ void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degr
 int main(int argc, char **argv)
 {
 	// Set the default "skip"
-	size_t skip = 38;//120;//60;//100;//38;//0;
+	size_t skip = 0;//120;//60;//100;//38;//0;
 	if(argc >= 2){
 		// Use given skip (selects the first image to show)
 		char* endptr;
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 	}
 	
 	// For each output image, loop through it
-	std::string path = "testFrames1";
+	std::string path = "testFrames2"; //"testFrames1";
 	//std::string path = "outFrames";
 	
 	// https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
@@ -115,14 +115,29 @@ int main(int argc, char **argv)
 	std::optional<std::string> prevWindowTitle;
 	cv::Mat firstImage;
 	for (size_t i = skip; i < files.size(); i++) {
+		//for (size_t i = files.size() - 1 - skip; i < files.size() /*underflow of i will end the loop*/; i--) {
 		auto& path = files[i];
 		std::cout << path << std::endl;
 
 		// Loading image
 		size_t w, h;
 		float* x = io_png_read_f32_gray(path.c_str(), &w, &h);
+		float* x_orig = x;
+		// Stuff:
 		for(int i=0; i < w*h; i++)
 			x[i] /=256.; // TODO: why do we do this?
+		// Crop image
+		int x1 = w/5;
+		cv::Rect crop_region(x1, 0, 4*w/5- x1, h);
+		//Bad: x = &x[crop_region.x + crop_region.y * crop_region.height]; // Crop part 1
+
+		// Crop and make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
+		cv::Mat mat(h, w, CV_32F, x); // Is black and white
+		mat = mat(crop_region);
+		
+		// Crop part 2
+		w = crop_region.width;
+		h = crop_region.height;
 
 		// Initialize canvas if needed
 		if (canvas.data == nullptr) {
@@ -133,10 +148,8 @@ int main(int argc, char **argv)
 		// compute sift keypoints
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
-		struct sift_keypoint_std *k = my_sift_compute_features(x, w, h, &n, &keypoints);
+		struct sift_keypoint_std *k = my_sift_compute_features((float*)mat.data, w, h, &n, &keypoints);
 
-		// Make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
-		cv::Mat mat(h, w, CV_32F, x); // Is black and white
 
 		// Make the black and white OpenCV matrix into color but still black and white (we do this so we can draw colored rectangles on it later)
 		cv::Mat backtorgb;
@@ -322,8 +335,13 @@ int main(int argc, char **argv)
 						puts("No transformations left");
 					}
 					else {
-						printf("Applying transformation %zu\n", currentTransformation);
-						M *= allTransformations[currentTransformation];
+						printf("Applying transformation %zu ", currentTransformation);
+						M *= allTransformations[currentTransformation].inv();
+						cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
+						fmt->set64fPrecision(4);
+						fmt->set32fPrecision(4);
+						auto s = fmt->format(M);
+						std::cout << s << std::endl;
 						currentTransformation--; // Underflow means we reach a value always >= allTransformations.size() so we are considered finished.
 						// FIXME: Maybe the issue here is that the error accumulates because we transform a slightly different image each time?
 						// Realized I was using `firstImage` instead of `canvas` below...
@@ -355,7 +373,7 @@ int main(int argc, char **argv)
 
 		// cleanup
 		free(k);
-		free(x);
+		free(x_orig);
 
 		// Save keypoints
 		computedKeypoints.push_back(keypoints);
