@@ -327,12 +327,13 @@ int main(int argc, char **argv)
 					}
 					else {
 						printf("Applying transformation %zu ", currentTransformation);
-						M *= allTransformations[currentTransformation];
+						M *= allTransformations[currentTransformation].inv();
 						cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
 						fmt->set64fPrecision(4);
 						fmt->set32fPrecision(4);
 						auto s = fmt->format(M);
 						std::cout << s << std::endl;
+						cv::Mat m = allTransformations[currentTransformation];
 						currentTransformation--; // Underflow means we reach a value always >= allTransformations.size() so we are considered finished.
 						// FIXME: Maybe the issue here is that the error accumulates because we transform a slightly different image each time?
 						// Realized I was using `firstImage` instead of `canvas` below...
@@ -344,7 +345,7 @@ int main(int argc, char **argv)
 						  Next few slides will be applying the rest of the saved transformations to this image one by one
 
 						 */
-						cv::warpPerspective(canvas, canvas /* <-- destination */, M, canvas.size());
+						cv::warpPerspective(canvas, canvas /* <-- destination */, m, canvas.size());
 						
 						//if (counter++ == 0) {
 							// Draw first image

@@ -16,10 +16,12 @@ let
   my-python-packages = python39.withPackages(ps: with ps; [
     opencv
     numpy
+    matplotlib
   ]);
 in
 mkShell {
   buildInputs = [ my-python-packages
+                  python39Packages.opencv4
     opencv clang pkgconfig libpng
 
     #bear # Optional, for generating emacs compile_commands.json
