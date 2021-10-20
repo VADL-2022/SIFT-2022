@@ -1,16 +1,41 @@
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
   
 struct sift_keypoint_std;
 struct sift_keypoints;
+  
 
+void v1Params(struct sift_parameters* p);
+// White background high contrast
+void v2Params(struct sift_parameters* p);
+// Based off v1 params, similar
+void v3Params(struct sift_parameters* p);
+  
 /** @brief Extracts oriented keypoints (without description
  *  Need to free *outKeypoints with sift_free_keypoints()
  *
  */
-struct sift_keypoint_std* my_sift_compute_features(const float* x, int w, int h, int *n, struct sift_keypoints** outKeypoints);
+struct sift_keypoint_std* my_sift_compute_features(struct sift_parameters* p, const float* x, int w, int h, int *n, struct sift_keypoints** outKeypoints);
 
+  void my_fprintf_parameters(FILE* file, struct sift_parameters* params);
+  void my_sift_write_to_file(const char *filename, const struct sift_keypoints *keypoints, struct sift_parameters* params, int n);
+  void my_sift_load_parameters(FILE* stream, char* buffer, int buffer_size, struct sift_parameters* outParams);
+  struct sift_keypoint_std* my_sift_read_from_file(const char *filename, int *n, struct sift_keypoints** outKeypoints);
+  void my_sift_read_keypoints(struct sift_keypoints* keys,
+                         FILE* stream,
+                            char* buffer, // size_t buffer_size = 1024 * 1024;  // 1MB buffer for long lines.
+                                          // char* buffer = xmalloc(buffer_size);
+                                          // <this function runs>
+                                          // xfree(buffer);
+                            size_t buffer_size,
+                         int n_hist,
+                         int n_ori,
+                         int n_bins,
+			      int flag);
+  
 #ifdef __cplusplus
 }
 #endif

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <lib_sift.h>
+#include <lib_sift_anatomy.h>
 #include <lib_keypoint.h>
 #include <lib_matching.h>
 #include <io_png.h>
@@ -119,8 +120,15 @@ int main(int argc, char **argv)
 	std::vector<cv::Mat> allTransformations;
 	std::optional<std::string> prevWindowTitle;
 	cv::Mat firstImage;
-	struct sift_keypoint_std *loadedKeypoints = nullptr;
+	struct sift_keypoints* loadedKeypoints = nullptr;
+	std::unique_ptr<struct sift_keypoint_std> loadedK;
 	int loadedKeypointsSize = 0;
+	// Set params //
+	/** assign parameters **/
+	struct sift_parameters* params = sift_assign_default_parameters();
+	v3Params(params);
+	//v2Params(params);
+	// //
 	for (size_t i = skip; i < files.size(); i++) {
 		//for (size_t i = files.size() - 1 - skip; i < files.size() /*underflow of i will end the loop*/; i--) {
 		auto& path = files[i];
@@ -143,10 +151,11 @@ int main(int argc, char **argv)
 		struct sift_keypoints* keypoints;
 		struct sift_keypoint_std *k;
 		if (loadedKeypoints == nullptr) {
-			k = my_sift_compute_features(x, w, h, &n, &keypoints);
+			k = my_sift_compute_features(params, x, w, h, &n, &keypoints);
 		}
 		else {
-			k = loadedKeypoints;
+			k = loadedK.get();
+			keypoints = loadedKeypoints;
 			n = loadedKeypointsSize;
 			
 			// Reset the loaded ones so we don't reuse them accidentally:
@@ -287,7 +296,7 @@ int main(int argc, char **argv)
 				
 				// Serialize to file
 				printf("Saving keypoints to %s\n", fname.c_str());
-				sift_write_to_file(fname.c_str(), k, n);
+				my_sift_write_to_file(fname.c_str(), keypoints, params, n); //sift_write_to_file(fname.c_str(), k, n); //<--not used because it doesn't save params
 				break;
 			case 'g':
 				// 'g' for "get"
@@ -298,7 +307,7 @@ int main(int argc, char **argv)
 					break;
 				}
 				printf("Loading keypoints from next image's keypoints file %s\n", fname.c_str());
-				loadedKeypoints = sift_read_from_file(fname.c_str(), &numKeypoints);
+				loadedK.reset(my_sift_read_from_file(fname.c_str(), &numKeypoints, &loadedKeypoints)); // https://en.cppreference.com/w/cpp/memory/unique_ptr/reset
 				loadedKeypointsSize = numKeypoints;
 				break;
 			case 'd':
@@ -411,6 +420,8 @@ int main(int argc, char **argv)
 		//sift_write_to_file("/dev/stdout", k, n);
 
 		// cleanup
+		auto* prevK = loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
+		assert(prevK == nullptr || prevK == k);
 		free(k);
 		free(x);
 
