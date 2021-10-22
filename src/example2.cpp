@@ -25,6 +25,9 @@ namespace fs = std::__fs::filesystem;
 #include <iostream>
 #include "utils.hpp"
 
+#include "Timer.hpp"
+Timer t;
+
 // https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
 const int alpha_slider_max = 2;
 int alpha_slider = 0;
@@ -158,10 +161,14 @@ int main(int argc, char **argv)
 		std::cout << path << std::endl;
 
 		// Loading image
+        t.reset();
 		size_t w, h;
 		float* x = io_png_read_f32_gray(path.c_str(), &w, &h);
+        t.logElapsed("load image");
+        t.reset();
 		for(int i=0; i < w*h; i++)
 			x[i] /=256.; // TODO: why do we do this?
+        t.logElapsed("normalize image");
 
 		// Initialize canvas if needed
 		if (canvas.data == nullptr) {
@@ -174,7 +181,9 @@ int main(int argc, char **argv)
 		struct sift_keypoints* keypoints;
 		struct sift_keypoint_std *k;
 		if (loadedKeypoints == nullptr) {
+            t.reset();
 			k = my_sift_compute_features(params, x, w, h, &n, &keypoints);
+            t.logElapsed("compute features");
 		}
 		else {
 			k = loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
@@ -187,13 +196,16 @@ int main(int argc, char **argv)
 
 		// Make the black and white OpenCV matrix into color but still black and white (we do this so we can draw colored rectangles on it later)
 		cv::Mat backtorgb;
+        t.reset();
 		cv::cvtColor(mat, backtorgb, cv::COLOR_GRAY2RGBA); // https://stackoverflow.com/questions/21596281/how-does-one-convert-a-grayscale-image-to-rgb-in-opencv-python
+        t.logElapsed("convert image");
 		if (i == skip) {
 			puts("Init firstImage");
 			firstImage = backtorgb;
 		}
 
 		// Draw keypoints on `mat`
+        t.reset();
 		for(int i=0; i<n; i++){
 			drawSquare(backtorgb, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
 			//break;
@@ -203,9 +215,11 @@ int main(int argc, char **argv)
 			// }
 			// fprintf(f, "\n");
 		}
+        t.logElapsed("draw keypoints");
 
 		// Compare keypoints if we had some previously
 		if (computedKeypoints.size() > 0) {
+            t.reset();
 			struct sift_keypoints* keypointsPrev = computedKeypoints.back();
 			struct sift_keypoints* out_k1 = sift_malloc_keypoints();
 			struct sift_keypoints* out_k2A = sift_malloc_keypoints();
@@ -222,8 +236,10 @@ int main(int argc, char **argv)
     
 			// Matching
 			matching(keypointsPrev, keypoints, out_k1, out_k2A, out_k2B, thresh, meth_flag);
+            t.logElapsed("find matches");
 
 			// Draw matches
+            t.reset();
 			struct sift_keypoints* k1 = out_k1;
 			printf("Number of matching keypoints: %d\n", k1->size);
 			if (k1->size > 0){
@@ -243,7 +259,9 @@ int main(int argc, char **argv)
 					cv::line(backtorgb, cv::Point(out_k1->list[i]->x, out_k1->list[i]->y), cv::Point(out_k2A->list[i]->x, out_k2A->list[i]->y), lastColor, 1);
 				}
 			}
+            t.logElapsed("draw matches");
 
+            t.reset()
 			// Find the homography matrix between the previous and current image ( https://docs.opencv.org/4.5.2/d1/de0/tutorial_py_feature_homography.html )
 			//const int MIN_MATCH_COUNT = 10
 			// https://docs.opencv.org/3.4/d7/dff/tutorial_feature_homography.html
@@ -259,10 +277,13 @@ int main(int argc, char **argv)
 			
 			// Make a matrix in transformations history
 			allTransformations.emplace_back(cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ ));
+            t.logElapsed("find homography");
 			
+            t.reset();
 			// Save to canvas
 			cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
 			img_matches.copyTo(canvas);
+            t.logElapsed("render to canvas: with prev keypoints");
 			
 			// Cleanup //
 			sift_free_keypoints(out_k1);
@@ -274,13 +295,17 @@ int main(int argc, char **argv)
 			// //
 		}
 		else {
+            t.reset();
 			// Save to canvas
 			backtorgb.copyTo(canvas);
+            t.logElapsed("render to canvas: no prev keypoints");
 		}
 		
 		//imshow(path, backtorgb);
 
+        t.reset();
 		imshow(path, canvas);
+        t.logElapsed("show canvas window");
 		int keycode = cv::waitKey(0);
 		bool exit;
 		size_t currentTransformation = allTransformations.size() - 1;
@@ -304,12 +329,15 @@ int main(int argc, char **argv)
 				// Go to next image and save SIFT keypoints
 				
 				// Serialize to file
+                t.reset();
 				printf("Saving keypoints to %s\n", fname.c_str());
 				my_sift_write_to_file(fname.c_str(), keypoints, params, n); //sift_write_to_file(fname.c_str(), k, n); //<--not used because it doesn't save params
+                t.logElapsed("save keypoints");
 				break;
 			case 'g':
 				// 'g' for "get"
 				// Go to next image and get its keypoints from a file
+                t.reset();
 				int numKeypoints;
 				if (fname.empty()) {
 					printf("No next keypoints file to load from\n");
@@ -333,6 +361,7 @@ int main(int argc, char **argv)
                 }
                 loadedKeypoints.release(); loadedKeypoints.reset(ptr); // Set the unique_ptr to ptr
 				loadedKeypointsSize = numKeypoints;
+                t.logElapsed("load keypoints");
 				break;
 			case 'd':
 				// Go to next image
@@ -343,6 +372,7 @@ int main(int argc, char **argv)
 				
 				// Check preconditions
 				if (allTransformations.size() > 0 && firstImage.data != nullptr) {
+                    t.reset();
 					puts("Showing current transformation");
 					
 					H = &allTransformations.back();
@@ -376,6 +406,7 @@ int main(int argc, char **argv)
 					imshow(path, canvas);
 					keycode = cv::waitKey(0);
 					exit = false;
+                    t.logElapsed("show current transformation");
 				}
 				else {
 					puts("No transformations or firstImage yet");
@@ -383,7 +414,8 @@ int main(int argc, char **argv)
 				break;
 			case 's':
 				// Show transformations so far
-				
+                t.reset();
+                    
 				// Check preconditions
 				if (allTransformations.size() > 0 && firstImage.data != nullptr) {
 					puts("Showing transformation of current image that eventually leads to firstImage");
@@ -435,6 +467,7 @@ int main(int argc, char **argv)
 				else {
 					puts("No transformations or firstImage yet");
 				}
+                t.logElapsed("show transformation");
 				break;
 			}
 		} while (!exit);
