@@ -72,7 +72,7 @@ namespace std {
 }
 
 cv::VideoWriter writer;
-std::atomic<bool> ctrlC = false;
+std::atomic<bool> ctrlC(false);
 template<typename T> class Queue {
 public:
   void reserve(size_t count) {

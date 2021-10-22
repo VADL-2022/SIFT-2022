@@ -40,6 +40,10 @@ example: $(OBJECTS) src/example2.o
 quadcopter: $(OBJECTS) src/quadcopter.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
+# .PHONY: testObjFile
+# testObjFile:
+# 	$(CC) sift_anatomy_20141201/src/lib_sift_anatomy.c -c -o lib_sift_anatomy.o
+
 .PHONY: clean
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE_RESULT)

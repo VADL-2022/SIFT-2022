@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -6,6 +8,7 @@ extern "C" {
   
 struct sift_keypoint_std;
 struct sift_keypoints;
+struct sift_parameters;
   
 
 void v1Params(struct sift_parameters* p);

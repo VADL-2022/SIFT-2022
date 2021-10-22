@@ -1,0 +1,15 @@
+//
+//  Config.xcconfig
+//  SIFT
+//
+//  Created by sbond75 on 10/20/21.
+//  Copyright © 2021 sbond75. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+//SIFT = sift_anatomy_20141201
+//SIFT_SRC = ./$(SIFT)/src
+//OTHER_CFLAGS=-Wall -pedantic -D_POSIX_C_SOURCE=200809L $(OPENCV_CFLAGS) -I$(SIFT_SRC)
+//HEADER_SEARCH_PATHS=$(HEADER_SEARCH_PATHS) 

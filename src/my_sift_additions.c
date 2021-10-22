@@ -1,3 +1,5 @@
+#include "my_sift_additions.h"
+
 #include <lib_sift.h>
 #include <lib_sift_anatomy.h>
 #include <lib_util.h>
@@ -100,6 +102,7 @@ struct sift_keypoint_std* my_sift_compute_features(struct sift_parameters* p, co
     return k;
 }
 
+int currentVersion = 1000;
 void my_fprintf_parameters(FILE* file, struct sift_parameters* params) {
     // struct sift_parameters
     // {
@@ -107,10 +110,10 @@ void my_fprintf_parameters(FILE* file, struct sift_parameters* params) {
     //     float sigma_min, delta_min, sigma_in, C_DoG, C_edge, lambda_ori, t, lambda_descr;
     // };
 
-    fprintf(file, "%d %d %d %d %d %d" // int n_oct, n_spo, n_hist, n_bins, n_ori, itermax;
+    fprintf(file, "%d\n%d %d %d %d %d %d" // int n_oct, n_spo, n_hist, n_bins, n_ori, itermax;
             // Note for the below: "The %a formatting specifier is new in C99. It prints the floating-point number in hexadecimal form." ( https://stackoverflow.com/questions/4826842/the-format-specifier-a-for-printf-in-c )
             "%a %a %a %a %a %a %a %a" // float sigma_min, delta_min, sigma_in, C_DoG, C_edge, lambda_ori, t, lambda_descr;
-            "\n", params->n_oct, params->n_spo, params->n_hist, params->n_bins, params->n_ori, params->itermax,
+            "\n", currentVersion, params->n_oct, params->n_spo, params->n_hist, params->n_bins, params->n_ori, params->itermax,
             params->sigma_min, params->delta_min, params->sigma_in, params->C_DoG, params->C_edge, params->lambda_ori, params->t, params->lambda_descr);
 }
 
@@ -128,7 +131,14 @@ void my_sift_write_to_file(const char *filename, const struct sift_keypoints *ke
 
 void my_sift_load_parameters(FILE* stream, char* buffer, int buffer_size, struct sift_parameters* outParams) {
     struct sift_parameters* params = outParams;
+    int version;
     if(fgets(buffer, buffer_size, stream) != NULL){
+        // read version
+        sscanf(buffer, "%d\n", &version);
+        // check version
+        if (version != currentVersion) {
+            fatal_error("Keypoints file version incorrect");
+        }
         // read coordinates
         sscanf(buffer,"%d %d %d %d %d %d"
                "%a %a %a %a %a %a %a %a"

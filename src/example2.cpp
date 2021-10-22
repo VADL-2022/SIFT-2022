@@ -14,7 +14,8 @@
 #include "my_sift_additions.h"
 
 #include <filesystem>
-namespace fs = std::filesystem;
+//namespace fs = std::filesystem;
+namespace fs = std::__fs::filesystem;
 #include "strnatcmp.hpp"
 
 #include "opencv2/highgui.hpp"
@@ -129,6 +130,7 @@ int main(int argc, char **argv)
 	v3Params(params);
 	//v2Params(params);
 	// //
+	bool checkLoadedK = true;
 	for (size_t i = skip; i < files.size(); i++) {
 		//for (size_t i = files.size() - 1 - skip; i < files.size() /*underflow of i will end the loop*/; i--) {
 		auto& path = files[i];
@@ -308,6 +310,7 @@ int main(int argc, char **argv)
 				}
 				printf("Loading keypoints from next image's keypoints file %s\n", fname.c_str());
 				loadedK.reset(my_sift_read_from_file(fname.c_str(), &numKeypoints, &loadedKeypoints)); // https://en.cppreference.com/w/cpp/memory/unique_ptr/reset
+				checkLoadedK = false;
 				loadedKeypointsSize = numKeypoints;
 				break;
 			case 'd':
@@ -420,10 +423,16 @@ int main(int argc, char **argv)
 		//sift_write_to_file("/dev/stdout", k, n);
 
 		// cleanup
-		auto* prevK = loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
-		assert(prevK == nullptr || prevK == k);
-		free(k);
+		std::cout << loadedK.get() << ", " << k << std::endl;
+		if (checkLoadedK) {
+			auto* prevK = loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
+			assert(prevK == nullptr || prevK == k);
+		}
+		else {
+			free(k);
+		}
 		free(x);
+		checkLoadedK = true;
 
 		// Save keypoints
 		computedKeypoints.push_back(keypoints);
