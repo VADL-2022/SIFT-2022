@@ -88,7 +88,7 @@ struct sift_keypoint_std* my_sift_compute_features(struct sift_parameters* p, co
     }
 
     /* memory deallocation */
-    xfree(p);
+    //xfree(p);
     *outKeypoints = keys; //sift_free_keypoints(keys);
     for(int i = 0; i < 6; i++){
         sift_free_keypoints(kk[i]);
@@ -147,13 +147,13 @@ void my_sift_load_parameters(FILE* stream, char* buffer, int buffer_size, struct
     }
 }
 
-// Need to free return value with free() and need to free *outKeypoints with sift_free_keypoints()
+// Need to free return value with free() and need to free *outKeypoints with sift_free_keypoints().
+// On error, returns NULL.
 struct sift_keypoint_std* my_sift_read_from_file(const char *filename, int *n, struct sift_keypoints** outKeypoints)
 {
     FILE* stream = fopen(filename,"r");
     if ( !stream) {
-        perror("");
-        fatal_error("File \"%s\" could not be opened.", filename);
+        return NULL;
     }
 
     size_t buffer_size = 1024 * 1024;  // 1MB buffer for long lines.

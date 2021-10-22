@@ -4,6 +4,7 @@
 #include <lib_sift_anatomy.h>
 #include <lib_keypoint.h>
 #include <lib_matching.h>
+#include <lib_util.h>
 #include <io_png.h>
 
 // Use the OpenCV C API ( http://doc.aldebaran.com/2-0/dev/cpp/examples/vision/opencv.html )
@@ -74,6 +75,27 @@ void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degr
 	drawRect(img, center, cv::Size2f(size, size), orientation_degrees, thickness);
 }
 
+// Wrapper around imshow that reuses the same window each time
+void imshow(std::string name, cv::Mat& mat) {
+    static std::optional<std::string> prevWindowTitle;
+    
+    if (prevWindowTitle) {
+        // Rename window
+        cv::setWindowTitle(*prevWindowTitle, name);
+    }
+    else {
+        prevWindowTitle = name;
+        cv::namedWindow(name, cv::WINDOW_AUTOSIZE); // Create Window
+        
+//        // Set up window
+//        char TrackbarName[50];
+//        sprintf( TrackbarName, "Alpha x %d", alpha_slider_max );
+//        cv::createTrackbar( TrackbarName, name, &alpha_slider, alpha_slider_max, on_trackbar );
+//        on_trackbar( alpha_slider, 0 );
+    }
+    cv::imshow(*prevWindowTitle, mat); // prevWindowTitle (the first title) is always used as an identifier for this window, regardless of the renaming done via setWindowTitle().
+}
+
 int main(int argc, char **argv)
 {
 	// Set the default "skip"
@@ -119,9 +141,8 @@ int main(int argc, char **argv)
 	std::vector<struct sift_keypoints*> computedKeypoints;
 	cv::Mat canvas;
 	std::vector<cv::Mat> allTransformations;
-	std::optional<std::string> prevWindowTitle;
 	cv::Mat firstImage;
-	struct sift_keypoints* loadedKeypoints = nullptr;
+    std::unique_ptr<struct sift_keypoints> loadedKeypoints;
 	std::unique_ptr<struct sift_keypoint_std> loadedK;
 	int loadedKeypointsSize = 0;
 	// Set params //
@@ -156,12 +177,9 @@ int main(int argc, char **argv)
 			k = my_sift_compute_features(params, x, w, h, &n, &keypoints);
 		}
 		else {
-			k = loadedK.get();
-			keypoints = loadedKeypoints;
+			k = loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
+            keypoints = loadedKeypoints.release();
 			n = loadedKeypointsSize;
-			
-			// Reset the loaded ones so we don't reuse them accidentally:
-			loadedKeypoints = nullptr;
 		}
 
 		// Make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
@@ -261,18 +279,6 @@ int main(int argc, char **argv)
 		}
 		
 		//imshow(path, backtorgb);
-		if (!prevWindowTitle) {
-			cv::namedWindow(path, cv::WINDOW_AUTOSIZE); // Create Window
-		}
-		else {
-			// Rename window
-			cv::setWindowTitle(*prevWindowTitle, path);
-		}
-		// Set up window
-		char TrackbarName[50];
-		sprintf( TrackbarName, "Alpha x %d", alpha_slider_max );
-		cv::createTrackbar( TrackbarName, path, &alpha_slider, alpha_slider_max, on_trackbar );
-		on_trackbar( alpha_slider, 0 );
 
 		imshow(path, canvas);
 		int keycode = cv::waitKey(0);
@@ -284,6 +290,7 @@ int main(int argc, char **argv)
 		cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
 		cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
 		std::string fname = i + 1 >= files.size() ? "" : files[i+1] + ".keypoints.txt";
+        struct sift_keypoints* ptr;
 		do {
 			int counter = 0;
 			exit = true;
@@ -309,8 +316,22 @@ int main(int argc, char **argv)
 					break;
 				}
 				printf("Loading keypoints from next image's keypoints file %s\n", fname.c_str());
-				loadedK.reset(my_sift_read_from_file(fname.c_str(), &numKeypoints, &loadedKeypoints)); // https://en.cppreference.com/w/cpp/memory/unique_ptr/reset
-				checkLoadedK = false;
+                ptr = loadedKeypoints.get(); // Make regular pointer so we can use a double pointer below
+				loadedK.reset(my_sift_read_from_file(fname.c_str(), &numKeypoints, &ptr)); // https://en.cppreference.com/w/cpp/memory/unique_ptr/reset
+                if (loadedK == nullptr) {
+                    if (errno == ENOENT) { // No such file or directory
+                        // Let's create it
+                        fprintf(stdout, "File \"%s\" doesn't exist, creating it\n", fname.c_str());
+                        keycode = 'f';
+                        exit = false;
+                        continue;
+                    }
+                    else { // No other way to handle this is provided
+                        perror("");
+                        fatal_error("File \"%s\" could not be opened.", fname.c_str());
+                    }
+                }
+                loadedKeypoints.release(); loadedKeypoints.reset(ptr); // Set the unique_ptr to ptr
 				loadedKeypointsSize = numKeypoints;
 				break;
 			case 'd':
@@ -417,23 +438,14 @@ int main(int argc, char **argv)
 				break;
 			}
 		} while (!exit);
-		prevWindowTitle = path;
 	
 		// write to standard output
 		//sift_write_to_file("/dev/stdout", k, n);
 
 		// cleanup
-		std::cout << loadedK.get() << ", " << k << std::endl;
-		if (checkLoadedK) {
-			auto* prevK = loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
-			assert(prevK == nullptr || prevK == k);
-		}
-		else {
-			free(k);
-		}
+        free(k);
 		free(x);
-		checkLoadedK = true;
-
+		
 		// Save keypoints
 		computedKeypoints.push_back(keypoints);
 		
@@ -442,6 +454,7 @@ int main(int argc, char **argv)
 	}
 
 	// Cleanup
+    free(params);
 	for (struct sift_keypoints* keypoints : computedKeypoints) {
 		sift_free_keypoints(keypoints);
 	}
