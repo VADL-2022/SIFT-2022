@@ -1,32 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <lib_sift.h>
-#include <lib_sift_anatomy.h>
-#include <lib_keypoint.h>
-#include <lib_matching.h>
-#include <lib_util.h>
-#include <io_png.h>
+#include "common.hpp"
 
-// Use the OpenCV C API ( http://doc.aldebaran.com/2-0/dev/cpp/examples/vision/opencv.html )
-//#include <opencv2/core/core_c.h>
-
-#include <opencv2/opencv.hpp>
-
-#include "my_sift_additions.h"
-
-#include <filesystem>
-//namespace fs = std::filesystem;
-namespace fs = std::__fs::filesystem;
-#include "strnatcmp.hpp"
-
-#include "opencv2/highgui.hpp"
-#include <optional>
-#include <cinttypes>
-#include <iostream>
-#include "utils.hpp"
-
-#include "Timer.hpp"
-Timer t;
+#include "KeypointsAndMatching.hpp"
+#include "compareKeypoints.hpp"
 
 // https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
 const int alpha_slider_max = 2;
@@ -36,67 +11,6 @@ double beta;
 static void on_trackbar( int, void* )
 {
    alpha = (double) alpha_slider/alpha_slider_max ;
-}
-
-
-// Based on https://stackoverflow.com/questions/31658132/c-opencv-not-drawing-circles-on-mat-image and https://stackoverflow.com/questions/19400376/how-to-draw-circles-with-random-colors-in-opencv/19401384
-#define RNG_SEED 12345
-cv::RNG rng(RNG_SEED); // Random number generator
-cv::Scalar lastColor;
-void resetRNG() {
-	rng = cv::RNG(RNG_SEED);
-}
-cv::Scalar nextRNGColor() {
-	//return cv::Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255)); // Most of these are rendered as close to white for some reason..
-	//return cv::Scalar(0,0,255); // BGR color value (not RGB)
-	lastColor = cv::Scalar(rng.uniform(0, 255) / rng.uniform(1, 255),
-			       rng.uniform(0, 255) / rng.uniform(1, 255),
-			       rng.uniform(0, 255) / rng.uniform(1, 255));
-	return lastColor;
-}
-void drawCircle(cv::Mat& img, cv::Point cp, int radius)
-{
-    //cv::Scalar black( 0, 0, 0 );
-    cv::Scalar color = nextRNGColor();
-    
-    cv::circle( img, cp, radius, color );
-}
-void drawRect(cv::Mat& img, cv::Point center, cv::Size2f size, float orientation_degrees, int thickness = 2) {
-	cv::RotatedRect rRect = cv::RotatedRect(center, size, orientation_degrees);
-	cv::Point2f vertices[4];
-	rRect.points(vertices);
-	cv::Scalar color = nextRNGColor();
-	//printf("%f %f %f\n", color[0], color[1], color[2]);
-	for (int i = 0; i < 4; i++)
-		cv::line(img, vertices[i], vertices[(i+1)%4], color, thickness);
-	
-	// To draw a rectangle bounding this one:
-	//Rect brect = rRect.boundingRect();
-	//cv::rectangle(img, brect, nextRNGColor(), 2);
-}
-void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degrees, int thickness = 2) {
-	drawRect(img, center, cv::Size2f(size, size), orientation_degrees, thickness);
-}
-
-// Wrapper around imshow that reuses the same window each time
-void imshow(std::string name, cv::Mat& mat) {
-    static std::optional<std::string> prevWindowTitle;
-    
-    if (prevWindowTitle) {
-        // Rename window
-        cv::setWindowTitle(*prevWindowTitle, name);
-    }
-    else {
-        prevWindowTitle = name;
-        cv::namedWindow(name, cv::WINDOW_AUTOSIZE); // Create Window
-        
-//        // Set up window
-//        char TrackbarName[50];
-//        sprintf( TrackbarName, "Alpha x %d", alpha_slider_max );
-//        cv::createTrackbar( TrackbarName, name, &alpha_slider, alpha_slider_max, on_trackbar );
-//        on_trackbar( alpha_slider, 0 );
-    }
-    cv::imshow(*prevWindowTitle, mat); // prevWindowTitle (the first title) is always used as an identifier for this window, regardless of the renaming done via setWindowTitle().
 }
 
 int main(int argc, char **argv)
@@ -131,7 +45,7 @@ int main(int argc, char **argv)
 	std::vector<std::string> files;
 	for (const auto & entry : fs::directory_iterator(folderPath)) {
 		// Ignore files we treat specially:
-		if (endsWith(entry.path().string(), ".keypoints.txt")) {
+		if (endsWith(entry.path().string(), ".keypoints.txt") || endsWith(entry.path().string(), ".matches.txt")) {
 			continue;
 		}
 		files.push_back(entry.path().string());
@@ -141,20 +55,8 @@ int main(int argc, char **argv)
 	std::sort(files.begin(),files.end(),compareNat);
 	
 	//--- print the files sorted by filename
-	std::vector<struct sift_keypoints*> computedKeypoints;
-	cv::Mat canvas;
-	std::vector<cv::Mat> allTransformations;
-	cv::Mat firstImage;
-    std::unique_ptr<struct sift_keypoints> loadedKeypoints;
-	std::unique_ptr<struct sift_keypoint_std> loadedK;
-	int loadedKeypointsSize = 0;
-	// Set params //
-	/** assign parameters **/
-	struct sift_parameters* params = sift_assign_default_parameters();
-	v3Params(params);
-	//v2Params(params);
-	// //
-	bool checkLoadedK = true;
+    SIFTState s;
+    SIFTParams p;
 	for (size_t i = skip; i < files.size(); i++) {
 		//for (size_t i = files.size() - 1 - skip; i < files.size() /*underflow of i will end the loop*/; i--) {
 		auto& path = files[i];
@@ -163,32 +65,42 @@ int main(int argc, char **argv)
 		// Loading image
         t.reset();
 		size_t w, h;
+        errno = ESUCCESS; // Set errno so we can read it again to check why any errors happen after the below call
 		float* x = io_png_read_f32_gray(path.c_str(), &w, &h);
         t.logElapsed("load image");
+        if (x == nullptr) {
+            if (errno != ESUCCESS) {
+                perror("");
+                fatal_error("File \"%s\" could not be opened", path.c_str());
+            }
+            else {
+                fatal_error("File \"%s\" cannot be loaded as an image", path.c_str());
+            }
+        }
         t.reset();
 		for(int i=0; i < w*h; i++)
 			x[i] /=256.; // TODO: why do we do this?
         t.logElapsed("normalize image");
 
 		// Initialize canvas if needed
-		if (canvas.data == nullptr) {
+        if (s.canvas.data == nullptr) {
 			puts("Init canvas");
-			canvas = cv::Mat(h, w, CV_32FC4);
+			s.canvas = cv::Mat(h, w, CV_32FC4);
 		}
 
 		// compute sift keypoints
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
 		struct sift_keypoint_std *k;
-		if (loadedKeypoints == nullptr) {
+		if (s.loadedKeypoints == nullptr) {
             t.reset();
-			k = my_sift_compute_features(params, x, w, h, &n, &keypoints);
+            k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
             t.logElapsed("compute features");
 		}
 		else {
-			k = loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
-            keypoints = loadedKeypoints.release();
-			n = loadedKeypointsSize;
+            k = s.loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
+            keypoints = s.loadedKeypoints.release();
+            n = s.loadedKeypointsSize;
 		}
 
 		// Make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
@@ -201,7 +113,7 @@ int main(int argc, char **argv)
         t.logElapsed("convert image");
 		if (i == skip) {
 			puts("Init firstImage");
-			firstImage = backtorgb;
+            s.firstImage = backtorgb;
 		}
 
 		// Draw keypoints on `mat`
@@ -218,121 +130,63 @@ int main(int argc, char **argv)
         t.logElapsed("draw keypoints");
 
 		// Compare keypoints if we had some previously
-		if (computedKeypoints.size() > 0) {
-            t.reset();
-			struct sift_keypoints* keypointsPrev = computedKeypoints.back();
-			struct sift_keypoints* out_k1 = sift_malloc_keypoints();
-			struct sift_keypoints* out_k2A = sift_malloc_keypoints();
-			struct sift_keypoints* out_k2B = sift_malloc_keypoints();
-			
-			// Setting default parameters
-			int n_hist = 4;
-			int n_ori = 8;
-			int n_bins = 36;
-			int meth_flag = 1;
-			float thresh = 0.6;
-			int verb_flag = 0;
-			char label[256];
-    
-			// Matching
-			matching(keypointsPrev, keypoints, out_k1, out_k2A, out_k2B, thresh, meth_flag);
-            t.logElapsed("find matches");
-
-			// Draw matches
-            t.reset();
-			struct sift_keypoints* k1 = out_k1;
-			printf("Number of matching keypoints: %d\n", k1->size);
-			if (k1->size > 0){
-
-				int n_hist = k1->list[0]->n_hist;
-				int n_ori = k1->list[0]->n_ori;
-				int dim = n_hist*n_hist*n_ori;
-				int n_bins  = k1->list[0]->n_bins;
-				int n = k1->size;
-				for(int i = 0; i < n; i++){
-					// fprintf_one_keypoint(f, k1->list[i], dim, n_bins, 2);
-					// fprintf_one_keypoint(f, k2A->list[i], dim, n_bins, 2);
-					// fprintf_one_keypoint(f, k2B->list[i], dim, n_bins, 2);
-					// fprintf(f, "\n");
-
-					drawSquare(backtorgb, cv::Point(out_k2A->list[i]->x, out_k2A->list[i]->y), out_k2A->list[i]->sigma /* need to choose something better here */, out_k2A->list[i]->theta, 2);
-					cv::line(backtorgb, cv::Point(out_k1->list[i]->x, out_k1->list[i]->y), cv::Point(out_k2A->list[i]->x, out_k2A->list[i]->y), lastColor, 1);
-				}
-			}
-            t.logElapsed("draw matches");
-
-            t.reset()
-			// Find the homography matrix between the previous and current image ( https://docs.opencv.org/4.5.2/d1/de0/tutorial_py_feature_homography.html )
-			//const int MIN_MATCH_COUNT = 10
-			// https://docs.opencv.org/3.4/d7/dff/tutorial_feature_homography.html
-			std::vector<cv::Point2f> obj; // The `obj` is the current image's keypoints
-			std::vector<cv::Point2f> scene; // The `scene` is the previous image's keypoints. "Scene" means the area within which we are finding `obj` and this is since we want to find the previous image in the current image since we're falling down and therefore "zooming in" so the current image should be within the previous one.
-			obj.reserve(k1->size);
-			scene.reserve(k1->size);
-			// TODO: reuse memory of k1 instead of copying?
-			for (size_t i = 0; i < k1->size; i++) {
-				obj.emplace_back(out_k2A->list[i]->x, out_k2A->list[i]->y);
-				scene.emplace_back(out_k1->list[i]->x, out_k1->list[i]->y);
-			}
-			
-			// Make a matrix in transformations history
-			allTransformations.emplace_back(cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ ));
-            t.logElapsed("find homography");
-			
-            t.reset();
-			// Save to canvas
-			cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
-			img_matches.copyTo(canvas);
-            t.logElapsed("render to canvas: with prev keypoints");
-			
-			// Cleanup //
-			sift_free_keypoints(out_k1);
-			sift_free_keypoints(out_k2A);
-			sift_free_keypoints(out_k2B);
-			
-			sift_free_keypoints(keypointsPrev);
-			computedKeypoints.pop_back();
-			// //
-		}
-		else {
-            t.reset();
-			// Save to canvas
-			backtorgb.copyTo(canvas);
-            t.logElapsed("render to canvas: no prev keypoints");
-		}
+        bool retryNeeded = compareKeypoints(s, p, keypoints, backtorgb);
 		
 		//imshow(path, backtorgb);
 
         t.reset();
-		imshow(path, canvas);
+        imshow(path, s.canvas);
         t.logElapsed("show canvas window");
-		int keycode = cv::waitKey(0);
+        int keycode;
+        if (retryNeeded) {
+            cv::waitKey(1); // Show the window
+            keycode = 'a';
+        }
+        else {
+            keycode = cv::waitKey(0);
+        }
 		bool exit;
-		size_t currentTransformation = allTransformations.size() - 1;
-		cv::Mat M = allTransformations.size() > 0 ? allTransformations[currentTransformation] : cv::Mat();
+        size_t currentTransformation = s.allTransformations.size() - 1;
+		cv::Mat M = s.allTransformations.size() > 0 ? s.allTransformations[currentTransformation] : cv::Mat();
 		cv::Mat* H;
 		cv::Mat temp;
 		cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
 		cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
 		std::string fname = i + 1 >= files.size() ? "" : files[i+1] + ".keypoints.txt";
+        std::string fnameMatches = i + 1 >= files.size() ? "" : files[i+1] + ".matches.txt";
         struct sift_keypoints* ptr;
+        bool skipSavingKeypoints = false;
 		do {
 			int counter = 0;
 			exit = true;
 			switch (keycode) {
 			case 'a':
 				// Go to previous image
-				i -= 2;
+				i -= 2; // FIXME: fix this part, should be decrementing right amount
 				break;
 			case 'f':
 				// 'f' for "file" writing
 				// Go to next image and save SIFT keypoints
 				
 				// Serialize to file
-                t.reset();
-				printf("Saving keypoints to %s\n", fname.c_str());
-				my_sift_write_to_file(fname.c_str(), keypoints, params, n); //sift_write_to_file(fname.c_str(), k, n); //<--not used because it doesn't save params
-                t.logElapsed("save keypoints");
+                if (!skipSavingKeypoints) {
+                    t.reset();
+                    printf("Saving keypoints to %s and matches to %s\n", fname.c_str(), fnameMatches.c_str());
+                    my_sift_write_to_file(fname.c_str(), keypoints, p.params, n); //sift_write_to_file(fname.c_str(), k, n); //<--not used because it doesn't save params
+                    t.logElapsed("save keypoints");
+                }
+                else {
+                    skipSavingKeypoints = false;
+                }
+                if (s.out_k1 != nullptr) {
+                    // Save matches
+                    t.reset();
+                    my_sift_write_matches_to_file(fnameMatches.c_str(), s.out_k1, s.out_k2A, s.out_k2B, p.params, p.meth_flag, p.thresh); // TODO: dont save the newly made params since they might be loaded already and then written again. or maybe keep params separate..
+                    t.logElapsed("save matches");
+                }
+                else {
+                    printf("(No matches can be saved for the first image since it has no previous image to match to)\n");
+                }
 				break;
 			case 'g':
 				// 'g' for "get"
@@ -343,10 +197,10 @@ int main(int argc, char **argv)
 					printf("No next keypoints file to load from\n");
 					break;
 				}
-				printf("Loading keypoints from next image's keypoints file %s\n", fname.c_str());
-                ptr = loadedKeypoints.get(); // Make regular pointer so we can use a double pointer below
-				loadedK.reset(my_sift_read_from_file(fname.c_str(), &numKeypoints, &ptr)); // https://en.cppreference.com/w/cpp/memory/unique_ptr/reset
-                if (loadedK == nullptr) {
+                printf("Loading keypoints from next image's keypoints file %s and matches from %s\n", fname.c_str(), fnameMatches.c_str()); // TODO: load matches
+                ptr = s.loadedKeypoints.get(); // Make regular pointer so we can use a double pointer below
+                s.loadedK.reset(my_sift_read_from_file(fname.c_str(), &numKeypoints, &ptr)); // https://en.cppreference.com/w/cpp/memory/unique_ptr/reset
+                if (s.loadedK == nullptr) {
                     if (errno == ENOENT) { // No such file or directory
                         // Let's create it
                         fprintf(stdout, "File \"%s\" doesn't exist, creating it\n", fname.c_str());
@@ -359,9 +213,32 @@ int main(int argc, char **argv)
                         fatal_error("File \"%s\" could not be opened.", fname.c_str());
                     }
                 }
-                loadedKeypoints.release(); loadedKeypoints.reset(ptr); // Set the unique_ptr to ptr
-				loadedKeypointsSize = numKeypoints;
+                s.loadedKeypoints.release(); s.loadedKeypoints.reset(ptr); // Set the unique_ptr to ptr
+				s.loadedKeypointsSize = numKeypoints;
                 t.logElapsed("load keypoints");
+                // Load matches
+                if (s.out_k1 != nullptr) {
+                    t.reset();
+                    s.loaded_out_k1.reset(sift_malloc_keypoints());
+                    s.loaded_out_k2A.reset(sift_malloc_keypoints());
+                    s.loaded_out_k2B.reset(sift_malloc_keypoints());
+                    if (my_sift_read_matches_from_file(fnameMatches.c_str(), s.loaded_out_k1.get(), s.loaded_out_k2A.get(), s.loaded_out_k2B.get(), &p.loaded_meth_flag, &p.loaded_thresh) == 1) {
+                        // Failed to read the file
+                        if (errno == ENOENT) { // No such file or directory
+                            // Let's create it
+                            fprintf(stdout, "File \"%s\" doesn't exist, creating it\n", fname.c_str());
+                            keycode = 'f';
+                            skipSavingKeypoints = true;
+                            exit = false;
+                            continue;
+                        }
+                        else { // No other way to handle this is provided
+                            perror("");
+                            fatal_error("File \"%s\" could not be opened.", fname.c_str());
+                        }
+                    }
+                    t.logElapsed("load matches");
+                }
 				break;
 			case 'd':
 				// Go to next image
@@ -371,11 +248,11 @@ int main(int argc, char **argv)
 				// Show current transformation
 				
 				// Check preconditions
-				if (allTransformations.size() > 0 && firstImage.data != nullptr) {
+				if (s.allTransformations.size() > 0 && s.firstImage.data != nullptr) {
                     t.reset();
 					puts("Showing current transformation");
 					
-					H = &allTransformations.back();
+					H = &s.allTransformations.back();
 			
 					// //-- Get the corners from the image_1 ( the object to be "detected" )
 					// std::vector<cv::Point2f> obj_corners(4);
@@ -402,8 +279,8 @@ int main(int argc, char **argv)
 					// t2 = type2str(img_object.type());
 					// printf("img_matches type: %s, img_object type: %s\n", t1.c_str(), t2.c_str());
 					// https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
-					cv::warpPerspective(img_object, canvas /* <-- destination */, *H /* aka "M" */, img_matches.size());
-					imshow(path, canvas);
+					cv::warpPerspective(img_object, s.canvas /* <-- destination */, *H /* aka "M" */, img_matches.size());
+					imshow(path, s.canvas);
 					keycode = cv::waitKey(0);
 					exit = false;
                     t.logElapsed("show current transformation");
@@ -417,26 +294,26 @@ int main(int argc, char **argv)
                 t.reset();
                     
 				// Check preconditions
-				if (allTransformations.size() > 0 && firstImage.data != nullptr) {
+				if (s.allTransformations.size() > 0 && s.firstImage.data != nullptr) {
 					puts("Showing transformation of current image that eventually leads to firstImage");
 					// cv::Mat M = allTransformations[0];
 					// // Apply all transformations to the first image (future todo: condense all transformations in `allTransformations` into one matrix as we process each image)
 					// for (auto it = allTransformations.begin() + 1; it != allTransformations.end(); ++it) {
 					// 	M *= *it;
 					// }
-					if (currentTransformation >= allTransformations.size()) {
+					if (currentTransformation >= s.allTransformations.size()) {
 						puts("No transformations left");
-						imshow(path, canvas);
+						imshow(path, s.canvas);
 					}
 					else {
 						printf("Applying transformation %zu ", currentTransformation);
-						M *= allTransformations[currentTransformation].inv();
+						M *= s.allTransformations[currentTransformation].inv();
 						cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
 						fmt->set64fPrecision(4);
 						fmt->set32fPrecision(4);
-						auto s = fmt->format(M);
-						std::cout << s << std::endl;
-						cv::Mat m = allTransformations[currentTransformation];
+						auto str = fmt->format(M);
+						std::cout << str << std::endl;
+						cv::Mat m = s.allTransformations[currentTransformation];
 						currentTransformation--; // Underflow means we reach a value always >= allTransformations.size() so we are considered finished.
 						// FIXME: Maybe the issue here is that the error accumulates because we transform a slightly different image each time?
 						// Realized I was using `firstImage` instead of `canvas` below...
@@ -448,15 +325,15 @@ int main(int argc, char **argv)
 						  Next few slides will be applying the rest of the saved transformations to this image one by one
 
 						 */
-						cv::warpPerspective(canvas, canvas /* <-- destination */, m, canvas.size());
+						cv::warpPerspective(s.canvas, s.canvas /* <-- destination */, m, s.canvas.size());
 						
 						//if (counter++ == 0) {
 							// Draw first image
-							firstImage.copyTo(temp);
+                            s.firstImage.copyTo(temp);
 							//}
 
 						// Draw the canvas on temp
-						canvas.copyTo(temp);
+                        s.canvas.copyTo(temp);
 
 						imshow(path, temp);
 					}
@@ -480,16 +357,10 @@ int main(int argc, char **argv)
 		free(x);
 		
 		// Save keypoints
-		computedKeypoints.push_back(keypoints);
+        s.computedKeypoints.push_back(keypoints);
 		
 		// Reset RNG so some colors coincide
 		resetRNG();
-	}
-
-	// Cleanup
-    free(params);
-	for (struct sift_keypoints* keypoints : computedKeypoints) {
-		sift_free_keypoints(keypoints);
 	}
 	
 	return 0;

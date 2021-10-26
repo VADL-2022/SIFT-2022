@@ -102,7 +102,7 @@ struct sift_keypoint_std* my_sift_compute_features(struct sift_parameters* p, co
     return k;
 }
 
-int currentVersion = 1000;
+int currentVersion = 1001; //1000;
 void my_fprintf_parameters(FILE* file, struct sift_parameters* params) {
     // struct sift_parameters
     // {
@@ -110,11 +110,16 @@ void my_fprintf_parameters(FILE* file, struct sift_parameters* params) {
     //     float sigma_min, delta_min, sigma_in, C_DoG, C_edge, lambda_ori, t, lambda_descr;
     // };
 
-    fprintf(file, "%d\n%d %d %d %d %d %d" // int n_oct, n_spo, n_hist, n_bins, n_ori, itermax;
+    fprintf(file, "%d\n%d %d %d %d %d %d " // int n_oct, n_spo, n_hist, n_bins, n_ori, itermax;
             // Note for the below: "The %a formatting specifier is new in C99. It prints the floating-point number in hexadecimal form." ( https://stackoverflow.com/questions/4826842/the-format-specifier-a-for-printf-in-c )
             "%a %a %a %a %a %a %a %a" // float sigma_min, delta_min, sigma_in, C_DoG, C_edge, lambda_ori, t, lambda_descr;
             "\n", currentVersion, params->n_oct, params->n_spo, params->n_hist, params->n_bins, params->n_ori, params->itermax,
             params->sigma_min, params->delta_min, params->sigma_in, params->C_DoG, params->C_edge, params->lambda_ori, params->t, params->lambda_descr);
+}
+void my_fprintf_matching_parameters(FILE* file,
+                                    int meth_flag,
+                                    float thresh) {
+    fprintf(file, "%d %a\n", meth_flag, thresh);
 }
 
 void my_sift_write_to_file(const char *filename, const struct sift_keypoints *keypoints, struct sift_parameters* params, int n)
@@ -129,18 +134,20 @@ void my_sift_write_to_file(const char *filename, const struct sift_keypoints *ke
     fclose(file);
 }
 
-void my_sift_load_parameters(FILE* stream, char* buffer, int buffer_size, struct sift_parameters* outParams) {
+void my_sift_load_parameters(FILE* stream, char* buffer, int buffer_size, struct sift_parameters* outParams, int* outVersion) {
     struct sift_parameters* params = outParams;
-    int version;
     if(fgets(buffer, buffer_size, stream) != NULL){
         // read version
-        sscanf(buffer, "%d\n", &version);
+        sscanf(buffer, "%d\n", outVersion);
         // check version
-        if (version != currentVersion) {
-            fatal_error("Keypoints file version incorrect");
+        if (*outVersion > currentVersion || *outVersion < 1000 /*<--first version*/) {
+            fatal_error("Keypoints or matching file version too large (unsupported version)");
         }
-        // read coordinates
-        sscanf(buffer,"%d %d %d %d %d %d"
+    }
+    
+    if(fgets(buffer, buffer_size, stream) != NULL){
+        // read params
+        sscanf(buffer,"%d %d %d %d %d %d "
                "%a %a %a %a %a %a %a %a"
                "\n", &params->n_oct, &params->n_spo, &params->n_hist, &params->n_bins, &params->n_ori, &params->itermax,
                &params->sigma_min, &params->delta_min, &params->sigma_in, &params->C_DoG, &params->C_edge, &params->lambda_ori, &params->t, &params->lambda_descr);
@@ -161,7 +168,8 @@ struct sift_keypoint_std* my_sift_read_from_file(const char *filename, int *n, s
     
     // Load parameters
     struct sift_parameters* params = sift_assign_default_parameters();
-    my_sift_load_parameters(stream, buffer, buffer_size, params);
+    int version;
+    my_sift_load_parameters(stream, buffer, buffer_size, params, &version);
 
     // Load keypoints
     struct sift_keypoints* keys = sift_malloc_keypoints();
@@ -190,6 +198,48 @@ struct sift_keypoint_std* my_sift_read_from_file(const char *filename, int *n, s
     return k;
 }
 
+// Returns 1 on failure
+int my_sift_read_matches_from_file(const char *filename,
+                                                         // Output:
+                                                         const struct sift_keypoints *k1,
+                                                         const struct sift_keypoints *k2A,
+                                                         const struct sift_keypoints *k2B,
+                                   int* meth_flag,
+                                   float* thresh)
+{
+    FILE* stream = fopen(filename,"r");
+    if ( !stream) {
+        return 1;
+    }
+
+    size_t buffer_size = 1024 * 1024;  // 1MB buffer for long lines.
+    char* buffer = xmalloc(buffer_size);
+    
+    // Load parameters
+    struct sift_parameters* params = sift_assign_default_parameters();
+    int version;
+    my_sift_load_parameters(stream, buffer, buffer_size, params, &version);
+    
+    // Load extra params (>=v1001 only)
+    if (version >= 1001) {
+        if(fgets(buffer, buffer_size, stream) != NULL){
+            scanf(buffer, "%d %a\n", meth_flag, thresh);
+        }
+    }
+    else {
+        // Defaults are used
+        *meth_flag = 1;
+        *thresh = 0.6;
+    }
+
+    // Load keypoints
+    my_sift_read_matches(k1, k2A, k2B, stream, buffer, buffer_size, params->n_hist, params->n_ori, params->n_bins, 2);
+    
+    xfree(buffer);
+    fclose(stream);
+    return 0;
+}
+
 
 /** @brief read list of oriented keypoints from txt file
  *
@@ -213,31 +263,111 @@ void my_sift_read_keypoints(struct sift_keypoints* keys,
                          int n_bins,
                          int flag)
 {
+    while(fgets(buffer, buffer_size, stream) != NULL){ // Note: "A newline character makes fgets stop reading" ( https://www.cplusplus.com/reference/cstdio/fgets/ )
+        int pos = 0;
+        int read = 0;
+        my_sift_read_one_keypoint(keys, &pos, &read, buffer, buffer_size, n_hist, n_ori, n_bins, flag);
+    }
+}
+
+void my_sift_read_one_keypoint(struct sift_keypoints* keys,
+                               int* pos,
+                               int* read,
+                               char* buffer,
+                               size_t buffer_size,
+                               int n_hist,
+                               int n_ori,
+                               int n_bins,
+                               int flag) {
+    struct keypoint* key = sift_malloc_keypoint(n_ori, n_hist, n_bins);
+    // read coordinates
+    sscanf(buffer + *pos,"%f  %f  %f  %f %n", &key->x
+                                         , &key->y
+                                         , &key->sigma
+                                         , &key->theta
+                                         , read);
+    *pos += *read;
+    if (flag > 0){
+        // read descriptor
+        for(int i = 0; i < n_hist*n_hist*n_ori; i++){
+            sscanf(buffer + *pos, "%f %n",&(key->descr[i]),read);
+            *pos += *read;
+        }
+    }
+    if (flag > 1){
+        // read orientation histogram
+        for(int i=0;i<n_bins;i++){
+            sscanf(buffer + *pos, "%f %n",&(key->orihist[i]),read);
+            *pos += *read;
+        }
+    }
+    sift_add_keypoint_to_list(key,keys);
+}
+
+void my_sift_read_matches(
+                          // Output:
+                          const struct sift_keypoints *k1,
+                          const struct sift_keypoints *k2A,
+                          const struct sift_keypoints *k2B,
+                          // Input:
+                          FILE* stream,
+                            char* buffer, // size_t buffer_size = 1024 * 1024;  // 1MB buffer for long lines.
+                                          // char* buffer = xmalloc(buffer_size);
+                                          // <this function runs>
+                                          // xfree(buffer);
+                            size_t buffer_size,
+                         int n_hist,
+                         int n_ori,
+                         int n_bins,
+                         int flag)
+{
     while(fgets(buffer, buffer_size, stream) != NULL){
         int pos = 0;
         int read = 0;
-        struct keypoint* key = sift_malloc_keypoint(n_ori, n_hist, n_bins);
-        // read coordinates
-        sscanf(buffer+pos,"%f  %f  %f  %f %n", &key->x
-                                             , &key->y
-                                             , &key->sigma
-                                             , &key->theta
-                                             , &read);
-        pos+=read;
-        if (flag > 0){
-            // read descriptor
-            for(int i = 0; i < n_hist*n_hist*n_ori; i++){
-                sscanf(buffer+pos, "%f %n",&(key->descr[i]),&read);
-                pos +=read;
-            }
+        
+        // Read a keypoint into each keypoints list
+        my_sift_read_one_keypoint(k1, &pos, &read, buffer, buffer_size, n_hist, n_ori, n_bins, flag);
+        my_sift_read_one_keypoint(k2A, &pos, &read, buffer, buffer_size, n_hist, n_ori, n_bins, flag);
+        my_sift_read_one_keypoint(k2B, &pos, &read, buffer, buffer_size, n_hist, n_ori, n_bins, flag);
+    }
+}
+
+void my_sift_write_matches_to_file(const char *filename,
+                                   const struct sift_keypoints *k1,
+                                   const struct sift_keypoints *k2A,
+                                   const struct sift_keypoints *k2B,
+                                   struct sift_parameters* params,
+                                   int meth_flag,
+                                   float thresh)
+{
+    FILE* file = fopen(filename,"w");
+    if ( !file) {
+        perror("");
+        fatal_error("File \"%s\" could not be opened.", filename);
+    }
+    my_fprintf_parameters(file, params);
+    my_fprintf_matching_parameters(file, meth_flag, thresh);
+    my_save_pairs_extra(file, k1, k2A, k2B);
+    fclose(file);
+}
+
+void my_save_pairs_extra(FILE* stream,
+                      const struct sift_keypoints *k1,
+                      const struct sift_keypoints *k2A,
+                      const struct sift_keypoints *k2B)
+{
+    if (k1->size > 0){
+
+        int n_hist = k1->list[0]->n_hist;
+        int n_ori = k1->list[0]->n_ori;
+        int dim = n_hist*n_hist*n_ori;
+        int n_bins  = k1->list[0]->n_bins;
+        int n = k1->size;
+        for(int i = 0; i < n; i++){
+            fprintf_one_keypoint(stream, k1->list[i], dim, n_bins, 2);
+            fprintf_one_keypoint(stream, k2A->list[i], dim, n_bins, 2);
+            fprintf_one_keypoint(stream, k2B->list[i], dim, n_bins, 2);
+            fprintf(stream, "\n");
         }
-        if (flag > 1){
-            // read orientation histogram
-            for(int i=0;i<n_bins;i++){
-                sscanf(buffer+pos, "%f %n",&(key->orihist[i]),&read);
-                pos += read;
-            }
-        }
-        sift_add_keypoint_to_list(key,keys);
     }
 }

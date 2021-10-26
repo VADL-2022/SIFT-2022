@@ -24,6 +24,10 @@
 		300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48F27209F9400969C5F /* Semaphore.cpp */; };
 		30CE61E827234CD2001C987F /* SIFT.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61E727234CD2001C987F /* SIFT.hpp */; };
 		30CE61EB27235141001C987F /* Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61E927235141001C987F /* Timer.cpp */; };
+		30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61EC27237D8C001C987F /* compareKeypoints.cpp */; };
+		30CE61F227237F18001C987F /* KeypointsAndMatching.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61F027237F17001C987F /* KeypointsAndMatching.cpp */; };
+		30CE61F527238409001C987F /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61F327238409001C987F /* common.cpp */; };
+		30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE49227209F9400969C5F /* strnatcmp.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -82,12 +86,20 @@
 		300EE48F27209F9400969C5F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		300EE49027209F9400969C5F /* utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = utils.hpp; sourceTree = "<group>"; };
 		300EE49127209F9400969C5F /* quadcopter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = quadcopter.cpp; sourceTree = "<group>"; };
-		300EE49227209F9400969C5F /* strnatcmp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = strnatcmp.hpp; sourceTree = "<group>"; };
+		300EE49227209F9400969C5F /* strnatcmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = strnatcmp.cpp; sourceTree = "<group>"; };
 		300EE4B827209FF000969C5F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		300EE4BA2720A98700969C5F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Config.xcconfig; path = ../Config.xcconfig; sourceTree = "<group>"; };
 		30CE61E727234CD2001C987F /* SIFT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SIFT.hpp; sourceTree = "<group>"; };
 		30CE61E927235141001C987F /* Timer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Timer.cpp; sourceTree = "<group>"; };
 		30CE61EA27235141001C987F /* Timer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Timer.hpp; sourceTree = "<group>"; };
+		30CE61EC27237D8C001C987F /* compareKeypoints.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compareKeypoints.cpp; sourceTree = "<group>"; };
+		30CE61ED27237D8C001C987F /* compareKeypoints.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = compareKeypoints.hpp; sourceTree = "<group>"; };
+		30CE61EF27237E30001C987F /* Includes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Includes.hpp; sourceTree = "<group>"; };
+		30CE61F027237F17001C987F /* KeypointsAndMatching.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = KeypointsAndMatching.cpp; sourceTree = "<group>"; };
+		30CE61F127237F18001C987F /* KeypointsAndMatching.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = KeypointsAndMatching.hpp; sourceTree = "<group>"; };
+		30CE61F327238409001C987F /* common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = common.cpp; sourceTree = "<group>"; };
+		30CE61F427238409001C987F /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
+		30CE61F727238787001C987F /* strnatcmp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = strnatcmp.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -198,9 +210,17 @@
 				300EE48F27209F9400969C5F /* Semaphore.cpp */,
 				300EE49027209F9400969C5F /* utils.hpp */,
 				300EE49127209F9400969C5F /* quadcopter.cpp */,
-				300EE49227209F9400969C5F /* strnatcmp.hpp */,
+				300EE49227209F9400969C5F /* strnatcmp.cpp */,
+				30CE61F727238787001C987F /* strnatcmp.hpp */,
 				30CE61E927235141001C987F /* Timer.cpp */,
 				30CE61EA27235141001C987F /* Timer.hpp */,
+				30CE61EC27237D8C001C987F /* compareKeypoints.cpp */,
+				30CE61ED27237D8C001C987F /* compareKeypoints.hpp */,
+				30CE61EF27237E30001C987F /* Includes.hpp */,
+				30CE61F027237F17001C987F /* KeypointsAndMatching.cpp */,
+				30CE61F127237F18001C987F /* KeypointsAndMatching.hpp */,
+				30CE61F327238409001C987F /* common.cpp */,
+				30CE61F427238409001C987F /* common.hpp */,
 			);
 			name = src;
 			path = ../../src;
@@ -284,16 +304,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30CE61F227237F18001C987F /* KeypointsAndMatching.cpp in Sources */,
 				300EE4B027209F9400969C5F /* utils.cpp in Sources */,
 				300EE4A227209F9400969C5F /* lib_io_scalespace.c in Sources */,
 				300EE49327209F9400969C5F /* Makefile in Sources */,
+				30CE61F527238409001C987F /* common.cpp in Sources */,
 				300EE49F27209F9400969C5F /* lib_sift.c in Sources */,
 				300EE49C27209F9400969C5F /* lib_matching.c in Sources */,
 				300EE4B527209F9400969C5F /* example2.cpp in Sources */,
+				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
 				300EE49527209F9400969C5F /* lib_keypoint.c in Sources */,
 				300EE4A427209F9400969C5F /* lib_description.c in Sources */,
 				300EE4AA27209F9400969C5F /* lib_sift_anatomy.c in Sources */,
 				300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */,
+				30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */,
 				300EE4A527209F9400969C5F /* lib_scalespace.c in Sources */,
 				300EE4B427209F9400969C5F /* my_sift_additions.c in Sources */,
 				300EE49D27209F9400969C5F /* lib_discrete.c in Sources */,

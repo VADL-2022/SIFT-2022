@@ -11,7 +11,7 @@ public:
     void logElapsed(const char* name) const;
 private:
     typedef std::chrono::high_resolution_clock clock_;
-    std::chrono::steady_clock::time_point beg_;
+    clock_::time_point beg_;
 };
 
 #endif /* Timer_hpp */
