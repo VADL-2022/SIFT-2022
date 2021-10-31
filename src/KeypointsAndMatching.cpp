@@ -1,10 +1,11 @@
 #include "KeypointsAndMatching.hpp"
 
+#define USE(paramsFunc) { paramsName = #paramsFunc; paramsFunc(params); }
 SIFTParams::SIFTParams() {
     /** assign parameters **/
     params = sift_assign_default_parameters();
-    v3Params(params);
-    //v2Params(params);
+    //USE(v3Params);
+    USE(v2Params);
     // //
 }
 

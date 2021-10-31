@@ -3,6 +3,8 @@
 #include "KeypointsAndMatching.hpp"
 
 bool compareKeypoints(SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoints, cv::Mat& backtorgb) {
+    bool retval = false;
+    
     // Compare keypoints if we had some previously
     if (s.computedKeypoints.size() > 0) {
         struct sift_keypoints* keypointsPrev = s.computedKeypoints.back();
@@ -82,10 +84,12 @@ bool compareKeypoints(SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoi
             p.params->sigma_in -= 0.05;
             
             // Go back to previous file as well
-            return true;
+            retval = true;
         }
-        s.allTransformations.emplace_back(cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ ));
-        t.logElapsed("find homography");
+        if (!retval) {
+            s.allTransformations.emplace_back(cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ ));
+            t.logElapsed("find homography");
+        }
         
         t.reset();
         // Save to canvas
@@ -94,8 +98,10 @@ bool compareKeypoints(SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoi
         t.logElapsed("render to canvas: with prev keypoints");
         
         // Cleanup //
-        sift_free_keypoints(keypointsPrev);
-        s.computedKeypoints.pop_back();
+        if (!retval) {
+            sift_free_keypoints(keypointsPrev);
+            s.computedKeypoints.pop_back();
+        }
         // //
     }
     else {
@@ -105,5 +111,5 @@ bool compareKeypoints(SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoi
         t.logElapsed("render to canvas: no prev keypoints");
     }
     
-    return false;
+    return retval;
 }

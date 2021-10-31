@@ -223,7 +223,7 @@ int my_sift_read_matches_from_file(const char *filename,
     // Load extra params (>=v1001 only)
     if (version >= 1001) {
         if(fgets(buffer, buffer_size, stream) != NULL){
-            scanf(buffer, "%d %a\n", meth_flag, thresh);
+            sscanf(buffer, "%d %a\n", meth_flag, thresh);
         }
     }
     else {

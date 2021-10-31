@@ -18,8 +18,8 @@
 #include "my_sift_additions.h"
 
 #include <filesystem>
-//namespace fs = std::filesystem;
-namespace fs = std::__fs::filesystem;
+namespace fs = std::filesystem;
+//namespace fs = std::__fs::filesystem;
 #include "strnatcmp.hpp"
 
 #include "opencv2/highgui.hpp"

@@ -13,39 +13,62 @@ static void on_trackbar( int, void* )
    alpha = (double) alpha_slider/alpha_slider_max ;
 }
 
+size_t getSkip(char* arg) {
+    // Use given skip (selects the first image to show)
+    char* endptr;
+    std::uintmax_t skip_ = std::strtoumax(arg, &endptr, 0); // https://en.cppreference.com/w/cpp/string/byte/strtoimax
+    // Check for overflow
+    auto max = std::numeric_limits<size_t>::max();
+    if (skip_ > max || ERANGE == errno) {
+        std::cout << "Argument (\"" << skip_ << "\") is too large for size_t (max value is " << max << "). Exiting." << std::endl;
+        exit(1);
+    }
+    // Check for conversion failures ( https://wiki.sei.cmu.edu/confluence/display/c/ERR34-C.+Detect+errors+when+converting+a+string+to+a+number )
+    else if (endptr == arg) {
+        std::cout << "Argument (\"" << arg << "\") could not be converted to an unsigned integer. Exiting." << std::endl;
+        exit(2);
+    }
+    printf("Using skip %zu\n", skip_); // Note: if you give a negative number: "If the minus sign was part of the input sequence, the numeric value calculated from the sequence of digits is negated as if by unary minus in the result type." ( https://en.cppreference.com/w/c/string/byte/strtoimax )
+    return skip_;
+}
 int main(int argc, char **argv)
 {
+    // Set the default folder path
+    std::string folderPath = "testFrames2_cropped"; //"testFrames1";
+    //std::string folderPath = "outFrames";
+    
 	// Set the default "skip"
 	size_t skip = 0;//120;//60;//100;//38;//0;
-	if(argc >= 2){
-		// Use given skip (selects the first image to show)
-		char* endptr;
-		std::uintmax_t skip_ = std::strtoumax(argv[1], &endptr, 0); // https://en.cppreference.com/w/cpp/string/byte/strtoimax
-		// Check for overflow
-		auto max = std::numeric_limits<size_t>::max();
-		if (skip_ > max || ERANGE == errno) {
-			std::cout << "Argument (\"" << skip_ << "\") is too large for size_t (max value is " << max << "). Exiting." << std::endl;
-			return 1;
-		}
-		// Check for conversion failures ( https://wiki.sei.cmu.edu/confluence/display/c/ERR34-C.+Detect+errors+when+converting+a+string+to+a+number )
-		else if (endptr == argv[1]) {
-			std::cout << "Argument (\"" << argv[1] << "\") could not be converted to an unsigned integer. Exiting." << std::endl;
-			return 2;
-		}
-		skip = skip_;
-		printf("Using skip %zu\n", skip); // Note: if you give a negative number: "If the minus sign was part of the input sequence, the numeric value calculated from the sequence of digits is negated as if by unary minus in the result type." ( https://en.cppreference.com/w/c/string/byte/strtoimax )
-	}
+    // Parse arguments
+    for (int i = 1; i < argc; i++) {
+        if (i+1 < argc) {
+            if (strcmp(argv[i], "--folder") == 0) {
+                folderPath = argv[i+1];
+                i++;
+            }
+            else if (strcmp(argv[i], "--skip") == 0) {
+                skip = getSkip(argv[i+1]);
+                i++;
+            }
+            else {
+                goto else_;
+            }
+        }
+        else {
+else_:
+            if (argc > 1) {
+                skip = getSkip(argv[1]);
+            }
+        }
+    }
 	
-	// For each output image, loop through it
-	std::string folderPath = "testFrames2_cropped"; //"testFrames1";
-	//std::string folderPath = "outFrames";
-	
+    // For each output image, loop through it
 	// https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
 	//--- filenames are unique so we can use a set
 	std::vector<std::string> files;
 	for (const auto & entry : fs::directory_iterator(folderPath)) {
 		// Ignore files we treat specially:
-		if (endsWith(entry.path().string(), ".keypoints.txt") || endsWith(entry.path().string(), ".matches.txt")) {
+        if (entry.is_directory() || endsWith(entry.path().string(), ".keypoints.txt") || endsWith(entry.path().string(), ".matches.txt") || entry.path().filename().string() == ".DS_Store") {
 			continue;
 		}
 		files.push_back(entry.path().string());
@@ -57,6 +80,7 @@ int main(int argc, char **argv)
 	//--- print the files sorted by filename
     SIFTState s;
     SIFTParams p;
+    bool retryNeeded = false;
 	for (size_t i = skip; i < files.size(); i++) {
 		//for (size_t i = files.size() - 1 - skip; i < files.size() /*underflow of i will end the loop*/; i--) {
 		auto& path = files[i];
@@ -130,7 +154,7 @@ int main(int argc, char **argv)
         t.logElapsed("draw keypoints");
 
 		// Compare keypoints if we had some previously
-        bool retryNeeded = compareKeypoints(s, p, keypoints, backtorgb);
+        retryNeeded = compareKeypoints(s, p, keypoints, backtorgb);
 		
 		//imshow(path, backtorgb);
 
@@ -153,7 +177,7 @@ int main(int argc, char **argv)
 		cv::Mat& img_object = backtorgb; // The image containing the "object" (current image)
 		cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
 		std::string fname = i + 1 >= files.size() ? "" : files[i+1] + ".keypoints.txt";
-        std::string fnameMatches = i + 1 >= files.size() ? "" : files[i+1] + ".matches.txt";
+        std::string fnameMatches = i + 1 >= files.size() ? "" : files[i+1] + (p.paramsName == nullptr ? "" : (std::string(".") + p.paramsName)) + ".matches" + ".txt";
         struct sift_keypoints* ptr;
         bool skipSavingKeypoints = false;
 		do {
@@ -162,7 +186,11 @@ int main(int argc, char **argv)
 			switch (keycode) {
 			case 'a':
 				// Go to previous image
-				i -= 2; // FIXME: fix this part, should be decrementing right amount
+				i -= 2; // FIXME: fix this part, should be decrementing right amount. fix segfault on access previous keypoints too
+                // Overwrite prev keypoints
+                sift_free_keypoints(s.computedKeypoints.back());
+                s.computedKeypoints.pop_back();
+                s.computedKeypoints.push_back(keypoints);
 				break;
 			case 'f':
 				// 'f' for "file" writing
@@ -357,7 +385,9 @@ int main(int argc, char **argv)
 		free(x);
 		
 		// Save keypoints
-        s.computedKeypoints.push_back(keypoints);
+        if (!retryNeeded) {
+            s.computedKeypoints.push_back(keypoints);
+        }
 		
 		// Reset RNG so some colors coincide
 		resetRNG();

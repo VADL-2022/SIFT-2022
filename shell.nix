@@ -14,15 +14,18 @@ with pkgs;
 let
   opencvGtk = opencv.override (old : { enableGtk2 = true; }); # https://stackoverflow.com/questions/40667313/how-to-get-opencv-to-work-in-nix , https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/opencv/default.nix
   my-python-packages = python39.withPackages(ps: with ps; [
-    opencv
+    (lib.optional stdenv.hostPlatform.isMacOS opencv)
     numpy
     matplotlib
   ]);
 in
 mkShell {
   buildInputs = [ my-python-packages
-                  python39Packages.opencv4
-    opencv clang pkgconfig libpng
+                ] ++ (lib.optional stdenv.hostPlatform.isMacOS [ opencv ])
+                  ++ (lib.optional stdenv.hostPlatform.isLinux [ (python39Packages.opencv4.override { enableGtk2 = true; })
+                                                                 opencvGtk
+                                                               ]) ++ [
+    clang pkgconfig libpng
 
     #bear # Optional, for generating emacs compile_commands.json
 
