@@ -24,6 +24,7 @@
 		300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48F27209F9400969C5F /* Semaphore.cpp */; };
 		30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBBE2731A01600473B25 /* DataSource.cpp */; };
 		30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBC72732EBF200473B25 /* DataOutput.cpp */; };
+		30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBCA2733137400473B25 /* DataOutputRun.cpp */; };
 		30CE61E827234CD2001C987F /* SIFT.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61E727234CD2001C987F /* SIFT.hpp */; };
 		30CE61EB27235141001C987F /* Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61E927235141001C987F /* Timer.cpp */; };
 		30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61EC27237D8C001C987F /* compareKeypoints.cpp */; };
@@ -95,6 +96,7 @@
 		30CBDBBF2731A01600473B25 /* DataSource.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataSource.hpp; sourceTree = "<group>"; };
 		30CBDBC72732EBF200473B25 /* DataOutput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataOutput.cpp; sourceTree = "<group>"; };
 		30CBDBC82732EBF200473B25 /* DataOutput.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataOutput.hpp; sourceTree = "<group>"; };
+		30CBDBCA2733137400473B25 /* DataOutputRun.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataOutputRun.cpp; sourceTree = "<group>"; };
 		30CE61E727234CD2001C987F /* SIFT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SIFT.hpp; sourceTree = "<group>"; };
 		30CE61E927235141001C987F /* Timer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Timer.cpp; sourceTree = "<group>"; };
 		30CE61EA27235141001C987F /* Timer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Timer.hpp; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 				30CE61EC27237D8C001C987F /* compareKeypoints.cpp */,
 				30CE61ED27237D8C001C987F /* compareKeypoints.hpp */,
 				30CE61EF27237E30001C987F /* Includes.hpp */,
+				30CBDBCA2733137400473B25 /* DataOutputRun.cpp */,
 				30CE61F027237F17001C987F /* KeypointsAndMatching.cpp */,
 				30CE61F127237F18001C987F /* KeypointsAndMatching.hpp */,
 				30CE61F327238409001C987F /* common.cpp */,
@@ -324,6 +327,7 @@
 				300EE49F27209F9400969C5F /* lib_sift.c in Sources */,
 				300EE49C27209F9400969C5F /* lib_matching.c in Sources */,
 				300EE4B527209F9400969C5F /* siftMain.cpp in Sources */,
+				30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */,
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
 				300EE49527209F9400969C5F /* lib_keypoint.c in Sources */,
 				300EE4A427209F9400969C5F /* lib_description.c in Sources */,

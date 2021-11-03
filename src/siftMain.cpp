@@ -27,8 +27,8 @@ static void on_trackbar( int, void* )
 
 // Config //
 // Data source
-using DataSourceT = FolderDataSource;
-//using DataSourceT = CameraDataSource;
+//using DataSourceT = FolderDataSource;
+using DataSourceT = CameraDataSource;
 
 // Data output
 using DataOutputT = PreviewWindowDataOutput;
