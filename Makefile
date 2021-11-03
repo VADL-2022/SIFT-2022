@@ -18,12 +18,12 @@ OBJ := obj
 SIFT := sift_anatomy_20141201
 SIFT_SRC := ./$(SIFT)/src
 
-SOURCES := $(filter-out src/example2.cpp src/quadcopter.cpp, $(wildcard $(SRC)/*.cpp)) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
+SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(wildcard $(SRC)/*.cpp)) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
 SOURCES_C := $(wildcard $(SRC)/*.c)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
 $(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile
 
-all: common example quadcopter
+all: common sift quadcopter
 # gcc -std=c99 -o example example2.c $(SIFT)/lib_sift.o $(SIFT)/lib_sift_anatomy.o \
 # $(SIFT)/lib_keypoint.o  $(SIFT)/lib_scalespace.o $(SIFT)/lib_description.o \
 # $(SIFT)/lib_discrete.o $(SIFT)/lib_util.o -lm -I$(SIFT)
@@ -34,7 +34,7 @@ setup:
 common: $(OBJECTS)
 	cd $(SIFT) && $(MAKE)
 
-example: $(OBJECTS) src/example2.o
+sift: $(OBJECTS) src/siftMain.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
 quadcopter: $(OBJECTS) src/quadcopter.o
