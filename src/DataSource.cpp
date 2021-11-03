@@ -151,11 +151,28 @@ std::string FolderDataSource::nameForIndex(size_t index) {
     return files[index];
 }
 
-float* FolderDataSource::dataForMat(size_t index) {
-    return (float*)cache.at(index).data;
+cv::Mat FolderDataSource::siftImageForMat(size_t index) {
+    return cache.at(index);
 }
-float* CameraDataSource::dataForMat(size_t index) {
-    return (float*)cache.at(index).data;
+cv::Mat FolderDataSource::colorImageForMat(size_t index) {
+    cv::Mat color = cache.at(index);
+    
+    // Make the black and white OpenCV matrix into color but still black and white (we do this so we can draw colored rectangles on it later)
+    cv::Mat backtorgb;
+    t.reset();
+    cv::cvtColor(color, backtorgb, cv::COLOR_GRAY2RGBA); // https://stackoverflow.com/questions/21596281/how-does-one-convert-a-grayscale-image-to-rgb-in-opencv-python
+    t.logElapsed("convert image to color");
+    return backtorgb;
+}
+cv::Mat CameraDataSource::siftImageForMat(size_t index) {
+    cv::Mat grey = cache.at(index), mat;
+    t.reset();
+    cv::cvtColor(grey, mat, cv::COLOR_RGB2GRAY);
+    t.logElapsed("convert image to greyscale");
+    return mat;
+}
+cv::Mat CameraDataSource::colorImageForMat(size_t index) {
+    return cache.at(index);
 }
 
 CameraDataSource::CameraDataSource() {

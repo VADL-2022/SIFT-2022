@@ -46,7 +46,8 @@ int main(int argc, char **argv)
     bool retryNeeded = false;
     for (size_t& i = src.currentIndex;; i++) {
         cv::Mat mat = src.get(i);
-        float* x = src.dataForMat(i);
+        cv::Mat greyscale = src.siftImageForMat(i);
+        float* x = (float*)greyscale.data;
         size_t w = mat.cols, h = mat.rows;
         auto path = src.nameForIndex(i);
 
@@ -68,11 +69,7 @@ int main(int argc, char **argv)
             n = s.loadedKeypointsSize;
 		}
 
-		// Make the black and white OpenCV matrix into color but still black and white (we do this so we can draw colored rectangles on it later)
-		cv::Mat backtorgb;
-        t.reset();
-		cv::cvtColor(mat, backtorgb, cv::COLOR_GRAY2RGBA); // https://stackoverflow.com/questions/21596281/how-does-one-convert-a-grayscale-image-to-rgb-in-opencv-python
-        t.logElapsed("convert image");
+        cv::Mat backtorgb = src.colorImageForMat(i);
 		if (i == skip) {
 			puts("Init firstImage");
             s.firstImage = backtorgb;
@@ -101,7 +98,6 @@ int main(int argc, char **argv)
 
 		// cleanup
         free(k);
-		free(x);
 		
 		// Save keypoints
         if (!retryNeeded) {

@@ -38,7 +38,8 @@ struct FolderDataSource : public DataSourceBase<FolderDataSource>
     cv::Mat get(size_t index);
     
     std::string nameForIndex(size_t index);
-    float* dataForMat(size_t index);
+    cv::Mat siftImageForMat(size_t index);
+    cv::Mat colorImageForMat(size_t index);
     
     size_t currentIndex; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
@@ -59,7 +60,8 @@ struct CameraDataSource : public DataSourceBase<CameraDataSource>
     cv::Mat get(size_t index);
     
     std::string nameForIndex(size_t index);
-    float* dataForMat(size_t index);
+    cv::Mat siftImageForMat(size_t index);
+    cv::Mat colorImageForMat(size_t index);
     
     cv::VideoCapture cap;
     size_t currentIndex; // Index to save into next
