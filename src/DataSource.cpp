@@ -235,7 +235,10 @@ cv::Mat CameraDataSource::get(size_t index) {
     if (i < currentIndex) {
         throw "Index given has no cached image";
     }
-    if (i > currentIndex) { // Index given is too large
+    else if (i == currentIndex) {
+        currentIndex++;
+    }
+    else if (i > currentIndex) { // Index given is too large
         return cv::Mat();
     }
     

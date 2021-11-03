@@ -45,6 +45,7 @@ int main(int argc, char **argv)
     SIFTParams p;
     bool retryNeeded = false;
     for (size_t& i = src.currentIndex;; i++) {
+        std::cout << "i: " << i << std::endl;
         cv::Mat mat = src.get(i);
         cv::Mat greyscale = src.siftImageForMat(i);
         float* x = (float*)greyscale.data;
