@@ -167,7 +167,9 @@ cv::Mat FolderDataSource::colorImageForMat(size_t index) {
 cv::Mat CameraDataSource::siftImageForMat(size_t index) {
     cv::Mat grey = cache.at(index), mat;
     t.reset();
+    std::cout << type2str(grey.type()) << std::endl;
     cv::cvtColor(grey, mat, cv::COLOR_RGB2GRAY);
+    std::cout << type2str(mat.type()) << std::endl;
     t.logElapsed("convert image to greyscale");
     return mat;
 }
