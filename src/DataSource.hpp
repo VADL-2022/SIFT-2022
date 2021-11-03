@@ -64,7 +64,7 @@ struct CameraDataSource : public DataSourceBase<CameraDataSource>
     cv::Mat colorImageForMat(size_t index);
     
     cv::VideoCapture cap;
-    size_t currentIndex; // Index to save into next
+    size_t currentIndex = 0; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
 private:
     void init();
