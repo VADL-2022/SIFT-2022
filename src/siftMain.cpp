@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 		// Compare keypoints if we had some previously
         retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
 		
-        runDataOutput<DataOutputT>(o, src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+        o.run(src, s, p, backtorgb, keypoints, retryNeeded, i, n);
 	
 		// write to standard output
 		//sift_write_to_file("/dev/stdout", k, n);

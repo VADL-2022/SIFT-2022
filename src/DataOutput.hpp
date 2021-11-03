@@ -38,17 +38,18 @@ struct FileDataOutput : public DataOutputBase<FileDataOutput>
 
 //#include "DataOutputRun.cpp"
 
-#define ARGS DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n
-template<class T, class DataSourceT>
-void runDataOutput(T& o, ARGS) { throw 0; }
-template<class DataSourceT>
-void runDataOutput<PreviewWindowDataOutput, DataSourceT>(PreviewWindowDataOutput& o, ARGS) {
-    o.run(src, s, p, backtorgb, keypoints, retryNeeded, index, n);
-}
+//#define ARGS DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n
+//// https://stackoverflow.com/questions/6138439/understanding-simple-c-partial-template-specialization : "Partial specialization of a function template['s type parameters], whether it is member function template or stand-alone function template, is not allowed by the Standard"
+//template<class T, class DataSourceT>
+//void runDataOutput(T& o, ARGS) { throw 0; }
 //template<class DataSourceT>
-//void runDataOutput<FileDataOutput, DataSourceT>(FileDataOutput& o, ARGS) {
-//    //o.run(src, s, p, backtorgb, keypoints, retryNeeded, index, n);
+//void runDataOutput<PreviewWindowDataOutput, DataSourceT>(PreviewWindowDataOutput& o, ARGS) {
+//    o.run(src, s, p, backtorgb, keypoints, retryNeeded, index, n);
 //}
+////template<class DataSourceT>
+////void runDataOutput<FileDataOutput, DataSourceT>(FileDataOutput& o, ARGS) {
+////    //o.run(src, s, p, backtorgb, keypoints, retryNeeded, index, n);
+////}
 
 
 template <typename DataSourceT>
