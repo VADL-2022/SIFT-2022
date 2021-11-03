@@ -1,3 +1,11 @@
+//
+//  KeypointsAndMatching.hpp
+//  SIFT
+//
+//  Created by VADL on 10/31/21.
+//  Copyright © 2021 VADL. All rights reserved.
+//
+
 #ifndef KeypointsAndMatching_hpp
 #define KeypointsAndMatching_hpp
 
@@ -35,7 +43,6 @@ struct SIFTState {
     ~SIFTState();
     
     std::vector<struct sift_keypoints*> computedKeypoints;
-    cv::Mat canvas;
     std::vector<cv::Mat> allTransformations;
     cv::Mat firstImage;
     

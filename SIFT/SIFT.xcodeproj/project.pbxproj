@@ -20,8 +20,10 @@
 		300EE4AA27209F9400969C5F /* lib_sift_anatomy.c in Sources */ = {isa = PBXBuildFile; fileRef = 300EE47D27209F9400969C5F /* lib_sift_anatomy.c */; };
 		300EE4B027209F9400969C5F /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48827209F9400969C5F /* utils.cpp */; };
 		300EE4B427209F9400969C5F /* my_sift_additions.c in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48D27209F9400969C5F /* my_sift_additions.c */; };
-		300EE4B527209F9400969C5F /* example2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48E27209F9400969C5F /* example2.cpp */; };
+		300EE4B527209F9400969C5F /* siftMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48E27209F9400969C5F /* siftMain.cpp */; };
 		300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48F27209F9400969C5F /* Semaphore.cpp */; };
+		30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBBE2731A01600473B25 /* DataSource.cpp */; };
+		30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBC72732EBF200473B25 /* DataOutput.cpp */; };
 		30CE61E827234CD2001C987F /* SIFT.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61E727234CD2001C987F /* SIFT.hpp */; };
 		30CE61EB27235141001C987F /* Timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61E927235141001C987F /* Timer.cpp */; };
 		30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61EC27237D8C001C987F /* compareKeypoints.cpp */; };
@@ -82,13 +84,17 @@
 		300EE48827209F9400969C5F /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = utils.cpp; sourceTree = "<group>"; };
 		300EE48B27209F9400969C5F /* my_sift_additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = my_sift_additions.h; sourceTree = "<group>"; };
 		300EE48D27209F9400969C5F /* my_sift_additions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = my_sift_additions.c; sourceTree = "<group>"; };
-		300EE48E27209F9400969C5F /* example2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = example2.cpp; sourceTree = "<group>"; };
+		300EE48E27209F9400969C5F /* siftMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = siftMain.cpp; sourceTree = "<group>"; };
 		300EE48F27209F9400969C5F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		300EE49027209F9400969C5F /* utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = utils.hpp; sourceTree = "<group>"; };
 		300EE49127209F9400969C5F /* quadcopter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = quadcopter.cpp; sourceTree = "<group>"; };
 		300EE49227209F9400969C5F /* strnatcmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = strnatcmp.cpp; sourceTree = "<group>"; };
 		300EE4B827209FF000969C5F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		300EE4BA2720A98700969C5F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Config.xcconfig; path = ../Config.xcconfig; sourceTree = "<group>"; };
+		30CBDBBE2731A01600473B25 /* DataSource.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataSource.cpp; sourceTree = "<group>"; };
+		30CBDBBF2731A01600473B25 /* DataSource.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataSource.hpp; sourceTree = "<group>"; };
+		30CBDBC72732EBF200473B25 /* DataOutput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataOutput.cpp; sourceTree = "<group>"; };
+		30CBDBC82732EBF200473B25 /* DataOutput.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataOutput.hpp; sourceTree = "<group>"; };
 		30CE61E727234CD2001C987F /* SIFT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SIFT.hpp; sourceTree = "<group>"; };
 		30CE61E927235141001C987F /* Timer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Timer.cpp; sourceTree = "<group>"; };
 		30CE61EA27235141001C987F /* Timer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Timer.hpp; sourceTree = "<group>"; };
@@ -206,7 +212,7 @@
 				300EE48827209F9400969C5F /* utils.cpp */,
 				300EE48B27209F9400969C5F /* my_sift_additions.h */,
 				300EE48D27209F9400969C5F /* my_sift_additions.c */,
-				300EE48E27209F9400969C5F /* example2.cpp */,
+				300EE48E27209F9400969C5F /* siftMain.cpp */,
 				300EE48F27209F9400969C5F /* Semaphore.cpp */,
 				300EE49027209F9400969C5F /* utils.hpp */,
 				300EE49127209F9400969C5F /* quadcopter.cpp */,
@@ -221,6 +227,10 @@
 				30CE61F127237F18001C987F /* KeypointsAndMatching.hpp */,
 				30CE61F327238409001C987F /* common.cpp */,
 				30CE61F427238409001C987F /* common.hpp */,
+				30CBDBBE2731A01600473B25 /* DataSource.cpp */,
+				30CBDBBF2731A01600473B25 /* DataSource.hpp */,
+				30CBDBC72732EBF200473B25 /* DataOutput.cpp */,
+				30CBDBC82732EBF200473B25 /* DataOutput.hpp */,
 			);
 			name = src;
 			path = ../../src;
@@ -307,11 +317,13 @@
 				30CE61F227237F18001C987F /* KeypointsAndMatching.cpp in Sources */,
 				300EE4B027209F9400969C5F /* utils.cpp in Sources */,
 				300EE4A227209F9400969C5F /* lib_io_scalespace.c in Sources */,
+				30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */,
 				300EE49327209F9400969C5F /* Makefile in Sources */,
+				30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */,
 				30CE61F527238409001C987F /* common.cpp in Sources */,
 				300EE49F27209F9400969C5F /* lib_sift.c in Sources */,
 				300EE49C27209F9400969C5F /* lib_matching.c in Sources */,
-				300EE4B527209F9400969C5F /* example2.cpp in Sources */,
+				300EE4B527209F9400969C5F /* siftMain.cpp in Sources */,
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
 				300EE49527209F9400969C5F /* lib_keypoint.c in Sources */,
 				300EE4A427209F9400969C5F /* lib_description.c in Sources */,

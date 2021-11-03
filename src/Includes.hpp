@@ -1,3 +1,11 @@
+//
+//  Includes.hpp
+//  SIFT
+//
+//  Created by VADL on 10/31/21.
+//  Copyright © 2021 VADL. All rights reserved.
+//
+
 #ifndef Includes_h
 #define Includes_h
 
@@ -17,16 +25,10 @@
 
 #include "my_sift_additions.h"
 
-#include <filesystem>
-namespace fs = std::filesystem;
-//namespace fs = std::__fs::filesystem;
-#include "strnatcmp.hpp"
-
 #include "opencv2/highgui.hpp"
 #include <optional>
 #include <cinttypes>
 #include <iostream>
-#include "utils.hpp"
 
 //#include <errno.h>
 #define ESUCCESS    0        /* Success */ // From https://opensource.apple.com/source/xnu/xnu-344.21.73/osfmk/libsa/errno.h.auto.html

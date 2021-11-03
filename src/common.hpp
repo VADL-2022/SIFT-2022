@@ -1,3 +1,11 @@
+//
+//  common.hpp
+//  SIFT
+//
+//  Created by VADL on 10/31/21.
+//  Copyright © 2021 VADL. All rights reserved.
+//
+
 #ifndef common_hpp
 #define common_hpp
 

@@ -1,8 +1,16 @@
+//
+//  compareKeypoints.cpp
+//  SIFT
+//
+//  Created by VADL on 10/31/21.
+//  Copyright © 2021 VADL. All rights reserved.
+//
+
 #include "compareKeypoints.hpp"
 
 #include "KeypointsAndMatching.hpp"
 
-bool compareKeypoints(SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoints, cv::Mat& backtorgb) {
+bool compareKeypoints(PreviewWindowDataOutput& o, SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoints, cv::Mat& backtorgb) {
     bool retval = false;
     
     // Compare keypoints if we had some previously
@@ -94,7 +102,7 @@ bool compareKeypoints(SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoi
         t.reset();
         // Save to canvas
         cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
-        img_matches.copyTo(s.canvas);
+        img_matches.copyTo(o.canvas);
         t.logElapsed("render to canvas: with prev keypoints");
         
         // Cleanup //
@@ -107,7 +115,7 @@ bool compareKeypoints(SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoi
     else {
         t.reset();
         // Save to canvas
-        backtorgb.copyTo(s.canvas);
+        backtorgb.copyTo(o.canvas);
         t.logElapsed("render to canvas: no prev keypoints");
     }
     

@@ -1,3 +1,11 @@
+//
+//  my_sift_additions.c
+//  SIFT
+//
+//  Created by VADL on 9/5/21.
+//  Copyright © 2021 VADL. All rights reserved.
+//
+
 #include "my_sift_additions.h"
 
 #include <lib_sift.h>

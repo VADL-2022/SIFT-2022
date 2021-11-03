@@ -1,3 +1,11 @@
+//
+//  common.cpp
+//  SIFT
+//
+//  Created by VADL on 10/31/21.
+//  Copyright © 2021 VADL. All rights reserved.
+//
+
 #include "common.hpp"
 
 Timer t;

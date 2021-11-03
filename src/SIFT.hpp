@@ -1,3 +1,11 @@
+//
+//  SIFT.hpp
+//  SIFT
+//
+//  Created by VADL on 10/22/21.
+//  Copyright © 2021 VADL. All rights reserved.
+//
+
 template <typename Wrapped>
 struct SIFTBase {
     
