@@ -42,13 +42,13 @@ struct FileDataOutput : public DataOutputBase<FileDataOutput>
 template<class T, class DataSourceT>
 void runDataOutput(T& o, ARGS) { throw 0; }
 template<class DataSourceT>
-void runDataOutput(PreviewWindowDataOutput& o, ARGS) {
+void runDataOutput<PreviewWindowDataOutput, DataSourceT>(PreviewWindowDataOutput& o, ARGS) {
     o.run(src, s, p, backtorgb, keypoints, retryNeeded, index, n);
 }
-template<class DataSourceT>
-void runDataOutput(FileDataOutput& o, ARGS) {
-    //o.run(src, s, p, backtorgb, keypoints, retryNeeded, index, n);
-}
+//template<class DataSourceT>
+//void runDataOutput<FileDataOutput, DataSourceT>(FileDataOutput& o, ARGS) {
+//    //o.run(src, s, p, backtorgb, keypoints, retryNeeded, index, n);
+//}
 
 
 template <typename DataSourceT>
