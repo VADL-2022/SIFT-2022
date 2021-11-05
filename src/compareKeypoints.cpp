@@ -57,8 +57,8 @@ bool compareKeypoints(PreviewWindowDataOutput& o, SIFTState& s, SIFTParams& p, s
                 // fprintf_one_keypoint(f, k2B->list[i], dim, n_bins, 2);
                 // fprintf(f, "\n");
 
-                drawSquare(backtorgb, cv::Point(s.out_k2A->list[i]->x, s.out_k2A->list[i]->y), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
-                cv::line(backtorgb, cv::Point(s.out_k1->list[i]->x, s.out_k1->list[i]->y), cv::Point(s.out_k2A->list[i]->x, s.out_k2A->list[i]->y), lastColor, 1);
+                drawSquare(o.canvas, cv::Point(s.out_k2A->list[i]->x, s.out_k2A->list[i]->y), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
+                cv::line(o.canvas, cv::Point(s.out_k1->list[i]->x, s.out_k1->list[i]->y), cv::Point(s.out_k2A->list[i]->x, s.out_k2A->list[i]->y), lastColor, 1);
             }
         }
         t.logElapsed("draw matches");
@@ -99,11 +99,11 @@ bool compareKeypoints(PreviewWindowDataOutput& o, SIFTState& s, SIFTParams& p, s
             t.logElapsed("find homography");
         }
         
-        t.reset();
-        // Save to canvas
-        cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
-        img_matches.copyTo(o.canvas);
-        t.logElapsed("render to canvas: with prev keypoints");
+//        t.reset();
+//        // Save to canvas
+//        cv::Mat& img_matches = backtorgb; // The image on which to draw the lines showing corners of the object (current image)
+//        img_matches.copyTo(o.canvas);
+//        t.logElapsed("render to canvas: with prev keypoints");
         
         // Cleanup //
         if (!retval) {
@@ -113,10 +113,10 @@ bool compareKeypoints(PreviewWindowDataOutput& o, SIFTState& s, SIFTParams& p, s
         // //
     }
     else {
-        t.reset();
-        // Save to canvas
-        backtorgb.copyTo(o.canvas);
-        t.logElapsed("render to canvas: no prev keypoints");
+//        t.reset();
+//        // Save to canvas
+//        backtorgb.copyTo(o.canvas);
+//        t.logElapsed("render to canvas: no prev keypoints");
     }
     
     return retval;

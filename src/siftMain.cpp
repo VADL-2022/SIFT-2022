@@ -27,8 +27,8 @@ static void on_trackbar( int, void* )
 
 // Config //
 // Data source
-//using DataSourceT = FolderDataSource;
-using DataSourceT = CameraDataSource;
+using DataSourceT = FolderDataSource;
+//using DataSourceT = CameraDataSource;
 
 // Data output
 using DataOutputT = PreviewWindowDataOutput;
@@ -76,10 +76,11 @@ int main(int argc, char **argv)
             s.firstImage = backtorgb;
 		}
 
-		// Draw keypoints on `mat`
+		// Draw keypoints on `o.canvas`
         t.reset();
+        backtorgb.copyTo(o.canvas);
 		for(int i=0; i<n; i++){
-			drawSquare(backtorgb, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
+            drawSquare(o.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
 			//break;
 			// fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
 			// for(int j=0; j<128; j++){
@@ -89,7 +90,7 @@ int main(int argc, char **argv)
 		}
         t.logElapsed("draw keypoints");
 
-		// Compare keypoints if we had some previously
+		// Compare keypoints if we had some previously and render to canvas if needed
         retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
 		
         o.run(src, s, p, backtorgb, keypoints, retryNeeded, i, n);

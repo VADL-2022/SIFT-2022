@@ -33,7 +33,9 @@ struct PreviewWindowDataOutput : public DataOutputBase<PreviewWindowDataOutput>
 
 struct FileDataOutput : public DataOutputBase<FileDataOutput>
 {
+    void run(cv::Mat frame, std::string filenameNoExt, double fps, cv::Size sizeFrame);
     
+    cv::VideoWriter writer;
 };
 
 //#include "DataOutputRun.cpp"
@@ -50,6 +52,7 @@ struct FileDataOutput : public DataOutputBase<FileDataOutput>
 ////void runDataOutput<FileDataOutput, DataSourceT>(FileDataOutput& o, ARGS) {
 ////    //o.run(src, s, p, backtorgb, keypoints, retryNeeded, index, n);
 ////}
+//#undef ARGS
 
 
 template <typename DataSourceT>

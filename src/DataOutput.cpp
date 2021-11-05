@@ -9,6 +9,8 @@
 #include "DataOutput.hpp"
 
 #include "opencv2/highgui.hpp"
+#include <fstream>
+#include "utils.hpp"
 
 void PreviewWindowDataOutput::init(size_t width, size_t height) {
     // Initialize canvas if needed
@@ -27,4 +29,51 @@ void PreviewWindowDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
     t.logElapsed("show canvas window");
 }
 
-#undef ARGS
+// Throws if fails
+std::string openFileWithUniqueName(std::string name, std::string extension) {
+  // Based on https://stackoverflow.com/questions/13108973/creating-file-names-automatically-c
+  
+  std::ofstream ofile;
+
+  std::string fname;
+  for(unsigned int n = 0; ; ++ n)
+    {
+      fname = name + std::to_string(n) + extension;
+
+      std::ifstream ifile;
+      ifile.open(fname.c_str());
+
+      if(ifile.is_open())
+	{
+	}
+      else
+	{
+	  ofile.open(fname.c_str());
+	  break;
+	}
+
+      ifile.close();
+    }
+
+  if(!ofile.is_open())
+    {
+      //return "";
+      throw "";
+    }
+
+  return fname;
+}
+
+void FileDataOutput::run(cv::Mat frame, std::string filenameNoExt, double fps, cv::Size sizeFrame) {
+    bool first = !writer.isOpened();
+    if (first) {
+        int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
+
+        bool isColor = (frame.type() == CV_8UC3);
+        std::cout << "Output type: " << type2str(frame.type()) << "\nisColor: " << isColor << std::endl;
+        std::string filename = openFileWithUniqueName(filenameNoExt, ".mp4");
+        writer.open(filename, codec, fps, sizeFrame, isColor);
+    }
+    
+    writer.write(frame);
+}
