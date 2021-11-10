@@ -11,11 +11,13 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+extern "C" {
 #include <lib_sift.h>
 #include <lib_sift_anatomy.h>
 #include <lib_keypoint.h>
 #include <lib_matching.h>
 #include <lib_util.h>
+}
 #include <io_png.h>
 
 // Use the OpenCV C API ( http://doc.aldebaran.com/2-0/dev/cpp/examples/vision/opencv.html )
