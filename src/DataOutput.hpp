@@ -183,7 +183,7 @@ bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                     else { // No other way to handle this is provided
                         perror("");
                         //fatal_error("File \"%s\" could not be opened.", fname.c_str());
-                        exit(1);
+                        std::exit(1);
                     }
                 }
                 t.logElapsed("load matches");
