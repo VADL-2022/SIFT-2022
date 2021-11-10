@@ -14,19 +14,32 @@
 #include <opencv2/opencv.hpp>
 #include <utility>
 #include <unordered_map>
+#include "Config.hpp"
+
+#ifdef USE_COMMAND_LINE_ARGS
+#define MaybeVirtual virtual
+#define MaybePureVirtual = 0
+#else
+#define MaybeVirtual
+#define MaybePureVirtual
+#endif
 
 // Note: cv::Mat is reference counted automatically
 
-template <typename Wrapped>
 struct DataSourceBase {
-    bool hasNext();
-    cv::Mat next();
-    cv::Mat get(size_t index);
-    std::string nameForIndex(size_t index);
-    float* dataForMat(size_t index);
+    MaybeVirtual bool hasNext() MaybePureVirtual;
+    MaybeVirtual cv::Mat next() MaybePureVirtual;
+    MaybeVirtual cv::Mat get(size_t index) MaybePureVirtual;
+    MaybeVirtual std::string nameForIndex(size_t index) MaybePureVirtual;
+    MaybeVirtual float* dataForMat(size_t index) MaybePureVirtual;
+    
+    MaybeVirtual cv::Mat siftImageForMat(size_t index) MaybePureVirtual ;
+    MaybeVirtual cv::Mat colorImageForMat(size_t index) MaybePureVirtual;
+    
+    size_t currentIndex; // Index to save into next
 };
 
-struct FolderDataSource : public DataSourceBase<FolderDataSource>
+struct FolderDataSource : public DataSourceBase
 {
     FolderDataSource(std::string folderPath, size_t skip);
     FolderDataSource(int argc, char** argv, size_t skip);
@@ -38,6 +51,7 @@ struct FolderDataSource : public DataSourceBase<FolderDataSource>
     cv::Mat get(size_t index);
     
     std::string nameForIndex(size_t index);
+    float* dataForMat(size_t index) { return (float*)get(index).data; }
     cv::Mat siftImageForMat(size_t index);
     cv::Mat colorImageForMat(size_t index);
     
@@ -49,7 +63,7 @@ private:
     void init(std::string folderPath);
 };
 
-struct CameraDataSource : public DataSourceBase<CameraDataSource>
+struct CameraDataSource : public DataSourceBase
 {
     CameraDataSource();
     CameraDataSource(int argc, char** argv);
@@ -60,11 +74,11 @@ struct CameraDataSource : public DataSourceBase<CameraDataSource>
     cv::Mat get(size_t index);
     
     std::string nameForIndex(size_t index);
+    float* dataForMat(size_t index) { return (float*)get(index).data; }
     cv::Mat siftImageForMat(size_t index);
     cv::Mat colorImageForMat(size_t index);
     
     cv::VideoCapture cap;
-    size_t currentIndex = 0; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
 private:
     void init();

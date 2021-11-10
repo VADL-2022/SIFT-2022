@@ -17,7 +17,8 @@ namespace fs = std::filesystem;
 
 #include "common.hpp"
 
-FolderDataSource::FolderDataSource(std::string folderPath, size_t skip_ = 0): currentIndex(skip_) {
+FolderDataSource::FolderDataSource(std::string folderPath, size_t skip_ = 0) {
+    currentIndex = skip_;
     init(folderPath);
 }
 
@@ -40,7 +41,9 @@ size_t getSkip(char* arg) {
     printf("Using skip %zu\n", skip_); // Note: if you give a negative number: "If the minus sign was part of the input sequence, the numeric value calculated from the sequence of digits is negated as if by unary minus in the result type." ( https://en.cppreference.com/w/c/string/byte/strtoimax )
     return skip_;
 }
-FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip): currentIndex(skip) {
+FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
+    currentIndex = skip;
+    
     // Set the default folder path
     std::string folderPath = "testFrames2_cropped"; //"testFrames1";
     //std::string folderPath = "outFrames";
@@ -187,6 +190,8 @@ CameraDataSource::CameraDataSource(int argc, char** argv) {
 }
 
 void CameraDataSource::init() {
+    currentIndex = 0; // Index to save into next
+    
     double fps;
     //cv::Size sizeFrame(640,480);
     cv::Size sizeFrame(1920,1080);

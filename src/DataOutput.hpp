@@ -70,7 +70,6 @@ protected:
 //#undef ARGS
 
 
-// Returns true if should exit
 template <typename DataSourceT, typename DataOutputT>
 bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
 ) {
@@ -159,8 +158,7 @@ bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                 }
                 else { // No other way to handle this is provided
                     perror("");
-                    //fatal_error("File \"%s\" could not be opened.", fname.c_str());
-                    std::exit(1);
+                    fatal_error("File \"%s\" could not be opened.", fname.c_str());
                 }
             }
             s.loadedKeypoints.release(); s.loadedKeypoints.reset(ptr); // Set the unique_ptr to ptr
@@ -184,8 +182,7 @@ bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                     }
                     else { // No other way to handle this is provided
                         perror("");
-                        //fatal_error("File \"%s\" could not be opened.", fname.c_str());
-                        std::exit(1);
+                        fatal_error("File \"%s\" could not be opened.", fname.c_str());
                     }
                 }
                 t.logElapsed("load matches");
