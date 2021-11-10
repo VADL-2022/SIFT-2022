@@ -22,7 +22,7 @@ SIFT := sift_anatomy_20141201
 SIFT_SRC := ./$(SIFT)/src
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
-SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $ALL_SOURCES) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
+SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
 SOURCES_C := $(wildcard $(SRC)/*.c)
 ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
