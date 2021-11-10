@@ -39,6 +39,14 @@ int main(int argc, char **argv)
     size_t skip = 0;//120;//60;//100;//38;//0;
     DataSourceT src = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataOutputT o;
+    bool imageCaptureOnly = false;
+
+    // Parse arguments
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
+            imageCaptureOnly = true;
+        }
+    }
 	
 	//--- print the files sorted by filename
     SIFTState s;
@@ -59,17 +67,19 @@ int main(int argc, char **argv)
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
 		struct sift_keypoint_std *k;
-//		if (s.loadedKeypoints == nullptr) {
-//            t.reset();
-//            k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
-//            printf("Number of keypoints: %d\n", n);
-//            t.logElapsed("compute features");
-//		}
-//		else {
-//            k = s.loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
-//            keypoints = s.loadedKeypoints.release();
-//            n = s.loadedKeypointsSize;
-//		}
+        if (!imageCaptureOnly) {
+            if (s.loadedKeypoints == nullptr) {
+                t.reset();
+                k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
+                printf("Number of keypoints: %d\n", n);
+                t.logElapsed("compute features");
+            }
+            else {
+                k = s.loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
+                keypoints = s.loadedKeypoints.release();
+                n = s.loadedKeypointsSize;
+            }
+        }
 
         cv::Mat backtorgb = src.colorImageForMat(i);
 		if (i == skip) {
@@ -78,22 +88,28 @@ int main(int argc, char **argv)
 		}
 
 		// Draw keypoints on `o.canvas`
-//        t.reset();
+        if (!imageCaptureOnly) {
+            t.reset();
+        }
         backtorgb.copyTo(o.canvas);
-//		for(int i=0; i<n; i++){
-//            drawSquare(o.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
-//			//break;
-//			// fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
-//			// for(int j=0; j<128; j++){
-//			// 	fprintf(f, "%u ", k[i].descriptor[j]);
-//			// }
-//			// fprintf(f, "\n");
-//		}
-//        t.logElapsed("draw keypoints");
+        if (!imageCaptureOnly) {
+            for(int i=0; i<n; i++){
+                drawSquare(o.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
+                //break;
+                // fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
+                // for(int j=0; j<128; j++){
+                // 	fprintf(f, "%u ", k[i].descriptor[j]);
+                // }
+                // fprintf(f, "\n");
+            }
+            t.logElapsed("draw keypoints");
+        }
 
 		// Compare keypoints if we had some previously and render to canvas if needed
-//        retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
-//
+        if (!imageCaptureOnly) {
+            retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
+        }
+
         o.run(src, s, p, backtorgb, keypoints, retryNeeded, i, n);
 	
 		// write to standard output
