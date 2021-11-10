@@ -59,17 +59,17 @@ int main(int argc, char **argv)
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
 		struct sift_keypoint_std *k;
-		if (s.loadedKeypoints == nullptr) {
-            t.reset();
-            k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
-            printf("Number of keypoints: %d\n", n);
-            t.logElapsed("compute features");
-		}
-		else {
-            k = s.loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
-            keypoints = s.loadedKeypoints.release();
-            n = s.loadedKeypointsSize;
-		}
+//		if (s.loadedKeypoints == nullptr) {
+//            t.reset();
+//            k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
+//            printf("Number of keypoints: %d\n", n);
+//            t.logElapsed("compute features");
+//		}
+//		else {
+//            k = s.loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
+//            keypoints = s.loadedKeypoints.release();
+//            n = s.loadedKeypointsSize;
+//		}
 
         cv::Mat backtorgb = src.colorImageForMat(i);
 		if (i == skip) {
@@ -78,22 +78,22 @@ int main(int argc, char **argv)
 		}
 
 		// Draw keypoints on `o.canvas`
-        t.reset();
-        backtorgb.copyTo(o.canvas);
-		for(int i=0; i<n; i++){
-            drawSquare(o.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
-			//break;
-			// fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
-			// for(int j=0; j<128; j++){
-			// 	fprintf(f, "%u ", k[i].descriptor[j]);
-			// }
-			// fprintf(f, "\n");
-		}
-        t.logElapsed("draw keypoints");
+//        t.reset();
+//        backtorgb.copyTo(o.canvas);
+//		for(int i=0; i<n; i++){
+//            drawSquare(o.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
+//			//break;
+//			// fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
+//			// for(int j=0; j<128; j++){
+//			// 	fprintf(f, "%u ", k[i].descriptor[j]);
+//			// }
+//			// fprintf(f, "\n");
+//		}
+//        t.logElapsed("draw keypoints");
 
 		// Compare keypoints if we had some previously and render to canvas if needed
-        retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
-		
+//        retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
+//
         o.run(src, s, p, backtorgb, keypoints, retryNeeded, i, n);
 	
 		// write to standard output
