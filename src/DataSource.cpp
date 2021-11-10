@@ -188,7 +188,8 @@ CameraDataSource::CameraDataSource(int argc, char** argv) {
 
 void CameraDataSource::init() {
     double fps;
-    cv::Size sizeFrame(640,480);
+    //cv::Size sizeFrame(640,480);
+    cv::Size sizeFrame(1920,1080);
     
     // Instanciate the capture
     cap.open(0);

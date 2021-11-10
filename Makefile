@@ -3,8 +3,11 @@ CXXFLAGS += -std=c++17 $(CFLAGS)
 CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*) .*/\1/' | awk '{$$1=$$1;print}') # https://stackoverflow.com/questions/5188267/checking-the-gcc-version-in-a-makefile
 $(info $(CLANGVERSION)) # Example: "7.1.0 "
 SHELL := /bin/bash
+OS := $(shell uname -s)
 ifeq ($(shell foo="$(CLANGVERSION)"; if [ "$${foo//./}" -le 710 ]; then echo 0; fi),0) #ifeq ($(shell foo="$(CLANGVERSION)"; test ${foo//./} -le 710; echo $$?),0) # TODO: check if version less than or equal to this
-    #LFLAGS += -lc++fs
+ifeq ($(OS),Darwin)
+    LFLAGS += -lc++fs
+endif
 endif
 $(info $(LFLAGS))
 LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
@@ -23,7 +26,7 @@ SOURCES_C := $(wildcard $(SRC)/*.c)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
 $(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile
 
-all: common sift quadcopter
+all: common sift_exe quadcopter
 # gcc -std=c99 -o example example2.c $(SIFT)/lib_sift.o $(SIFT)/lib_sift_anatomy.o \
 # $(SIFT)/lib_keypoint.o  $(SIFT)/lib_scalespace.o $(SIFT)/lib_description.o \
 # $(SIFT)/lib_discrete.o $(SIFT)/lib_util.o -lm -I$(SIFT)
@@ -34,7 +37,7 @@ setup:
 common: $(OBJECTS)
 	cd $(SIFT) && $(MAKE)
 
-sift: $(OBJECTS) src/siftMain.o
+sift_exe: $(OBJECTS) src/siftMain.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
 quadcopter: $(OBJECTS) src/quadcopter.o

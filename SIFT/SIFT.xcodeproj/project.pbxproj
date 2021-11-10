@@ -31,17 +31,19 @@
 		30CE61F227237F18001C987F /* KeypointsAndMatching.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61F027237F17001C987F /* KeypointsAndMatching.cpp */; };
 		30CE61F527238409001C987F /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61F327238409001C987F /* common.cpp */; };
 		30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE49227209F9400969C5F /* strnatcmp.cpp */; };
+		30EF9790273C588B00E3D538 /* Info.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 30EF978F273C582100E3D538 /* Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		300EE44927209F6F00969C5F /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 16;
 			files = (
+				30EF9790273C588B00E3D538 /* Info.plist in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -108,6 +110,7 @@
 		30CE61F327238409001C987F /* common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = common.cpp; sourceTree = "<group>"; };
 		30CE61F427238409001C987F /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
 		30CE61F727238787001C987F /* strnatcmp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = strnatcmp.hpp; sourceTree = "<group>"; };
+		30EF978F273C582100E3D538 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +147,7 @@
 				300EE45527209F9400969C5F /* sift_anatomy_20141201 */,
 				300EE48327209F9400969C5F /* src */,
 				300EE4B827209FF000969C5F /* Config.xcconfig */,
+				30EF978F273C582100E3D538 /* Info.plist */,
 			);
 			path = SIFT;
 			sourceTree = "<group>";
@@ -380,6 +384,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -438,6 +443,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -463,6 +469,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 86HDH9K924;
 				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/SIFT/Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -474,6 +481,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 86HDH9K924;
 				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/SIFT/Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
