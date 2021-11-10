@@ -27,8 +27,8 @@ static void on_trackbar( int, void* )
 
 // Config //
 // Data source
-using DataSourceT = FolderDataSource;
-//using DataSourceT = CameraDataSource;
+//using DataSourceT = FolderDataSource;
+using DataSourceT = CameraDataSource;
 
 // Data output
 using DataOutputT = PreviewWindowDataOutput;
@@ -62,6 +62,7 @@ int main(int argc, char **argv)
 		if (s.loadedKeypoints == nullptr) {
             t.reset();
             k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
+            printf("Number of keypoints: %d\n", n);
             t.logElapsed("compute features");
 		}
 		else {
