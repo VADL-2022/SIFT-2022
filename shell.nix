@@ -22,7 +22,7 @@ let
 in
 mkShell {
   buildInputs = [ my-python-packages
-                ] ++ (lib.optional stdenv.hostPlatform.isMacOS [ opencv ])
+                ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv ])
   ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python39Packages.opencv4.override { enableGtk2 = true; })
                                                                  opencvGtk
                                                                ]) ++ [
