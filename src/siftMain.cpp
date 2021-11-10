@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
 		// Draw keypoints on `o.canvas`
 //        t.reset();
-//        backtorgb.copyTo(o.canvas);
+        backtorgb.copyTo(o.canvas);
 //		for(int i=0; i<n; i++){
 //            drawSquare(o.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
 //			//break;
