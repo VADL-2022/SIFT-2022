@@ -70,6 +70,7 @@ protected:
 //#undef ARGS
 
 
+// Returns true if should exit
 template <typename DataSourceT, typename DataOutputT>
 bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
 ) {

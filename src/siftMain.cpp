@@ -114,11 +114,12 @@ int main(int argc, char **argv)
             retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
         }
 
+        bool exit;
         if (imageFileOutput) {
-            run(o2, src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+            exit = run(o2, src, s, p, backtorgb, keypoints, retryNeeded, i, n);
         }
         else {
-            run(o, src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+            exit = run(o, src, s, p, backtorgb, keypoints, retryNeeded, i, n);
         }
 	
 		// write to standard output
@@ -130,6 +131,11 @@ int main(int argc, char **argv)
 		// Save keypoints
         if (!retryNeeded) {
             s.computedKeypoints.push_back(keypoints);
+        }
+        
+        if (exit && imageFileOutput) {
+            o2.writer.release(); // Save the file
+            break;
         }
 		
 		// Reset RNG so some colors coincide

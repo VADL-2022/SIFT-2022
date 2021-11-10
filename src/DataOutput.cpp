@@ -100,7 +100,7 @@ int FileDataOutput::waitKey(int delay) {
     std::string n;
     std::getline(std::cin, n);
     if (n == "q") {
-        return 
+        return 'q';
     }
     return 'd'; // Always advance simply
 }
