@@ -39,12 +39,16 @@ int main(int argc, char **argv)
     size_t skip = 0;//120;//60;//100;//38;//0;
     DataSourceT src = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataOutputT o;
-    bool imageCaptureOnly = false;
+    bool imageCaptureOnly = false, imageFileOutput = false;
+    FileDataOutput o2;
 
     // Parse arguments
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
             imageCaptureOnly = true;
+        }
+        else if (strcmp(argv[i], "--image-file-output")) { // Outputs to video instead of preview window
+            imageFileOutput = true;
         }
     }
 	
@@ -110,7 +114,12 @@ int main(int argc, char **argv)
             retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
         }
 
-        o.run(src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+        if (imageFileOutput) {
+            run(o2, src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+        }
+        else {
+            run(o, src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+        }
 	
 		// write to standard output
 		//sift_write_to_file("/dev/stdout", k, n);

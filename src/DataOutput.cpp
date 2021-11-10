@@ -29,6 +29,13 @@ void PreviewWindowDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
     t.logElapsed("show canvas window");
 }
 
+int PreviewWindowDataOutput::waitKey(int delay) {
+    return cv::waitKey(delay);
+}
+
+FileDataOutput::FileDataOutput(double fps_, cv::Size sizeFrame_) :
+fps(fps_), sizeFrame(sizeFrame_) {}
+
 // Throws if fails
 std::string openFileWithUniqueName(std::string name, std::string extension) {
   // Based on https://stackoverflow.com/questions/13108973/creating-file-names-automatically-c
@@ -64,7 +71,7 @@ std::string openFileWithUniqueName(std::string name, std::string extension) {
   return fname;
 }
 
-void FileDataOutput::run(cv::Mat frame, std::string filenameNoExt, double fps, cv::Size sizeFrame) {
+void FileDataOutput::run(cv::Mat frame, std::string filenameNoExt) {
     bool first = !writer.isOpened();
     if (first) {
         int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
@@ -76,4 +83,21 @@ void FileDataOutput::run(cv::Mat frame, std::string filenameNoExt, double fps, c
     }
     
     writer.write(frame);
+}
+
+void FileDataOutput::showCanvas(std::string name) {
+    showCanvas(name, canvas);
+}
+void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
+    t.reset();
+    run(canvas, name);
+    t.logElapsed("save frame to FileDataOutput");
+}
+
+int FileDataOutput::waitKey(int delay) {
+    // Advance to next image after user presses enter
+    std::cout << "Press enter to advance to the next frame: " << std::flush;
+    std::string n;
+    std::getline(std::cin, n);
+    return 'd'; // Always advance simply
 }

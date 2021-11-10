@@ -1,7 +1,8 @@
 # Tip: direnv to keep dependencies for a specific project in Nix
 # Run: nix-shell
 
-{ pkgs ? import (builtins.fetchTarball { # https://nixos.wiki/wiki/FAQ/Pinning_Nixpkgs :
+{ useGtk ? true,
+  pkgs ? import (builtins.fetchTarball { # https://nixos.wiki/wiki/FAQ/Pinning_Nixpkgs :
   # Descriptive name to make the store path easier to identify
   name = "nixos-unstable-2020-09-03";
   # Commit hash for nixos-unstable as of the date above
@@ -22,7 +23,7 @@ in
 mkShell {
   buildInputs = [ my-python-packages
                 ] ++ (lib.optional stdenv.hostPlatform.isMacOS [ opencv ])
-                  ++ (lib.optional stdenv.hostPlatform.isLinux [ (python39Packages.opencv4.override { enableGtk2 = true; })
+  ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python39Packages.opencv4.override { enableGtk2 = true; })
                                                                  opencvGtk
                                                                ]) ++ [
     clang pkgconfig libpng

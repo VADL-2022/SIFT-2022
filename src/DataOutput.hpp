@@ -17,6 +17,9 @@
 template <typename Wrapped>
 struct DataOutputBase {
     void output(cv::Mat& m);
+    
+protected:
+    int waitKey(int delay=0);
 };
 
 struct PreviewWindowDataOutput : public DataOutputBase<PreviewWindowDataOutput>
@@ -29,13 +32,25 @@ struct PreviewWindowDataOutput : public DataOutputBase<PreviewWindowDataOutput>
     void run(DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n);
     
     cv::Mat canvas;
+    int waitKey(int delay=0);
+    protected:
 };
 
 struct FileDataOutput : public DataOutputBase<FileDataOutput>
 {
-    void run(cv::Mat frame, std::string filenameNoExt, double fps, cv::Size sizeFrame);
+    FileDataOutput(double fps = 30, cv::Size sizeFrame = {640,480});
+    void run(cv::Mat frame, std::string filenameNoExt);
     
     cv::VideoWriter writer;
+    
+    cv::Mat canvas;
+    
+    void showCanvas(std::string name);
+    void showCanvas(std::string name, cv::Mat& canvas);
+    int waitKey(int delay=0);
+protected:
+    double fps;
+    cv::Size sizeFrame;
 };
 
 //#include "DataOutputRun.cpp"
@@ -55,20 +70,20 @@ struct FileDataOutput : public DataOutputBase<FileDataOutput>
 //#undef ARGS
 
 
-template <typename DataSourceT>
-void PreviewWindowDataOutput::run(DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
+template <typename DataSourceT, typename DataOutputT>
+void run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
 ) {
     auto path = src.nameForIndex(index);
     //imshow(path, backtorgb);
 
-    showCanvas(path);
+    o.showCanvas(path);
     int keycode;
     if (retryNeeded) {
-        cv::waitKey(1); // Show the window
+        o.waitKey(1); // Show the window
         keycode = 'a';
     }
     else {
-        keycode = cv::waitKey(0);
+        keycode = o.waitKey(0);
     }
     bool exit;
     size_t currentTransformation = s.allTransformations.size() - 1;
@@ -208,9 +223,9 @@ void PreviewWindowDataOutput::run(DataSourceT& src, SIFTState& s, SIFTParams& p,
                 // t2 = type2str(img_object.type());
                 // printf("img_matches type: %s, img_object type: %s\n", t1.c_str(), t2.c_str());
                 // https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
-                cv::warpPerspective(img_object, canvas /* <-- destination */, *H /* aka "M" */, img_matches.size());
-                showCanvas(path);
-                keycode = cv::waitKey(0);
+                cv::warpPerspective(img_object, o.canvas /* <-- destination */, *H /* aka "M" */, img_matches.size());
+                o.showCanvas(path);
+                keycode = o.waitKey(0);
                 exit = false;
                 t.logElapsed("show current transformation");
             }
@@ -232,7 +247,7 @@ void PreviewWindowDataOutput::run(DataSourceT& src, SIFTState& s, SIFTParams& p,
                 // }
                 if (currentTransformation >= s.allTransformations.size()) {
                     puts("No transformations left");
-                    showCanvas(path);
+                    o.showCanvas(path);
                 }
                 else {
                     printf("Applying transformation %zu ", currentTransformation);
@@ -254,7 +269,7 @@ void PreviewWindowDataOutput::run(DataSourceT& src, SIFTState& s, SIFTParams& p,
                       Next few slides will be applying the rest of the saved transformations to this image one by one
 
                      */
-                    cv::warpPerspective(canvas, canvas /* <-- destination */, m, canvas.size());
+                    cv::warpPerspective(o.canvas, o.canvas /* <-- destination */, m, o.canvas.size());
                     
                     //if (counter++ == 0) {
                         // Draw first image
@@ -262,12 +277,12 @@ void PreviewWindowDataOutput::run(DataSourceT& src, SIFTState& s, SIFTParams& p,
                         //}
 
                     // Draw the canvas on temp
-                    canvas.copyTo(temp);
+                    o.canvas.copyTo(temp);
 
-                    showCanvas(path, temp);
+                    o.showCanvas(path, temp);
                 }
                 
-                keycode = cv::waitKey(0);
+                keycode = o.waitKey(0);
                 exit = false;
             }
             else {
