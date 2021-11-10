@@ -159,7 +159,8 @@ bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                 }
                 else { // No other way to handle this is provided
                     perror("");
-                    fatal_error("File \"%s\" could not be opened.", fname.c_str());
+                    //fatal_error("File \"%s\" could not be opened.", fname.c_str());
+                    std::exit(1);
                 }
             }
             s.loadedKeypoints.release(); s.loadedKeypoints.reset(ptr); // Set the unique_ptr to ptr
