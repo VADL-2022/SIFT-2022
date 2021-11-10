@@ -71,7 +71,7 @@ protected:
 
 
 template <typename DataSourceT, typename DataOutputT>
-void run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
+bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
 ) {
     auto path = src.nameForIndex(index);
     //imshow(path, backtorgb);
@@ -100,6 +100,10 @@ void run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
         int counter = 0;
         exit = true;
         switch (keycode) {
+        case 'q':
+            // Quit
+            return true;
+            break;
         case 'a':
             // Go to previous image
             index -= 2; // FIXME: fix this part, should be decrementing right amount. fix segfault on access previous keypoints too
@@ -178,7 +182,8 @@ void run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                     }
                     else { // No other way to handle this is provided
                         perror("");
-                        fatal_error("File \"%s\" could not be opened.", fname.c_str());
+                        //fatal_error("File \"%s\" could not be opened.", fname.c_str());
+                        exit(1);
                     }
                 }
                 t.logElapsed("load matches");
@@ -292,6 +297,8 @@ void run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
             break;
         }
     } while (!exit);
+    
+    return false;
 }
 
 #endif /* DataOutput_hpp */

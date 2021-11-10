@@ -96,8 +96,11 @@ void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
 
 int FileDataOutput::waitKey(int delay) {
     // Advance to next image after user presses enter
-    std::cout << "Press enter to advance to the next frame: " << std::flush;
+    std::cout << "Press enter to advance to the next frame or q + enter to quit: " << std::flush;
     std::string n;
     std::getline(std::cin, n);
+    if (n == "q") {
+        return 
+    }
     return 'd'; // Always advance simply
 }
