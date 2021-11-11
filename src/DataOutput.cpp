@@ -82,7 +82,14 @@ void FileDataOutput::run(cv::Mat frame) {
         writer.open(filename, codec, fps, sizeFrame, isColor);
     }
     
-    writer.write(frame);
+    if (frame.size != sizeFrame) {
+        cv::Mat newFrame;
+        cv::resize(frame, newFrame, sizeFrame);
+        writer.write(newFrame);
+    }
+    else {
+        writer.write(frame);
+    }
 }
 
 void FileDataOutput::showCanvas(std::string name) {
