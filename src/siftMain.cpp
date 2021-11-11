@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
             imageCaptureOnly = true;
         }
-        else if (strcmp(argv[i], "--image-file-output")) { // Outputs to video instead of preview window
+        else if (strcmp(argv[i], "--image-file-output") == 0) { // Outputs to video instead of preview window
             imageFileOutput = true;
         }
     }

@@ -59,16 +59,16 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
                 skip = getSkip(argv[i+1]);
                 i++;
             }
-            else {
-                goto else_;
-            }
+//            else {
+//                goto else_;
+//            }
         }
-        else {
-else_:
-            if (argc > 1) {
-                skip = getSkip(argv[1]);
-            }
-        }
+//        else {
+//else_:
+//            if (argc > 1) {
+//                skip = getSkip(argv[1]);
+//            }
+//        }
     }
     
     init(folderPath);
