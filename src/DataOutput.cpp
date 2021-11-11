@@ -33,8 +33,8 @@ int PreviewWindowDataOutput::waitKey(int delay) {
     return cv::waitKey(delay);
 }
 
-FileDataOutput::FileDataOutput(double fps_, cv::Size sizeFrame_) :
-fps(fps_), sizeFrame(sizeFrame_) {}
+FileDataOutput::FileDataOutput(std::string filenameNoExt_, double fps_, cv::Size sizeFrame_) :
+fps(fps_), sizeFrame(sizeFrame_), filenameNoExt(filenameNoExt_) {}
 
 // Throws if fails
 std::string openFileWithUniqueName(std::string name, std::string extension) {
@@ -71,7 +71,7 @@ std::string openFileWithUniqueName(std::string name, std::string extension) {
   return fname;
 }
 
-void FileDataOutput::run(cv::Mat frame, std::string filenameNoExt) {
+void FileDataOutput::run(cv::Mat frame) {
     bool first = !writer.isOpened();
     if (first) {
         int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
@@ -90,17 +90,26 @@ void FileDataOutput::showCanvas(std::string name) {
 }
 void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
     t.reset();
-    run(canvas, name);
+    run(canvas);
     t.logElapsed("save frame to FileDataOutput");
 }
 
 int FileDataOutput::waitKey(int delay) {
     // Advance to next image after user presses enter
-    std::cout << "Press enter to advance to the next frame or q + enter to quit: " << std::flush;
-    std::string n;
-    std::getline(std::cin, n);
-    if (n == "q") {
-        return 'q';
-    }
-    return 'd'; // Always advance simply
+    do {
+        std::cout << "Press enter to advance to the next frame and get keypoints, g to load or make cached keypoints file, s to apply previous transformations, or q + enter to quit: " << std::flush;
+        std::string n;
+        std::getline(std::cin, n);
+        if (n.empty()) {
+            return 'd'; // Simply advance to next image
+        }
+        else if (n.length() > 1) {
+            std::cout << "Invalid option. Try again." << std::endl;
+            continue;
+        }
+        else {
+            return n[0]; // The command given
+        }
+        break;
+    } while (true);
 }

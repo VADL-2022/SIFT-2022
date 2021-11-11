@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     // Command-line args //
 #ifdef USE_COMMAND_LINE_ARGS
     bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false;
-    FileDataOutput o2;
+    FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
 
     // Parse arguments
@@ -75,6 +75,7 @@ int main(int argc, char **argv)
     for (size_t i = src->currentIndex;; i++) {
         std::cout << "i: " << i << std::endl;
         cv::Mat mat = src->get(i);
+        if (mat.empty()) { printf("No more images left to process. Exiting.\n"); break; }
         cv::Mat greyscale = src->siftImageForMat(i);
         float* x = (float*)greyscale.data;
         size_t w = mat.cols, h = mat.rows;
@@ -149,14 +150,17 @@ int main(int argc, char **argv)
             s.computedKeypoints.push_back(keypoints);
         }
         
-        if (exit && imageFileOutput) {
-            o2.writer.release(); // Save the file
+        if (exit) {
             break;
         }
 		
 		// Reset RNG so some colors coincide
 		resetRNG();
 	}
-	
+    
+    if (imageFileOutput) {
+        o2.writer.release(); // Save the file
+    }
+    
 	return 0;
 }

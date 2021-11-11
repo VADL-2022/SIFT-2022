@@ -38,8 +38,8 @@ struct PreviewWindowDataOutput : public DataOutputBase<PreviewWindowDataOutput>
 
 struct FileDataOutput : public DataOutputBase<FileDataOutput>
 {
-    FileDataOutput(double fps = 30, cv::Size sizeFrame = {640,480});
-    void run(cv::Mat frame, std::string filenameNoExt);
+    FileDataOutput(std::string filenameNoExt, double fps = 30, cv::Size sizeFrame = {640,480});
+    void run(cv::Mat frame);
     
     cv::VideoWriter writer;
     
@@ -51,6 +51,7 @@ struct FileDataOutput : public DataOutputBase<FileDataOutput>
 protected:
     double fps;
     cv::Size sizeFrame;
+    std::string filenameNoExt;
 };
 
 //#include "DataOutputRun.cpp"
