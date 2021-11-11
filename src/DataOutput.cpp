@@ -82,7 +82,7 @@ void FileDataOutput::run(cv::Mat frame) {
         writer.open(filename, codec, fps, sizeFrame, isColor);
     }
     
-    if (frame.size != sizeFrame) {
+    if (frame.cols != sizeFrame.width || frame.rows != sizeFrame.height) {
         cv::Mat newFrame;
         cv::resize(frame, newFrame, sizeFrame);
         writer.write(newFrame);
