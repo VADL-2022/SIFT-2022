@@ -96,20 +96,15 @@ void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
 
 int FileDataOutput::waitKey(int delay) {
     // Advance to next image after user presses enter
-    do {
-        std::cout << "Press enter to advance to the next frame and get keypoints, g to load or make cached keypoints file, s to apply previous transformations, or q + enter to quit: " << std::flush;
-        std::string n;
-        std::getline(std::cin, n);
-        if (n.empty()) {
-            return 'd'; // Simply advance to next image
-        }
-        else if (n.length() > 1) {
-            std::cout << "Invalid option. Try again." << std::endl;
-            continue;
-        }
-        else {
-            return n[0]; // The command given
-        }
-        break;
-    } while (true);
+    std::cout << "Press enter to advance to the next frame and get keypoints, g to load or make cached keypoints file, s to apply previous transformations, or q to quit: " << std::flush;
+//        std::string n;
+//        std::getline(std::cin, n);
+    char n = getchar();
+    
+    if (n == '\n') {
+        return 'd'; // Simply advance to next image
+    }
+    else {
+        return n; // The command given
+    }
 }
