@@ -22,8 +22,8 @@ FolderDataSource::FolderDataSource(std::string folderPath, size_t skip_ = 0) {
     init(folderPath);
 }
 
-// Parses skip from a command-line argument
-size_t getSkip(char* arg) {
+// Parses size_t from a command-line argument
+size_t getSize(char* arg) {
     // Use given skip (selects the first image to show)
     char* endptr;
     std::uintmax_t skip_ = std::strtoumax(arg, &endptr, 0); // https://en.cppreference.com/w/cpp/string/byte/strtoimax
@@ -38,8 +38,21 @@ size_t getSkip(char* arg) {
         std::cout << "Argument (\"" << arg << "\") could not be converted to an unsigned integer. Exiting." << std::endl;
         exit(2);
     }
-    printf("Using skip %zu\n", skip_); // Note: if you give a negative number: "If the minus sign was part of the input sequence, the numeric value calculated from the sequence of digits is negated as if by unary minus in the result type." ( https://en.cppreference.com/w/c/string/byte/strtoimax )
     return skip_;
+}
+template <typename T1, typename T2> T2 ensureFitsInT2(T1 val, std::function<void(T1)> showFailureMsg) {
+    if (val < std::numeric_limits<T2>::max()) {
+        return val;
+    }
+    showFailureMsg(val);
+    exit(1);
+}
+cv::Size getSizeFrame(char* arg1, char* arg2) {
+    std::function<void(size_t)> m = [](size_t val) {
+        auto max = std::numeric_limits<int>::max();
+        std::cout << "Argument (\"" << val << "\") is too large for int (max value is " << max << "). Exiting." << std::endl;
+    };
+    return {ensureFitsInT2<size_t, int>(getSize(arg1), m), ensureFitsInT2<size_t, int>(getSize(arg2), m)};
 }
 FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
     currentIndex = skip;
@@ -56,8 +69,13 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
                 i++;
             }
             else if (strcmp(argv[i], "--skip") == 0) {
-                skip = getSkip(argv[i+1]);
+                skip = getSize(argv[i+1]);
+                printf("Using skip %zu\n", skip); // Note: if you give a negative number: "If the minus sign was part of the input sequence, the numeric value calculated from the sequence of digits is negated as if by unary minus in the result type." ( https://en.cppreference.com/w/c/string/byte/strtoimax )
                 i++;
+            }
+            else if (i+2 < argc && strcmp(argv[i], "--size-frame") == 0) {
+                sizeFrame = getSizeFrame(argv[i+1], argv[i+2]);
+                std::cout << "Using size " << sizeFrame << '\n';
             }
 //            else {
 //                goto else_;
@@ -143,6 +161,21 @@ cv::Mat FolderDataSource::get(size_t index) {
     
     // Make OpenCV matrix with no copy ( https://stackoverflow.com/questions/44453088/how-to-convert-c-array-to-opencv-mat )
     cv::Mat mat(h, w, CV_32F, x); // Is black and white
+    
+    // Ensure good size for SIFT
+    if (w > sizeFrame.width || h > sizeFrame.height) {
+        t.reset();
+        
+        // TODO: Keep same aspect ratio
+//        double EPSILON = 0.0001;
+//        if (sizeFrame.width / (double)sizeFrame.height - w / (double)h > EPSILON) {
+//
+//        }
+        
+        std::cout << "Resize from " << w << " x " << h << " to " << sizeFrame << std::endl;
+        cv::resize(mat, mat, sizeFrame);
+        t.logElapsed("resize frame for SIFT");
+    }
     
     // Cache it
     cache.emplace(i, mat);

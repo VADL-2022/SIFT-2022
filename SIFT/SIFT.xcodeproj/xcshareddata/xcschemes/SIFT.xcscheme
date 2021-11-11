@@ -59,11 +59,31 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--size-frame"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "640"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "480"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--folder"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "testFrames1"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--folder"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "testFrames1"
+            argument = "testFrames2_cropped"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

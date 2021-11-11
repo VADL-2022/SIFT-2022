@@ -71,18 +71,31 @@ void FileDataOutput::run(cv::Mat frame) {
         writer.open(filename, codec, fps, sizeFrame, isColor);
     }
 
+    // Resize/convert, then write to video writer
     cv::Mat newFrame;
+    cv::Mat* newFramePtr;
+    std::cout << "frame.data: " << (void*)frame.data << std::endl;
     if (frame.cols != sizeFrame.width || frame.rows != sizeFrame.height) {
         t.reset();
         cv::resize(frame, newFrame, sizeFrame);
         t.logElapsed("resize frame for video writer");
+        newFramePtr = &newFrame;
     }
-    if (frame.depth() != CV_8U) {
+    else {
+        newFramePtr = &frame;
+    }
+    if (newFramePtr->depth() != CV_8U) {
         t.reset();
-        newFrame.convertTo(newFrame, CV_8U);
-        t.logElapsed("convert frame for video writer");
+        newFramePtr->convertTo(newFrame, CV_8U);
+        newFramePtr = &newFrame;
+        t.logElapsed("convert frame for video writer part 1");
     }
     t.reset();
+    // https://answers.opencv.org/question/66545/problems-with-the-video-writer-in-opencv-300/
+    cv::cvtColor(newFrame, *newFramePtr, cv::COLOR_RGBA2BGR);
+    t.logElapsed("convert frame for video writer part 2");
+    t.reset();
+    std::cout << "newFrame.data: " << (void*)newFrame.data << std::endl;
     std::cout << "Writing frame with type " << mat_type2str(newFrame.type()) << std::endl;
     writer.write(newFrame);
     t.logElapsed("write frame for video writer");

@@ -59,6 +59,7 @@ struct FolderDataSource : public DataSourceBase
     std::unordered_map<size_t, cv::Mat> cache;
 private:
     std::vector<std::string> files;
+    cv::Size sizeFrame;
     
     void init(std::string folderPath);
 };
