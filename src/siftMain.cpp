@@ -62,6 +62,9 @@ int main(int argc, char **argv)
     if (!folderDataSource) {
         src = std::make_unique<DataSourceT>();
     }
+    
+    // Make same canvases (refcounted)
+    o.canvas = o2.canvas;
 #else
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
