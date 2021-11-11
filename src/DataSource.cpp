@@ -170,10 +170,10 @@ cv::Mat FolderDataSource::colorImageForMat(size_t index) {
 cv::Mat CameraDataSource::siftImageForMat(size_t index) {
     cv::Mat grey = cache.at(index), mat;
     t.reset();
-    std::cout << type2str(grey.type()) << std::endl;
+    std::cout << mat_type2str(grey.type()) << std::endl;
     cv::cvtColor(grey, mat, cv::COLOR_RGB2GRAY);
     mat.convertTo(mat, CV_32F);
-    std::cout << type2str(mat.type()) << std::endl;
+    std::cout << mat_type2str(mat.type()) << std::endl;
     t.logElapsed("convert image to greyscale and float");
     return mat;
 }

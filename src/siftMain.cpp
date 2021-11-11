@@ -35,13 +35,15 @@ using DataOutputT = PreviewWindowDataOutput;
 // //
 int main(int argc, char **argv)
 {
+    cv::Mat canvas;
+    
 	// Set the default "skip"
     size_t skip = 0;//120;//60;//100;//38;//0;
     DataOutputT o;
     
     // Command-line args //
 #ifdef USE_COMMAND_LINE_ARGS
-    bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false;
+    CommandLineConfig cfg;
     FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
 
@@ -49,22 +51,19 @@ int main(int argc, char **argv)
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--folder-data-source") == 0) { // Get from folder instead of camera
             src = std::make_unique<FolderDataSource>(argc, argv, skip); // Read folder determined by command-line arguments
-            folderDataSource = true;
+            cfg.folderDataSource = true;
         }
         else if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
-            imageCaptureOnly = true;
+            cfg.imageCaptureOnly = true;
         }
         else if (strcmp(argv[i], "--image-file-output") == 0) { // Outputs to video instead of preview window
-            imageFileOutput = true;
+            cfg.imageFileOutput = true;
         }
     }
     
-    if (!folderDataSource) {
+    if (!cfg.folderDataSource) {
         src = std::make_unique<DataSourceT>();
     }
-    
-    // Make same canvases (refcounted)
-    o.canvas = o2.canvas;
 #else
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
@@ -84,14 +83,17 @@ int main(int argc, char **argv)
         size_t w = mat.cols, h = mat.rows;
         auto path = src->nameForIndex(i);
 
-		// Initialize canvas if needed
-        o.init(w, h);
+        // Initialize canvas if needed
+        if (canvas.data == nullptr) {
+            puts("Init canvas");
+            canvas = cv::Mat(h, w, CV_32FC4);
+        }
 
 		// compute sift keypoints
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
 		struct sift_keypoint_std *k;
-        if (!imageCaptureOnly) {
+        if (!cfg.imageCaptureOnly) {
             if (s.loadedKeypoints == nullptr) {
                 t.reset();
                 k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
@@ -112,13 +114,13 @@ int main(int argc, char **argv)
 		}
 
 		// Draw keypoints on `o.canvas`
-        if (!imageCaptureOnly) {
+        if (!cfg.imageCaptureOnly) {
             t.reset();
         }
-        backtorgb.copyTo(o.canvas);
-        if (!imageCaptureOnly) {
+        backtorgb.copyTo(canvas);
+        if (!cfg.imageCaptureOnly) {
             for(int i=0; i<n; i++){
-                drawSquare(o.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
+                drawSquare(canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
                 //break;
                 // fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
                 // for(int j=0; j<128; j++){
@@ -130,16 +132,16 @@ int main(int argc, char **argv)
         }
 
 		// Compare keypoints if we had some previously and render to canvas if needed
-        if (!imageCaptureOnly) {
-            retryNeeded = compareKeypoints(o, s, p, keypoints, backtorgb);
+        if (!cfg.imageCaptureOnly) {
+            retryNeeded = compareKeypoints(canvas, s, p, keypoints, backtorgb COMPARE_KEYPOINTS_ADDITIONAL_ARGS);
         }
 
         bool exit;
-        if (imageFileOutput) {
-            exit = run(o2, *src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+        if (cfg.imageFileOutput) {
+            exit = run(o2, canvas, *src, s, p, backtorgb, keypoints, retryNeeded, i, n);
         }
         else {
-            exit = run(o, *src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+            exit = run(o, canvas, *src, s, p, backtorgb, keypoints, retryNeeded, i, n);
         }
 	
 		// write to standard output
@@ -161,7 +163,7 @@ int main(int argc, char **argv)
 		resetRNG();
 	}
     
-    if (imageFileOutput) {
+    if (cfg.imageFileOutput) {
         o2.writer.release(); // Save the file
     }
     

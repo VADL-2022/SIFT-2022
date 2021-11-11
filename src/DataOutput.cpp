@@ -12,17 +12,6 @@
 #include <fstream>
 #include "utils.hpp"
 
-void PreviewWindowDataOutput::init(size_t width, size_t height) {
-    // Initialize canvas if needed
-    if (canvas.data == nullptr) {
-        puts("Init canvas");
-        canvas = cv::Mat(height, width, CV_32FC4);
-    }
-}
-
-void PreviewWindowDataOutput::showCanvas(std::string name) {
-    showCanvas(name, canvas);
-}
 void PreviewWindowDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
     t.reset();
     imshow(name, canvas);
@@ -76,25 +65,29 @@ void FileDataOutput::run(cv::Mat frame) {
     if (first) {
         int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
 
-        bool isColor = (frame.type() == CV_8UC3);
-        std::cout << "Output type: " << type2str(frame.type()) << "\nisColor: " << isColor << std::endl;
+        bool isColor = (frame.channels() > 1);
+        std::cout << "Output type: " << mat_type2str(frame.type()) << "\nisColor: " << isColor << std::endl;
         std::string filename = openFileWithUniqueName(filenameNoExt, ".mp4");
         writer.open(filename, codec, fps, sizeFrame, isColor);
     }
-    
+
+    cv::Mat newFrame;
     if (frame.cols != sizeFrame.width || frame.rows != sizeFrame.height) {
-        cv::Mat newFrame;
+        t.reset();
         cv::resize(frame, newFrame, sizeFrame);
-        writer.write(newFrame);
+        t.logElapsed("resize frame for video writer");
     }
-    else {
-        writer.write(frame);
+    if (frame.depth() != CV_8U) {
+        t.reset();
+        newFrame.convertTo(newFrame, CV_8U);
+        t.logElapsed("convert frame for video writer");
     }
+    t.reset();
+    std::cout << "Writing frame with type " << mat_type2str(newFrame.type()) << std::endl;
+    writer.write(newFrame);
+    t.logElapsed("write frame for video writer");
 }
 
-void FileDataOutput::showCanvas(std::string name) {
-    showCanvas(name, canvas);
-}
 void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
     t.reset();
     run(canvas);

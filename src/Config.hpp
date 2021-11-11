@@ -13,4 +13,10 @@
 #define USE_COMMAND_LINE_ARGS
 // //
 
+#ifdef USE_COMMAND_LINE_ARGS
+struct CommandLineConfig {
+    bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false;
+};
+#endif
+
 #endif /* Config_h */

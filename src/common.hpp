@@ -11,6 +11,8 @@
 
 #include "Includes.hpp"
 
+#include "Config.hpp"
+
 extern Timer t;
 
 void drawCircle(cv::Mat& img, cv::Point cp, int radius);

@@ -24,14 +24,11 @@ protected:
 
 struct PreviewWindowDataOutput : public DataOutputBase<PreviewWindowDataOutput>
 {
-    void init(size_t width, size_t height);
-    void showCanvas(std::string name);
     void showCanvas(std::string name, cv::Mat& canvas);
     
     template <typename DataSourceT>
     void run(DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n);
     
-    cv::Mat canvas;
     int waitKey(int delay=0);
     protected:
 };
@@ -43,9 +40,6 @@ struct FileDataOutput : public DataOutputBase<FileDataOutput>
     
     cv::VideoWriter writer;
     
-    cv::Mat canvas;
-    
-    void showCanvas(std::string name);
     void showCanvas(std::string name, cv::Mat& canvas);
     int waitKey(int delay=0);
 protected:
@@ -72,12 +66,12 @@ protected:
 
 
 template <typename DataSourceT, typename DataOutputT>
-bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
+bool run(DataOutputT& o, cv::Mat& canvas, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
 ) {
     auto path = src.nameForIndex(index);
     //imshow(path, backtorgb);
 
-    o.showCanvas(path);
+    o.showCanvas(path, canvas);
     int keycode;
     if (retryNeeded) {
         o.waitKey(1); // Show the window
@@ -228,8 +222,8 @@ bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                 // t2 = type2str(img_object.type());
                 // printf("img_matches type: %s, img_object type: %s\n", t1.c_str(), t2.c_str());
                 // https://answers.opencv.org/question/54886/how-does-the-perspectivetransform-function-work/
-                cv::warpPerspective(img_object, o.canvas /* <-- destination */, *H /* aka "M" */, img_matches.size());
-                o.showCanvas(path);
+                cv::warpPerspective(img_object, canvas /* <-- destination */, *H /* aka "M" */, img_matches.size());
+                o.showCanvas(path, canvas);
                 keycode = o.waitKey(0);
                 exit = false;
                 t.logElapsed("show current transformation");
@@ -252,7 +246,7 @@ bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                 // }
                 if (currentTransformation >= s.allTransformations.size()) {
                     puts("No transformations left");
-                    o.showCanvas(path);
+                    o.showCanvas(path, canvas);
                 }
                 else {
                     printf("Applying transformation %zu ", currentTransformation);
@@ -274,7 +268,7 @@ bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                       Next few slides will be applying the rest of the saved transformations to this image one by one
 
                      */
-                    cv::warpPerspective(o.canvas, o.canvas /* <-- destination */, m, o.canvas.size());
+                    cv::warpPerspective(canvas, canvas /* <-- destination */, m, canvas.size());
                     
                     //if (counter++ == 0) {
                         // Draw first image
@@ -282,7 +276,7 @@ bool run(DataOutputT& o, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat&
                         //}
 
                     // Draw the canvas on temp
-                    o.canvas.copyTo(temp);
+                    canvas.copyTo(temp);
 
                     o.showCanvas(path, temp);
                 }

@@ -10,7 +10,7 @@
 
 #include <opencv2/opencv.hpp>
 
-std::string type2str(int type) {
+std::string mat_type2str(int type) {
   std::string r;
 
   uchar depth = type & CV_MAT_DEPTH_MASK;
