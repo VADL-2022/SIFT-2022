@@ -26,7 +26,7 @@ mkShell {
   ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python39Packages.opencv4.override { enableGtk2 = true; })
                                                                  opencvGtk
                                                                ]) ++ [
-    clang pkgconfig libpng
+    clang_12 pkgconfig libpng
     lldb
 
     #bear # Optional, for generating emacs compile_commands.json
