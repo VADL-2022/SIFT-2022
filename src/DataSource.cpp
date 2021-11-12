@@ -76,6 +76,7 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
             else if (i+2 < argc && strcmp(argv[i], "--size-frame") == 0) {
                 sizeFrame = getSizeFrame(argv[i+1], argv[i+2]);
                 std::cout << "Using size " << sizeFrame << '\n';
+                i += 2;
             }
 //            else {
 //                goto else_;
@@ -219,15 +220,39 @@ CameraDataSource::CameraDataSource() {
 }
 
 CameraDataSource::CameraDataSource(int argc, char** argv) {
-    init();
+    double fps;
+    cv::Size sizeFrame(640,480);
+    //cv::Size sizeFrame(1920,1080);
+    
+    // Parse arguments
+    for (int i = 1; i < argc; i++) {
+        if (i+1 < argc) {
+            if (strcmp(argv[i], "--fps") == 0) {
+                fps = std::stod(argv[i+1]);
+                i++;
+            }
+            else if (i+2 < argc && strcmp(argv[i], "--size-frame") == 0) {
+                sizeFrame = getSizeFrame(argv[i+1], argv[i+2]);
+                std::cout << "Using size " << sizeFrame << '\n';
+                i += 2;
+            }
+//            else {
+//                goto else_;
+//            }
+        }
+//        else {
+//else_:
+//            if (argc > 1) {
+//                skip = getSkip(argv[1]);
+//            }
+//        }
+    }
+
+    init(fps, sizeFrame);
 }
 
-void CameraDataSource::init() {
+void CameraDataSource::init(double fps, cv::Size sizeFrame) {
     currentIndex = 0; // Index to save into next
-    
-    double fps;
-    //cv::Size sizeFrame(640,480);
-    cv::Size sizeFrame(1920,1080);
     
     // Instanciate the capture
     cap.open(0);
