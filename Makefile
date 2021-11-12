@@ -1,5 +1,5 @@
 SHELL := /usr/bin/env bash
-CFLAGS += -O0 -g3 -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` -I$(SIFT_SRC)
+CFLAGS += -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` -I$(SIFT_SRC)
 CXXFLAGS += -std=c++17 $(CFLAGS)
 CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*) .*/\1/' | awk '{$$1=$$1;print}') # https://stackoverflow.com/questions/5188267/checking-the-gcc-version-in-a-makefile
 $(info $(CLANGVERSION)) # Example: "7.1.0 "
@@ -20,6 +20,8 @@ OBJ := obj
 #SIFT_SRC := /Volumes/MyTestVolume/SeniorSemester1_Vanderbilt_University/RocketTeam/MyWorkspaceAndTempFiles/MyDocuments/SIFT_articleAndImplementation/sift_anatomy_20141201/src
 SIFT := sift_anatomy_20141201
 SIFT_SRC := ./$(SIFT)/src
+SIFT_SOURCES := $(filter-out $(SIFT_SRC)/example.c $(SIFT_SRC)/demo_extract_patch.c $(SIFT_SRC)/match_cli.c $(SIFT_SRC)/sift_cli.c $(SIFT_SRC)/sift_cli_default.c $(SIFT_SRC)/anatomy2lowe.c, $(wildcard $(SIFT_SRC)/*.c))
+SIFT_OBJECTS := $(SIFT_SOURCES:%.c=%.o)
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
 SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
@@ -36,16 +38,34 @@ all: common sift_exe quadcopter
 setup:
 	mkdir -p $(OBJ)
 
-common: $(OBJECTS)
+common:
 	cd $(SIFT) && $(MAKE)
 
-sift_exe: CFLAGS += -Ofast #-O3
-sift_exe: $(OBJECTS) src/siftMain.o
-	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
+%_r.o: %.c
+	$(eval CFLAGS += -Ofast) #-O3
+	$(CC) $(CFLAGS) -c $< -o $@
 
-sift_exe_debug: CFLAGS += -O0 -g3
-sift_exe_debug: $(OBJECTS) src/siftMain.o
-	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
+%_r.o: %.cpp
+	$(eval CFLAGS += -Ofast) #-O3
+	$(CC)++ $(CXXFLAGS) -c $< -o $@
+
+%_d.o: %.c
+	$(eval CFLAGS += -O0 -g3)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%_d.o: %.cpp
+	$(eval CFLAGS += -O0 -g3)
+	$(CC)++ $(CXXFLAGS) -c $< -o $@
+
+OBJECTS_RELEASE = $(OBJECTS) $(SIFT_OBJECTS)
+OBJECTS_RELEASE := $(addsuffix _r.o, $(patsubst %.o,%, $(OBJECTS_RELEASE))) src/siftMain_r.o
+sift_exe: $(OBJECTS_RELEASE)
+	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS)
+
+OBJECTS_DEBUG = $(OBJECTS) $(SIFT_OBJECTS)
+OBJECTS_DEBUG := $(addsuffix _d.o, $(patsubst %.o,%, $(OBJECTS_DEBUG))) src/siftMain_d.o
+sift_exe_debug: $(OBJECTS_DEBUG)
+	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS)
 
 quadcopter: $(OBJECTS) src/quadcopter.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
