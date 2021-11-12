@@ -70,6 +70,9 @@ int main(int argc, char **argv)
                 printf(". Exiting.\n");
                 exit(1);
             }
+            else {
+                printf("Using params function %s\n", argv[i+1]);
+            }
             i++;
         }
     }
