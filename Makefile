@@ -41,7 +41,7 @@ setup:
 common:
 	cd $(SIFT) && $(MAKE)
 
-CFLAGS_RELEASE = $(CFLAGS) -lm -ffast-math -Ofast #-O3
+CFLAGS_RELEASE = $(CFLAGS) -Ofast #-O3
 %_r.o: %.c
 	$(CC) $(CFLAGS_RELEASE) -c $< -o $@
 CXXFLAGS_RELEASE = $(CXXFLAGS) $(CFLAGS_RELEASE)
@@ -63,7 +63,7 @@ sift_exe: $(OBJECTS_RELEASE)
 OBJECTS_DEBUG = $(OBJECTS) $(SIFT_OBJECTS)
 OBJECTS_DEBUG := $(addsuffix _d.o, $(patsubst %.o,%, $(OBJECTS_DEBUG))) src/siftMain_d.o
 sift_exe_debug: $(OBJECTS_DEBUG)
-	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS)
+	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) -ffast-math
 
 quadcopter: $(OBJECTS) src/quadcopter.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
