@@ -8,12 +8,30 @@
 
 #include "KeypointsAndMatching.hpp"
 
-#define USE(paramsFunc) { paramsName = #paramsFunc; paramsFunc(params); }
+int SIFTParams::call_params_function(const char *name, struct sift_parameters* p)
+{
+  int i;
+
+  for (i = 0; i < (sizeof(function_map) / sizeof(function_map[0])); i++) {
+    if (!strcmp(function_map[i].name, name) && function_map[i].func) {
+      function_map[i].func(p);
+      return 0;
+    }
+  }
+
+  return -1;
+}
+void SIFTParams::print_params_functions() {
+    int i;
+    int max = (sizeof(function_map) / sizeof(function_map[0]));
+    for (i = 0; i < max; i++) {
+        printf("%s%s", function_map[i].name, i == max - 1 ? "" : ", ");
+    }
+}
+
 SIFTParams::SIFTParams() {
     /** assign parameters **/
     params = sift_assign_default_parameters();
-    //USE(v3Params);
-    USE(v2Params);
     // //
 }
 

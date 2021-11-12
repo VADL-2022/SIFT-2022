@@ -35,6 +35,9 @@ using DataOutputT = PreviewWindowDataOutput;
 // //
 int main(int argc, char **argv)
 {
+    SIFTState s;
+    SIFTParams p;
+    
     cv::Mat canvas;
     
 	// Set the default "skip"
@@ -59,20 +62,33 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--image-file-output") == 0) { // Outputs to video instead of preview window
             cfg.imageFileOutput = true;
         }
+        else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) { // Outputs to video instead of preview window
+            cfg.imageFileOutput = true;
+            if (SIFTParams::call_params_function(argv[i+1], p.params) < 0) {
+                printf("Invalid params function name given: %s. Value options are:", argv[i+1]);
+                SIFTParams::print_params_functions();
+                printf(". Exiting.\n");
+                exit(1);
+            }
+            i++;
+        }
     }
     
     if (!cfg.folderDataSource) {
         src = std::make_unique<DataSourceT>();
     }
 #else
+    // Set params (will use default if none set) //
+    //USE(v3Params);
+    //USE(v2Params);
+    // //
+    
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
 #endif
     // //
 	
 	//--- print the files sorted by filename
-    SIFTState s;
-    SIFTParams p;
     bool retryNeeded = false;
     for (size_t i = src->currentIndex;; i++) {
         std::cout << "i: " << i << std::endl;

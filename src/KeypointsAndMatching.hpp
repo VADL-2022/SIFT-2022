@@ -12,6 +12,29 @@
 #include "Includes.hpp"
 
 struct SIFTParams {
+    #define USE(paramsFunc) { p.paramsName = #paramsFunc; paramsFunc(p.params); }
+    #define DeclareParamsFunc(p) { #p, p },
+    // https://stackoverflow.com/questions/1118705/call-a-function-named-in-a-string-variable-in-c
+    constexpr const static struct {
+      const char *name;
+      void (*func)(struct sift_parameters*);
+    } function_map [] = {
+        DeclareParamsFunc(v1Params)
+        DeclareParamsFunc(v2Params)
+        DeclareParamsFunc(v3Params)
+        
+    //  { "function_a", function_a },
+    //  { "function_b", function_b },
+    //  { "function_c", function_c },
+    //  { "function_d", function_d },
+    //  { "function_e", function_e },
+    };
+    #undef DeclareParamsFunc
+    // Returns -1 if not found, 0 if called successfully.
+    static int call_params_function(const char *name, struct sift_parameters* p);
+    static void print_params_functions();
+    
+    
     SIFTParams();
     ~SIFTParams();
     
