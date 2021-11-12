@@ -63,7 +63,7 @@ sift_exe: $(OBJECTS_RELEASE)
 OBJECTS_DEBUG = $(OBJECTS) $(SIFT_OBJECTS)
 OBJECTS_DEBUG := $(addsuffix _d.o, $(patsubst %.o,%, $(OBJECTS_DEBUG))) src/siftMain_d.o
 sift_exe_debug: $(OBJECTS_DEBUG)
-	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) -lm -lc -lgcc -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
+	$(CC)++ $^ -o $@ $(LIBS) -ffast-math $(LDFLAGS) $(LFLAGS) -lm -lc -lgcc -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
 
 quadcopter: $(OBJECTS) src/quadcopter.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
