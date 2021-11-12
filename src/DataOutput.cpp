@@ -54,7 +54,7 @@ std::string openFileWithUniqueName(std::string name, std::string extension) {
   if(!ofile.is_open())
     {
       //return "";
-      throw "";
+        throw name;
     }
 
   return fname;
