@@ -27,6 +27,7 @@ mkShell {
                                                                  opencvGtk
                                                                ]) ++ [
     clang pkgconfig libpng
+    lldb
 
     #bear # Optional, for generating emacs compile_commands.json
 
