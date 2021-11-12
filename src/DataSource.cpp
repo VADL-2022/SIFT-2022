@@ -264,13 +264,14 @@ void CameraDataSource::init(double fps, cv::Size sizeFrame) {
 
     // https://learnopencv.com/how-to-find-frame-rate-or-frames-per-second-fps-in-opencv-python-cpp/
     // "For OpenCV 3, you can also use the following"
-    fps = cap.get(cv::CAP_PROP_FPS);
+    double fpsOrig = cap.get(cv::CAP_PROP_FPS);
+    double widthOrig = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    double heightOrig = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
 
     cap.set(cv::CAP_PROP_FRAME_WIDTH, sizeFrame.width);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, sizeFrame.height);
-    double width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
-    double height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-    std::cout << "Frames per second using video.get(CAP_PROP_FPS) : " << fps << "\nWidth: " << width << "\nHeight: " << height << std::endl;
+    cap.set(cv::CAP_PROP_FPS, fps);
+    std::cout << "Original frames per second using video.get(CAP_PROP_FPS) : " << fpsOrig << "\n\tSet fps to: " << fps << "\n\tOriginal width: " << widthOrig << "\n\tOriginal height: " << heightOrig << "\n\tSet width and height to: " << sizeFrame << std::endl;
 
     
     //cv::Mat frame_;
