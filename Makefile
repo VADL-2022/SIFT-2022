@@ -41,21 +41,19 @@ setup:
 common:
 	cd $(SIFT) && $(MAKE)
 
+CFLAGS_RELEASE = $(CFLAGS) -lm -ffast-math -Ofast #-O3
 %_r.o: %.c
-	$(eval CFLAGS += -Ofast) #-O3
-	$(CC) $(CFLAGS) -c $< -o $@
-
+	$(CC) $(CFLAGS_RELEASE) -c $< -o $@
+CXXFLAGS_RELEASE = $(CXXFLAGS) $(CFLAGS_RELEASE)
 %_r.o: %.cpp
-	$(eval CFLAGS += -Ofast) #-O3
-	$(CC)++ $(CXXFLAGS) -c $< -o $@
+	$(CC)++ $(CXXFLAGS_RELEASE) -c $< -o $@
 
+CFLAGS_DEBUG = $(CFLAGS) -O0 -g3
 %_d.o: %.c
-	$(eval CFLAGS += -O0 -g3)
-	$(CC) $(CFLAGS) -c $< -o $@
-
+	$(CC) $(CFLAGS_DEBUG) -c $< -o $@
+CXXFLAGS_DEBUG = $(CXXFLAGS) $(CFLAGS_DEBUG)
 %_d.o: %.cpp
-	$(eval CFLAGS += -O0 -g3)
-	$(CC)++ $(CXXFLAGS) -c $< -o $@
+	$(CC)++ $(CXXFLAGS_DEBUG) -c $< -o $@
 
 OBJECTS_RELEASE = $(OBJECTS) $(SIFT_OBJECTS)
 OBJECTS_RELEASE := $(addsuffix _r.o, $(patsubst %.o,%, $(OBJECTS_RELEASE))) src/siftMain_r.o
