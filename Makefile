@@ -39,7 +39,12 @@ setup:
 common: $(OBJECTS)
 	cd $(SIFT) && $(MAKE)
 
+sift_exe: CFLAGS += -Ofast #-O3
 sift_exe: $(OBJECTS) src/siftMain.o
+	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
+
+sift_exe_debug: CFLAGS += -O0 -g3
+sift_exe_debug: $(OBJECTS) src/siftMain.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
 quadcopter: $(OBJECTS) src/quadcopter.o
