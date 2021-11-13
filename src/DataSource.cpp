@@ -215,7 +215,13 @@ cv::Mat CameraDataSource::colorImageForMat(size_t index) {
     return cache.at(index);
 }
 
-const double CameraDataSource::default_fps = 30;
+const double CameraDataSource::default_fps =
+#ifdef USE_COMMAND_LINE_ARGS
+30
+#else
+1
+#endif
+;
 const cv::Size CameraDataSource::default_sizeFrame = {640,480};
 //cv::Size sizeFrame(1920,1080);
 CameraDataSource::CameraDataSource() {
