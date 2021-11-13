@@ -220,7 +220,7 @@ CameraDataSource::CameraDataSource() {
 }
 
 CameraDataSource::CameraDataSource(int argc, char** argv) {
-    double fps;
+    double fps = 30;
     cv::Size sizeFrame(640,480);
     //cv::Size sizeFrame(1920,1080);
     

@@ -82,7 +82,7 @@ struct CameraDataSource : public DataSourceBase
     cv::VideoCapture cap;
     std::unordered_map<size_t, cv::Mat> cache;
 private:
-    void init(double fps = 30, cv::Size sizeFrame = {640,480});
+    void init(double fps, cv::Size sizeFrame);
 };
 
 // Parital template specialization. But maybe use this: https://stackoverflow.com/questions/31500426/why-does-enable-if-t-in-template-arguments-complains-about-redefinitions
