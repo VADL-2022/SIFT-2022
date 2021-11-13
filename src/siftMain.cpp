@@ -24,9 +24,9 @@ struct ProcessedImage {
     unique_keypoints_ptr computedKeypoints;
     
     // Matching with the previous image, if any //
-    unique_keypoints_ptr out_k1 = nullptr;
-    unique_keypoints_ptr out_k2A = nullptr;
-    unique_keypoints_ptr out_k2B = nullptr;
+    unique_keypoints_ptr out_k1;
+    unique_keypoints_ptr out_k2A;
+    unique_keypoints_ptr out_k2B;
     // //
     
     SIFTParams p;
@@ -191,7 +191,12 @@ int mainMission(DataSourceT* src,
             }
 
             t.reset();
-            processedImageQueue.enqueue(mat, keypoints, out_k1, out_k2A, out_k2B, p);
+            processedImageQueue.enqueue(mat,
+                                        std::move(unique_keypoints_ptr(keypoints)),
+                                        std::move(unique_keypoints_ptr(out_k1)),
+                                        std::move(unique_keypoints_ptr(out_k2A)),
+                                        std::move(unique_keypoints_ptr(out_k2B)),
+                                        p);
             t.logElapsed(id, "enqueue procesed image");
 
             // cleanup
