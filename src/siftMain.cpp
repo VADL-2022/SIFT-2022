@@ -15,15 +15,24 @@
 #include "DataSource.hpp"
 #include "DataOutput.hpp"
 
-// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
-const int alpha_slider_max = 2;
-int alpha_slider = 0;
-double alpha;
-double beta;
-static void on_trackbar( int, void* )
-{
-   alpha = (double) alpha_slider/alpha_slider_max ;
-}
+#ifndef USE_COMMAND_LINE_ARGS
+#include "Queue.hpp"
+struct CapturedImage {
+    cv::Mat image;
+    struct sift_keypoints* computedKeypoints;
+};
+Queue<CapturedImage, 32> imageQueue;
+#endif
+
+//// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
+//const int alpha_slider_max = 2;
+//int alpha_slider = 0;
+//double alpha;
+//double beta;
+//static void on_trackbar( int, void* )
+//{
+//   alpha = (double) alpha_slider/alpha_slider_max ;
+//}
 
 // Config //
 // Data source
@@ -33,12 +42,30 @@ using DataSourceT = CameraDataSource;
 // Data output
 using DataOutputT = PreviewWindowDataOutput;
 // //
+
+template <typename DataSourceT, typename DataOutputT>
+int mainInteractive(DataSourceT* src,
+                    SIFTState& s,
+                    SIFTParams& p,
+                    size_t skip,
+                    DataOutputT& o
+                    #ifdef USE_COMMAND_LINE_ARGS
+                      , FileDataOutput& o2,
+                      const CommandLineConfig& cfg
+                    #endif
+);
+
+template <typename DataSourceT, typename DataOutputT>
+int mainMission(DataSourceT* src,
+                SIFTState& s,
+                SIFTParams& p,
+                DataOutputT& o
+                );
+
 int main(int argc, char **argv)
 {
     SIFTState s;
     SIFTParams p;
-    
-    cv::Mat canvas;
     
 	// Set the default "skip"
     size_t skip = 0;//120;//60;//100;//38;//0;
@@ -80,6 +107,8 @@ int main(int argc, char **argv)
     if (!cfg.folderDataSource) {
         src = std::make_unique<DataSourceT>();
     }
+    
+    mainInteractive(&src, s, p, skip, o, o2, cfg);
 #else
     // Set params (will use default if none set) //
     //USE(v3Params);
@@ -88,9 +117,60 @@ int main(int argc, char **argv)
     
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
+    
+    mainMission(src, s, p, o);
 #endif
     // //
 	
+    
+	return 0;
+}
+
+void* thfuncImgProc(void* arg) {
+    cv::Mat m = imageQueue.dequeue();
+    
+    return (void*)0;
+}
+
+template <typename DataSourceT, typename DataOutputT>
+int mainMission(DataSourceT* src,
+                SIFTState& s,
+                SIFTParams& p,
+                DataOutputT& o
+) {
+    pthread_t th1, th2, th3, th4;
+    cv::Mat next = src->next();
+    imageQueue.enqueue(next);
+
+    // Create SIFT threads:
+    pthread_create(&th1, NULL, thfuncImgProc, NULL);
+    pthread_create(&th2, NULL, thfuncImgProc, NULL);
+    pthread_create(&th3, NULL, thfuncImgProc, NULL);
+    pthread_create(&th4, NULL, thfuncImgProc, NULL);
+
+    int ret1, ret2, ret3, ret4;
+    pthread_join(th1, (void**)&ret1);
+    pthread_join(th2, (void**)&ret2);
+    pthread_join(th3, (void**)&ret3);
+    pthread_join(th4, (void**)&ret4);
+    printf("Thread exit codes: %d, %d, %d, %d\n", ret1, ret2, ret3, ret4);
+    
+    return 0;
+}
+
+template <typename DataSourceT, typename DataOutputT>
+int mainInteractive(DataSourceT* src,
+                    SIFTState& s,
+                    SIFTParams& p,
+                    size_t skip,
+                    DataOutputT& o
+                    #ifdef USE_COMMAND_LINE_ARGS
+                      , FileDataOutput& o2,
+                      const CommandLineConfig& cfg
+                    #endif
+) {
+    cv::Mat canvas;
+    
 	//--- print the files sorted by filename
     bool retryNeeded = false;
     for (size_t i = src->currentIndex;; i++) {
@@ -112,7 +192,7 @@ int main(int argc, char **argv)
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
 		struct sift_keypoint_std *k;
-        if (!cfg.imageCaptureOnly) {
+        if (!CMD_CONFIG(imageCaptureOnly)) {
             if (s.loadedKeypoints == nullptr) {
                 t.reset();
                 k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
@@ -133,11 +213,11 @@ int main(int argc, char **argv)
 		}
 
 		// Draw keypoints on `o.canvas`
-        if (!cfg.imageCaptureOnly) {
+        if (!CMD_CONFIG(imageCaptureOnly)) {
             t.reset();
         }
         backtorgb.copyTo(canvas);
-        if (!cfg.imageCaptureOnly) {
+        if (!CMD_CONFIG(imageCaptureOnly)) {
             for(int i=0; i<n; i++){
                 drawSquare(canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
                 //break;
@@ -151,13 +231,15 @@ int main(int argc, char **argv)
         }
 
 		// Compare keypoints if we had some previously and render to canvas if needed
-        if (!cfg.imageCaptureOnly) {
+        if (!CMD_CONFIG(imageCaptureOnly)) {
             retryNeeded = compareKeypoints(canvas, s, p, keypoints, backtorgb COMPARE_KEYPOINTS_ADDITIONAL_ARGS);
         }
 
         bool exit;
-        if (cfg.imageFileOutput) {
+        if (CMD_CONFIG(imageFileOutput)) {
+            #ifdef USE_COMMAND_LINE_ARGS
             exit = run(o2, canvas, *src, s, p, backtorgb, keypoints, retryNeeded, i, n);
+            #endif
         }
         else {
             exit = run(o, canvas, *src, s, p, backtorgb, keypoints, retryNeeded, i, n);
@@ -182,9 +264,11 @@ int main(int argc, char **argv)
 		resetRNG();
 	}
     
-    if (cfg.imageFileOutput) {
+    if (CMD_CONFIG(imageFileOutput)) {
+        #ifdef USE_COMMAND_LINE_ARGS
         o2.writer.release(); // Save the file
+        #endif
     }
     
-	return 0;
+    return 0;
 }

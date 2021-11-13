@@ -10,7 +10,7 @@
 #define Config_h
 
 // Config //
-#define USE_COMMAND_LINE_ARGS
+//#define USE_COMMAND_LINE_ARGS
 // //
 
 #ifdef USE_COMMAND_LINE_ARGS
