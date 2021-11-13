@@ -62,6 +62,8 @@ template <typename T, auto fn>
 using unique_ptr_with_deleter = std::unique_ptr<T, deleter_from_fn<fn>>;
 // //
 
+using unique_keypoints_ptr = unique_ptr_with_deleter<struct sift_keypoints, sift_free_keypoints>;
+
 struct SIFTState {
     ~SIFTState();
     
@@ -70,7 +72,7 @@ struct SIFTState {
     cv::Mat firstImage;
     
     // Loaded keypoints:
-    unique_ptr_with_deleter<struct sift_keypoints, sift_free_keypoints> loadedKeypoints;
+    unique_keypoints_ptr loadedKeypoints;
     std::unique_ptr<struct sift_keypoint_std> loadedK;
     int loadedKeypointsSize = 0;
     
@@ -80,9 +82,9 @@ struct SIFTState {
     struct sift_keypoints* out_k2B = nullptr;
     
     // Loaded matches
-    unique_ptr_with_deleter<struct sift_keypoints, sift_free_keypoints> loaded_out_k1 = nullptr;
-    unique_ptr_with_deleter<struct sift_keypoints, sift_free_keypoints> loaded_out_k2A = nullptr;
-    unique_ptr_with_deleter<struct sift_keypoints, sift_free_keypoints> loaded_out_k2B = nullptr;
+    unique_keypoints_ptr loaded_out_k1 = nullptr;
+    unique_keypoints_ptr loaded_out_k2A = nullptr;
+    unique_keypoints_ptr loaded_out_k2B = nullptr;
     // //
 };
 

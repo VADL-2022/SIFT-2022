@@ -17,6 +17,7 @@ public:
     void reset();
     double elapsed() const;
     void logElapsed(const char* name) const;
+    void logElapsed(int threadID, const char* name) const;
 private:
     typedef std::chrono::high_resolution_clock clock_;
     clock_::time_point beg_;

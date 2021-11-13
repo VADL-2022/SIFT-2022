@@ -17,11 +17,21 @@
 
 #ifndef USE_COMMAND_LINE_ARGS
 #include "Queue.hpp"
-struct CapturedImage {
+#include "lib/ctpl_stl.hpp"
+struct ProcessedImage {
     cv::Mat image;
-    struct sift_keypoints* computedKeypoints;
+    
+    unique_keypoints_ptr computedKeypoints;
+    
+    // Matching with the previous image, if any //
+    unique_keypoints_ptr out_k1 = nullptr;
+    unique_keypoints_ptr out_k2A = nullptr;
+    unique_keypoints_ptr out_k2B = nullptr;
+    // //
+    
+    SIFTParams p;
 };
-Queue<CapturedImage, 32> imageQueue;
+Queue<ProcessedImage, 32> processedImageQueue;
 #endif
 
 //// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
@@ -57,7 +67,6 @@ int mainInteractive(DataSourceT* src,
 
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
-                SIFTState& s,
                 SIFTParams& p,
                 DataOutputT& o
                 );
@@ -118,43 +127,87 @@ int main(int argc, char **argv)
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
     
-    mainMission(src, s, p, o);
+    mainMission(src, p, o);
 #endif
     // //
-	
     
 	return 0;
 }
 
-void* thfuncImgProc(void* arg) {
-    cv::Mat m = imageQueue.dequeue();
-    
-    return (void*)0;
-}
-
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
-                SIFTState& s,
                 SIFTParams& p,
                 DataOutputT& o
 ) {
-    pthread_t th1, th2, th3, th4;
-    cv::Mat next = src->next();
-    imageQueue.enqueue(next);
-
-    // Create SIFT threads:
-    pthread_create(&th1, NULL, thfuncImgProc, NULL);
-    pthread_create(&th2, NULL, thfuncImgProc, NULL);
-    pthread_create(&th3, NULL, thfuncImgProc, NULL);
-    pthread_create(&th4, NULL, thfuncImgProc, NULL);
-
-    int ret1, ret2, ret3, ret4;
-    pthread_join(th1, (void**)&ret1);
-    pthread_join(th2, (void**)&ret2);
-    pthread_join(th3, (void**)&ret3);
-    pthread_join(th4, (void**)&ret4);
-    printf("Thread exit codes: %d, %d, %d, %d\n", ret1, ret2, ret3, ret4);
+    cv::Mat firstImage;
+    cv::Mat prevImage;
+    struct sift_keypoints* keypointsPrev;
+    ctpl::thread_pool tp(4); // Number of threads in the pool
+    // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
     
+    for (size_t i = src->currentIndex;; i++) {
+        std::cout << "i: " << i << std::endl;
+        t.reset();
+        cv::Mat mat = src->get(i);
+        t.logElapsed("get image");
+        if (mat.empty()) { printf("No more images left to process. Exiting.\n"); break; }
+        t.reset();
+        cv::Mat greyscale = src->siftImageForMat(i);
+        t.logElapsed("siftImageForMat");
+        float* x = (float*)greyscale.data;
+        size_t w = mat.cols, h = mat.rows;
+        //auto path = src->nameForIndex(i);
+        
+        tp.push([&pOrig=p, x, w, h](int id, /*extra args:*/ cv::Mat mat, cv::Mat prevImage, struct sift_keypoints* keypointsPrev) {
+            std::cout << "hello from " << id << std::endl;
+            
+            SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
+
+            // compute sift keypoints
+            t.reset();
+            int n; // Number of keypoints
+            struct sift_keypoints* keypoints;
+            struct sift_keypoint_std *k;
+            k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
+            printf("Thread %d: Number of keypoints: %d\n", id, n);
+            t.logElapsed(id, "compute features");
+            
+            // Check if we have to compare with a previous image
+            struct sift_keypoints* out_k1 = nullptr;
+            struct sift_keypoints* out_k2A = nullptr;
+            struct sift_keypoints* out_k2B = nullptr;
+            if (!prevImage.empty()) {
+                // Setting current parameters for matching
+                p.meth_flag = 1;
+                p.thresh = 0.6;
+
+                // Matching
+                t.reset();
+                out_k1 = sift_malloc_keypoints();
+                out_k2A = sift_malloc_keypoints();
+                out_k2B = sift_malloc_keypoints();
+                matching(keypointsPrev, keypoints, out_k1, out_k2A, out_k2B, p.thresh, p.meth_flag);
+                t.logElapsed(id, "find matches");
+            }
+
+            t.reset();
+            processedImageQueue.enqueue(mat, keypoints, out_k1, out_k2A, out_k2B, p);
+            t.logElapsed(id, "enqueue procesed image");
+
+            // cleanup
+            free(k);
+        }, /*extra args:*/ mat, prevImage, keypointsPrev);
+        
+        // Save this image for next iteration
+        prevImage = mat;
+        
+        if (firstImage.empty()) { // This is the first iteration.
+            // Save firstImage once
+            firstImage = mat;
+        }
+    }
+    
+    tp.stop();
     return 0;
 }
 

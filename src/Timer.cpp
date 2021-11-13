@@ -19,3 +19,6 @@ double Timer::elapsed() const {
 void Timer::logElapsed(const char* name) const {
     std::cout << name << " took " << elapsed() << " milliseconds" << std::endl;
 }
+void Timer::logElapsed(int threadID, const char* name) const {
+    std::cout << "Thread " << threadID << ": " << name << " took " << elapsed() << " milliseconds" << std::endl;
+}
