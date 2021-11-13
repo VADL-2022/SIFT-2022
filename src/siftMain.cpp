@@ -192,10 +192,10 @@ int mainMission(DataSourceT* src,
 
             t.reset();
             processedImageQueue.enqueue(mat,
-                                        std::move(unique_keypoints_ptr(keypoints)),
-                                        std::move(unique_keypoints_ptr(out_k1)),
-                                        std::move(unique_keypoints_ptr(out_k2A)),
-                                        std::move(unique_keypoints_ptr(out_k2B)),
+                                        unique_keypoints_ptr(keypoints),
+                                        unique_keypoints_ptr(out_k1),
+                                        unique_keypoints_ptr(out_k2A),
+                                        unique_keypoints_ptr(out_k2B),
                                         p);
             t.logElapsed(id, "enqueue procesed image");
 
