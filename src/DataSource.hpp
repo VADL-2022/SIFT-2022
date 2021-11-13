@@ -82,6 +82,8 @@ struct CameraDataSource : public DataSourceBase
     cv::VideoCapture cap;
     std::unordered_map<size_t, cv::Mat> cache;
 private:
+    static const double default_fps;
+    static const cv::Size default_sizeFrame;
     void init(double fps, cv::Size sizeFrame);
 };
 

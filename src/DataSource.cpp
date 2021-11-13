@@ -215,14 +215,16 @@ cv::Mat CameraDataSource::colorImageForMat(size_t index) {
     return cache.at(index);
 }
 
+const double CameraDataSource::default_fps = 30;
+const cv::Size CameraDataSource::default_sizeFrame = {640,480};
+//cv::Size sizeFrame(1920,1080);
 CameraDataSource::CameraDataSource() {
-    init();
+    init(default_fps, default_sizeFrame);
 }
 
 CameraDataSource::CameraDataSource(int argc, char** argv) {
-    double fps = 30;
-    cv::Size sizeFrame(640,480);
-    //cv::Size sizeFrame(1920,1080);
+    double fps = default_fps;
+    cv::Size sizeFrame = default_sizeFrame;
     
     // Parse arguments
     for (int i = 1; i < argc; i++) {
