@@ -14,11 +14,28 @@
 #include "compareKeypoints.hpp"
 #include "DataSource.hpp"
 #include "DataOutput.hpp"
+#include "utils.hpp"
 
 #ifndef USE_COMMAND_LINE_ARGS
 #include "Queue.hpp"
 #include "lib/ctpl_stl.hpp"
 struct ProcessedImage {
+    ProcessedImage() = default;
+    
+    // Insane move assignment operator
+    // move ctor: ProcessedImage(ProcessedImage&& other) {
+    ProcessedImage& operator=(ProcessedImage&& other) {
+        image = std::move(other.image);
+        computedKeypoints.reset(other.computedKeypoints.release());
+        out_k1.reset(other.out_k1.release());
+        out_k2A.reset(other.out_k2A.release());
+        out_k2B.reset(other.out_k2B.release());
+        transformation = std::move(other.transformation);
+        p = std::move(other.p);
+        
+        return *this;
+    }
+    
     cv::Mat image;
     
     unique_keypoints_ptr computedKeypoints;
@@ -27,11 +44,14 @@ struct ProcessedImage {
     unique_keypoints_ptr out_k1;
     unique_keypoints_ptr out_k2A;
     unique_keypoints_ptr out_k2B;
+    cv::Mat transformation;
     // //
     
     SIFTParams p;
+    size_t i;
 };
-Queue<ProcessedImage, 32> processedImageQueue;
+Queue<ProcessedImage, 256 /*32*/> processedImageQueue;
+cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
 #endif
 
 //// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
@@ -147,6 +167,88 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
     return std::chrono::duration_cast<result_t>(clock_t::now() - start);
 }
 
+void* matcherThreadFunc(void* arg) {
+    std::atomic<bool>& isStop = *(std::atomic<bool>*)arg;
+    do {
+        ProcessedImage img1, img2;
+        std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
+        processedImageQueue.dequeueOnceOnTwoImages(&img1, &img2);
+        std::cout << "Matcher thread: Unlocked for dequeueOnceOnTwoImages" << std::endl;
+        
+        // Setting current parameters for matching
+        img2.p.meth_flag = 1;
+        img2.p.thresh = 0.6;
+
+        // Matching
+        t.reset();
+        struct sift_keypoints* keypointsPrev = img1.computedKeypoints.get();
+        struct sift_keypoints* keypoints = img2.computedKeypoints.get();
+        assert(keypointsPrev != nullptr && keypoints != nullptr); // This should always hold, since the other thread pool threads enqueued them.
+        assert(img2.out_k1 == nullptr && img2.out_k2A == nullptr && img2.out_k2B == nullptr); // This should always hold since we reset the pointers when done with matching
+        img2.out_k1.reset(sift_malloc_keypoints());
+        img2.out_k2A.reset(sift_malloc_keypoints());
+        img2.out_k2B.reset(sift_malloc_keypoints());
+        if (keypointsPrev->size == 0 || keypoints->size == 0) {
+            std::cout << "Matcher thread: zero keypoints, cannot match" << std::endl;
+            throw ""; // TODO: temp, need to notify main thread and retry matching maybe
+        }
+        matching(keypointsPrev, keypoints, img2.out_k1.get(), img2.out_k2A.get(), img2.out_k2B.get(), img2.p.thresh, img2.p.meth_flag);
+        t.logElapsed("Matcher thread: find matches");
+        
+        // Find homography
+        t.reset();
+        struct sift_keypoints* k1 = img2.out_k1.get();
+        struct sift_keypoints* out_k2A = img2.out_k2A.get();
+        struct sift_keypoints* out_k1 = k1;
+        // Find the homography matrix between the previous and current image ( https://docs.opencv.org/4.5.2/d1/de0/tutorial_py_feature_homography.html )
+        //const int MIN_MATCH_COUNT = 10
+        // https://docs.opencv.org/3.4/d7/dff/tutorial_feature_homography.html
+        std::vector<cv::Point2f> obj; // The `obj` is the current image's keypoints
+        std::vector<cv::Point2f> scene; // The `scene` is the previous image's keypoints. "Scene" means the area within which we are finding `obj` and this is since we want to find the previous image in the current image since we're falling down and therefore "zooming in" so the current image should be within the previous one.
+        obj.reserve(k1->size);
+        scene.reserve(k1->size);
+        // TODO: reuse memory of k1 instead of copying?
+        for (size_t i = 0; i < k1->size; i++) {
+            obj.emplace_back(out_k2A->list[i]->x, out_k2A->list[i]->y);
+            scene.emplace_back(out_k1->list[i]->x, out_k1->list[i]->y);
+        }
+        
+        // Make a matrix in transformations history
+        if (obj.size() < 4 || scene.size() < 4) { // Prevents "libc++abi.dylib: terminating with uncaught exception of type cv::Exception: OpenCV(4.5.2) /tmp/nix-build-opencv-4.5.2.drv-0/source/modules/calib3d/src/fundam.cpp:385: error: (-28:Unknown error code -28) The input arrays should have at least 4 corresponding point sets to calculate Homography in function 'findHomography'"
+            //printf("Not enough keypoints to find homography! Trying to find keypoints on previous image again with tweaked params\n");
+//            // Retry with tweaked params
+//            img2.p.params->n_oct++;
+//            img2.p.params->n_bins++;
+//            img2.p.params->n_hist++;
+//            if (img2.p.params->n_spo < 2) {
+//                img2.p.params->n_spo = 2;
+//            }
+//            img2.p.params->sigma_min -= 0.05;
+//            img2.p.params->delta_min -= 0.05;
+//            img2.p.params->sigma_in -= 0.05;
+            
+            //throw "Not yet implemented"; // This is way too complex..
+            
+            
+            printf("Not enough keypoints to find homography! Ignoring this image\n");
+            throw "";
+            continue;
+        }
+        
+        img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+        // Accumulate homography
+        lastImageToFirstImageTransformation *= img2.transformation.inv();
+        t.logElapsed("find homography");
+        
+        // Free memory and mark this as an unused ProcessedImage:
+        img2.out_k1.reset();
+        img2.out_k2A.reset();
+        img2.out_k2B.reset();
+        
+    } while (!isStop);
+    return (void*)0;
+}
+
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
@@ -154,14 +256,16 @@ int mainMission(DataSourceT* src,
 ) {
     cv::Mat firstImage;
     cv::Mat prevImage;
-    struct sift_keypoints* keypointsPrev;
     ctpl::thread_pool tp(4); // Number of threads in the pool
     // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
+    pthread_t matcherThread;
+    pthread_create(&matcherThread, NULL, matcherThreadFunc, NULL);
     
     auto last = std::chrono::steady_clock::now();
     auto fps = src->fps();
     const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
     std::cout << "Target fps: " << fps << std::endl;
+    std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
     for (size_t i = src->currentIndex;; i++) {
         std::cout << "i: " << i << std::endl;
         if (src->wantsCustomFPS()) {
@@ -176,6 +280,7 @@ int mainMission(DataSourceT* src,
         }
         t.reset();
         cv::Mat mat = src->get(i);
+        std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl;
         t.logElapsed("get image");
         if (mat.empty()) { printf("No more images left to process. Exiting.\n"); break; }
         t.reset();
@@ -185,7 +290,7 @@ int mainMission(DataSourceT* src,
         size_t w = mat.cols, h = mat.rows;
         //auto path = src->nameForIndex(i);
         
-        tp.push([&pOrig=p, x, w, h](int id, /*extra args:*/ size_t i, cv::Mat mat, cv::Mat prevImage) {
+        tp.push([&offset, &pOrig=p, x, w, h](int id, /*extra args:*/ size_t i, cv::Mat mat, cv::Mat prevImage) {
             std::cout << "hello from " << id << std::endl;
             
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
@@ -198,57 +303,45 @@ int mainMission(DataSourceT* src,
             struct sift_keypoint_std *k;
             k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
             printf("Thread %d: Number of keypoints: %d\n", id, n);
+            if (n < 4) {
+                printf("Not enough keypoints to find homography! Ignoring this image\n");
+                offset++;
+            }
             t.logElapsed(id, "compute features");
             
-            // Check if we have to compare with a previous image
-            struct sift_keypoints* out_k1 = nullptr;
-            struct sift_keypoints* out_k2A = nullptr;
-            struct sift_keypoints* out_k2B = nullptr;
-            if (!prevImage.empty()) {
-                // Setting current parameters for matching
-                p.meth_flag = 1;
-                p.thresh = 0.6;
-
-                // Matching
-                struct sift_keypoints* keypointsPrev = nullptr;
-                Timer t2;
-                do {
-                    t.reset();
-                    keypointsPrev = i > 0 ? processedImageQueue.get(i-1).computedKeypoints.get() : nullptr;
-                    t.logElapsed(id, "attempt to get keypointsPrev");
-                    
-                    // Wait until it is good
-                    pthread_mutex_lock(&processedImageQueue.mutex);
-                    while( processedImageQueue.count == 0 ) // Wait until not empty.
-                    {
-                        pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-                    }
-                } while (keypointsPrev == nullptr);
-                t2.logElapsed(id, "get keypointsPrev");
-                t.reset();
-                out_k1 = sift_malloc_keypoints();
-                out_k2A = sift_malloc_keypoints();
-                out_k2B = sift_malloc_keypoints();
-                if (keypointsPrev->size == 0 || keypoints->size == 0) {
-                    std::cout << "Thread " << id << ": zero keypoints, cannot match" << std::endl;
-                    throw ""; // TODO: temp, need to notify main thread and retry matching maybe
-                }
-                matching(keypointsPrev, keypoints, out_k1, out_k2A, out_k2B, p.thresh, p.meth_flag);
-                t.logElapsed(id, "find matches");
-            }
-
             t.reset();
-            processedImageQueue.enqueue(mat,
-                                        unique_keypoints_ptr(keypoints),
-                                        unique_keypoints_ptr(out_k1),
-                                        unique_keypoints_ptr(out_k2A),
-                                        unique_keypoints_ptr(out_k2B),
-                                        p);
+            do {
+                std::cout << "Thread " << id << ": Locking" << std::endl;
+                pthread_mutex_lock( &processedImageQueue.mutex );
+                std::cout << "Thread " << id << ": Locked" << std::endl;
+                if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
+                    || (processedImageQueue.readPtr == i - 1) // If we're writing right after the last element, can enqueue our sequentially ordered image
+                    ) {
+                    processedImageQueue.enqueue(mat,
+                                            unique_keypoints_ptr(),
+                                            unique_keypoints_ptr(),
+                                            unique_keypoints_ptr(),
+                                            unique_keypoints_ptr(),
+                                            cv::Mat(),
+                                            p,
+                                            i);
+                }
+                else {
+                    auto ms = 10;
+                    std::cout << "Thread " << id << ": Sleeping " << ms << " milliseconds" << std::endl;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+                    continue;
+                }
+                std::cout << "Thread " << id << ": Unlocking" << std::endl;
+                pthread_mutex_unlock( &processedImageQueue.mutex );
+                std::cout << "Thread " << id << ": Unlocked" << std::endl;
+                break;
+            } while (true);
             t.logElapsed(id, "enqueue procesed image");
 
             // cleanup
             free(k);
-        }, /*extra args:*/ i, mat, prevImage);
+        }, /*extra args:*/ i - offset, mat, prevImage);
         
         // Save this image for next iteration
         prevImage = mat;
@@ -259,7 +352,26 @@ int mainMission(DataSourceT* src,
         }
     }
     
+    tp.isStop = true;
+    int ret1;
+    pthread_join(matcherThread, (void**)&ret1);
+    
     tp.stop();
+    
+    // Print the final homography
+    cv::Mat& M = lastImageToFirstImageTransformation;
+    cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
+    fmt->set64fPrecision(4);
+    fmt->set32fPrecision(4);
+    auto str = fmt->format(M);
+    std::cout << str << std::endl;
+    
+    // Save final homography to an image
+    cv::Mat canvas;
+    cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
+    auto name = openFileWithUniqueName("scaled", ".png");
+    std::cout << "Saving to " << name << std::endl;
+    cv::imwrite(name, canvas);
     return 0;
 }
 #else

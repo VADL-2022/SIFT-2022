@@ -39,6 +39,33 @@ struct Queue {
         pthread_mutex_init(&mutex, NULL);
         pthread_cond_init(&condition, NULL);
     }
+    
+    // Adds to the buffer without locking
+    template< class... Args >
+    void enqueueNoLock(Args&&... args) {
+        while( count == BUFFER_SIZE ) // Wait until not full.
+        {
+           pthread_cond_wait( &condition, &mutex );
+        }
+
+        // Place in the new value:
+        T* e = &content[writePtr];
+        e->~T();
+        new (e) T{std::forward<Args>(args)...}; // Note: `cv::Mat::Mat    (    const Mat &     m    )` only increments refcount of that matrix (copies `m`'s header (or pointer to it?) into `this` and then increments refcount), which is what we want here: https://docs.opencv.org/3.4/d3/d63/classcv_1_1Mat.html#a294eaf8a95d2f9c7be19ff594d06278e
+
+        // Increment the write pointer modulo the BUFFER_SIZE:
+        writePtr = (writePtr + 1) % BUFFER_SIZE;
+
+        // Increment the element count:
+        count++;
+
+        printf("Enqueue: %p\n", (void*)e);
+        fflush(stdout);
+
+        // Wake up all other threads waiting on the condition variable
+        pthread_cond_broadcast(&condition);
+        // Signal only tells one thread that's waiting, whereas broadcast tells all threads waiting on the condition.
+    }
 
     // Adds to the buffer.
     template< class... Args >
@@ -82,7 +109,7 @@ struct Queue {
     }
 
     // Removes from the buffer.
-    void dequeue() {
+    void dequeue(T* output) {
         pthread_mutex_lock( &mutex );
         while( count == 0 ) // Wait until not empty.
         {
@@ -93,10 +120,39 @@ struct Queue {
         // and decrement the counter,
         // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
         T* e = &content[readPtr];
+        *output = *e;
         readPtr = (readPtr + 1) % BUFFER_SIZE;
         count--;
 
         printf("Dequeue: %x with %d left\n", e, count); // Need to print inside
+        // the lock! Because print could get preempted (a context switch could happen) *right* between print
+        // and fflush, so that the actual printing to the console that we see happens way later, after already
+        // context switching!
+        fflush(stdout);
+
+        pthread_cond_broadcast(&condition);
+        pthread_mutex_unlock(&mutex);
+    }
+    
+    // Removes one item from the buffer but takes two items from the buffer (the previous one as well).
+    void dequeueOnceOnTwoImages(T* output1, T* output2) {
+        pthread_mutex_lock( &mutex );
+        while( count <= 1 ) // Wait until not empty and not one left.
+        {
+           pthread_cond_wait( &condition, &mutex );
+        }
+
+        // remove the next element from the buffer, increment the read pointer (modulo buffer size)
+        // and decrement the counter,
+        // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
+        T* e = &content[readPtr - 1];
+        *output1 = std::move(*e);
+        T* e2 = &content[readPtr];
+        *output2 = std::move(*e2);
+        readPtr = (readPtr + 1) % BUFFER_SIZE;
+        count--;
+
+        printf("Dequeue twice: %x and %x with %d left\n", e, e2, count); // Need to print inside
         // the lock! Because print could get preempted (a context switch could happen) *right* between print
         // and fflush, so that the actual printing to the console that we see happens way later, after already
         // context switching!

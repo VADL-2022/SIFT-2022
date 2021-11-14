@@ -38,6 +38,7 @@ struct DataSourceBase {
     
     MaybeVirtual bool wantsCustomFPS() const MaybePureVirtual;
     MaybeVirtual double fps() const MaybePureVirtual;
+    MaybeVirtual double timeMilliseconds() const MaybePureVirtual;
     
     size_t currentIndex; // Index to save into next
 };
@@ -60,6 +61,7 @@ struct FolderDataSource : public DataSourceBase
     
     bool wantsCustomFPS() const { return false; }
     double fps() const { return DBL_MAX; }
+    double timeMilliseconds() const { return 0; }
     
     size_t currentIndex; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
@@ -87,6 +89,7 @@ struct CameraDataSource : public DataSourceBase
     
     bool wantsCustomFPS() const { return wantedFPS.has_value(); }
     double fps() const { return wantsCustomFPS() ? wantedFPS.value() : cap.get(cv::CAP_PROP_FPS); }
+    double timeMilliseconds() const { return cap.get(cv::CAP_PROP_POS_MSEC); }
     
     cv::VideoCapture cap;
     std::unordered_map<size_t, cv::Mat> cache;

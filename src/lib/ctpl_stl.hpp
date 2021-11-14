@@ -248,7 +248,9 @@ namespace ctpl {
         std::vector<std::shared_ptr<std::atomic<bool>>> flags;
         detail::Queue<std::function<void(int id)> *> q;
         std::atomic<bool> isDone;
+    public:
         std::atomic<bool> isStop;
+    private:
         std::atomic<int> nWaiting;  // how many threads are waiting
 
         std::mutex mutex;

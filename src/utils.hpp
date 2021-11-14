@@ -13,6 +13,9 @@
 // Usage: mat_type2str(cvMat.type())
 std::string mat_type2str(int type);
 
+// Throws if fails
+std::string openFileWithUniqueName(std::string name, std::string extension);
+
 // https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c //
 #if __cplusplus >= 201703L // C++17 and later 
 #include <string_view>

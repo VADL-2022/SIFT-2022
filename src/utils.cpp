@@ -9,6 +9,7 @@
 #include "utils.hpp"
 
 #include <opencv2/opencv.hpp>
+#include <fstream>
 
 std::string mat_type2str(int type) {
   std::string r;
@@ -31,4 +32,40 @@ std::string mat_type2str(int type) {
   r += (chans+'0'); // Number of channels
 
   return r;
+}
+
+// Throws if fails
+std::string openFileWithUniqueName(std::string name, std::string extension) {
+  // Based on https://stackoverflow.com/questions/13108973/creating-file-names-automatically-c
+  
+  std::ofstream ofile;
+
+  std::string fname;
+  for(unsigned int n = 0; ; ++ n)
+    {
+      fname = name + std::to_string(n) + extension;
+
+      std::ifstream ifile;
+      ifile.open(fname.c_str());
+
+      if(ifile.is_open())
+    {
+    }
+      else
+    {
+      ofile.open(fname.c_str());
+      break;
+    }
+
+      ifile.close();
+    }
+
+  if(!ofile.is_open())
+    {
+      //return "";
+        std::cout << fname << " could not be opened" << std::endl;
+      throw "";
+    }
+
+  return fname;
 }

@@ -9,7 +9,6 @@
 #include "DataOutput.hpp"
 
 #include "opencv2/highgui.hpp"
-#include <fstream>
 #include "utils.hpp"
 
 void PreviewWindowDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
@@ -24,42 +23,6 @@ int PreviewWindowDataOutput::waitKey(int delay) {
 
 FileDataOutput::FileDataOutput(std::string filenameNoExt_, double fps_, cv::Size sizeFrame_) :
 fps(fps_), sizeFrame(sizeFrame_), filenameNoExt(filenameNoExt_) {}
-
-// Throws if fails
-std::string openFileWithUniqueName(std::string name, std::string extension) {
-  // Based on https://stackoverflow.com/questions/13108973/creating-file-names-automatically-c
-  
-  std::ofstream ofile;
-
-  std::string fname;
-  for(unsigned int n = 0; ; ++ n)
-    {
-      fname = name + std::to_string(n) + extension;
-
-      std::ifstream ifile;
-      ifile.open(fname.c_str());
-
-      if(ifile.is_open())
-	{
-	}
-      else
-	{
-	  ofile.open(fname.c_str());
-	  break;
-	}
-
-      ifile.close();
-    }
-
-  if(!ofile.is_open())
-    {
-      //return "";
-        std::cout << fname << " could not be opened" << std::endl;
-      throw "";
-    }
-
-  return fname;
-}
 
 void FileDataOutput::run(cv::Mat frame) {
     bool first = !writer.isOpened();
