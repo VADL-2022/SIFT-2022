@@ -184,9 +184,21 @@ int mainMission(DataSourceT* src,
                 p.thresh = 0.6;
 
                 // Matching
-                t.reset();
-                struct sift_keypoints* keypointsPrev = i > 0 ? processedImageQueue.get(i-1).computedKeypoints.get() : nullptr;
-                t.logElapsed("get keypointsPrev");
+                struct sift_keypoints* keypointsPrev = nullptr;
+                Timer t2;
+                do {
+                    t.reset();
+                    keypointsPrev = i > 0 ? processedImageQueue.get(i-1).computedKeypoints.get() : nullptr;
+                    t.logElapsed(id, "attempt to get keypointsPrev");
+                    
+                    // Wait until it is good
+                    pthread_mutex_lock(&processedImageQueue.mutex);
+                    while( processedImageQueue.count == 0 ) // Wait until not empty.
+                    {
+                        pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
+                    }
+                } while (keypointsPrev == nullptr);
+                t2.logElapsed(id, "get keypointsPrev");
                 t.reset();
                 out_k1 = sift_malloc_keypoints();
                 out_k2A = sift_malloc_keypoints();
