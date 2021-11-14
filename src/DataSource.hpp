@@ -33,8 +33,11 @@ struct DataSourceBase {
     MaybeVirtual std::string nameForIndex(size_t index) MaybePureVirtual;
     MaybeVirtual float* dataForMat(size_t index) MaybePureVirtual;
     
-    MaybeVirtual cv::Mat siftImageForMat(size_t index) MaybePureVirtual ;
+    MaybeVirtual cv::Mat siftImageForMat(size_t index) MaybePureVirtual;
     MaybeVirtual cv::Mat colorImageForMat(size_t index) MaybePureVirtual;
+    
+    MaybeVirtual bool wantsCustomFPS() const MaybePureVirtual;
+    MaybeVirtual double fps() const MaybePureVirtual;
     
     size_t currentIndex; // Index to save into next
 };
@@ -54,6 +57,9 @@ struct FolderDataSource : public DataSourceBase
     float* dataForMat(size_t index) { return (float*)get(index).data; }
     cv::Mat siftImageForMat(size_t index);
     cv::Mat colorImageForMat(size_t index);
+    
+    bool wantsCustomFPS() const { return false; }
+    double fps() const { return DBL_MAX; }
     
     size_t currentIndex; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
@@ -79,9 +85,14 @@ struct CameraDataSource : public DataSourceBase
     cv::Mat siftImageForMat(size_t index);
     cv::Mat colorImageForMat(size_t index);
     
+    bool wantsCustomFPS() const { return wantedFPS.has_value(); }
+    double fps() const { return wantsCustomFPS() ? wantedFPS.value() : cap.get(cv::CAP_PROP_FPS); }
+    
     cv::VideoCapture cap;
     std::unordered_map<size_t, cv::Mat> cache;
 private:
+    std::optional<double> wantedFPS;
+    
     static const double default_fps;
     static const cv::Size default_sizeFrame;
     void init(double fps, cv::Size sizeFrame);

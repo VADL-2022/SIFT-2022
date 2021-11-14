@@ -279,7 +279,19 @@ void CameraDataSource::init(double fps, cv::Size sizeFrame) {
     cap.set(cv::CAP_PROP_FRAME_WIDTH, sizeFrame.width);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, sizeFrame.height);
     cap.set(cv::CAP_PROP_FPS, fps);
-    std::cout << "Original frames per second using video.get(CAP_PROP_FPS) : " << fpsOrig << "\n\tSet fps to: " << fps << "\n\tOriginal width: " << widthOrig << "\n\tOriginal height: " << heightOrig << "\n\tSet width and height to: " << sizeFrame << std::endl;
+    
+    // Sometimes the requested values aren't supported, so they stay the same. If so, we have a separate fps value stored for that called `wantedFPS`.
+    double fpsReported = cap.get(cv::CAP_PROP_FPS);
+    double widthReported = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    double heightReported = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    
+    if (fpsReported != fps) {
+        wantedFPS = fps;
+    }
+    
+    std::cout << "Original frames per second using video.get(CAP_PROP_FPS) : " << fpsOrig << "\n\tOriginal width: " << widthOrig << "\n\tOriginal height: " << heightOrig
+    << "\n\tSet fps to: " << fps << "\n\tSet width and height to: " << sizeFrame
+    << "\n\tFinal reported fps: " << fpsReported << "\n\tFinal reported width: " << widthReported << "\n\tFinal reported height: " << heightReported << std::endl;
 
     
     //cv::Mat frame_;

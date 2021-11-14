@@ -136,6 +136,17 @@ int main(int argc, char **argv)
 }
 
 #ifndef USE_COMMAND_LINE_ARGS
+// https://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
+template <
+    class result_t   = std::chrono::milliseconds,
+    class clock_t    = std::chrono::steady_clock,
+    class duration_t = std::chrono::milliseconds
+>
+auto since(std::chrono::time_point<clock_t, duration_t> const& start)
+{
+    return std::chrono::duration_cast<result_t>(clock_t::now() - start);
+}
+
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
@@ -147,8 +158,22 @@ int mainMission(DataSourceT* src,
     ctpl::thread_pool tp(4); // Number of threads in the pool
     // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
     
+    auto last = std::chrono::steady_clock::now();
+    auto fps = src->fps();
+    const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
+    std::cout << "Target fps: " << fps << std::endl;
     for (size_t i = src->currentIndex;; i++) {
         std::cout << "i: " << i << std::endl;
+        if (src->wantsCustomFPS()) {
+            auto sinceLast_milliseconds = since(last).count();
+            if (sinceLast_milliseconds < timeBetweenFrames_milliseconds) {
+                // Sleep
+                auto sleepTime = timeBetweenFrames_milliseconds - sinceLast_milliseconds;
+                std::cout << "Sleeping for " << sleepTime << " milliseconds" << std::endl;
+                std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+            }
+            last = std::chrono::steady_clock::now();
+        }
         t.reset();
         cv::Mat mat = src->get(i);
         t.logElapsed("get image");
