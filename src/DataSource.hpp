@@ -27,6 +27,10 @@
 // Note: cv::Mat is reference counted automatically
 
 struct DataSourceBase {
+    #ifdef USE_COMMAND_LINE_ARGS
+    virtual ~DataSourceBase() {}
+    #endif
+    
     MaybeVirtual bool hasNext() MaybePureVirtual;
     MaybeVirtual cv::Mat next() MaybePureVirtual;
     MaybeVirtual cv::Mat get(size_t index) MaybePureVirtual;

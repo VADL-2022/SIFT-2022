@@ -335,6 +335,7 @@ int mainMission(DataSourceT* src,
             
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
             p.params = sift_assign_default_parameters();
+            v2Params(p.params);
 
             // compute sift keypoints
             t.reset();
