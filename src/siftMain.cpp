@@ -345,7 +345,8 @@ int mainMission(DataSourceT* src,
             printf("Thread %d: Number of keypoints: %d\n", id, n);
             if (n < 4) {
                 printf("Not enough keypoints to find homography! Ignoring this image\n");
-                offset++;
+                offset++; // TODO: this doesn't work since main thread will already have used the next value
+                throw "";
             }
             t.logElapsed(id, "compute features");
             
