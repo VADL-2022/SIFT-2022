@@ -30,9 +30,9 @@ void SIFTParams::print_params_functions() {
 }
 
 SIFTParams::SIFTParams() {
-    /** assign parameters **/
-    params = sift_assign_default_parameters();
-    // //
+//    /** assign parameters **/
+//    params = sift_assign_default_parameters();
+//    // //
 }
 
 SIFTParams::~SIFTParams() {

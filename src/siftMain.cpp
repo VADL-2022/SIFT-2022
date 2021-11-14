@@ -82,6 +82,7 @@ int main(int argc, char **argv)
     
     // Command-line args //
 #ifdef USE_COMMAND_LINE_ARGS
+    p.params = sift_assign_default_parameters();
     CommandLineConfig cfg;
     FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
@@ -158,10 +159,11 @@ int mainMission(DataSourceT* src,
         size_t w = mat.cols, h = mat.rows;
         //auto path = src->nameForIndex(i);
         
-        tp.push([&pOrig=p, x, w, h](int id, /*extra args:*/ cv::Mat mat, cv::Mat prevImage, struct sift_keypoints* keypointsPrev) {
+        tp.push([&pOrig=p, x, w, h](int id, /*extra args:*/ size_t i, cv::Mat mat, cv::Mat prevImage) {
             std::cout << "hello from " << id << std::endl;
             
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
+            p.params = sift_assign_default_parameters();
 
             // compute sift keypoints
             t.reset();
@@ -183,6 +185,9 @@ int mainMission(DataSourceT* src,
 
                 // Matching
                 t.reset();
+                struct sift_keypoints* keypointsPrev = i > 0 ? processedImageQueue.get(i-1).computedKeypoints.get() : nullptr;
+                t.logElapsed("get keypointsPrev");
+                t.reset();
                 out_k1 = sift_malloc_keypoints();
                 out_k2A = sift_malloc_keypoints();
                 out_k2B = sift_malloc_keypoints();
@@ -201,7 +206,7 @@ int mainMission(DataSourceT* src,
 
             // cleanup
             free(k);
-        }, /*extra args:*/ mat, prevImage, keypointsPrev);
+        }, /*extra args:*/ i, mat, prevImage);
         
         // Save this image for next iteration
         prevImage = mat;

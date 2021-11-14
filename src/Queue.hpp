@@ -75,6 +75,11 @@ struct Queue {
     T& front() {
         return content[readPtr];
     }
+    
+    // Gets the element at the given index relative to the current front of the queue, modulo the BUFFER_SIZE.
+    T& get(size_t i) {
+        return content[readPtr + i % BUFFER_SIZE];
+    }
 
     // Removes from the buffer.
     void dequeue() {

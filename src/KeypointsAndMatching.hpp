@@ -39,7 +39,7 @@ struct SIFTParams {
     ~SIFTParams();
     
     // Set params //
-    struct sift_parameters* params;
+    struct sift_parameters* params = nullptr;
     const char* paramsName = nullptr; // Name to identify these set of params, if any
     bool checkLoadedK = true;
     
