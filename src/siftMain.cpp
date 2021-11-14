@@ -370,13 +370,16 @@ int mainMission(DataSourceT* src,
                 }
                 else {
                     auto ms = 10;
+                    std::cout << "Thread " << id << ": Unlocking" << std::endl;
+                    pthread_mutex_unlock( &processedImageQueue.mutex );
+                    std::cout << "Thread " << id << ": Unlocked" << std::endl;
                     std::cout << "Thread " << id << ": Sleeping " << ms << " milliseconds" << std::endl;
                     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
                     continue;
                 }
-                std::cout << "Thread " << id << ": Unlocking" << std::endl;
+                std::cout << "Thread " << id << ": Unlocking 2" << std::endl;
                 pthread_mutex_unlock( &processedImageQueue.mutex );
-                std::cout << "Thread " << id << ": Unlocked" << std::endl;
+                std::cout << "Thread " << id << ": Unlocked 2" << std::endl;
                 break;
             } while (true);
             t.logElapsed(id, "enqueue procesed image");
