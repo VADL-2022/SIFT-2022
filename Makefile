@@ -1,3 +1,37 @@
+# BEGIN LIBRARY FUNCTIONS #
+
+# Template to make compilation rules and flags for C and C++ files. Based on https://www.gnu.org/software/make/manual/html_node/Eval-Function.html
+# Usage: `$(eval $(call C_AND_CXX_FLAGS_template,targetNameHere,cFlagsHere,cxxFlagsHere))` where `targetNameHere` is the name of this specific configuration, `cFlagsHere` are CFLAGS to pass, if any, and cxxFlagsHere are CXXFLAGS if any.
+# Example result of calling `$(eval $(call C_AND_CXX_FLAGS_template,release,-Ofast,))` (no CXXFLAGS were provided):
+#
+# CFLAGS_release = $(CFLAGS) -Ofast
+# %_r.o: %.c
+# 	$(CC) $(CFLAGS_release) -c $< -o $@
+# CXXFLAGS_release = $(CXXFLAGS) $(CFLAGS_release)
+# %_r.o: %.cpp
+# 	$(CC)++ $(CXXFLAGS_release) -c $< -o $@
+#
+define C_AND_CXX_FLAGS_template =
+CFLAGS_$(1) = $(CFLAGS) $(2)
+%_$(1).o: %.c
+	$(CC) $$(CFLAGS_$(1)) -c $$< -o $$@
+CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
+%_$(1).o: %.cpp
+	$(CC)++ $$(CXXFLAGS_$(1)) -c $$< -o $$@
+endef
+
+# Usage: `$(eval $(call OBJECTS_LINKING_template,release_orWhateverTargetYouWant,flagsHere))`
+define OBJECTS_LINKING_template =
+OBJECTS_$(1) = $(OBJECTS) $(SIFT_OBJECTS)
+OBJECTS_$(1) := $$(addsuffix _$(1).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)))) src/siftMain_$(1).o
+sift_exe_$(1): $$(OBJECTS_$(1))
+	$(CC)++ $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(2)
+endef
+
+# END LIBRARY FUNCTIONS #
+
+
+
 SHELL := /usr/bin/env bash
 CFLAGS += -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` -I$(SIFT_SRC)
 CXXFLAGS += -std=c++17 $(CFLAGS)
@@ -41,30 +75,34 @@ setup:
 common:
 	cd $(SIFT) && $(MAKE)
 
-CFLAGS_RELEASE = $(CFLAGS) -Ofast #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
-%_r.o: %.c
-	$(CC) $(CFLAGS_RELEASE) -c $< -o $@
-CXXFLAGS_RELEASE = $(CXXFLAGS) $(CFLAGS_RELEASE)
-%_r.o: %.cpp
-	$(CC)++ $(CXXFLAGS_RELEASE) -c $< -o $@
 
-#CFLAGS_DEBUG = $(CFLAGS) -O0 -g3
-CFLAGS_DEBUG = $(CFLAGS) -Og -g3
-%_d.o: %.c
-	$(CC) $(CFLAGS_DEBUG) -c $< -o $@
-CXXFLAGS_DEBUG = $(CXXFLAGS) $(CFLAGS_DEBUG)
-%_d.o: %.cpp
-	$(CC)++ $(CXXFLAGS_DEBUG) -c $< -o $@
 
-OBJECTS_RELEASE = $(OBJECTS) $(SIFT_OBJECTS)
-OBJECTS_RELEASE := $(addsuffix _r.o, $(patsubst %.o,%, $(OBJECTS_RELEASE))) src/siftMain_r.o
-sift_exe: $(OBJECTS_RELEASE)
-	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS)
+# release target
+ADDITIONAL_CFLAGS_RELEASE = -Ofast #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
+$(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
 
-OBJECTS_DEBUG = $(OBJECTS) $(SIFT_OBJECTS)
-OBJECTS_DEBUG := $(addsuffix _d.o, $(patsubst %.o,%, $(OBJECTS_DEBUG))) src/siftMain_d.o
-sift_exe_debug: $(OBJECTS_DEBUG)
-	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
+# release_commandLine target
+ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE = $(ADDITIONAL_CFLAGS_RELEASE) -DUSE_COMMAND_LINE_ARGS
+$(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE),))
+
+# debug target
+ADDITIONAL_CFLAGS_DEBUG = -Og -g3 # -O0
+$(eval $(call C_AND_CXX_FLAGS_template,debug,$(ADDITIONAL_CFLAGS_DEBUG),))
+
+# debug_commandLine target
+ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE = $(ADDITIONAL_CFLAGS_DEBUG) -DUSE_COMMAND_LINE_ARGS
+$(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE),))
+
+# release linking
+$(eval $(call OBJECTS_LINKING_template,release))
+$(eval $(call OBJECTS_LINKING_template,release_commandLine))
+
+# debug linking
+ADDITIONAL_CFLAGS_LINKING_DEBUG = -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
+$(eval $(call OBJECTS_LINKING_template,debug,$(ADDITIONAL_CFLAGS_LINKING_DEBUG)))
+$(eval $(call OBJECTS_LINKING_template,debug_commandLine,$(ADDITIONAL_CFLAGS_LINKING_DEBUG)))
+
+
 
 quadcopter: $(OBJECTS) src/quadcopter.o
 	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)

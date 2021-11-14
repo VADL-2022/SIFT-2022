@@ -9,7 +9,7 @@
 #ifndef Config_h
 #define Config_h
 
-// Config //
+// Config: Define these in the Makefile, i.e. with `CFLAGS += -DUSE_COMMAND_LINE_ARGS` instead, although these can be overriden here: //
 //#define USE_COMMAND_LINE_ARGS
 // //
 

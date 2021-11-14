@@ -118,7 +118,7 @@ int main(int argc, char **argv)
         src = std::make_unique<DataSourceT>();
     }
     
-    mainInteractive(&src, s, p, skip, o, o2, cfg);
+    mainInteractive(src.get(), s, p, skip, o, o2, cfg);
 #else
     // Set params (will use default if none set) //
     //USE(v3Params);
@@ -135,6 +135,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+#ifndef USE_COMMAND_LINE_ARGS
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
@@ -203,6 +204,10 @@ int mainMission(DataSourceT* src,
                 out_k1 = sift_malloc_keypoints();
                 out_k2A = sift_malloc_keypoints();
                 out_k2B = sift_malloc_keypoints();
+                if (keypointsPrev->size == 0 || keypoints->size == 0) {
+                    std::cout << "Thread " << id << ": zero keypoints, cannot match" << std::endl;
+                    throw ""; // TODO: temp, need to notify main thread and retry matching maybe
+                }
                 matching(keypointsPrev, keypoints, out_k1, out_k2A, out_k2B, p.thresh, p.meth_flag);
                 t.logElapsed(id, "find matches");
             }
@@ -232,7 +237,7 @@ int mainMission(DataSourceT* src,
     tp.stop();
     return 0;
 }
-
+#else
 template <typename DataSourceT, typename DataOutputT>
 int mainInteractive(DataSourceT* src,
                     SIFTState& s,
@@ -347,3 +352,4 @@ int mainInteractive(DataSourceT* src,
     
     return 0;
 }
+#endif // USE_COMMAND_LINE_ARGS
