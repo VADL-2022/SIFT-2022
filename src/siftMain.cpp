@@ -24,26 +24,47 @@ struct ProcessedImage {
     
     // Insane move assignment operator
     // move ctor: ProcessedImage(ProcessedImage&& other) {
-    ProcessedImage& operator=(ProcessedImage&& other) {
-        image = std::move(other.image);
-        computedKeypoints.reset(other.computedKeypoints.release());
-        out_k1.reset(other.out_k1.release());
-        out_k2A.reset(other.out_k2A.release());
-        out_k2B.reset(other.out_k2B.release());
-        transformation = std::move(other.transformation);
-        p = std::move(other.p);
-        
-        return *this;
-    }
+//    ProcessedImage& operator=(ProcessedImage&& other) {
+//        //bad whole:
+//        image = std::move(other.image);
+//        computedKeypoints.reset(other.computedKeypoints.release());
+//        out_k1.reset(other.out_k1.release());
+//        out_k2A.reset(other.out_k2A.release());
+//        out_k2B.reset(other.out_k2B.release());
+//        transformation = std::move(other.transformation);
+//        new (&other.transformation) cv::Mat();
+//        p = std::move(other.p);
+//        other.p.params = nullptr;
+//        other.p.paramsName = nullptr;
+//
+//        return *this;
+//    }
+    
+//    ProcessedImage& operator=(ProcessedImage& other) {
+//        image = other.image;
+//        // bad:
+//        computedKeypoints.reset(other.computedKeypoints.get());
+//        // bad:
+//        out_k1.reset(other.out_k1.get());
+//        // bad:
+//        out_k2A.reset(other.out_k2A.get());
+//        // bad:
+//        out_k2B.reset(other.out_k2B.get());
+//        transformation = other.transformation;
+//        // bad:
+//        p = other.p;
+//
+//        return *this;
+//    }
     
     cv::Mat image;
     
-    unique_keypoints_ptr computedKeypoints;
+    shared_keypoints_ptr_t computedKeypoints;
     
     // Matching with the previous image, if any //
-    unique_keypoints_ptr out_k1;
-    unique_keypoints_ptr out_k2A;
-    unique_keypoints_ptr out_k2B;
+    shared_keypoints_ptr_t out_k1;
+    shared_keypoints_ptr_t out_k2A;
+    shared_keypoints_ptr_t out_k2B;
     cv::Mat transformation;
     // //
     
@@ -172,6 +193,19 @@ void* matcherThreadFunc(void* arg) {
     do {
         ProcessedImage img1, img2;
         std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
+        pthread_mutex_lock( &processedImageQueue.mutex );
+        while( processedImageQueue.count <= 1 ) // Wait until not empty.
+        {
+            pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
+            std::cout << "Matcher thread: Unlocking for dequeueOnceOnTwoImages 2" << std::endl;
+            pthread_mutex_unlock( &processedImageQueue.mutex );
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 2" << std::endl;
+            pthread_mutex_lock( &processedImageQueue.mutex );
+        }
+        std::cout << "Matcher thread: Unlocking for dequeueOnceOnTwoImages 3" << std::endl;
+        pthread_mutex_unlock( &processedImageQueue.mutex );
+        std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 3" << std::endl;
         processedImageQueue.dequeueOnceOnTwoImages(&img1, &img2);
         std::cout << "Matcher thread: Unlocked for dequeueOnceOnTwoImages" << std::endl;
         
@@ -183,6 +217,7 @@ void* matcherThreadFunc(void* arg) {
         t.reset();
         struct sift_keypoints* keypointsPrev = img1.computedKeypoints.get();
         struct sift_keypoints* keypoints = img2.computedKeypoints.get();
+        std::cout << keypointsPrev << ", " << keypoints << std::endl;
         assert(keypointsPrev != nullptr && keypoints != nullptr); // This should always hold, since the other thread pool threads enqueued them.
         assert(img2.out_k1 == nullptr && img2.out_k2A == nullptr && img2.out_k2B == nullptr); // This should always hold since we reset the pointers when done with matching
         img2.out_k1.reset(sift_malloc_keypoints());
@@ -237,7 +272,12 @@ void* matcherThreadFunc(void* arg) {
         
         img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
         // Accumulate homography
-        lastImageToFirstImageTransformation *= img2.transformation.inv();
+        if (lastImageToFirstImageTransformation.empty()) {
+            lastImageToFirstImageTransformation = img2.transformation.inv();
+        }
+        else {
+            lastImageToFirstImageTransformation *= img2.transformation.inv();
+        }
         t.logElapsed("find homography");
         
         // Free memory and mark this as an unused ProcessedImage:
@@ -259,7 +299,7 @@ int mainMission(DataSourceT* src,
     ctpl::thread_pool tp(4); // Number of threads in the pool
     // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
     pthread_t matcherThread;
-    pthread_create(&matcherThread, NULL, matcherThreadFunc, NULL);
+    pthread_create(&matcherThread, NULL, matcherThreadFunc, &tp.isStop);
     
     auto last = std::chrono::steady_clock::now();
     auto fps = src->fps();
@@ -317,8 +357,9 @@ int mainMission(DataSourceT* src,
                 if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
                     || (processedImageQueue.readPtr == i - 1) // If we're writing right after the last element, can enqueue our sequentially ordered image
                     ) {
-                    processedImageQueue.enqueue(mat,
-                                            unique_keypoints_ptr(),
+                    std::cout << "Thread " << id << ": enqueue" << std::endl;
+                    processedImageQueue.enqueueNoLock(mat,
+                                            unique_keypoints_ptr(keypoints),
                                             unique_keypoints_ptr(),
                                             unique_keypoints_ptr(),
                                             unique_keypoints_ptr(),

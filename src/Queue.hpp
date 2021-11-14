@@ -78,7 +78,7 @@ struct Queue {
 
         // Place in the new value:
         T* e = &content[writePtr];
-        e->~T();
+        //e->~T(); // FIXME: BROKEN, should be called
         new (e) T{std::forward<Args>(args)...}; // Note: `cv::Mat::Mat    (    const Mat &     m    )` only increments refcount of that matrix (copies `m`'s header (or pointer to it?) into `this` and then increments refcount), which is what we want here: https://docs.opencv.org/3.4/d3/d63/classcv_1_1Mat.html#a294eaf8a95d2f9c7be19ff594d06278e
 
         // Increment the write pointer modulo the BUFFER_SIZE:
@@ -145,14 +145,14 @@ struct Queue {
         // remove the next element from the buffer, increment the read pointer (modulo buffer size)
         // and decrement the counter,
         // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
-        T* e = &content[readPtr - 1];
-        *output1 = std::move(*e);
-        T* e2 = &content[readPtr];
-        *output2 = std::move(*e2);
+        T* e = &content[readPtr];
+        *output1 = *e;
+        T* e2 = &content[readPtr + 1];
+        *output2 = *e2;
         readPtr = (readPtr + 1) % BUFFER_SIZE;
         count--;
 
-        printf("Dequeue twice: %x and %x with %d left\n", e, e2, count); // Need to print inside
+        printf("Dequeue once on two images: %x and %x with %d left\n", e, e2, count); // Need to print inside
         // the lock! Because print could get preempted (a context switch could happen) *right* between print
         // and fflush, so that the actual printing to the console that we see happens way later, after already
         // context switching!

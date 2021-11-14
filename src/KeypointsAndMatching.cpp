@@ -37,7 +37,7 @@ SIFTParams::SIFTParams() {
 
 SIFTParams::~SIFTParams() {
     // Cleanup
-    free(params);
+    //free(params); // FIXME: free
 }
 
 SIFTState::~SIFTState() {
