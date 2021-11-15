@@ -94,6 +94,19 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
 }
 
+std::vector<cv::KeyPoint> SIFTOpenCV::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
+    t.reset();
+    auto ret = detect(greyscale);
+    t.logElapsed(threadID, "compute features");
+    return ret;
+}
+
 void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2) {
-    img2.matches = match(img1.descriptors, img2.descriptors);
+    //img2.matches = match(img1.descriptors, img2.descriptors);
+    
+    std::vector<cv::Point2f> obj;
+    std::vector<cv::Point2f> scene;
+    cv::KeyPoint::convert(img2.computedKeypoints, obj);
+    cv::KeyPoint::convert(img1.computedKeypoints, scene); // TODO: correct order?
+    img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
 }

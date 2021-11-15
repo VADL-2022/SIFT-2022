@@ -250,13 +250,15 @@ int mainMission(DataSourceT* src,
             v2Params(p.params);
 
             // compute sift keypoints
-#if SIFT_IMPL == SIFTAnatomy
+#ifdef SIFTAnatomy_
             auto pair = sift.findKeypoints(id, p, greyscale);
             int n = pair.second.second; // Number of keypoints
             struct sift_keypoints* keypoints = pair.first;
             struct sift_keypoint_std *k = pair.second.first;
-#elif SIFT_IMPL == SIFTOpenCV
+#elif defined(SIFTOpenCV_)
+            std::cout << id << " findKeypoints" << std::endl;
             auto vec = sift.findKeypoints(id, p, greyscale);
+            std::cout << id << " findKeypoints end" << std::endl;
 #endif
             
             t.reset();
@@ -273,7 +275,7 @@ int mainMission(DataSourceT* src,
                     || (processedImageQueue.readPtr == i - 1) // If we're writing right after the last element, can enqueue our sequentially ordered image
                     ) {
                     std::cout << "Thread " << id << ": enqueue" << std::endl;
-                    #if SIFT_IMPL == SIFTAnatomy
+                    #ifdef SIFTAnatomy_
                     processedImageQueue.enqueueNoLock(greyscale,
                                             shared_keypoints_ptr(keypoints),
                                             shared_keypoints_ptr(),
@@ -282,9 +284,9 @@ int mainMission(DataSourceT* src,
                                             cv::Mat(),
                                             p,
                                             i);
-                    #elif SIFT_IMPL == SIFTOpenCV
+                    #elif defined(SIFTOpenCV_)
                     processedImageQueue.enqueueNoLock(greyscale,
-                                            vec
+                                            vec,
                                             cv::Mat());
                     #endif
                 }
@@ -310,8 +312,11 @@ int mainMission(DataSourceT* src,
             t.logElapsed(id, "enqueue processed image");
 
             end:
+            ;
             // cleanup
+            #ifdef SIFTAnatomy_
             free(k);
+            #endif
         }, /*extra args:*/ i /*- offset*/, greyscale);
         
         // Save this image for next iteration

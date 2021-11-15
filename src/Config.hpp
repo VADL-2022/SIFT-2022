@@ -15,6 +15,7 @@
 // SIFT implementation
 //#define SIFT_IMPL SIFTAnatomy
 #define SIFT_IMPL SIFTOpenCV
+#define SIFTOpenCV_
 // //
 
 // Config: Define these in the Makefile, i.e. with `CFLAGS += -DUSE_COMMAND_LINE_ARGS` instead, although these can be overriden here: //

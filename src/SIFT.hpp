@@ -134,6 +134,7 @@ protected:
         return keypoints;
     }
     
+    // TODO: unused function
     cv::Mat descriptors(cv::Mat& img, std::vector<cv::KeyPoint>& keypoints) {
         //-- Step 2: Calculate descriptors (feature vectors)
         cv::Mat descriptors;
@@ -141,6 +142,7 @@ protected:
         return descriptors;
     }
     
+    // TODO: unused function
     std::vector<cv::DMatch> match(cv::Mat& descriptors_1, cv::Mat& descriptors_2) {
         //-- Step 3: Matching descriptor vectors using BFMatcher :
         cv::BFMatcher matcher;
