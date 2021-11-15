@@ -50,8 +50,9 @@ struct Queue {
 
         // Place in the new value:
         T* e = &content[writePtr];
-        //e->~T(); // FIXME: BROKEN, should be called
-        new (e) T{std::forward<Args>(args)...}; // Note: `cv::Mat::Mat    (    const Mat &     m    )` only increments refcount of that matrix (copies `m`'s header (or pointer to it?) into `this` and then increments refcount), which is what we want here: https://docs.opencv.org/3.4/d3/d63/classcv_1_1Mat.html#a294eaf8a95d2f9c7be19ff594d06278e
+        *e = T{std::forward<Args>(args)...};
+        //e->~T();
+//        new (e) T{std::forward<Args>(args)...}; // Note: `cv::Mat::Mat    (    const Mat &     m    )` only increments refcount of that matrix (copies `m`'s header (or pointer to it?) into `this` and then increments refcount), which is what we want here: https://docs.opencv.org/3.4/d3/d63/classcv_1_1Mat.html#a294eaf8a95d2f9c7be19ff594d06278e
 
         // Increment the write pointer modulo the BUFFER_SIZE:
         writePtr = (writePtr + 1) % BUFFER_SIZE;

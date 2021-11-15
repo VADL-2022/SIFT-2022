@@ -332,6 +332,9 @@ cv::Mat CameraDataSource::get(size_t index) {
         throw "Error reading from camera";
     }
     
+    // Clean up cache a bit
+    cache.clear();
+    
     // Cache it
     cache.emplace(i, mat);
     
