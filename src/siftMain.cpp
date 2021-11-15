@@ -305,7 +305,7 @@ int mainMission(DataSourceT* src,
     auto fps = src->fps();
     const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
     std::cout << "Target fps: " << fps << std::endl;
-    std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
+    //std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
     for (size_t i = src->currentIndex;; i++) {
         std::cout << "i: " << i << std::endl;
         if (src->wantsCustomFPS()) {
@@ -330,7 +330,7 @@ int mainMission(DataSourceT* src,
         size_t w = mat.cols, h = mat.rows;
         //auto path = src->nameForIndex(i);
         
-        tp.push([&offset, &pOrig=p, x, w, h](int id, /*extra args:*/ size_t i, cv::Mat mat, cv::Mat prevImage) {
+        tp.push([&pOrig=p, x, w, h](int id, /*extra args:*/ size_t i, cv::Mat mat, cv::Mat prevImage) {
             std::cout << "hello from " << id << std::endl;
             
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
@@ -346,8 +346,10 @@ int mainMission(DataSourceT* src,
             printf("Thread %d: Number of keypoints: %d\n", id, n);
             if (n < 4) {
                 printf("Not enough keypoints to find homography! Ignoring this image\n");
-                offset++; // TODO: this doesn't work since main thread will already have used the next value
+                // TODO: Simply let the transformation be an identity matrix?
                 throw "";
+                t.logElapsed(id, "compute features");
+                goto end;
             }
             t.logElapsed(id, "compute features");
             
@@ -385,9 +387,10 @@ int mainMission(DataSourceT* src,
             } while (true);
             t.logElapsed(id, "enqueue procesed image");
 
+            end:
             // cleanup
             free(k);
-        }, /*extra args:*/ i - offset, mat, prevImage);
+        }, /*extra args:*/ i /*- offset*/, mat, prevImage);
         
         // Save this image for next iteration
         prevImage = mat;
