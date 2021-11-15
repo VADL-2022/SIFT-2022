@@ -66,7 +66,7 @@ using unique_keypoints_ptr = unique_ptr_with_deleter<struct sift_keypoints, sift
 
 // https://www.cppstories.com/2016/04/custom-deleters-for-c-smart-pointers/
 using shared_keypoints_ptr_t = std::shared_ptr<struct sift_keypoints>;
-inline auto shared_keypoints_ptr(struct sift_keypoints* val) { return std::shared_ptr<struct sift_keypoints>(val, sift_free_keypoints); };
+inline auto shared_keypoints_ptr(struct sift_keypoints* val = nullptr) { return std::shared_ptr<struct sift_keypoints>(val, sift_free_keypoints); };
 
 struct SIFTState {
     ~SIFTState();

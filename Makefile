@@ -9,7 +9,7 @@
 # 	$(CC) $(CFLAGS_release) -c $< -o $@
 # CXXFLAGS_release = $(CXXFLAGS) $(CFLAGS_release)
 # %_r.o: %.cpp
-# 	$(CC)++ $(CXXFLAGS_release) -c $< -o $@
+# 	$(CXX) $(CXXFLAGS_release) -c $< -o $@
 #
 define C_AND_CXX_FLAGS_template =
 CFLAGS_$(1) = $(CFLAGS) $(2)
@@ -17,7 +17,7 @@ CFLAGS_$(1) = $(CFLAGS) $(2)
 	$(CC) $$(CFLAGS_$(1)) -c $$< -o $$@
 CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 %_$(1).o: %.cpp
-	$(CC)++ $$(CXXFLAGS_$(1)) -c $$< -o $$@
+	$(CXX) $$(CXXFLAGS_$(1)) -c $$< -o $$@
 endef
 
 # Usage: `$(eval $(call OBJECTS_LINKING_template,release_orWhateverTargetYouWant,flagsHere))`
@@ -26,7 +26,7 @@ OBJECTS_$(1) = $(OBJECTS) $(SIFT_OBJECTS)
 OBJECTS_$(1) := $$(addsuffix _$(1).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)))) src/siftMain_$(1).o
 ALL_OBJECTS_FROM_TARGETS += $$(OBJECTS_$(1))
 sift_exe_$(1): $$(OBJECTS_$(1))
-	$(CC)++ $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(2)
+	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(2)
 endef
 
 # END LIBRARY FUNCTIONS #
@@ -48,7 +48,10 @@ $(info $(LFLAGS))
 LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
 LDFLAGS = `pkg-config --libs opencv4`
 
+#CC := clang-12
+#CXX := clang-12 -x c++
 CC := clang
+CXX := clang++
 SRC := src
 OBJ := obj
 
@@ -106,7 +109,7 @@ $(eval $(call OBJECTS_LINKING_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEB
 
 
 quadcopter: $(OBJECTS) src/quadcopter.o
-	$(CC)++ $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
+	$(CXX) $^ -o $@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(wildcard $(SIFT_SRC)/*.o)
 
 # .PHONY: testObjFile
 # testObjFile:

@@ -24,59 +24,8 @@
 #ifndef USE_COMMAND_LINE_ARGS
 #include "Queue.hpp"
 #include "lib/ctpl_stl.hpp"
-struct ProcessedImage {
-    ProcessedImage() = default;
-    
-    // Insane move assignment operator
-    // move ctor: ProcessedImage(ProcessedImage&& other) {
-//    ProcessedImage& operator=(ProcessedImage&& other) {
-//        //bad whole:
-//        image = std::move(other.image);
-//        computedKeypoints.reset(other.computedKeypoints.release());
-//        out_k1.reset(other.out_k1.release());
-//        out_k2A.reset(other.out_k2A.release());
-//        out_k2B.reset(other.out_k2B.release());
-//        transformation = std::move(other.transformation);
-//        new (&other.transformation) cv::Mat();
-//        p = std::move(other.p);
-//        other.p.params = nullptr;
-//        other.p.paramsName = nullptr;
-//
-//        return *this;
-//    }
-    
-//    ProcessedImage& operator=(ProcessedImage& other) {
-//        image = other.image;
-//        // bad:
-//        computedKeypoints.reset(other.computedKeypoints.get());
-//        // bad:
-//        out_k1.reset(other.out_k1.get());
-//        // bad:
-//        out_k2A.reset(other.out_k2A.get());
-//        // bad:
-//        out_k2B.reset(other.out_k2B.get());
-//        transformation = other.transformation;
-//        // bad:
-//        p = other.p;
-//
-//        return *this;
-//    }
-    
-    cv::Mat image;
-    
-    shared_keypoints_ptr_t computedKeypoints;
-    
-    // Matching with the previous image, if any //
-    shared_keypoints_ptr_t out_k1;
-    shared_keypoints_ptr_t out_k2A;
-    shared_keypoints_ptr_t out_k2B;
-    cv::Mat transformation;
-    // //
-    
-    SIFTParams p;
-    size_t i;
-};
-Queue<ProcessedImage, 256 /*32*/> processedImageQueue;
+SIFT_T sift;
+Queue<ProcessedImage<SIFT_T>, 256 /*32*/> processedImageQueue;
 cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
 #endif
 
@@ -199,7 +148,7 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 void* matcherThreadFunc(void* arg) {
     std::atomic<bool>& isStop = *(std::atomic<bool>*)arg;
     do {
-        ProcessedImage img1, img2;
+        ProcessedImage<SIFT_T> img1, img2;
         std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
         pthread_mutex_lock( &processedImageQueue.mutex );
         while( processedImageQueue.count <= 1 ) // Wait until not empty.
@@ -218,69 +167,11 @@ void* matcherThreadFunc(void* arg) {
         std::cout << "Matcher thread: Unlocked for dequeueOnceOnTwoImages" << std::endl;
         
         // Setting current parameters for matching
-        img2.p.meth_flag = 1;
-        img2.p.thresh = 0.6;
+        img2.applyDefaultMatchingParams();
 
-        // Matching
+        // Matching and homography
         t.reset();
-        struct sift_keypoints* keypointsPrev = img1.computedKeypoints.get();
-        struct sift_keypoints* keypoints = img2.computedKeypoints.get();
-        std::cout << keypointsPrev << ", " << keypoints << std::endl;
-        assert(keypointsPrev != nullptr && keypoints != nullptr); // This should always hold, since the other thread pool threads enqueued them.
-        assert(img2.out_k1 == nullptr && img2.out_k2A == nullptr && img2.out_k2B == nullptr); // This should always hold since we reset the pointers when done with matching
-        img2.out_k1.reset(sift_malloc_keypoints());
-        img2.out_k2A.reset(sift_malloc_keypoints());
-        img2.out_k2B.reset(sift_malloc_keypoints());
-        if (keypointsPrev->size == 0 || keypoints->size == 0) {
-            std::cout << "Matcher thread: zero keypoints, cannot match" << std::endl;
-            throw ""; // TODO: temp, need to notify main thread and retry matching maybe
-        }
-        matching(keypointsPrev, keypoints, img2.out_k1.get(), img2.out_k2A.get(), img2.out_k2B.get(), img2.p.thresh, img2.p.meth_flag);
-        t.logElapsed("Matcher thread: find matches");
-        
-        // Find homography
-        t.reset();
-        struct sift_keypoints* k1 = img2.out_k1.get();
-        struct sift_keypoints* out_k2A = img2.out_k2A.get();
-        struct sift_keypoints* out_k1 = k1;
-        // Find the homography matrix between the previous and current image ( https://docs.opencv.org/4.5.2/d1/de0/tutorial_py_feature_homography.html )
-        //const int MIN_MATCH_COUNT = 10
-        // https://docs.opencv.org/3.4/d7/dff/tutorial_feature_homography.html
-        std::vector<cv::Point2f> obj; // The `obj` is the current image's keypoints
-        std::vector<cv::Point2f> scene; // The `scene` is the previous image's keypoints. "Scene" means the area within which we are finding `obj` and this is since we want to find the previous image in the current image since we're falling down and therefore "zooming in" so the current image should be within the previous one.
-        obj.reserve(k1->size);
-        scene.reserve(k1->size);
-        // TODO: reuse memory of k1 instead of copying?
-        for (size_t i = 0; i < k1->size; i++) {
-            obj.emplace_back(out_k2A->list[i]->x, out_k2A->list[i]->y);
-            scene.emplace_back(out_k1->list[i]->x, out_k1->list[i]->y);
-        }
-        
-        // Make a matrix in transformations history
-        if (obj.size() < 4 || scene.size() < 4) { // Prevents "libc++abi.dylib: terminating with uncaught exception of type cv::Exception: OpenCV(4.5.2) /tmp/nix-build-opencv-4.5.2.drv-0/source/modules/calib3d/src/fundam.cpp:385: error: (-28:Unknown error code -28) The input arrays should have at least 4 corresponding point sets to calculate Homography in function 'findHomography'"
-            //printf("Not enough keypoints to find homography! Trying to find keypoints on previous image again with tweaked params\n");
-//            // Retry with tweaked params
-//            img2.p.params->n_oct++;
-//            img2.p.params->n_bins++;
-//            img2.p.params->n_hist++;
-//            if (img2.p.params->n_spo < 2) {
-//                img2.p.params->n_spo = 2;
-//            }
-//            img2.p.params->sigma_min -= 0.05;
-//            img2.p.params->delta_min -= 0.05;
-//            img2.p.params->sigma_in -= 0.05;
-            
-            //throw "Not yet implemented"; // This is way too complex..
-            
-            
-            //printf("Not enough keypoints to find homography! Ignoring this image\n");
-            //continue;
-            
-            printf("Not enough keypoints to find homography! Exiting..");
-            exit(3);
-        }
-        
-        img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+        sift.findHomography(img1, img2);
         // Accumulate homography
         if (lastImageToFirstImageTransformation.empty()) {
             lastImageToFirstImageTransformation = img2.transformation.inv();
@@ -290,11 +181,9 @@ void* matcherThreadFunc(void* arg) {
         }
         t.logElapsed("find homography");
         
+        end:
         // Free memory and mark this as an unused ProcessedImage:
-        img2.out_k1.reset();
-        img2.out_k2A.reset();
-        img2.out_k2B.reset();
-        
+        img2.resetMatching();
     } while (!isStop);
     return (void*)0;
 }
@@ -356,28 +245,19 @@ int mainMission(DataSourceT* src,
         tp.push([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
             std::cout << "hello from " << id << std::endl;
 
-            float* x = (float*)greyscale.data;
-            size_t w = greyscale.cols, h = greyscale.rows;
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
             p.params = sift_assign_default_parameters();
             v2Params(p.params);
 
             // compute sift keypoints
-            t.reset();
-            int n; // Number of keypoints
-            struct sift_keypoints* keypoints;
-            struct sift_keypoint_std *k;
-            k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
-            printf("Thread %d: Number of keypoints: %d\n", id, n);
-            if (n < 4) {
-                printf("Not enough keypoints to find homography! Ignoring this image\n");
-                // TODO: Simply let the transformation be an identity matrix?
-                exit(3);
-                
-//                t.logElapsed(id, "compute features");
-//                goto end;
-            }
-            t.logElapsed(id, "compute features");
+#if SIFT_IMPL == SIFTAnatomy
+            auto pair = sift.findKeypoints(id, p, greyscale);
+            int n = pair.second.second; // Number of keypoints
+            struct sift_keypoints* keypoints = pair.first;
+            struct sift_keypoint_std *k = pair.second.first;
+#elif SIFT_IMPL == SIFTOpenCV
+            auto vec = sift.findKeypoints(id, p, greyscale);
+#endif
             
             t.reset();
             bool isFirstSleep = true;
@@ -393,14 +273,20 @@ int mainMission(DataSourceT* src,
                     || (processedImageQueue.readPtr == i - 1) // If we're writing right after the last element, can enqueue our sequentially ordered image
                     ) {
                     std::cout << "Thread " << id << ": enqueue" << std::endl;
+                    #if SIFT_IMPL == SIFTAnatomy
                     processedImageQueue.enqueueNoLock(greyscale,
-                                            unique_keypoints_ptr(keypoints),
-                                            unique_keypoints_ptr(),
-                                            unique_keypoints_ptr(),
-                                            unique_keypoints_ptr(),
+                                            shared_keypoints_ptr(keypoints),
+                                            shared_keypoints_ptr(),
+                                            shared_keypoints_ptr(),
+                                            shared_keypoints_ptr(),
                                             cv::Mat(),
                                             p,
                                             i);
+                    #elif SIFT_IMPL == SIFTOpenCV
+                    processedImageQueue.enqueueNoLock(greyscale,
+                                            vec
+                                            cv::Mat());
+                    #endif
                 }
                 else {
                     auto ms = 10;
