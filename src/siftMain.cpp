@@ -21,12 +21,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#ifndef USE_COMMAND_LINE_ARGS
 #include "Queue.hpp"
 #include "lib/ctpl_stl.hpp"
 thread_local SIFT_T sift;
 Queue<ProcessedImage<SIFT_T>, 256 /*32*/> processedImageQueue;
 cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
+#ifdef USE_COMMAND_LINE_ARGS
+Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
 #endif
 
 //// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
@@ -64,8 +65,14 @@ template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
                 DataOutputT& o
+                #ifdef USE_COMMAND_LINE_ARGS
+                , CommandLineConfig& cfg
+                #endif
                 );
 
+#ifdef USE_COMMAND_LINE_ARGS
+    CommandLineConfig cfg;
+#endif
 int main(int argc, char **argv)
 {
     SIFTState s;
@@ -77,7 +84,6 @@ int main(int argc, char **argv)
     
     // Command-line args //
 #ifdef USE_COMMAND_LINE_ARGS
-    CommandLineConfig cfg;
     FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
 
@@ -120,7 +126,7 @@ int main(int argc, char **argv)
         mainInteractive(src.get(), s, p, skip, o, o2, cfg);
     }
     else {
-        mainMission(src, p, o2);
+        mainMission(src.get(), p, o2, cfg);
     }
 #else
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
@@ -171,7 +177,17 @@ void* matcherThreadFunc(void* arg) {
 
         // Matching and homography
         t.reset();
-        sift.findHomography(img1, img2);
+#ifdef USE_COMMAND_LINE_ARGS
+        cv::Mat canvas;
+#endif
+        sift.findHomography(img1, img2
+#ifdef USE_COMMAND_LINE_ARGS
+                            , canvas, cfg
+#endif
+                            );
+#ifdef USE_COMMAND_LINE_ARGS
+        canvasesReadyQueue.enqueue(img2);
+#endif
         // Accumulate homography
         if (lastImageToFirstImageTransformation.empty()) {
             lastImageToFirstImageTransformation = img2.transformation.inv();
@@ -188,8 +204,8 @@ void* matcherThreadFunc(void* arg) {
     return (void*)0;
 }
 
-//#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
-#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
+#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
+//#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 ctpl::thread_pool tp(4); // Number of threads in the pool
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
 void ctrlC(int s){
@@ -200,6 +216,9 @@ template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
                 DataOutputT& o2
+#ifdef USE_COMMAND_LINE_ARGS
+, CommandLineConfig& cfg
+#endif
 ) {
     // Install ctrl-c handler
     // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
@@ -330,6 +349,16 @@ int mainMission(DataSourceT* src,
             // Save firstImage once
             firstImage = mat;
         }
+        
+#ifdef USE_COMMAND_LINE_ARGS
+        // Show images
+        if (!canvasesReadyQueue.empty()) {
+            ProcessedImage<SIFT_T> img;
+            canvasesReadyQueue.dequeue(&img);
+            imshow("", img.canvas);
+            cv::waitKey(30);
+        }
+#endif
     }
     
     o2.writer.release(); // Save the file

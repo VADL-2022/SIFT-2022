@@ -13,6 +13,8 @@
 #include "opencv2/xfeatures2d.hpp"
 #include "KeypointsAndMatching.hpp"
 
+struct CommandLineConfig;
+
 template <typename SIFT_Type>
 struct ProcessedImage {};
 
@@ -103,6 +105,10 @@ struct ProcessedImage<SIFTOpenCV> {
         matches.clear();
     }
     // //
+    
+#ifdef USE_COMMAND_LINE_ARGS
+    cv::Mat canvas;
+#endif
 };
 
 
@@ -139,7 +145,11 @@ struct SIFTOpenCV : public SIFTBase {
     
     std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale);
     
-    void findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2);
+    void findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2
+#ifdef USE_COMMAND_LINE_ARGS
+    , cv::Mat canvas, CommandLineConfig& cfg
+#endif
+                        );
     
 protected:
     std::vector<cv::KeyPoint> detect(cv::Mat& img) {

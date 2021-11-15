@@ -8,6 +8,8 @@
 
 #include "SIFT.hpp"
 
+#include "Config.hpp"
+
 std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int /*n*/>> SIFTAnatomy::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
     float* x = (float*)greyscale.data;
     size_t w = greyscale.cols, h = greyscale.rows;
@@ -119,7 +121,11 @@ std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKe
     return std::make_pair(keypoints, descriptors);
 }
 
-void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2) {
+void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2
+#ifdef USE_COMMAND_LINE_ARGS
+    , cv::Mat canvas, CommandLineConfig& cfg
+#endif
+) {
     img2.matches = match(img1.descriptors, img2.descriptors);
     
     // Using descriptors (makes it able to match each feature using scale invariance):
@@ -140,4 +146,11 @@ void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage
     
     // Better:
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+    
+    if (CMD_CONFIG(mainMission)) {
+#ifdef USE_COMMAND_LINE_ARGS
+        // Draw it
+        cv::drawMatches(img1.image, img1.computedKeypoints, img2.image, img2.computedKeypoints, img2.matches, img2.canvas);
+#endif
+    }
 }

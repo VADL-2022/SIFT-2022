@@ -28,6 +28,16 @@ struct CommandLineConfig {
 };
 #endif
 
+#ifdef USE_COMMAND_LINE_ARGS
+#define COMPARE_KEYPOINTS_ADDITIONAL_ARGS , cfg
+#define COMPARE_KEYPOINTS_ADDITIONAL_PARAMS , const CommandLineConfig& cfg
+#define CMD_CONFIG(x) cfg.x
+#else
+#define CMD_CONFIG(x) true
+#define COMPARE_KEYPOINTS_ADDITIONAL_ARGS
+#define COMPARE_KEYPOINTS_ADDITIONAL_PARAMS
+#endif
+
 struct SIFTAnatomy;
 struct SIFTOpenCV;
 using SIFT_T = SIFT_IMPL;

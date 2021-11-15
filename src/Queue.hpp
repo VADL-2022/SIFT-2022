@@ -86,7 +86,15 @@ struct Queue {
     T& get(size_t i) {
         return content[readPtr + i % BUFFER_SIZE];
     }
-
+    
+    //
+    bool empty() {
+        pthread_mutex_lock( &mutex );
+        bool ret = count == 0;
+        pthread_mutex_unlock(&mutex);
+        return ret;
+    }
+        
     // Removes from the buffer.
     void dequeue(T* output) {
         pthread_mutex_lock( &mutex );

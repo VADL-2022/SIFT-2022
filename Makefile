@@ -87,7 +87,7 @@ $(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
 
 # release_commandLine target
 ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE = $(ADDITIONAL_CFLAGS_RELEASE) -DUSE_COMMAND_LINE_ARGS
-$(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE),))
+$(eval $(call C_AND_CXX_FLAGS_template,release_commandLine,$(ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE),))
 
 # debug target
 ADDITIONAL_CFLAGS_DEBUG = -Og -g3 # -O0
