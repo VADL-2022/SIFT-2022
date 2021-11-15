@@ -1,0 +1,411 @@
+pi@sentientpi:~ $ cd VanderbiltRocketTeam/
+pi@sentientpi:~/VanderbiltRocketTeam $ nix-shell
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+[nix-shell:~/VanderbiltRocketTeam]$ make -j4 ./sift_exe_release && ./sift_exe_release
+
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+clang version 12.0.1
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+bash: line 0: [: clang version 1201 : integer expression expected
+
+src/DataOutput.o src/DataOutputRun.o src/DataSource.o src/KeypointsAndMatching.o src/SIFT.
+o src/Semaphore.o src/Timer.o src/common.o src/compareKeypoints.o src/strnatcmp.o src/util
+s.o src/my_sift_additions.o
+make: 'sift_exe_release' is up to date.
+[ WARN:0] global /build/source/modules/videoio/src/cap_gstreamer.cpp (597) isPipelinePlayi
+ng OpenCV | GStreamer warning: GStreamer: pipeline have not been created
+Original frames per second using video.get(CAP_PROP_FPS) : 30
+        Original width: 640
+        Original height: 480
+        Set fps to: 1
+        Set width and height to: [640 x 480]
+        Final reported fps: 1
+        Final reported width: 640
+        Final reported height: 480
+Target fps: 1
+Matcher thread: Locking for dequeueOnceOnTwoImagesi: 0
+
+CAP_PROP_POS_MSEC: 348570
+get image took 2098 milliseconds
+frame.data: 0x26970f80
+convert frame for video writer part 1 took 1 milliseconds
+newFrame.data: 0x27285cc0
+Writing frame with type 8UC3
+write frame for video writer took 11 milliseconds
+save frame to FileDataOutput took 11 milliseconds
+siftImageForMat took 0 milliseconds
+Pushing function to thread pool, currently has 4 idle thread(s) and 0 function(s) queued
+hello from 0
+0 findKeypoints
+i: 1
+Thread 0: Number of keypoints: 0
+Not enough keypoints to find homography! Ignoring this image
+terminate called without an active exception
+Aborted
+
+[nix-shell:~/VanderbiltRocketTeam]$ ls -la dataOutput/
+total 28
+drwxr-xr-x  2 pi pi 4096 Nov 15 11:00 .
+drwxr-xr-x 19 pi pi 4096 Nov 15 10:53 ..
+-rw-r--r--  1 pi pi   11 Nov 14 22:48 .gitignore
+-rw-r--r--  1 pi pi   48 Nov 14 23:17 live0.mp4
+-rw-r--r--  1 pi pi   48 Nov 15 00:00 live1.mp4
+-rw-r--r--  1 pi pi   48 Nov 15 10:53 live2.mp4
+-rw-r--r--  1 pi pi   48 Nov 15 11:00 live3.mp4
+
+[nix-shell:~/VanderbiltRocketTeam]$ vim src/siftMain.cpp
+
+[nix-shell:~/VanderbiltRocketTeam]$ vim src/siftMain.cpp
+
+[nix-shell:~/VanderbiltRocketTeam]$ make -j4 ./sift_exe_release && ./sift_exe_release
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+clang version 12.0.1
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+bash: line 0: [: clang version 1201 : integer expression expected
+
+src/DataOutput.o src/DataOutputRun.o src/DataSource.o src/KeypointsAndMatching.o src/SIFT.
+o src/Semaphore.o src/Timer.o src/common.o src/compareKeypoints.o src/strnatcmp.o src/util
+s.o src/my_sift_additions.o
+clang++ -std=c++17 -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4`
+ -I./sift_anatomy_20141201/src -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cfl
+ags opencv4` -I./sift_anatomy_20141201/src -Ofast   -c src/siftMain.cpp -o src/siftMain_re
+lease.o
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+In file included from src/siftMain.cpp:11:
+In file included from src/common.hpp:12:
+In file included from src/Includes.hpp:26:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/opencv.hpp:52:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/core.hpp:58:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/core/mat.hpp:3727:
+/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/opencv4/opencv2/core/mat.
+inl.hpp:2025:9: warning: '_Atomic' is a C11 extension [-Wc11-extensions]
+        CV_XADD(&this->hdr->refcount, 1);
+        ^
+/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/opencv4/opencv2/core/cvde
+f.h:666:60: note: expanded from macro 'CV_XADD'
+#      define CV_XADD(addr, delta) __c11_atomic_fetch_add((_Atomic(int)*)(addr), delta, __
+ATOMIC_ACQ_REL)
+                                                           ^
+In file included from src/siftMain.cpp:11:
+In file included from src/common.hpp:12:
+In file included from src/Includes.hpp:26:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/opencv.hpp:52:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/core.hpp:58:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/core/mat.hpp:3727:
+/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/opencv4/opencv2/core/mat.
+inl.hpp:2040:21: warning: '_Atomic' is a C11 extension [-Wc11-extensions]
+        if( m.hdr ) CV_XADD(&m.hdr->refcount, 1);
+                    ^
+/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/opencv4/opencv2/core/cvde
+f.h:666:60: note: expanded from macro 'CV_XADD'
+#      define CV_XADD(addr, delta) __c11_atomic_fetch_add((_Atomic(int)*)(addr), delta, __
+ATOMIC_ACQ_REL)
+                                                           ^
+In file included from src/siftMain.cpp:11:
+In file included from src/common.hpp:12:
+In file included from src/Includes.hpp:26:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/opencv.hpp:86:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/stitching.hpp:48:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/stitching/warpers.hpp:46:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/stitching/detail/warpers.hpp:47:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/core/cuda.hpp:1268:
+/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/opencv4/opencv2/core/cuda
+.inl.hpp:105:9: warning: '_Atomic' is a C11 extension [-Wc11-extensions]
+        CV_XADD(refcount, 1);
+        ^
+/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/opencv4/opencv2/core/cvde
+f.h:666:60: note: expanded from macro 'CV_XADD'
+#      define CV_XADD(addr, delta) __c11_atomic_fetch_add((_Atomic(int)*)(addr), delta, __
+ATOMIC_ACQ_REL)
+                                                           ^
+In file included from src/siftMain.cpp:11:
+In file included from src/common.hpp:12:
+In file included from src/Includes.hpp:26:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/opencv.hpp:86:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/stitching.hpp:48:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/stitching/warpers.hpp:46:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/stitching/detail/warpers.hpp:47:
+In file included from /nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/ope
+ncv4/opencv2/core/cuda.hpp:1268:
+/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/opencv4/opencv2/core/cuda
+.inl.hpp:487:9: warning: '_Atomic' is a C11 extension [-Wc11-extensions]
+        CV_XADD(refcount, 1);
+        ^
+/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/include/opencv4/opencv2/core/cvde
+f.h:666:60: note: expanded from macro 'CV_XADD'
+#      define CV_XADD(addr, delta) __c11_atomic_fetch_add((_Atomic(int)*)(addr), delta, __
+ATOMIC_ACQ_REL)
+                                                           ^
+In file included from src/siftMain.cpp:14:
+In file included from src/compareKeypoints.hpp:13:
+src/DataOutput.hpp:95:13: warning: unused variable 'counter' [-Wunused-variable]
+        int counter = 0;
+            ^
+src/siftMain.cpp:84:17: warning: unused variable 'o' [-Wunused-variable]
+    DataOutputT o;
+                ^
+src/siftMain.cpp:201:9: warning: unused label 'end' [-Wunused-label]
+        end:
+        ^~~~
+src/siftMain.cpp:280:2: warning: embedding a directive within macro arguments has undefine
+d behavior [-Wembedded-directive]
+#ifdef SIFTAnatomy_
+ ^
+src/siftMain.cpp:289:2: warning: embedding a directive within macro arguments has undefine
+d behavior [-Wembedded-directive]
+#endif
+ ^
+src/siftMain.cpp:305:22: warning: embedding a directive within macro arguments has undefin
+ed behavior [-Wembedded-directive]
+                    #ifdef SIFTAnatomy_
+                     ^
+src/siftMain.cpp:320:22: warning: embedding a directive within macro arguments has undefin
+ed behavior [-Wembedded-directive]
+                    #endif
+                     ^
+src/siftMain.cpp:346:14: warning: embedding a directive within macro arguments has undefin
+ed behavior [-Wembedded-directive]
+            #ifdef SIFTAnatomy_
+             ^
+src/siftMain.cpp:343:13: warning: unused label 'end' [-Wunused-label]
+            end:
+            ^
+In file included from src/siftMain.cpp:24:
+src/Queue.hpp:142:72: warning: format specifies type 'void *' but the argument has type 'P
+rocessedImage<SIFTOpenCV> *' [-Wformat-pedantic]
+        printf("Dequeue once on two images: %p and %p with %d left\n", e, e2, count); // N
+eed to print inside
+                                            ~~                         ^
+src/siftMain.cpp:173:29: note: in instantiation of member function 'Queue<ProcessedImage<S
+IFTOpenCV>, 256>::dequeueOnceOnTwoImages' requested here
+        processedImageQueue.dequeueOnceOnTwoImages(&img1, &img2);
+                            ^
+In file included from src/siftMain.cpp:24:
+src/Queue.hpp:142:75: warning: format specifies type 'void *' but the argument has type 'P
+rocessedImage<SIFTOpenCV> *' [-Wformat-pedantic]
+        printf("Dequeue once on two images: %p and %p with %d left\n", e, e2, count); // N
+eed to print inside
+                                                   ~~                     ^~
+In file included from src/siftMain.cpp:17:
+src/utils.hpp:23:13: warning: unused function 'endsWith' [-Wunused-function]
+static bool endsWith(std::string_view str, std::string_view suffix)
+            ^
+src/utils.hpp:28:13: warning: unused function 'startsWith' [-Wunused-function]
+static bool startsWith(std::string_view str, std::string_view prefix)
+            ^
+17 warnings generated.
+clang++ src/DataOutput_release.o src/DataOutputRun_release.o src/DataSource_release.o src/
+KeypointsAndMatching_release.o src/SIFT_release.o src/Semaphore_release.o src/Timer_releas
+e.o src/common_release.o src/compareKeypoints_release.o src/strnatcmp_release.o src/utils_
+release.o src/my_sift_additions_release.o sift_anatomy_20141201/src/io_png_release.o sift_
+anatomy_20141201/src/lib_description_release.o sift_anatomy_20141201/src/lib_discrete_rele
+ase.o sift_anatomy_20141201/src/lib_io_scalespace_release.o sift_anatomy_20141201/src/lib_
+keypoint_release.o sift_anatomy_20141201/src/lib_matching_release.o sift_anatomy_20141201/
+src/lib_scalespace_release.o sift_anatomy_20141201/src/lib_sift_release.o sift_anatomy_201
+41201/src/lib_sift_anatomy_release.o sift_anatomy_20141201/src/lib_util_release.o src/sift
+Main_release.o -o sift_exe_release  `pkg-config --libs opencv4` -lpng -lm -lpthread  -Ofas
+t
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+[ WARN:0] global /build/source/modules/videoio/src/cap_gstreamer.cpp (597) isPipelinePlayi
+ng OpenCV | GStreamer warning: GStreamer: pipeline have not been created
+Original frames per second using video.get(CAP_PROP_FPS) : 30
+        Original width: 640
+        Original height: 480
+        Set fps to: 1
+        Set width and height to: [640 x 480]
+        Final reported fps: 1
+        Final reported width: 640
+        Final reported height: 480
+Target fps: 1
+i: 0
+Matcher thread: Locking for dequeueOnceOnTwoImages
+CAP_PROP_POS_MSEC: 761383
+get image took 2052 milliseconds
+frame.data: 0x2101df80
+convert frame for video writer part 1 took 3 milliseconds
+newFrame.data: 0x21932cc0
+Writing frame with type 8UC3
+write frame for video writer took 14 milliseconds
+save frame to FileDataOutput took 14 milliseconds
+siftImageForMat took 0 milliseconds
+Pushing function to thread pool, currently has 4 idle thread(s) and 0 function(s) queued
+i: 1
+hello from 0
+0 findKeypoints
+Thread 0: Number of keypoints: 0
+Not enough keypoints to find homography! Ignoring this image
+terminate called without an active exception
+Aborted
+
+[nix-shell:~/VanderbiltRocketTeam]$ vim src/siftMain.cpp
+
+[nix-shell:~/VanderbiltRocketTeam]$ make -j4 ./sift_exe_release && ./sift_exe_release
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+clang version 12.0.1
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/nix/store/kll877i3qbrhpakvjhh13mbjbvxiwjkw-bash-4.4-p23/bin/bash: warning: setlocale: LC_
+ALL: cannot change locale (en_US.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+bash: line 0: [: clang version 1201 : integer expression expected
+
+src/DataOutput.o src/DataOutputRun.o src/DataSource.o src/KeypointsAndMatching.o src/SIFT.
+o src/Semaphore.o src/Timer.o src/common.o src/compareKeypoints.o src/strnatcmp.o src/util
+s.o src/my_sift_additions.o
+make: 'sift_exe_release' is up to date.
+[ WARN:0] global /build/source/modules/videoio/src/cap_gstreamer.cpp (597) isPipelinePlayi
+ng OpenCV | GStreamer warning: GStreamer: pipeline have not been created
+Original frames per second using video.get(CAP_PROP_FPS) : 30
+        Original width: 640
+        Original height: 480
+        Set fps to: 1
+        Set width and height to: [640 x 480]
+        Final reported fps: 1
+        Final reported width: 640
+        Final reported height: 480
+Target fps: 1
+i: Matcher thread: Locking for dequeueOnceOnTwoImages0
+
+CAP_PROP_POS_MSEC: 948760
+get image took 2051 milliseconds
+frame.data: 0x32c61f80
+convert frame for video writer part 1 took 3 milliseconds
+newFrame.data: 0x33576cc0
+Writing frame with type 8UC3
+write frame for video writer took 12 milliseconds
+save frame to FileDataOutput took 12 milliseconds
+siftImageForMat took 0 milliseconds
+Pushing function to thread pool, currently has 4 idle thread(s) and 0 function(s) queued
+i: 1
+hello from 0
+0 findKeypoints
+Thread 0: Number of keypoints: 8
+Thread 0: compute features took 314 milliseconds
+0 findKeypoints end
+Thread 0: Locking
+Thread 0: Locked
+Thread 0: enqueue
+Enqueue: 0x5822b0
+Thread 0: Unlocking 2
+Thread 0: Unlocked 2
+Thread 0: enqueue processed image took 0 milliseconds
+Matcher thread: Unlocking for dequeueOnceOnTwoImages 2
+Matcher thread: Locking for dequeueOnceOnTwoImages 2
+CAP_PROP_POS_MSEC: 949521
+get image took 718 milliseconds
+frame.data: 0x33576cc0
+convert frame for video writer part 1 took 1 milliseconds
+newFrame.data: 0x336e99c0
+Writing frame with type 8UC3
+write frame for video writer took 4 milliseconds
+save frame to FileDataOutput took 4 milliseconds
+siftImageForMat took 0 milliseconds
+Pushing function to thread pool, currently has 4 idle thread(s) and 0 function(s) queued
+i: 2
+hello from 1
+1 findKeypoints
+Thread 1: Number of keypoints: 11
+Thread 1: compute features took 260 milliseconds
+1 findKeypoints end
+Thread 1: Locking
+Thread 1: Locked
+Thread 1: enqueue
+Enqueue: 0x582400
+Thread 1: Unlocking 2
+Thread 1: Unlocked 2
+Thread 1: enqueue processed image took 0 milliseconds
+Matcher thread: Unlocking for dequeueOnceOnTwoImages 2
+Matcher thread: Locking for dequeueOnceOnTwoImages 2
+Matcher thread: Unlocking for dequeueOnceOnTwoImages 3
+Matcher thread: Locking for dequeueOnceOnTwoImages 3
+Dequeue once on two images: 0x5822b0 and 0x582400 with 1 left
+Matcher thread: Unlocked for dequeueOnceOnTwoImages
+find homography took 25 milliseconds
+Matcher thread: Locking for dequeueOnceOnTwoImages
+CAP_PROP_POS_MSEC: 950282
+get image took 754 milliseconds
+frame.data: 0x336e99c0
+convert frame for video writer part 1 took 1 milliseconds
+newFrame.data: 0x338f2b00
+Writing frame with type 8UC3
+write frame for video writer took 3 milliseconds
+save frame to FileDataOutput took 3 milliseconds
+siftImageForMat took 0 milliseconds
+Pushing function to thread pool, currently has 4 idle thread(s) and 0 function(s) queued
+i: 3
+hello from 2
+2 findKeypoints
+Thread 2: Number of keypoints: 0
+Not enough keypoints to find homography! Ignoring this image
+terminate called without an active exception
+Aborted
+
+[nix-shell:~/VanderbiltRocketTeam]$ vim src/
+BinarySemaphore.h         Queue.hpp                 compareKeypoints.hpp
+Config.hpp                SIFT.cpp                  lib/
+DataOutput.cpp            SIFT.hpp                  my_sift_additions.c
+DataOutput.hpp            Semaphore.cpp             my_sift_additions.h
+DataOutputRun.cpp         Semaphore.h               quadcopter.cpp
+DataSource.cpp            Timer.cpp                 siftMain.cpp
+DataSource.hpp            Timer.hpp                 strnatcmp.cpp
+Includes.hpp              common.cpp                strnatcmp.hpp
+KeypointsAndMatching.cpp  common.hpp                utils.cpp
+KeypointsAndMatching.hpp  compareKeypoints.cpp      utils.hpp
+
+[nix-shell:~/VanderbiltRocketTeam]$ vim src/KeypointsAndMatching.cpp
+
+[nix-shell:~/VanderbiltRocketTeam]$ vim src/SIFT.cpp
+
+[nix-shell:~/VanderbiltRocketTeam]$ tmux capture-pane -S -10000
+
+[nix-shell:~/VanderbiltRocketTeam]$ tmux save-buffer tmux.log
+
+[nix-shell:~/VanderbiltRocketTeam]$ less tmux.log
+tmux.log: No such file or directory
+
+[nix-shell:~/VanderbiltRocketTeam]$ ls | grep tmux
+
+[nix-shell:~/VanderbiltRocketTeam]$

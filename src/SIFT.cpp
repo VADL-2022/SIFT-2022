@@ -10,6 +10,8 @@
 
 #include "Config.hpp"
 
+#include "siftMain.hpp"
+
 std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int /*n*/>> SIFTAnatomy::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
     float* x = (float*)greyscale.data;
     size_t w = greyscale.cols, h = greyscale.rows;
@@ -24,7 +26,8 @@ std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int
     if (n < 4) {
         printf("Not enough keypoints to find homography! Ignoring this image\n");
         // TODO: Simply let the transformation be an identity matrix?
-        exit(3);
+        //exit(3);
+	tp.isStop = true;
         
 //                t.logElapsed(id, "compute features");
 //                goto end;

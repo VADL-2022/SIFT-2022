@@ -75,6 +75,7 @@ int mainMission(DataSourceT* src,
 #endif
 int main(int argc, char **argv)
 {
+	std::this_thread::sleep_for(std::chrono::milliseconds(30 * 1000));
     SIFTState s;
     SIFTParams p;
     
@@ -234,6 +235,7 @@ int mainMission(DataSourceT* src,
     pthread_t matcherThread;
     pthread_create(&matcherThread, NULL, matcherThreadFunc, &tp.isStop);
     
+    auto start = std::chrono::steady_clock::now();
     auto last = std::chrono::steady_clock::now();
     auto fps = src->fps();
     const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
@@ -251,6 +253,10 @@ int mainMission(DataSourceT* src,
             }
             last = std::chrono::steady_clock::now();
         }
+	if (since(start).count() > 30 * 1000) {
+		tp.isStop = true;
+		continue;
+	}
         t.reset();
         cv::Mat mat = src->get(i);
         std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl;
