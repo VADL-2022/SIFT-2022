@@ -8,7 +8,7 @@
 
 #include "common.hpp"
 
-Timer t;
+thread_local Timer t;
 
 #pragma mark Drawing
 

@@ -24,6 +24,7 @@ endef
 define OBJECTS_LINKING_template =
 OBJECTS_$(1) = $(OBJECTS) $(SIFT_OBJECTS)
 OBJECTS_$(1) := $$(addsuffix _$(1).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)))) src/siftMain_$(1).o
+ALL_OBJECTS_FROM_TARGETS += $$(OBJECTS_$(1))
 sift_exe_$(1): $$(OBJECTS_$(1))
 	$(CC)++ $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(2)
 endef
@@ -113,4 +114,4 @@ quadcopter: $(OBJECTS) src/quadcopter.o
 
 .PHONY: clean
 clean:
-	rm -f $(ALL_OBJECTS) $(EXECUTABLE_RESULT)
+	rm -f $(ALL_OBJECTS_FROM_TARGETS) $(EXECUTABLE_RESULT)

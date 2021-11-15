@@ -71,6 +71,10 @@ namespace ctpl {
                 std::unique_lock<std::mutex> lock(this->mutex);
                 return this->q.empty();
             }
+            size_t size() {
+                std::unique_lock<std::mutex> lock(this->mutex);
+                return this->q.size();
+            }
         private:
             std::queue<T> q;
             std::mutex mutex;
@@ -246,7 +250,9 @@ namespace ctpl {
 
         std::vector<std::unique_ptr<std::thread>> threads;
         std::vector<std::shared_ptr<std::atomic<bool>>> flags;
+    public:
         detail::Queue<std::function<void(int id)> *> q;
+    private:
         std::atomic<bool> isDone;
     public:
         std::atomic<bool> isStop;

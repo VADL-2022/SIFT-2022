@@ -42,23 +42,26 @@ void FileDataOutput::run(cv::Mat frame) {
     if (frame.cols != sizeFrame.width || frame.rows != sizeFrame.height) {
         t.reset();
         cv::resize(frame, newFrame, sizeFrame);
-        t.logElapsed("resize frame for video writer");
         newFramePtr = &newFrame;
+        t.logElapsed("resize frame for video writer");
     }
     else {
         newFramePtr = &frame;
     }
-    if (newFramePtr->type() != CV_8UC4) {
+    if (newFramePtr->type() != CV_8UC4 || newFramePtr->type() != CV_8UC3) {
         t.reset();
-        newFramePtr->convertTo(newFrame, CV_8U, 255); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values up to char's range of 0-255
+        newFramePtr->convertTo(newFrame, CV_8U);//, 255); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values up to char's range of 0-255
         newFramePtr = &newFrame;
         t.logElapsed("convert frame for video writer part 1");
     }
-    t.reset();
-    std::cout << "Converting from " << mat_type2str(frame.type()) << std::endl;
-    // https://answers.opencv.org/question/66545/problems-with-the-video-writer-in-opencv-300/
-    cv::cvtColor(newFrame, *newFramePtr, cv::COLOR_RGBA2BGR);
-    t.logElapsed("convert frame for video writer part 2");
+    if (newFramePtr->type() == CV_8UC4) {
+        t.reset();
+        std::cout << "Converting from " << mat_type2str(newFramePtr->type()) << std::endl;
+        // https://answers.opencv.org/question/66545/problems-with-the-video-writer-in-opencv-300/
+        cv::cvtColor(*newFramePtr, newFrame, cv::COLOR_RGBA2BGR);
+        newFramePtr = &newFrame;
+        t.logElapsed("convert frame for video writer part 2");
+    }
     t.reset();
     std::cout << "newFrame.data: " << (void*)newFrame.data << std::endl;
     std::cout << "Writing frame with type " << mat_type2str(newFrame.type()) << std::endl;

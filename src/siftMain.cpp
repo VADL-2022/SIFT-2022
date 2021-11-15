@@ -16,6 +16,11 @@
 #include "DataOutput.hpp"
 #include "utils.hpp"
 
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+
 #ifndef USE_COMMAND_LINE_ARGS
 #include "Queue.hpp"
 #include "lib/ctpl_stl.hpp"
@@ -294,15 +299,28 @@ void* matcherThreadFunc(void* arg) {
     return (void*)0;
 }
 
+ctpl::thread_pool tp(4); // Number of threads in the pool
+// ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
+void ctrlC(int s){
+    printf("Caught signal %d. Threads are stopping...\n",s);
+    tp.isStop = true;
+}
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
                 DataOutputT& o2
 ) {
+    // Install ctrl-c handler
+    // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = ctrlC;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
+
+    
     cv::Mat firstImage;
     cv::Mat prevImage;
-    ctpl::thread_pool tp(4); // Number of threads in the pool
-    // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
     pthread_t matcherThread;
     pthread_create(&matcherThread, NULL, matcherThreadFunc, &tp.isStop);
     
@@ -311,7 +329,7 @@ int mainMission(DataSourceT* src,
     const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
     std::cout << "Target fps: " << fps << std::endl;
     //std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
-    for (size_t i = src->currentIndex;; i++) {
+    for (size_t i = src->currentIndex; !tp.isStop; i++) {
         std::cout << "i: " << i << std::endl;
         if (src->wantsCustomFPS()) {
             auto sinceLast_milliseconds = since(last).count();
@@ -334,6 +352,7 @@ int mainMission(DataSourceT* src,
         t.logElapsed("siftImageForMat");
         //auto path = src->nameForIndex(i);
         
+        std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
         tp.push([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
             std::cout << "hello from " << id << std::endl;
 
@@ -353,17 +372,23 @@ int mainMission(DataSourceT* src,
             if (n < 4) {
                 printf("Not enough keypoints to find homography! Ignoring this image\n");
                 // TODO: Simply let the transformation be an identity matrix?
-                throw "";
-                t.logElapsed(id, "compute features");
-                goto end;
+                exit(3);
+                
+//                t.logElapsed(id, "compute features");
+//                goto end;
             }
             t.logElapsed(id, "compute features");
             
             t.reset();
+            bool isFirstSleep = true;
             do {
-                std::cout << "Thread " << id << ": Locking" << std::endl;
+                if (isFirstSleep) {
+                    std::cout << "Thread " << id << ": Locking" << std::endl;
+                }
                 pthread_mutex_lock( &processedImageQueue.mutex );
-                std::cout << "Thread " << id << ": Locked" << std::endl;
+                if (isFirstSleep) {
+                    std::cout << "Thread " << id << ": Locked" << std::endl;
+                }
                 if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
                     || (processedImageQueue.readPtr == i - 1) // If we're writing right after the last element, can enqueue our sequentially ordered image
                     ) {
@@ -379,10 +404,15 @@ int mainMission(DataSourceT* src,
                 }
                 else {
                     auto ms = 10;
-                    std::cout << "Thread " << id << ": Unlocking" << std::endl;
+                    if (isFirstSleep) {
+                        std::cout << "Thread " << id << ": Unlocking" << std::endl;
+                    }
                     pthread_mutex_unlock( &processedImageQueue.mutex );
-                    std::cout << "Thread " << id << ": Unlocked" << std::endl;
-                    std::cout << "Thread " << id << ": Sleeping " << ms << " milliseconds" << std::endl;
+                    if (isFirstSleep) {
+                        std::cout << "Thread " << id << ": Unlocked" << std::endl;
+                        std::cout << "Thread " << id << ": Sleeping " << ms << " milliseconds at least once (and possibly locking and unlocking a few times more)..." << std::endl;
+                        isFirstSleep = false;
+                    }
                     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
                     continue;
                 }
@@ -425,7 +455,7 @@ int mainMission(DataSourceT* src,
     // Save final homography to an image
     cv::Mat canvas;
     cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
-    auto name = openFileWithUniqueName("scaled", ".png");
+    auto name = openFileWithUniqueName("dataOutput/scaled", ".png");
     std::cout << "Saving to " << name << std::endl;
     cv::imwrite(name, canvas);
     return 0;
