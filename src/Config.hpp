@@ -27,6 +27,8 @@ struct CommandLineConfig {
 };
 #endif
 
+struct SIFTAnatomy;
+struct SIFTOpenCV;
 using SIFT_T = SIFT_IMPL;
 
 #endif /* Config_h */
