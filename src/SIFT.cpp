@@ -94,19 +94,50 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
 }
 
-std::vector<cv::KeyPoint> SIFTOpenCV::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
+std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
+//    t.reset();
+//    auto ret = detect(greyscale);
+//    t.logElapsed(threadID, "compute features");
+//    t.reset();
+//    auto ret2 = descriptors(greyscale, ret);
+//    t.logElapsed(threadID, "compute descriptors");
+//    return std::make_pair(ret, ret2);
+
     t.reset();
-    auto ret = detect(greyscale);
+    std::vector<cv::KeyPoint> keypoints;
+    cv::Mat descriptors;
+    f2d->detectAndCompute(greyscale, cv::Mat(), keypoints, descriptors);
+    
+    printf("Thread %d: Number of keypoints: %d\n", threadID, keypoints.size());
+    if (keypoints.size() < 4) {
+        printf("Not enough keypoints to find homography! Ignoring this image\n");
+        // TODO: Simply let the transformation be an identity matrix?
+        exit(3);
+    }
     t.logElapsed(threadID, "compute features");
-    return ret;
+    
+    return std::make_pair(keypoints, descriptors);
 }
 
 void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2) {
-    //img2.matches = match(img1.descriptors, img2.descriptors);
+    img2.matches = match(img1.descriptors, img2.descriptors);
     
-    std::vector<cv::Point2f> obj;
-    std::vector<cv::Point2f> scene;
-    cv::KeyPoint::convert(img2.computedKeypoints, obj);
-    cv::KeyPoint::convert(img1.computedKeypoints, scene); // TODO: correct order?
+    // Using descriptors (makes it able to match each feature using scale invariance):
+    // https://stackoverflow.com/questions/13318853/opencv-drawmatches-queryidx-and-trainidx , https://stackoverflow.com/questions/30716610/how-to-get-pixel-coordinates-from-feature-matching-in-opencv-python
+    std::vector<cv::Point2f> obj; obj.reserve(img2.matches.size());
+    std::vector<cv::Point2f> scene; obj.reserve(img1.matches.size()); // TODO: correct order?
+    for (cv::DMatch match : img2.matches) {
+        scene.push_back(img1.computedKeypoints[match.queryIdx].pt);
+        obj.push_back(img2.computedKeypoints[match.trainIdx].pt);
+    }
+    
+    // Basic:
+//    std::vector<cv::Point2f> obj;
+//    std::vector<cv::Point2f> scene;
+//    cv::KeyPoint::convert(img2.computedKeypoints, obj);
+//    cv::KeyPoint::convert(img1.computedKeypoints, scene); // TODO: correct order?
+//    img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+    
+    // Better:
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
 }

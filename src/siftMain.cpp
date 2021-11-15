@@ -24,7 +24,7 @@
 #ifndef USE_COMMAND_LINE_ARGS
 #include "Queue.hpp"
 #include "lib/ctpl_stl.hpp"
-SIFT_T sift;
+thread_local SIFT_T sift;
 Queue<ProcessedImage<SIFT_T>, 256 /*32*/> processedImageQueue;
 cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
 #endif
@@ -188,6 +188,8 @@ void* matcherThreadFunc(void* arg) {
     return (void*)0;
 }
 
+//#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
+#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 ctpl::thread_pool tp(4); // Number of threads in the pool
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
 void ctrlC(int s){
@@ -242,7 +244,7 @@ int mainMission(DataSourceT* src,
         //auto path = src->nameForIndex(i);
         
         std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
-        tp.push([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
+        tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
             std::cout << "hello from " << id << std::endl;
 
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
@@ -257,7 +259,7 @@ int mainMission(DataSourceT* src,
             struct sift_keypoint_std *k = pair.second.first;
 #elif defined(SIFTOpenCV_)
             std::cout << id << " findKeypoints" << std::endl;
-            auto vec = sift.findKeypoints(id, p, greyscale);
+            auto vecPair = sift.findKeypoints(id, p, greyscale);
             std::cout << id << " findKeypoints end" << std::endl;
 #endif
             
@@ -286,7 +288,9 @@ int mainMission(DataSourceT* src,
                                             i);
                     #elif defined(SIFTOpenCV_)
                     processedImageQueue.enqueueNoLock(greyscale,
-                                            vec,
+                                                      vecPair.first,
+                                                      vecPair.second,
+                                                      std::vector< cv::DMatch >(),
                                             cv::Mat());
                     #endif
                 }
@@ -308,7 +312,7 @@ int mainMission(DataSourceT* src,
                 pthread_mutex_unlock( &processedImageQueue.mutex );
                 std::cout << "Thread " << id << ": Unlocked 2" << std::endl;
                 break;
-            } while (true);
+            } while (!tp.isStop);
             t.logElapsed(id, "enqueue processed image");
 
             end:

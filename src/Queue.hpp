@@ -103,7 +103,7 @@ struct Queue {
         readPtr = (readPtr + 1) % BUFFER_SIZE;
         count--;
 
-        printf("Dequeue: %x with %d left\n", e, count); // Need to print inside
+        printf("Dequeue: %p with %d left\n", e, count); // Need to print inside
         // the lock! Because print could get preempted (a context switch could happen) *right* between print
         // and fflush, so that the actual printing to the console that we see happens way later, after already
         // context switching!
@@ -131,7 +131,7 @@ struct Queue {
         readPtr = (readPtr + 1) % BUFFER_SIZE;
         count--;
 
-        printf("Dequeue once on two images: %x and %x with %d left\n", e, e2, count); // Need to print inside
+        printf("Dequeue once on two images: %p and %p with %d left\n", e, e2, count); // Need to print inside
         // the lock! Because print could get preempted (a context switch could happen) *right* between print
         // and fflush, so that the actual printing to the console that we see happens way later, after already
         // context switching!

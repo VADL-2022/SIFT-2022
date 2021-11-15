@@ -98,7 +98,10 @@ struct ProcessedImage<SIFTOpenCV> {
     std::vector< cv::DMatch > matches;
     cv::Mat transformation;
     void applyDefaultMatchingParams() {}
-    void resetMatching() {}
+    void resetMatching() {
+        computedKeypoints.clear();
+        matches.clear();
+    }
     // //
 };
 
@@ -119,15 +122,27 @@ struct SIFTAnatomy : public SIFTBase {
 };
 
 struct SIFTOpenCV : public SIFTBase {
-    SIFTOpenCV() : f2d(cv::SIFT::create()) {
+    // https://github.com/opencv/opencv/blob/17234f82d025e3bbfbf611089637e5aa2038e7b8/modules/features2d/test/test_sift.cpp
+    // :
+    /* https://docs.opencv.org/3.4/d7/d60/classcv_1_1SIFT.html :
+     static Ptr<SIFT> cv::SIFT::create    (    int     nfeatures,
+     int     nOctaveLayers,
+     double     contrastThreshold,
+     double     edgeThreshold,
+     double     sigma,
+     int     descriptorType
+     )
+     */
+    SIFTOpenCV() : f2d(//cv::SIFT::create(0, 3, 0.04, 10, 1.6, CV_32F) // <-- CV_32F doesn't work -- gives `libc++abi.dylib: terminating with uncaught exception of type cv::Exception: OpenCV(4.5.2) /tmp/nix-build-opencv-4.5.2.drv-0/source/modules/features2d/src/sift.dispatch.cpp:477: error: (-5:Bad argument) image is empty or has incorrect depth (!=CV_8U) in function 'detectAndCompute'`
+                       cv::SIFT::create()) {
     }
     
-    std::vector<cv::KeyPoint> findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale);
+    std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale);
     
     void findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2);
     
 protected:
-    std::vector<cv::KeyPoint> detect(cv::Mat img) {
+    std::vector<cv::KeyPoint> detect(cv::Mat& img) {
         //-- Step 1: Detect the keypoints:
         std::vector<cv::KeyPoint> keypoints;
         f2d->detect( img, keypoints );

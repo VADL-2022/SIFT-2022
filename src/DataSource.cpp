@@ -202,7 +202,9 @@ cv::Mat FolderDataSource::colorImageForMat(size_t index) {
     return backtorgb;
 }
 cv::Mat CameraDataSource::siftImageForMat(size_t index) {
-    cv::Mat grey = cache.at(index), mat;
+    cv::Mat grey = cache.at(index);
+#ifdef SIFTAnatomy_
+    cv::Mat mat;
     t.reset();
     std::cout << mat_type2str(grey.type()) << std::endl;
     cv::cvtColor(grey, mat, cv::COLOR_RGB2GRAY);
@@ -210,6 +212,9 @@ cv::Mat CameraDataSource::siftImageForMat(size_t index) {
     std::cout << mat_type2str(mat.type()) << std::endl;
     t.logElapsed("convert image to greyscale and float");
     return mat;
+#else
+    return grey;
+#endif
 }
 cv::Mat CameraDataSource::colorImageForMat(size_t index) {
     return cache.at(index);
