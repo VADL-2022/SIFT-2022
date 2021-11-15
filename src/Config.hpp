@@ -15,7 +15,7 @@
 
 #ifdef USE_COMMAND_LINE_ARGS
 struct CommandLineConfig {
-    bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false;
+    bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false, mainMission = false;
 };
 #endif
 

@@ -123,7 +123,6 @@ int main(int argc, char **argv)
     
     // Command-line args //
 #ifdef USE_COMMAND_LINE_ARGS
-    p.params = sift_assign_default_parameters();
     CommandLineConfig cfg;
     FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
@@ -139,6 +138,9 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "--image-file-output") == 0) { // Outputs to video instead of preview window
             cfg.imageFileOutput = true;
+        }
+        else if (strcmp(argv[i], "--main-mission") == 0) {
+            cfg.mainMission = true;
         }
         else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) { // Outputs to video instead of preview window
             cfg.imageFileOutput = true;
@@ -159,24 +161,25 @@ int main(int argc, char **argv)
         src = std::make_unique<DataSourceT>();
     }
     
-    mainInteractive(src.get(), s, p, skip, o, o2, cfg);
+    if (!cfg.mainMission) {
+        p.params = sift_assign_default_parameters();
+        mainInteractive(src.get(), s, p, skip, o, o2, cfg);
+    }
+    else {
+        mainMission(src, p, o2);
+    }
 #else
-    // Set params (will use default if none set) //
-    //USE(v3Params);
-    //USE(v2Params);
-    // //
-    
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
     
-    mainMission(src, p, o);
+    FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
+    mainMission(src, p, o2);
 #endif
     // //
     
 	return 0;
 }
 
-#ifndef USE_COMMAND_LINE_ARGS
 // https://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
 template <
     class result_t   = std::chrono::milliseconds,
@@ -265,9 +268,11 @@ void* matcherThreadFunc(void* arg) {
             //throw "Not yet implemented"; // This is way too complex..
             
             
-            printf("Not enough keypoints to find homography! Ignoring this image\n");
-            throw "";
-            continue;
+            //printf("Not enough keypoints to find homography! Ignoring this image\n");
+            //continue;
+            
+            printf("Not enough keypoints to find homography! Exiting..");
+            exit(3);
         }
         
         img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
@@ -292,7 +297,7 @@ void* matcherThreadFunc(void* arg) {
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
-                DataOutputT& o
+                DataOutputT& o2
 ) {
     cv::Mat firstImage;
     cv::Mat prevImage;
@@ -323,16 +328,17 @@ int mainMission(DataSourceT* src,
         std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl;
         t.logElapsed("get image");
         if (mat.empty()) { printf("No more images left to process. Exiting.\n"); break; }
+        o2.showCanvas("", mat);
         t.reset();
         cv::Mat greyscale = src->siftImageForMat(i);
         t.logElapsed("siftImageForMat");
-        float* x = (float*)greyscale.data;
-        size_t w = mat.cols, h = mat.rows;
         //auto path = src->nameForIndex(i);
         
-        tp.push([&pOrig=p, x, w, h](int id, /*extra args:*/ size_t i, cv::Mat mat, cv::Mat prevImage) {
+        tp.push([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
             std::cout << "hello from " << id << std::endl;
-            
+
+            float* x = (float*)greyscale.data;
+            size_t w = greyscale.cols, h = greyscale.rows;
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
             p.params = sift_assign_default_parameters();
             v2Params(p.params);
@@ -362,7 +368,7 @@ int mainMission(DataSourceT* src,
                     || (processedImageQueue.readPtr == i - 1) // If we're writing right after the last element, can enqueue our sequentially ordered image
                     ) {
                     std::cout << "Thread " << id << ": enqueue" << std::endl;
-                    processedImageQueue.enqueueNoLock(mat,
+                    processedImageQueue.enqueueNoLock(greyscale,
                                             unique_keypoints_ptr(keypoints),
                                             unique_keypoints_ptr(),
                                             unique_keypoints_ptr(),
@@ -385,12 +391,12 @@ int mainMission(DataSourceT* src,
                 std::cout << "Thread " << id << ": Unlocked 2" << std::endl;
                 break;
             } while (true);
-            t.logElapsed(id, "enqueue procesed image");
+            t.logElapsed(id, "enqueue processed image");
 
             end:
             // cleanup
             free(k);
-        }, /*extra args:*/ i /*- offset*/, mat, prevImage);
+        }, /*extra args:*/ i /*- offset*/, greyscale);
         
         // Save this image for next iteration
         prevImage = mat;
@@ -401,6 +407,7 @@ int mainMission(DataSourceT* src,
         }
     }
     
+    o2.writer.release(); // Save the file
     tp.isStop = true;
     int ret1;
     pthread_join(matcherThread, (void**)&ret1);
@@ -423,7 +430,8 @@ int mainMission(DataSourceT* src,
     cv::imwrite(name, canvas);
     return 0;
 }
-#else
+
+#ifdef USE_COMMAND_LINE_ARGS
 template <typename DataSourceT, typename DataOutputT>
 int mainInteractive(DataSourceT* src,
                     SIFTState& s,
