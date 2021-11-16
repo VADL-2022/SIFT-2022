@@ -114,11 +114,12 @@ ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE = $(ADDITIONAL_CFLAGS_DEBUG) $(ADDITIONAL_CF
 $(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE),))
 
 # release linking
+ADDITIONAL_CFLAGS_RELEASE += -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
 $(eval $(call OBJECTS_LINKING_template,release,$(ADDITIONAL_CFLAGS_RELEASE)))
 $(eval $(call OBJECTS_LINKING_template,release_commandLine,$(ADDITIONAL_CFLAGS_RELEASE)))
 
 # debug linking
-ADDITIONAL_CFLAGS_DEBUG += -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
+#ADDITIONAL_CFLAGS_DEBUG += 
 $(eval $(call OBJECTS_LINKING_template,debug,$(ADDITIONAL_CFLAGS_DEBUG)))
 $(eval $(call OBJECTS_LINKING_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEBUG)))
 
