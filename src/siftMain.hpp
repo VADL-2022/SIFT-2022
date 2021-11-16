@@ -19,4 +19,7 @@ extern ctpl::thread_pool tp;
 extern cv::Rect g_desktopSize;
 #endif
 
+void stopMain();
+bool stoppedMain();
+
 #endif /* siftMain_h */

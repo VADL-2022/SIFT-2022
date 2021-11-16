@@ -24,9 +24,9 @@ void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degr
 // Wrapper around imshow that reuses the same window each time
 void imshow(std::string name, cv::Mat& mat);
 
-extern cv::RNG rng; // Random number generator
-extern cv::Scalar lastColor;
+extern thread_local cv::RNG rng; // Random number generator
+extern thread_local cv::Scalar lastColor;
 void resetRNG();
-cv::Scalar nextRNGColor();
+cv::Scalar nextRNGColor(int matDepth);
 
 #endif /* common_hpp */

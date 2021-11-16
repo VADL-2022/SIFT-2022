@@ -90,9 +90,14 @@ struct OpenCVVideoCaptureDataSource : public DataSourceBase
     cv::Mat siftImageForMat(size_t index);
     cv::Mat colorImageForMat(size_t index);
     
-    bool wantsCustomFPS() const { return false; }
-    double fps() const { return cap.get(cv::CAP_PROP_FPS); }
+    bool wantsCustomFPS() const { return wantedFPS.has_value(); }
+    double fps() const { return wantsCustomFPS() ? wantedFPS.value() : cap.get(cv::CAP_PROP_FPS); }
     double timeMilliseconds() const { return cap.get(cv::CAP_PROP_POS_MSEC); }
+
+protected:
+    std::optional<double> wantedFPS;
+    
+    static const double default_fps;
     
     cv::VideoCapture cap;
     std::unordered_map<size_t, cv::Mat> cache;
@@ -107,13 +112,7 @@ struct CameraDataSource : public OpenCVVideoCaptureDataSource
     
     using OpenCVVideoCaptureDataSource::get;
     
-    bool wantsCustomFPS() const { return wantedFPS.has_value(); }
-    double fps() const { return wantsCustomFPS() ? wantedFPS.value() : cap.get(cv::CAP_PROP_FPS); }
-    
 protected:
-    std::optional<double> wantedFPS;
-    
-    static const double default_fps;
     static const cv::Size default_sizeFrame;
     void init(double fps, cv::Size sizeFrame);
 };

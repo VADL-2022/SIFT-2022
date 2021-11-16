@@ -208,7 +208,7 @@ cv::Mat OpenCVVideoCaptureDataSource::siftImageForMat(size_t index) {
     t.reset();
     std::cout << mat_type2str(grey.type()) << std::endl;
     cv::cvtColor(grey, mat, cv::COLOR_RGB2GRAY);
-    mat.convertTo(mat, CV_32F);
+    mat.convertTo(mat, CV_32F, 1/255.0); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values down to float image's range of 0-1););
     std::cout << mat_type2str(mat.type()) << std::endl;
     t.logElapsed("convert image to greyscale and float");
     return mat;
@@ -224,9 +224,9 @@ OpenCVVideoCaptureDataSource::OpenCVVideoCaptureDataSource() {
     currentIndex = 0;
 }
 
-const double CameraDataSource::default_fps =
+const double OpenCVVideoCaptureDataSource::default_fps =
 #ifdef USE_COMMAND_LINE_ARGS
-30
+4 //30
 #else
 1
 #endif
@@ -341,8 +341,10 @@ cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
         throw "Error reading from camera";
     }
     
+#ifndef USE_COMMAND_LINE_ARGS
     // Clean up cache a bit
     cache.clear();
+#endif
     
     // Cache it
     cache.emplace(i, mat);
@@ -386,6 +388,10 @@ void VideoFileDataSource::init(std::string filePath) {
     }
     
     frame_rate = cap.get(cv::CAP_PROP_FPS);
+    
+    if (frame_rate != default_fps) {
+        wantedFPS = default_fps;
+    }
 
     // Calculate number of msec per frame.
     // (msec/sec / frames/sec = msec/frame)

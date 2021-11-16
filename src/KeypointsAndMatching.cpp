@@ -8,6 +8,12 @@
 
 #include "KeypointsAndMatching.hpp"
 
+void sift_free_keypoints_withNullCheck(struct sift_keypoints* x) {
+    if (x != nullptr) {
+        sift_free_keypoints(x);
+    }
+};
+
 int SIFTParams::call_params_function(const char *name, struct sift_parameters* p)
 {
   int i;

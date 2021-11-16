@@ -18,6 +18,9 @@ CFLAGS_$(1) = $(CFLAGS) $(2)
 CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 %_$(1).o: %.cpp
 	$(CXX) $$(CXXFLAGS_$(1)) -c $$< -o $$@
+
+# https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
+#-include $(SRC:%.cpp=%.d)
 endef
 
 # Usage: `$(eval $(call OBJECTS_LINKING_template,release_orWhateverTargetYouWant,flagsHere))`
@@ -35,6 +38,7 @@ endef
 
 SHELL := /usr/bin/env bash
 CFLAGS += -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` `pkg-config --cflags libpng` -I$(SIFT_SRC)  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+#CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 CXXFLAGS += -std=c++17 $(CFLAGS)
 CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*) .*/\1/' | awk '{$$1=$$1;print}') # https://stackoverflow.com/questions/5188267/checking-the-gcc-version-in-a-makefile
 $(info $(CLANGVERSION)) # Example: "7.1.0 "

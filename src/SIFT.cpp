@@ -12,9 +12,16 @@
 
 #include "siftMain.hpp"
 
+#ifdef USE_COMMAND_LINE_ARGS
+#include "DataSource.hpp"
+#endif
+
 std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int /*n*/>> SIFTAnatomy::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
+    assert(greyscale.depth() == CV_32F);
+    assert(greyscale.type() == CV_32FC1);
     float* x = (float*)greyscale.data;
     size_t w = greyscale.cols, h = greyscale.rows;
+    std::cout << "width: " << w << ", height: " << h << std::endl;
 
     // compute sift keypoints
     t.reset();
@@ -27,7 +34,7 @@ std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int
         printf("Not enough keypoints to find homography! Ignoring this image\n");
         // TODO: Simply let the transformation be an identity matrix?
         //exit(3);
-	tp.isStop = true;
+        stopMain();
         
 //                t.logElapsed(id, "compute features");
 //                goto end;
@@ -38,7 +45,11 @@ std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int
 }
 
 // Finds matching and homography
-void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2) {
+void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2
+#ifdef USE_COMMAND_LINE_ARGS
+    , DataSourceBase* src, CommandLineConfig& cfg
+#endif
+) {
     struct sift_keypoints* keypointsPrev = img1.computedKeypoints.get();
     struct sift_keypoints* keypoints = img2.computedKeypoints.get();
     std::cout << keypointsPrev << ", " << keypoints << std::endl;
@@ -97,6 +108,59 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
     }
     
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+
+    if (CMD_CONFIG(mainMission)) {
+#ifdef USE_COMMAND_LINE_ARGS
+        // Draw it //
+        cv::Mat backtorgb = src->colorImageForMat(img2.i);
+        backtorgb.copyTo(img2.canvas);
+        
+        // Draw keypoints on `img2.canvas`
+        struct sift_keypoint_std *k = img2.k.get();
+        int n = img2.n;
+        t.reset();
+        for(int i=0; i<n; i++){
+            drawSquare(img2.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
+            //break;
+            // fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
+            // for(int j=0; j<128; j++){
+            //     fprintf(f, "%u ", k[i].descriptor[j]);
+            // }
+            // fprintf(f, "\n");
+        }
+        t.logElapsed("draw keypoints");
+        
+        // Draw matches
+        t.reset();
+        auto& s = img2;
+        struct sift_keypoints* k1 = s.out_k1.get();
+        printf("Number of matching keypoints: %d\n", k1->size);
+        if (k1->size > 0){
+
+            int n_hist = k1->list[0]->n_hist;
+            int n_ori = k1->list[0]->n_ori;
+            int dim = n_hist*n_hist*n_ori;
+            int n_bins  = k1->list[0]->n_bins;
+            int n = k1->size;
+            for(int i = 0; i < n; i++){
+                // fprintf_one_keypoint(f, k1->list[i], dim, n_bins, 2);
+                // fprintf_one_keypoint(f, k2A->list[i], dim, n_bins, 2);
+                // fprintf_one_keypoint(f, k2B->list[i], dim, n_bins, 2);
+                // fprintf(f, "\n");
+
+                drawSquare(img2.canvas, cv::Point(s.out_k2A->list[i]->x, s.out_k2A->list[i]->y), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
+                cv::line(img2.canvas, cv::Point(s.out_k1->list[i]->x, s.out_k1->list[i]->y), cv::Point(s.out_k2A->list[i]->x, s.out_k2A->list[i]->y), lastColor, 1);
+            }
+        }
+        t.logElapsed("draw matches");
+        
+        t.reset();
+        // Reset RNG so some colors coincide
+        resetRNG();
+        t.logElapsed("reset RNG");
+        // //
+#endif
+    }
 }
 
 std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
@@ -126,7 +190,7 @@ std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKe
 
 void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2
 #ifdef USE_COMMAND_LINE_ARGS
-    , cv::Mat canvas, CommandLineConfig& cfg
+    , DataSourceBase* src, CommandLineConfig& cfg
 #endif
 ) {
     img2.matches = match(img1.descriptors, img2.descriptors);

@@ -62,11 +62,13 @@ template <typename T, auto fn>
 using unique_ptr_with_deleter = std::unique_ptr<T, deleter_from_fn<fn>>;
 // //
 
-using unique_keypoints_ptr = unique_ptr_with_deleter<struct sift_keypoints, sift_free_keypoints>;
+void sift_free_keypoints_withNullCheck(struct sift_keypoints* x);
+
+using unique_keypoints_ptr = unique_ptr_with_deleter<struct sift_keypoints, sift_free_keypoints_withNullCheck>;
 
 // https://www.cppstories.com/2016/04/custom-deleters-for-c-smart-pointers/
 using shared_keypoints_ptr_t = std::shared_ptr<struct sift_keypoints>;
-inline auto shared_keypoints_ptr(struct sift_keypoints* val = nullptr) { return std::shared_ptr<struct sift_keypoints>(val, sift_free_keypoints); };
+inline auto shared_keypoints_ptr(struct sift_keypoints* val = nullptr) { return std::shared_ptr<struct sift_keypoints>(val, sift_free_keypoints_withNullCheck); };
 
 struct SIFTState {
     ~SIFTState();

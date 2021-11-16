@@ -15,7 +15,7 @@ thread_local Timer t;
 void drawCircle(cv::Mat& img, cv::Point cp, int radius)
 {
     //cv::Scalar black( 0, 0, 0 );
-    cv::Scalar color = nextRNGColor();
+    cv::Scalar color = nextRNGColor(img.depth());
     
     cv::circle( img, cp, radius, color );
 }
@@ -23,14 +23,14 @@ void drawRect(cv::Mat& img, cv::Point center, cv::Size2f size, float orientation
     cv::RotatedRect rRect = cv::RotatedRect(center, size, orientation_degrees);
     cv::Point2f vertices[4];
     rRect.points(vertices);
-    cv::Scalar color = nextRNGColor();
+    cv::Scalar color = nextRNGColor(img.depth());
     //printf("%f %f %f\n", color[0], color[1], color[2]);
     for (int i = 0; i < 4; i++)
         cv::line(img, vertices[i], vertices[(i+1)%4], color, thickness);
     
     // To draw a rectangle bounding this one:
     //Rect brect = rRect.boundingRect();
-    //cv::rectangle(img, brect, nextRNGColor(), 2);
+    //cv::rectangle(img, brect, nextRNGColor(img.depth()), 2);
 }
 void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degrees, int thickness) {
     drawRect(img, center, cv::Size2f(size, size), orientation_degrees, thickness);
@@ -63,16 +63,24 @@ void imshow(std::string name, cv::Mat& mat) {
 
 // Based on https://stackoverflow.com/questions/31658132/c-opencv-not-drawing-circles-on-mat-image and https://stackoverflow.com/questions/19400376/how-to-draw-circles-with-random-colors-in-opencv/19401384
 #define RNG_SEED 12345
-cv::RNG rng(RNG_SEED); // Random number generator
-cv::Scalar lastColor;
+thread_local cv::RNG rng(RNG_SEED); // Random number generator
+thread_local cv::Scalar lastColor;
 void resetRNG() {
     rng = cv::RNG(RNG_SEED);
 }
-cv::Scalar nextRNGColor() {
-    //return cv::Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255)); // Most of these are rendered as close to white for some reason..
+cv::Scalar nextRNGColor(int matDepth) {
     //return cv::Scalar(0,0,255); // BGR color value (not RGB)
-    lastColor = cv::Scalar(rng.uniform(0, 255) / rng.uniform(1, 255),
-                   rng.uniform(0, 255) / rng.uniform(1, 255),
-                   rng.uniform(0, 255) / rng.uniform(1, 255));
+    
+    if (matDepth == CV_8U) {
+        lastColor = cv::Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255)); // Most of these are rendered as close to white for some reason..
+    }
+    else if (matDepth == CV_32F || matDepth == CV_64F) {
+        lastColor = cv::Scalar(rng.uniform(0, 255) / rng.uniform(1, 255),
+                       rng.uniform(0, 255) / rng.uniform(1, 255),
+                       rng.uniform(0, 255) / rng.uniform(1, 255));
+    }
+    else {
+        throw "Unsupported matDepth";
+    }
     return lastColor;
 }

@@ -21,6 +21,7 @@ struct ProcessedImage {};
 // Forward declarations //
 struct SIFTAnatomy;
 struct SIFTOpenCV;
+struct DataSourceBase;
 // //
 
 template <>
@@ -65,6 +66,8 @@ struct ProcessedImage<SIFTAnatomy> {
     cv::Mat image;
     
     shared_keypoints_ptr_t computedKeypoints;
+    std::shared_ptr<struct sift_keypoint_std> k;
+    int n; // Number of keypoints in `k`
     
     // Matching with the previous image, if any //
     shared_keypoints_ptr_t out_k1;
@@ -85,6 +88,10 @@ struct ProcessedImage<SIFTAnatomy> {
     
     SIFTParams p;
     size_t i;
+
+#ifdef USE_COMMAND_LINE_ARGS
+    cv::Mat canvas;
+#endif
 };
 
 template <>
@@ -124,7 +131,11 @@ struct SIFTAnatomy : public SIFTBase {
     std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int /*n*/>> findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale);
     
     // Finds matching and homography
-    void findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2);
+    void findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2
+#ifdef USE_COMMAND_LINE_ARGS
+    , DataSourceBase* src, CommandLineConfig& cfg
+#endif
+                        );
 };
 
 struct SIFTOpenCV : public SIFTBase {
@@ -186,7 +197,7 @@ struct SIFTOpenCV : public SIFTBase {
     
     void findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2
 #ifdef USE_COMMAND_LINE_ARGS
-    , cv::Mat canvas, CommandLineConfig& cfg
+    , DataSourceBase* src, CommandLineConfig& cfg
 #endif
                         );
     
@@ -247,6 +258,6 @@ protected:
  */
 
 
-// Idea here: TODO: Use this sometime to wrap all SIFT implementations you can choose from: https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
+// Idea here: done: Use this sometime to wrap all SIFT implementations you can choose from: https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
 
 #endif /* SIFT_hpp */

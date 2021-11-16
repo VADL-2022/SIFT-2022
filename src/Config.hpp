@@ -13,9 +13,11 @@
 
 // Config //
 // SIFT implementation
-//#define SIFT_IMPL SIFTAnatomy
-#define SIFT_IMPL SIFTOpenCV
-#define SIFTOpenCV_
+#define SIFT_IMPL SIFTAnatomy
+#define SIFTAnatomy_
+//#define SIFT_IMPL SIFTOpenCV
+//#define SIFTOpenCV_
+
 
 //#define SLEEP_BEFORE_RUNNING 30 * 3000 // Milliseconds
 //#define STOP_AFTER 30 * 3000 // Milliseconds

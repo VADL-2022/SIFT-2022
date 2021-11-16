@@ -25,7 +25,7 @@
 
 #include "Queue.hpp"
 thread_local SIFT_T sift;
-Queue<ProcessedImage<SIFT_T>, 256 /*32*/> processedImageQueue;
+Queue<ProcessedImage<SIFT_T>, 1024 /*256*/ /*32*/> processedImageQueue;
 cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
 #ifdef USE_COMMAND_LINE_ARGS
 Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
@@ -167,8 +167,10 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
     return std::chrono::duration_cast<result_t>(clock_t::now() - start);
 }
 
+#ifdef USE_COMMAND_LINE_ARGS
+DataSourceBase* g_src;
+#endif
 void* matcherThreadFunc(void* arg) {
-    std::atomic<bool>& isStop = *(std::atomic<bool>*)arg;
     do {
         ProcessedImage<SIFT_T> img1, img2;
         std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
@@ -193,12 +195,9 @@ void* matcherThreadFunc(void* arg) {
 
         // Matching and homography
         t.reset();
-#ifdef USE_COMMAND_LINE_ARGS
-        cv::Mat canvas;
-#endif
         sift.findHomography(img1, img2
 #ifdef USE_COMMAND_LINE_ARGS
-                            , canvas, cfg
+                            , g_src, cfg
 #endif
                             );
 #ifdef USE_COMMAND_LINE_ARGS
@@ -216,24 +215,33 @@ void* matcherThreadFunc(void* arg) {
         end:
         // Free memory and mark this as an unused ProcessedImage:
         img2.resetMatching();
-    } while (!isStop);
+    } while (!stoppedMain());
     return (void*)0;
 }
 
 cv::Rect g_desktopSize;
 
+std::atomic<bool> g_stop;
+void stopMain() {
+    g_stop = true;
+}
+bool stoppedMain() {
+    return g_stop;
+}
+
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
-ctpl::thread_pool tp(4); // Number of threads in the pool
+//ctpl::thread_pool tp(4); // Number of threads in the pool
+ctpl::thread_pool tp(8);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
 void ctrlC(int s){
     printf("Caught signal %d. Threads are stopping...\n",s);
-    tp.isStop = true;
+    stopMain();
 }
 FileDataOutput* g_o2 = nullptr;
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
-    printf("Caught segfault at address %p\n", si->si_addr);
+    printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
     
     if (g_o2) {
         g_o2->writer.release(); // Save the file
@@ -253,6 +261,10 @@ int mainMission(DataSourceT* src,
 , CommandLineConfig& cfg
 #endif
 ) {
+    #ifdef USE_COMMAND_LINE_ARGS
+    g_src = src;
+    #endif
+    
     // Install ctrl-c handler
     // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
     struct sigaction sigIntHandler;
@@ -270,6 +282,10 @@ int mainMission(DataSourceT* src,
     sa.sa_sigaction = segfault_sigaction;
     sa.sa_flags   = SA_SIGINFO;
     sigaction(SIGSEGV, &sa, NULL); // Segfault handler! Tries to save stuff ASAP, unlike sigIntHandler.
+    
+    // Install SIGBUS (?), SIGILL (illegal instruction), and EXC_BAD_ACCESS (similar to segfault but is for "A crash due to a memory access issue occurs when an app uses memory in an unexpected way. Memory access problems have numerous causes, such as dereferencing a pointer to an invalid memory address, writing to read-only memory, or jumping to an instruction at an invalid address. These crashes are most often identified by the EXC_BAD_ACCESS (SIGSEGV) or EXC_BAD_ACCESS (SIGBUS) exceptions" ( https://developer.apple.com/documentation/xcode/investigating-memory-access-crashes )) handlers
+    sigaction(SIGBUS, &sa, NULL);
+    sigaction(SIGILL, &sa, NULL);
 
     if (CMD_CONFIG(showPreviewWindow())) {
         #ifdef USE_COMMAND_LINE_ARGS
@@ -295,7 +311,7 @@ int mainMission(DataSourceT* src,
     cv::Mat firstImage;
     cv::Mat prevImage;
     pthread_t matcherThread;
-    pthread_create(&matcherThread, NULL, matcherThreadFunc, &tp.isStop);
+    pthread_create(&matcherThread, NULL, matcherThreadFunc, NULL);
     
     auto start = std::chrono::steady_clock::now();
     auto last = std::chrono::steady_clock::now();
@@ -303,7 +319,7 @@ int mainMission(DataSourceT* src,
     const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
     std::cout << "Target fps: " << fps << std::endl;
     //std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
-    for (size_t i = src->currentIndex; !tp.isStop; i++) {
+    for (size_t i = src->currentIndex; !stoppedMain(); i++) {
         std::cout << "i: " << i << std::endl;
         if (src->wantsCustomFPS()) {
             auto sinceLast_milliseconds = since(last).count();
@@ -317,7 +333,7 @@ int mainMission(DataSourceT* src,
         }
 #ifdef STOP_AFTER
 	if (since(start).count() > STOP_AFTER) {
-		tp.isStop = true;
+        stopMain();
 		break;
 	}
 #endif
@@ -327,7 +343,7 @@ int mainMission(DataSourceT* src,
         t.logElapsed("get image");
         if (mat.empty()) {
             printf("No more images left to process. Exiting.\n");
-            tp.isStop = true;
+            //stopMain();
             break;
         }
         o2.showCanvas("", mat);
@@ -342,19 +358,19 @@ int mainMission(DataSourceT* src,
 
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
             p.params = sift_assign_default_parameters();
-            v2Params(p.params);
+            //v2Params(p.params);
 
             // compute sift keypoints
+            std::cout << id << " findKeypoints" << std::endl;
 #ifdef SIFTAnatomy_
             auto pair = sift.findKeypoints(id, p, greyscale);
             int n = pair.second.second; // Number of keypoints
             struct sift_keypoints* keypoints = pair.first;
             struct sift_keypoint_std *k = pair.second.first;
 #elif defined(SIFTOpenCV_)
-            std::cout << id << " findKeypoints" << std::endl;
             auto vecPair = sift.findKeypoints(id, p, greyscale);
-            std::cout << id << " findKeypoints end" << std::endl;
 #endif
+            std::cout << id << " findKeypoints end" << std::endl;
             
             t.reset();
             bool isFirstSleep = true;
@@ -373,6 +389,8 @@ int mainMission(DataSourceT* src,
                     #ifdef SIFTAnatomy_
                     processedImageQueue.enqueueNoLock(greyscale,
                                             shared_keypoints_ptr(keypoints),
+                                            std::shared_ptr<struct sift_keypoint_std>(k),
+                                            n,
                                             shared_keypoints_ptr(),
                                             shared_keypoints_ptr(),
                                             shared_keypoints_ptr(),
@@ -405,15 +423,12 @@ int mainMission(DataSourceT* src,
                 pthread_mutex_unlock( &processedImageQueue.mutex );
                 std::cout << "Thread " << id << ": Unlocked 2" << std::endl;
                 break;
-            } while (!tp.isStop);
+            } while (!stoppedMain());
             t.logElapsed(id, "enqueue processed image");
 
             end:
             ;
-            // cleanup
-            #ifdef SIFTAnatomy_
-            free(k);
-            #endif
+            // cleanup: nothing to do
         }, /*extra args:*/ i /*- offset*/, greyscale);
         
         // Save this image for next iteration
@@ -433,33 +448,71 @@ int mainMission(DataSourceT* src,
             //cv::waitKey(30);
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
-            cv::waitKey(1 + 150.0 / (1 + size)); // Sleep less as more come in
+            char c = cv::waitKey(1 + 150.0 / (1 + size)); // Sleep less as more come in
+            if (c == 'q') {
+                // Quit
+                std::cout << "Exiting (q pressed)" << std::endl;
+                stopMain();
+            }
         }
 #endif
     }
     
     o2.writer.release(); // Save the file
-    tp.isStop = true;
     
-    // Show the rest of the images
-    #ifdef USE_COMMAND_LINE_ARGS
-    std::cout << "Showing the rest of the images" << std::endl;
-    // Show images
-    while (!canvasesReadyQueue.empty()) {
-        ProcessedImage<SIFT_T> img;
-        canvasesReadyQueue.dequeue(&img);
-        imshow("", img.canvas);
-        cv::waitKey(30);
+    // Show the rest of the images only if we stopped because we finished reading all frames
+    if (!stoppedMain()) {
+        #ifdef USE_COMMAND_LINE_ARGS
+        std::cout << "Showing the rest of the images" << std::endl;
+        // Show images
+        auto waitKey = [](int t = 30){
+            char c = cv::waitKey(t);
+            if (c == 'q') {
+                // Quit
+                std::cout << "Exiting (q pressed)" << std::endl;
+                stopMain();
+            }
+        };
+        while (//!canvasesReadyQueue.empty() // More images to show
+               //||
+               !tp.q.empty() // More functions to run
+               && !stoppedMain()
+               ) {
+            ProcessedImage<SIFT_T> img;
+            // Wait for dequeue
+            bool stopped = false;
+            while (canvasesReadyQueue.empty() && !(stopped = stoppedMain())) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(99));
+                waitKey(1); // Check if user wants to quit
+            }
+            if (stopped) {
+                break;
+            }
+            canvasesReadyQueue.dequeue(&img);
+            imshow("", img.canvas);
+            auto size = canvasesReadyQueue.size();
+            std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
+            waitKey(); // Check if user wants to quit
+        }
+        #else
+        // Wait for no more in queue
+        std::cout << "Main thread: waiting for no more in queue" << std::endl;
+        while (!tp.q.empty() // More functions to run
+               && !stoppedMain()
+               ) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        std::cout << "Main thread: done waiting for no more in queue" << std::endl;
+        #endif
     }
-    #endif
+    
+    tp.stop(!stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
 
     // Sometimes, the matcher thread is waiting on the condition variable still, and it will be waiting forever unless we interrupt it somehow (or broadcast on the condition variable..).
     pthread_cancel(matcherThread); // https://man7.org/linux/man-pages/man3/pthread_cancel.3.html
     
     int ret1;
     pthread_join(matcherThread, (void**)&ret1);
-    
-    tp.stop();
     
     // Print the final homography
     cv::Mat& M = lastImageToFirstImageTransformation;
