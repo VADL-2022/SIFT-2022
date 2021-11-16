@@ -8,6 +8,8 @@
 //
 // This file runs on the SIFT RPis. It can also run on your computer. You can optionally show a preview window for fine-grain control.
 
+#include "siftMain.hpp"
+
 #include "common.hpp"
 
 #include "KeypointsAndMatching.hpp"
@@ -22,7 +24,6 @@
 #include <unistd.h>
 
 #include "Queue.hpp"
-#include "lib/ctpl_stl.hpp"
 thread_local SIFT_T sift;
 Queue<ProcessedImage<SIFT_T>, 256 /*32*/> processedImageQueue;
 cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
@@ -43,7 +44,8 @@ Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
 // Config //
 // Data source
 //using DataSourceT = FolderDataSource;
-using DataSourceT = CameraDataSource;
+//using DataSourceT = CameraDataSource;
+using DataSourceT = VideoFileDataSource;
 
 // Data output
 using DataOutputT = PreviewWindowDataOutput;
@@ -75,7 +77,9 @@ int mainMission(DataSourceT* src,
 #endif
 int main(int argc, char **argv)
 {
-	std::this_thread::sleep_for(std::chrono::milliseconds(30 * 1000));
+#ifdef SLEEP_BEFORE_RUNNING
+	std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BEFORE_RUNNING));
+#endif
     SIFTState s;
     SIFTParams p;
     
@@ -97,12 +101,23 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
             cfg.imageCaptureOnly = true;
         }
-        else if (strcmp(argv[i], "--image-file-output") == 0) { // Outputs to video instead of preview window
+        else if (strcmp(argv[i], "--image-file-output") == 0) { // Outputs to video, usually also instead of preview window
             cfg.imageFileOutput = true;
+        }
+        else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
+            cfg.noPreviewWindow = true;
         }
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
         }
+//        else if (i+1 < argc && strcmp(argv[i], "--sleep-before-running") == 0) {
+//            long long time = std::stoll(argv[i+1]); // Time in milliseconds
+//            // Special value: -1 means sleep default time
+//            if (time == -1) {
+//                time = 30 * 1000;
+//            }
+//            std::this_thread::sleep_for(std::chrono::milliseconds(time));
+//        }
         else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) { // Outputs to video instead of preview window
             cfg.imageFileOutput = true;
             if (SIFTParams::call_params_function(argv[i+1], p.params) < 0) {
@@ -205,6 +220,8 @@ void* matcherThreadFunc(void* arg) {
     return (void*)0;
 }
 
+cv::Rect g_desktopSize;
+
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 ctpl::thread_pool tp(4); // Number of threads in the pool
@@ -212,6 +229,21 @@ ctpl::thread_pool tp(4); // Number of threads in the pool
 void ctrlC(int s){
     printf("Caught signal %d. Threads are stopping...\n",s);
     tp.isStop = true;
+}
+FileDataOutput* g_o2 = nullptr;
+void segfault_sigaction(int signal, siginfo_t *si, void *arg)
+{
+    printf("Caught segfault at address %p\n", si->si_addr);
+    
+    if (g_o2) {
+        g_o2->writer.release(); // Save the file
+        std::cout << "Saved the video" << std::endl;
+    }
+    else {
+        std::cout << "No video to save" << std::endl;
+    }
+    
+    exit(5);
 }
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
@@ -228,8 +260,38 @@ int mainMission(DataSourceT* src,
     sigemptyset(&sigIntHandler.sa_mask);
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, NULL);
-
     
+    // Install segfault handler
+    // https://stackoverflow.com/questions/2350489/how-to-catch-segmentation-fault-in-linux
+    g_o2 = &o2;
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(struct sigaction));
+    sigemptyset(&sa.sa_mask);
+    sa.sa_sigaction = segfault_sigaction;
+    sa.sa_flags   = SA_SIGINFO;
+    sigaction(SIGSEGV, &sa, NULL); // Segfault handler! Tries to save stuff ASAP, unlike sigIntHandler.
+
+    if (CMD_CONFIG(showPreviewWindow())) {
+        #ifdef USE_COMMAND_LINE_ARGS
+        // Doesn't work //
+        // Get desktop size
+        // https://github.com/opencv/opencv/issues/10438
+//        cv::namedWindow("", cv::WINDOW_NORMAL);
+//        cv::setWindowProperty("", cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+//        char arr[1] = {0};
+//        imshow("", cv::Mat(1, 1, CV_8U, arr));
+//        g_desktopSize = cv::getWindowImageRect("");
+        // //
+        
+        int w, h;
+        getScreenResolution(w, h);
+        g_desktopSize = {0,0,w,h};
+        
+        std::cout << "Desktop size: " << g_desktopSize << std::endl;
+        #endif
+    }
+    
+    // SIFT
     cv::Mat firstImage;
     cv::Mat prevImage;
     pthread_t matcherThread;
@@ -253,15 +315,21 @@ int mainMission(DataSourceT* src,
             }
             last = std::chrono::steady_clock::now();
         }
-	if (since(start).count() > 30 * 1000) {
+#ifdef STOP_AFTER
+	if (since(start).count() > STOP_AFTER) {
 		tp.isStop = true;
-		continue;
+		break;
 	}
+#endif
         t.reset();
         cv::Mat mat = src->get(i);
         std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl;
         t.logElapsed("get image");
-        if (mat.empty()) { printf("No more images left to process. Exiting.\n"); break; }
+        if (mat.empty()) {
+            printf("No more images left to process. Exiting.\n");
+            tp.isStop = true;
+            break;
+        }
         o2.showCanvas("", mat);
         t.reset();
         cv::Mat greyscale = src->siftImageForMat(i);
@@ -362,13 +430,32 @@ int mainMission(DataSourceT* src,
             ProcessedImage<SIFT_T> img;
             canvasesReadyQueue.dequeue(&img);
             imshow("", img.canvas);
-            cv::waitKey(30);
+            //cv::waitKey(30);
+            auto size = canvasesReadyQueue.size();
+            std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
+            cv::waitKey(1 + 150.0 / (1 + size)); // Sleep less as more come in
         }
 #endif
     }
     
     o2.writer.release(); // Save the file
     tp.isStop = true;
+    
+    // Show the rest of the images
+    #ifdef USE_COMMAND_LINE_ARGS
+    std::cout << "Showing the rest of the images" << std::endl;
+    // Show images
+    while (!canvasesReadyQueue.empty()) {
+        ProcessedImage<SIFT_T> img;
+        canvasesReadyQueue.dequeue(&img);
+        imshow("", img.canvas);
+        cv::waitKey(30);
+    }
+    #endif
+
+    // Sometimes, the matcher thread is waiting on the condition variable still, and it will be waiting forever unless we interrupt it somehow (or broadcast on the condition variable..).
+    pthread_cancel(matcherThread); // https://man7.org/linux/man-pages/man3/pthread_cancel.3.html
+    
     int ret1;
     pthread_join(matcherThread, (void**)&ret1);
     
@@ -383,6 +470,20 @@ int mainMission(DataSourceT* src,
     std::cout << str << std::endl;
     
     // Save final homography to an image
+    if (firstImage.empty()) {
+        std::cout << "No first image" << std::endl;
+        return 0;
+    }
+    if (M.empty()) {
+        std::cout << "No final homography" << std::endl;
+        
+        // Save just the image
+        auto name = openFileWithUniqueName("dataOutput/firstImage", ".png");
+        std::cout << "Saving to " << name << std::endl;
+        cv::imwrite(name, firstImage);
+        
+        return 0;
+    }
     cv::Mat canvas;
     cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
     auto name = openFileWithUniqueName("dataOutput/scaled", ".png");

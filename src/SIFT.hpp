@@ -128,6 +128,21 @@ struct SIFTAnatomy : public SIFTBase {
 };
 
 struct SIFTOpenCV : public SIFTBase {
+    // Defaults //
+//    int     nfeatures = 0;
+//    int     nOctaveLayers = 3;
+//    double     contrastThreshold = 0.04;
+//    double     edgeThreshold = 10;
+//    double     sigma = 1.6;
+    // //
+    // Testing //
+    int     nfeatures = 200;
+    int     nOctaveLayers = 5;
+    double     contrastThreshold = 0.03;
+    double     edgeThreshold = 12;
+    double     sigma = 1.2;
+    // //
+    
     // https://github.com/opencv/opencv/blob/17234f82d025e3bbfbf611089637e5aa2038e7b8/modules/features2d/test/test_sift.cpp
     // :
     /* https://docs.opencv.org/3.4/d7/d60/classcv_1_1SIFT.html :
@@ -139,8 +154,32 @@ struct SIFTOpenCV : public SIFTBase {
      int     descriptorType
      )
      */
+    /* https://docs.opencv.org/3.4/d7/d60/classcv_1_1SIFT.html : more useful part:
+     static Ptr<SIFT> cv::SIFT::create    (    int     nfeatures = 0,
+     int     nOctaveLayers = 3,
+     double     contrastThreshold = 0.04,
+     double     edgeThreshold = 10,
+     double     sigma = 1.6
+     
+     Docs:
+     Parameters
+     nfeatures    The number of best features to retain. The features are ranked by their scores (measured in SIFT algorithm as the local contrast)
+     nOctaveLayers    The number of layers in each octave. 3 is the value used in D. Lowe paper. The number of octaves is computed automatically from the image resolution.
+     contrastThreshold    The contrast threshold used to filter out weak features in semi-uniform (low-contrast) regions. The larger the threshold, the less features are produced by the detector.
+     Note
+     The contrast threshold will be divided by nOctaveLayers when the filtering is applied. When nOctaveLayers is set to default and if you want to use the value used in D. Lowe paper, 0.03, set this argument to 0.09.
+     Parameters
+     edgeThreshold    The threshold used to filter out edge-like features. Note that the its meaning is different from the contrastThreshold, i.e. the larger the edgeThreshold, the less features are filtered out (more features are retained).
+     sigma    The sigma of the Gaussian applied to the input image at the octave #0. If your image is captured with a weak camera with soft lenses, you might want to reduce the number.
+     )
+     */
     SIFTOpenCV() : f2d(//cv::SIFT::create(0, 3, 0.04, 10, 1.6, CV_32F) // <-- CV_32F doesn't work -- gives `libc++abi.dylib: terminating with uncaught exception of type cv::Exception: OpenCV(4.5.2) /tmp/nix-build-opencv-4.5.2.drv-0/source/modules/features2d/src/sift.dispatch.cpp:477: error: (-5:Bad argument) image is empty or has incorrect depth (!=CV_8U) in function 'detectAndCompute'`
-                       cv::SIFT::create()) {
+                       //cv::SIFT::create()
+                       cv::SIFT::create(nfeatures,
+                                        nOctaveLayers,
+                                        contrastThreshold,
+                                        edgeThreshold,
+                                        sigma)) {
     }
     
     std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale);

@@ -76,12 +76,11 @@ private:
     void init(std::string folderPath);
 };
 
-struct CameraDataSource : public DataSourceBase
+struct OpenCVVideoCaptureDataSource : public DataSourceBase
 {
-    CameraDataSource();
-    CameraDataSource(int argc, char** argv);
+    OpenCVVideoCaptureDataSource();
     
-    bool hasNext();
+    bool hasNext() { return cap.isOpened(); }
     cv::Mat next();
     
     cv::Mat get(size_t index);
@@ -91,19 +90,50 @@ struct CameraDataSource : public DataSourceBase
     cv::Mat siftImageForMat(size_t index);
     cv::Mat colorImageForMat(size_t index);
     
-    bool wantsCustomFPS() const { return wantedFPS.has_value(); }
-    double fps() const { return wantsCustomFPS() ? wantedFPS.value() : cap.get(cv::CAP_PROP_FPS); }
+    bool wantsCustomFPS() const { return false; }
+    double fps() const { return cap.get(cv::CAP_PROP_FPS); }
     double timeMilliseconds() const { return cap.get(cv::CAP_PROP_POS_MSEC); }
     
     cv::VideoCapture cap;
     std::unordered_map<size_t, cv::Mat> cache;
-private:
+};
+
+struct CameraDataSource : public OpenCVVideoCaptureDataSource
+{
+    CameraDataSource();
+    CameraDataSource(int argc, char** argv);
+    
+    bool hasNext();
+    
+    using OpenCVVideoCaptureDataSource::get;
+    
+    bool wantsCustomFPS() const { return wantedFPS.has_value(); }
+    double fps() const { return wantsCustomFPS() ? wantedFPS.value() : cap.get(cv::CAP_PROP_FPS); }
+    
+protected:
     std::optional<double> wantedFPS;
     
     static const double default_fps;
     static const cv::Size default_sizeFrame;
     void init(double fps, cv::Size sizeFrame);
 };
+
+struct VideoFileDataSource : public OpenCVVideoCaptureDataSource
+{
+    VideoFileDataSource();
+    VideoFileDataSource(int argc, char** argv);
+    
+    cv::Mat get(size_t index);
+    
+private:
+    double frame_rate;
+    double frame_msec;
+    double video_time;
+protected:
+    static const std::string default_filePath;
+    void init(std::string filePath);
+};
+
 
 // Parital template specialization. But maybe use this: https://stackoverflow.com/questions/31500426/why-does-enable-if-t-in-template-arguments-complains-about-redefinitions
 template<class T>
@@ -112,5 +142,7 @@ template<>
 FolderDataSource makeDataSource(int argc, char** argv, size_t skip);
 template<>
 CameraDataSource makeDataSource(int argc, char** argv, size_t skip);
+template<>
+VideoFileDataSource makeDataSource(int argc, char** argv, size_t skip);
 
 #endif /* DataSource_hpp */

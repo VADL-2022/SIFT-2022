@@ -16,6 +16,9 @@
 //#define SIFT_IMPL SIFTAnatomy
 #define SIFT_IMPL SIFTOpenCV
 #define SIFTOpenCV_
+
+//#define SLEEP_BEFORE_RUNNING 30 * 3000 // Milliseconds
+//#define STOP_AFTER 30 * 3000 // Milliseconds
 // //
 
 // Config: Define these in the Makefile, i.e. with `CFLAGS += -DUSE_COMMAND_LINE_ARGS` instead, although these can be overriden here: //
@@ -24,7 +27,11 @@
 
 #ifdef USE_COMMAND_LINE_ARGS
 struct CommandLineConfig {
-    bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false, mainMission = false;
+    bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false, mainMission = false, noPreviewWindow;
+    
+    bool showPreviewWindow() {
+        return !noPreviewWindow;
+    }
 };
 #endif
 

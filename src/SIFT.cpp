@@ -113,7 +113,7 @@ std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKe
     cv::Mat descriptors;
     f2d->detectAndCompute(greyscale, cv::Mat(), keypoints, descriptors);
     
-    printf("Thread %d: Number of keypoints: %d\n", threadID, keypoints.size());
+    printf("Thread %d: Number of keypoints: %zu\n", threadID, keypoints.size());
     if (keypoints.size() < 4) {
         printf("Not enough keypoints to find homography! Ignoring this image\n");
         // TODO: Simply let the transformation be an identity matrix?
@@ -152,8 +152,32 @@ void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage
     
     if (CMD_CONFIG(mainMission)) {
 #ifdef USE_COMMAND_LINE_ARGS
+        // Make it fill the screen
+        cv::Mat img1Resized, img2Resized;
+        cv::resize(img1.image, img1Resized, g_desktopSize.size());
+        cv::resize(img2.image, img2Resized, g_desktopSize.size());
+        //if (!img2.canvas.empty()) {
+            // Get scale to destination
+            cv::Size2d scale = cv::Size2d((double)g_desktopSize.size().width / img2.image.cols, (double)g_desktopSize.size().height / img2.image.rows);
+            std::cout << "Scale: " << scale << std::endl;
+            float max = std::max(scale.width, scale.height);
+            
+            // Resize canvas
+            //cv::resize(img2.canvas, img2.canvas, g_desktopSize.size(), 0, 0, cv::INTER_LINEAR);
+            // Scale all keypoints
+            auto s = [&](std::vector<cv::KeyPoint>& computedKeypoints) {
+                for (cv::KeyPoint& p : computedKeypoints) {
+                    p.pt.x *= scale.width;
+                    p.pt.y *= scale.height;
+                    p.size *= max;
+                }
+            };
+            s(img1.computedKeypoints);
+            s(img2.computedKeypoints);
+        //}
+        
         // Draw it
-        cv::drawMatches(img1.image, img1.computedKeypoints, img2.image, img2.computedKeypoints, img2.matches, img2.canvas);
+        cv::drawMatches(img1Resized, img1.computedKeypoints, img2Resized, img2.computedKeypoints, img2.matches, img2.canvas);
 #endif
     }
 }

@@ -34,7 +34,7 @@ endef
 
 
 SHELL := /usr/bin/env bash
-CFLAGS += -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` -I$(SIFT_SRC)
+CFLAGS += -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` `pkg-config --cflags libpng` -I$(SIFT_SRC)  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 CXXFLAGS += -std=c++17 $(CFLAGS)
 CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*) .*/\1/' | awk '{$$1=$$1;print}') # https://stackoverflow.com/questions/5188267/checking-the-gcc-version-in-a-makefile
 $(info $(CLANGVERSION)) # Example: "7.1.0 "
@@ -44,14 +44,23 @@ ifeq ($(OS),Darwin)
     LFLAGS += -lc++fs
 endif
 endif
+ifeq ($(OS),Darwin)
+    LFLAGS += -framework CoreGraphics
+endif
 $(info $(LFLAGS))
-LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
-LDFLAGS = `pkg-config --libs opencv4`
+LFLAGS += -lunwind -lpng -lm -lpthread #-ljpeg -lrt -lm
+LDFLAGS = ${NIX_LDFLAGS} `pkg-config --libs opencv4` `pkg-config --libs libpng`
 
 #CC := clang-12
 #CXX := clang-12 -x c++
+ifeq ($(OS),Darwin)
+# https://stackoverflow.com/questions/16387484/clangllvm-compile-with-frameworks
+CC := xcrun -sdk macosx clang
+CXX := xcrun -sdk macosx clang++
+else
 CC := clang
 CXX := clang++
+endif
 SRC := src
 OBJ := obj
 
@@ -81,20 +90,27 @@ common:
 
 
 
+# commandLine targets in general
+ADDITIONAL_CFLAGS_ALL_COMMANDLINE = -DUSE_COMMAND_LINE_ARGS
+ifeq ($(OS),Darwin)
+ADDITIONAL_CFLAGS_ALL_COMMANDLINE += -target x86_64-apple-macos10.15 #-isysroot $(shell xcrun --sdk macosx --show-sdk-path)
+endif
+
 # release target
-ADDITIONAL_CFLAGS_RELEASE = -Ofast #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
+# NOTE: -DNDEBUG turns off assertions (only for the code being compiled from source, not for libraries, including those from Nix like OpenCV unless we set it explicitly..).
+ADDITIONAL_CFLAGS_RELEASE = -DNDEBUG -Ofast #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
 $(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
 
 # release_commandLine target
-ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE = $(ADDITIONAL_CFLAGS_RELEASE) -DUSE_COMMAND_LINE_ARGS
+ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE = $(ADDITIONAL_CFLAGS_RELEASE) $(ADDITIONAL_CFLAGS_ALL_COMMANDLINE)
 $(eval $(call C_AND_CXX_FLAGS_template,release_commandLine,$(ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE),))
 
 # debug target
-ADDITIONAL_CFLAGS_DEBUG = -Og -g3 # -O0
+ADDITIONAL_CFLAGS_DEBUG = -Og -g3 -DDEBUG # -O0
 $(eval $(call C_AND_CXX_FLAGS_template,debug,$(ADDITIONAL_CFLAGS_DEBUG),))
 
 # debug_commandLine target
-ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE = $(ADDITIONAL_CFLAGS_DEBUG) -DUSE_COMMAND_LINE_ARGS
+ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE = $(ADDITIONAL_CFLAGS_DEBUG) $(ADDITIONAL_CFLAGS_ALL_COMMANDLINE)
 $(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE),))
 
 # release linking

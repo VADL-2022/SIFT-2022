@@ -87,7 +87,13 @@ struct Queue {
         return content[readPtr + i % BUFFER_SIZE];
     }
     
-    //
+    size_t size() {
+        pthread_mutex_lock( &mutex );
+        auto ret = count;
+        pthread_mutex_unlock(&mutex);
+        return ret;
+    }
+    
     bool empty() {
         pthread_mutex_lock( &mutex );
         bool ret = count == 0;

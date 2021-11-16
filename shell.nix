@@ -19,6 +19,11 @@ let
     numpy
     matplotlib
   ]);
+
+  # Actual package is https://github.com/NixOS/nixpkgs/blob/nixos-21.05/pkgs/development/compilers/llvm/7/libunwind/default.nix#L45
+  libunwind_modded = llvmPackages.libunwind.overrideAttrs (oldAttrs: rec {
+      nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ fixDarwinDylibNames ];
+  });
 in
 mkShell {
   buildInputs = [ my-python-packages
@@ -31,6 +36,11 @@ mkShell {
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) lldb) ++ [
 
     #bear # Optional, for generating emacs compile_commands.json
+
+    # For stack traces #
+    (callPackage ./backward-cpp.nix {}) # https://github.com/bombela/backward-cpp
+    libunwind_modded
+    # #
 
     llvmPackages.libstdcxxClang
     #ginac # https://www.ginac.de/tutorial/#A-comparison-with-other-CAS

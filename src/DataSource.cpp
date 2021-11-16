@@ -201,7 +201,7 @@ cv::Mat FolderDataSource::colorImageForMat(size_t index) {
     t.logElapsed("convert image to color");
     return backtorgb;
 }
-cv::Mat CameraDataSource::siftImageForMat(size_t index) {
+cv::Mat OpenCVVideoCaptureDataSource::siftImageForMat(size_t index) {
     cv::Mat grey = cache.at(index);
 #ifdef SIFTAnatomy_
     cv::Mat mat;
@@ -216,8 +216,12 @@ cv::Mat CameraDataSource::siftImageForMat(size_t index) {
     return grey;
 #endif
 }
-cv::Mat CameraDataSource::colorImageForMat(size_t index) {
+cv::Mat OpenCVVideoCaptureDataSource::colorImageForMat(size_t index) {
     return cache.at(index);
+}
+
+OpenCVVideoCaptureDataSource::OpenCVVideoCaptureDataSource() {
+    currentIndex = 0;
 }
 
 const double CameraDataSource::default_fps =
@@ -310,11 +314,11 @@ bool CameraDataSource::hasNext() {
     // https://www.tutorialspoint.com/unix_system_calls/_newselect.htm : "timeout is an upper bound on the amount of time elapsed before select() returns. It may be zero, causing select() to return immediately. (This is useful for polling.) If timeout is NULL (no timeout), select() can block indefinitely."
 }
 
-cv::Mat CameraDataSource::next() {
+cv::Mat OpenCVVideoCaptureDataSource::next() {
     return get(currentIndex++);
 }
 
-cv::Mat CameraDataSource::get(size_t index) {
+cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     size_t i = index;
     
     auto it = cache.find(i);
@@ -346,8 +350,71 @@ cv::Mat CameraDataSource::get(size_t index) {
     return mat;
 }
 
-std::string CameraDataSource::nameForIndex(size_t index) {
+std::string OpenCVVideoCaptureDataSource::nameForIndex(size_t index) {
     return "Image " + std::to_string(index);
+}
+
+const std::string VideoFileDataSource::default_filePath = "quadcopterFlight/live2--.mp4";
+VideoFileDataSource::VideoFileDataSource() {
+    init(default_filePath);
+}
+
+VideoFileDataSource::VideoFileDataSource(int argc, char** argv) {
+    // Parse arguments
+    std::string filePath = default_filePath;
+    for (int i = 1; i < argc; i++) {
+            if (i+1 < argc) {
+                if (strcmp(argv[i], "--file") == 0) {
+                    filePath = argv[i+1];
+                    i++;
+                }
+        }
+    }
+    
+    init(filePath);
+}
+
+// https://stackoverflow.com/questions/11260042/reverse-video-playback-in-opencv
+void VideoFileDataSource::init(std::string filePath) {
+    // Instanciate the capture
+    std::cout << "Opening " << filePath << std::endl;
+    cap.open(filePath);
+
+    if (!cap.isOpened()) { // check if we succeeded
+      std::cout << "Unable to open capture on given file: " << filePath << std::endl;
+      throw 0;
+    }
+    
+    frame_rate = cap.get(cv::CAP_PROP_FPS);
+
+    // Calculate number of msec per frame.
+    // (msec/sec / frames/sec = msec/frame)
+    frame_msec = 1000 / frame_rate;
+    
+    double frame_count = cap.get(cv::CAP_PROP_FRAME_COUNT);
+    
+    // Seek to the end of the video.
+    cap.set(cv::CAP_PROP_POS_AVI_RATIO, 1);
+    
+    // Get video length
+    cap.set(cv::CAP_PROP_POS_MSEC, frame_msec * frame_count);
+    video_time = cap.get(cv::CAP_PROP_POS_MSEC);
+    
+    std::cout << "Video duration: " << video_time << " milliseconds; frame count: " << frame_count << std::endl;
+}
+
+cv::Mat VideoFileDataSource::get(size_t index) {
+    // Decrease video time by number of msec in one frame
+    double video_time_ = video_time - frame_msec * index;
+    
+    if (!(video_time_ > 0)) {
+        return cv::Mat();
+    }
+    
+    // and seek to the new time.
+    cap.set(cv::CAP_PROP_POS_MSEC, video_time_);
+    
+    return OpenCVVideoCaptureDataSource::get(index);
 }
 
 template<>
@@ -357,4 +424,8 @@ FolderDataSource makeDataSource(int argc, char** argv, size_t skip) {
 template<>
 CameraDataSource makeDataSource(int argc, char** argv, size_t skip) {
     return CameraDataSource(argc, argv);
+}
+template<>
+VideoFileDataSource makeDataSource(int argc, char** argv, size_t skip) {
+    return VideoFileDataSource(argc, argv);
 }
