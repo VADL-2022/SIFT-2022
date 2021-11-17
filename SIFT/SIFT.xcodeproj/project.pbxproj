@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		300EE49327209F9400969C5F /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 300EE45B27209F9400969C5F /* Makefile */; };
 		300EE49527209F9400969C5F /* lib_keypoint.c in Sources */ = {isa = PBXBuildFile; fileRef = 300EE46227209F9400969C5F /* lib_keypoint.c */; };
-		300EE49C27209F9400969C5F /* lib_matching.c in Sources */ = {isa = PBXBuildFile; fileRef = 300EE46C27209F9400969C5F /* lib_matching.c */; };
+		300EE49C27209F9400969C5F /* lib_matching.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE46C27209F9400969C5F /* lib_matching.cpp */; };
 		300EE49D27209F9400969C5F /* lib_discrete.c in Sources */ = {isa = PBXBuildFile; fileRef = 300EE46D27209F9400969C5F /* lib_discrete.c */; };
 		300EE49F27209F9400969C5F /* lib_sift.c in Sources */ = {isa = PBXBuildFile; fileRef = 300EE46F27209F9400969C5F /* lib_sift.c */; };
 		300EE4A027209F9400969C5F /* io_png.c in Sources */ = {isa = PBXBuildFile; fileRef = 300EE47027209F9400969C5F /* io_png.c */; };
@@ -32,6 +32,8 @@
 		30CE61F527238409001C987F /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61F327238409001C987F /* common.cpp */; };
 		30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE49227209F9400969C5F /* strnatcmp.cpp */; };
 		30EF9790273C588B00E3D538 /* Info.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 30EF978F273C582100E3D538 /* Info.plist */; };
+		30FE900A27458CD20086957E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30FE900927458CD20086957E /* CoreGraphics.framework */; };
+		30FE900C2745924C0086957E /* SIFT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30FE900B2745924C0086957E /* SIFT.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -64,7 +66,7 @@
 		300EE46627209F9400969C5F /* lib_scalespace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lib_scalespace.h; sourceTree = "<group>"; };
 		300EE46927209F9400969C5F /* lib_description.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lib_description.h; sourceTree = "<group>"; };
 		300EE46A27209F9400969C5F /* lib_sift_anatomy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lib_sift_anatomy.h; sourceTree = "<group>"; };
-		300EE46C27209F9400969C5F /* lib_matching.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lib_matching.c; sourceTree = "<group>"; };
+		300EE46C27209F9400969C5F /* lib_matching.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lib_matching.cpp; sourceTree = "<group>"; };
 		300EE46D27209F9400969C5F /* lib_discrete.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lib_discrete.c; sourceTree = "<group>"; };
 		300EE46E27209F9400969C5F /* match_cli.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = match_cli.c; sourceTree = "<group>"; };
 		300EE46F27209F9400969C5F /* lib_sift.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lib_sift.c; sourceTree = "<group>"; };
@@ -111,6 +113,8 @@
 		30CE61F427238409001C987F /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
 		30CE61F727238787001C987F /* strnatcmp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = strnatcmp.hpp; sourceTree = "<group>"; };
 		30EF978F273C582100E3D538 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		30FE900927458CD20086957E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		30FE900B2745924C0086957E /* SIFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SIFT.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,6 +122,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30FE900A27458CD20086957E /* CoreGraphics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +135,7 @@
 				300EE44D27209F6F00969C5F /* SIFT */,
 				300EE44C27209F6F00969C5F /* Products */,
 				300EE4BA2720A98700969C5F /* Config.xcconfig */,
+				30FE900827458CD10086957E /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -187,7 +193,7 @@
 				300EE46627209F9400969C5F /* lib_scalespace.h */,
 				300EE46927209F9400969C5F /* lib_description.h */,
 				300EE46A27209F9400969C5F /* lib_sift_anatomy.h */,
-				300EE46C27209F9400969C5F /* lib_matching.c */,
+				300EE46C27209F9400969C5F /* lib_matching.cpp */,
 				300EE46D27209F9400969C5F /* lib_discrete.c */,
 				300EE46E27209F9400969C5F /* match_cli.c */,
 				300EE46F27209F9400969C5F /* lib_sift.c */,
@@ -214,6 +220,7 @@
 			children = (
 				300EE48427209F9400969C5F /* Semaphore.h */,
 				30CE61E727234CD2001C987F /* SIFT.hpp */,
+				30FE900B2745924C0086957E /* SIFT.cpp */,
 				300EE48727209F9400969C5F /* BinarySemaphore.h */,
 				300EE48827209F9400969C5F /* utils.cpp */,
 				300EE48B27209F9400969C5F /* my_sift_additions.h */,
@@ -241,6 +248,14 @@
 			);
 			name = src;
 			path = ../../src;
+			sourceTree = "<group>";
+		};
+		30FE900827458CD10086957E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				30FE900927458CD20086957E /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -329,7 +344,8 @@
 				30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */,
 				30CE61F527238409001C987F /* common.cpp in Sources */,
 				300EE49F27209F9400969C5F /* lib_sift.c in Sources */,
-				300EE49C27209F9400969C5F /* lib_matching.c in Sources */,
+				300EE49C27209F9400969C5F /* lib_matching.cpp in Sources */,
+				30FE900C2745924C0086957E /* SIFT.cpp in Sources */,
 				300EE4B527209F9400969C5F /* siftMain.cpp in Sources */,
 				30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */,
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
@@ -395,6 +411,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					USE_COMMAND_LINE_ARGS,
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
