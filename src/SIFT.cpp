@@ -241,7 +241,24 @@ void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage
         //}
         
         // Draw it
-        cv::drawMatches(img1Resized, img1.computedKeypoints, img2Resized, img2.computedKeypoints, img2.matches, img2.canvas);
+        // Side-by-side matches: //
+//        cv::drawMatches(img1Resized, img1.computedKeypoints, img2Resized, img2.computedKeypoints, img2.matches, img2.canvas);
+        // //
+        // Single image //
+        img2Resized.copyTo(img2.canvas);
+        for (auto& match : img2.matches) {
+            cv::KeyPoint& p1 = img1.computedKeypoints[match.trainIdx];
+            cv::KeyPoint& p2 = img2.computedKeypoints[match.queryIdx];
+
+            const int draw_shift_bits = 4;
+            const int draw_multiplier = 1 << draw_shift_bits;
+            cv::Point center1( cvRound(p1.pt.x * draw_multiplier), cvRound(p1.pt.y * draw_multiplier) );
+            cv::Point center2( cvRound(p2.pt.x * draw_multiplier), cvRound(p2.pt.y * draw_multiplier) );
+            drawCircle(img2.canvas, center1, 2);
+            drawCircle(img2.canvas, center2, 2);
+            cv::line(img2.canvas, center1, center2, lastColor, 1);
+        }
+        // //
 #endif
     }
 }
