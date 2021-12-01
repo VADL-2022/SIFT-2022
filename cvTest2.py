@@ -1,0 +1,8 @@
+import cv2
+import numpy as np
+
+M = np.array([2.939, -0.6294, -224.8,
+              0.7125, 1.505, -322.5,
+              0.003311, -0.004268, 1.239])
+img = cv2.imread("dataOutput/firstImage4.png")
+cv2.warpAffine(img, img, M, img.size())

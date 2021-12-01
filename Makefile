@@ -102,7 +102,8 @@ endif
 
 # release target
 # NOTE: -DNDEBUG turns off assertions (only for the code being compiled from source, not for libraries, including those from Nix like OpenCV unless we set it explicitly..).
-ADDITIONAL_CFLAGS_RELEASE = -DNDEBUG -Ofast #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
+# NOTE: -g is needed for stack traces for https://github.com/bombela/backward-cpp
+ADDITIONAL_CFLAGS_RELEASE = -Ofast -g -DNDEBUG #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
 $(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
 
 # release_commandLine target

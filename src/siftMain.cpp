@@ -23,6 +23,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <fstream>
+
+// For stack traces on segfault, etc.
+#include <backward.hpp> // https://github.com/bombela/backward-cpp
+
 #include "Queue.hpp"
 thread_local SIFT_T sift;
 Queue<ProcessedImage<SIFT_T>, 1024 /*256*/ /*32*/> processedImageQueue;
@@ -77,6 +82,12 @@ int mainMission(DataSourceT* src,
 #endif
 int main(int argc, char **argv)
 {
+#define SEGFAULT_TEST
+#ifdef SEGFAULT_TEST
+    char* a = nullptr;
+    *a = 0;
+#endif
+    
 #ifdef SLEEP_BEFORE_RUNNING
 	std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BEFORE_RUNNING));
 #endif
@@ -229,8 +240,8 @@ bool stoppedMain() {
     return g_stop;
 }
 
-//#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
-#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
+#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
+//#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 //ctpl::thread_pool tp(4); // Number of threads in the pool
 ctpl::thread_pool tp(8);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
@@ -522,6 +533,11 @@ int mainMission(DataSourceT* src,
     auto str = fmt->format(M);
     std::cout << str << std::endl;
     
+    // Save final homography matrix
+    auto name = M.empty() ? openFileWithUniqueName("dataOutput/firstImage", ".png") : openFileWithUniqueName("dataOutput/scaled", ".png");
+    auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
+    std::ofstream(matName.c_str()) << str << std::endl;
+    
     // Save final homography to an image
     if (firstImage.empty()) {
         std::cout << "No first image" << std::endl;
@@ -531,7 +547,6 @@ int mainMission(DataSourceT* src,
         std::cout << "No final homography" << std::endl;
         
         // Save just the image
-        auto name = openFileWithUniqueName("dataOutput/firstImage", ".png");
         std::cout << "Saving to " << name << std::endl;
         cv::imwrite(name, firstImage);
         
@@ -539,7 +554,7 @@ int mainMission(DataSourceT* src,
     }
     cv::Mat canvas;
     cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
-    auto name = openFileWithUniqueName("dataOutput/scaled", ".png");
+//    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
     std::cout << "Saving to " << name << std::endl;
     cv::imwrite(name, canvas);
     return 0;

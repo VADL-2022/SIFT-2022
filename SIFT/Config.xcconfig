@@ -1,0 +1,9 @@
+CXXFLAGS = -std=c++17 
+OPENCV_CFLAGS=
+HEADER_SEARCH_PATHS= $(SRCROOT)/../sift_anatomy_20141201/src
+ 
+
+OTHER_LDFLAGS = -lm -lpthread  //-ljpeg -lrt -lm
+
+CLANG_CXX_LIBRARY=libc++
+CLANG_CXX_LANGUAGE_STANDARD=c++17

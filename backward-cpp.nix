@@ -1,11 +1,11 @@
 # https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/backward-cpp/default.nix
-{ stdenv, lib, fetchFromGitHub, fixDarwinDylibNames }:
+{ stdenv, lib, fetchFromGitHub, fixDarwinDylibNames, libunwind }:
 
 stdenv.mkDerivation rec {
   pname = "backward";
   version = "1.6";
 
-  nativeBuildInputs = [ fixDarwinDylibNames ];
+  nativeBuildInputs = [ libunwind fixDarwinDylibNames ];
 
   src = fetchFromGitHub {
     owner = "bombela";
@@ -21,13 +21,12 @@ stdenv.mkDerivation rec {
     runHook postInstall
   '';
 
-  # Specific to this compiler project:
-  postPatch = ''
-    substituteInPlace backward.hpp \
-        --replace 'os << "Stack trace (most recent call last)";' ' '
-    substituteInPlace backward.hpp \
-        --replace 'os << ":\n";' ' '
-  '';
+  # postPatch = ''
+  #   substituteInPlace backward.hpp \
+  #       --replace 'os << "Stack trace (most recent call last)";' ' '
+  #   substituteInPlace backward.hpp \
+  #       --replace 'os << ":\n";' ' '
+  # '';
 
   meta = with lib; {
     description = "Beautiful stack trace pretty printer for C++";

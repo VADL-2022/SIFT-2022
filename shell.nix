@@ -13,9 +13,9 @@
 with pkgs;
 
 let
-  opencvGtk = opencv.override (old : { enableGtk2 = true; }); # https://stackoverflow.com/questions/40667313/how-to-get-opencv-to-work-in-nix , https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/opencv/default.nix
+  opencvGtk = opencv4.override (old : { enableGtk2 = true; }); # https://stackoverflow.com/questions/40667313/how-to-get-opencv-to-work-in-nix , https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/opencv/default.nix
   my-python-packages = python39.withPackages(ps: with ps; [
-    (lib.optional stdenv.hostPlatform.isMacOS opencv)
+    (lib.optional stdenv.hostPlatform.isMacOS opencv4)
     numpy
     matplotlib
   ]);
@@ -27,7 +27,7 @@ let
 in
 mkShell {
   buildInputs = [ my-python-packages
-                ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv ])
+                ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
   ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python39Packages.opencv4.override { enableGtk2 = true; })
                                                                  opencvGtk
                                                                ]) ++ [
