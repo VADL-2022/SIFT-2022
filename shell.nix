@@ -16,7 +16,7 @@ let
   opencvGtk = opencv4.override (old : { enableGtk2 = true; }); # https://stackoverflow.com/questions/40667313/how-to-get-opencv-to-work-in-nix , https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/opencv/default.nix
   my-python-packages = python39.withPackages(ps: with ps; [
     (lib.optional stdenv.hostPlatform.isMacOS opencv4)
-    (lib.optional useGtk python39Packages.opencv.override (old : { enableGtk2 = true; })) # Temp hack
+    (lib.optional useGtk (toPythonModule (pkgs.opencv4.override { enableGTK2 = true; enablePython = true; pythonPackages = python39Packages; }))) # Temp hack
     numpy
     matplotlib
   ]);
