@@ -60,7 +60,11 @@ else ifeq ($(OS),Linux)
 endif
 $(info $(LFLAGS))
 LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
-LDFLAGS = ${NIX_LDFLAGS} `pkg-config --libs opencv4` `pkg-config --libs libpng`
+ifeq ($(OS),Linux)
+    # Needed if gtk; nix hack:
+    LDFLAGS = -L/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib
+endif
+LDFLAGS += ${NIX_LDFLAGS} `pkg-config --libs opencv4` `pkg-config --libs libpng`
 
 #CC := clang-12
 #CXX := clang-12 -x c++
