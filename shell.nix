@@ -29,8 +29,7 @@ in
 mkShell {
   buildInputs = [ my-python-packages
                 ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
-  ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ opencvGtk (python39Packages.opencv4.override { enableGtk2 = true; })
-                                                                 opencvGtk
+  ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ opencvGtk
                                                                ]) ++ [
     clang_12 # Need >= clang 10 to fix fast-math bug (when using -Ofast) ( https://bugzilla.redhat.com/show_bug.cgi?id=1803203 )
     pkgconfig libpng
