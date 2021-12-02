@@ -86,7 +86,7 @@ int mainMission(DataSourceT* src,
 int main(int argc, char **argv)
 {
 //#define SEGFAULT_TEST
-#define SEGFAULT_TEST2
+//#define SEGFAULT_TEST2
 #ifdef SEGFAULT_TEST
     char* a = nullptr;
     *a = 0;
