@@ -50,10 +50,15 @@ Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
 //}
 
 // Config //
+#ifndef USE_COMMAND_LINE_ARGS
 // Data source
 //using DataSourceT = FolderDataSource;
 //using DataSourceT = CameraDataSource;
 using DataSourceT = VideoFileDataSource;
+#else
+// Fixed, not configurable:
+using DataSourceT = CameraDataSource;
+#endif
 
 // Data output
 using DataOutputT = PreviewWindowDataOutput;
@@ -616,7 +621,7 @@ int mainInteractive(DataSourceT* src,
 		// compute sift keypoints
 		int n; // Number of keypoints
 		struct sift_keypoints* keypoints;
-		struct sift_keypoint_std *k;
+		struct sift_keypoint_std *k = nullptr;
         if (!CMD_CONFIG(imageCaptureOnly)) {
             if (s.loadedKeypoints == nullptr) {
                 t.reset();
