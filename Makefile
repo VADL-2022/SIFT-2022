@@ -55,6 +55,8 @@ endif
 endif
 ifeq ($(OS),Darwin)
     LFLAGS += -framework CoreGraphics
+else ifeq ($(OS),Linux)
+    LFLAGS += -lX11
 endif
 $(info $(LFLAGS))
 LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm

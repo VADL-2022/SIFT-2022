@@ -34,7 +34,7 @@ mkShell {
                                                                ]) ++ [
     clang_12 # Need >= clang 10 to fix fast-math bug (when using -Ofast) ( https://bugzilla.redhat.com/show_bug.cgi?id=1803203 )
     pkgconfig libpng
-    ] ++ (lib.optional (stdenv.hostPlatform.isLinux) lldb) ++ [
+    ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ lldb x11 ]) ++ [
 
     #bear # Optional, for generating emacs compile_commands.json
 
