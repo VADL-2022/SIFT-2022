@@ -27,6 +27,9 @@
 
 // For stack traces on segfault, etc.
 #include <backward.hpp> // https://github.com/bombela/backward-cpp
+namespace backward {
+backward::SignalHandling sh;
+} // namespace backward
 
 #include "Queue.hpp"
 thread_local SIFT_T sift;
@@ -82,7 +85,8 @@ int mainMission(DataSourceT* src,
 #endif
 int main(int argc, char **argv)
 {
-#define SEGFAULT_TEST
+//#define SEGFAULT_TEST
+#define SEGFAULT_TEST2
 #ifdef SEGFAULT_TEST
     char* a = nullptr;
     *a = 0;
@@ -245,9 +249,19 @@ bool stoppedMain() {
 //ctpl::thread_pool tp(4); // Number of threads in the pool
 ctpl::thread_pool tp(8);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
-void ctrlC(int s){
+// Prints a stacktrace
+//void logTrace() {
+//    using namespace backward;
+//    StackTrace st; st.load_here();
+//    Printer p;
+//    p.print(st, stderr);
+//}
+void ctrlC(int s, siginfo_t *si, void *arg){
     printf("Caught signal %d. Threads are stopping...\n",s);
     stopMain();
+    
+    // Print stack trace
+    backward::sh.handleSignal(s, si, arg);
 }
 FileDataOutput* g_o2 = nullptr;
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
@@ -261,6 +275,9 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     else {
         std::cout << "No video to save" << std::endl;
     }
+    
+    // Print stack trace
+    backward::sh.handleSignal(signal, si, arg);
     
     exit(5);
 }
@@ -279,7 +296,7 @@ int mainMission(DataSourceT* src,
     // Install ctrl-c handler
     // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
     struct sigaction sigIntHandler;
-    sigIntHandler.sa_handler = ctrlC;
+    sigIntHandler.sa_sigaction = ctrlC;
     sigemptyset(&sigIntHandler.sa_mask);
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, NULL);
@@ -444,6 +461,11 @@ int mainMission(DataSourceT* src,
         
         // Save this image for next iteration
         prevImage = mat;
+        
+        #ifdef SEGFAULT_TEST2
+        char* a = nullptr;
+        *a = 0;
+        #endif
         
         if (firstImage.empty()) { // This is the first iteration.
             // Save firstImage once

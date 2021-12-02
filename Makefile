@@ -37,12 +37,17 @@ endef
 
 
 SHELL := /usr/bin/env bash
-CFLAGS += -Wall -pedantic -D_POSIX_C_SOURCE=200809L `pkg-config --cflags opencv4` `pkg-config --cflags libpng` -I$(SIFT_SRC) -DBACKWARD_HAS_LIBUNWIND  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+OS := $(shell uname -s)
+# -D_POSIX_C_SOURCE=200809L
+CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4` `pkg-config --cflags libpng` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_LIBUNWIND=1  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
+$(info $(OS))
+ifeq ($(OS),Darwin)
+CFLAGS += -target x86_64-apple-macos10.15 #-isysroot $(shell xcrun --sdk macosx --show-sdk-path)
+endif
 CXXFLAGS += -std=c++17 $(CFLAGS)
 CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*) .*/\1/' | awk '{$$1=$$1;print}') # https://stackoverflow.com/questions/5188267/checking-the-gcc-version-in-a-makefile
 $(info $(CLANGVERSION)) # Example: "7.1.0 "
-OS := $(shell uname -s)
 ifeq ($(shell foo="$(CLANGVERSION)"; if [ "$${foo//./}" -le 710 ]; then echo 0; fi),0) #ifeq ($(shell foo="$(CLANGVERSION)"; test ${foo//./} -le 710; echo $$?),0) # TODO: check if version less than or equal to this
 ifeq ($(OS),Darwin)
     LFLAGS += -lc++fs
@@ -71,8 +76,9 @@ OBJ := obj
 #SIFT_SRC := /Volumes/MyTestVolume/SeniorSemester1_Vanderbilt_University/RocketTeam/MyWorkspaceAndTempFiles/MyDocuments/SIFT_articleAndImplementation/sift_anatomy_20141201/src
 SIFT := sift_anatomy_20141201
 SIFT_SRC := ./$(SIFT)/src
-SIFT_SOURCES := $(filter-out $(SIFT_SRC)/example.c $(SIFT_SRC)/demo_extract_patch.c $(SIFT_SRC)/match_cli.c $(SIFT_SRC)/sift_cli.c $(SIFT_SRC)/sift_cli_default.c $(SIFT_SRC)/anatomy2lowe.c, $(wildcard $(SIFT_SRC)/*.c))
-SIFT_OBJECTS := $(SIFT_SOURCES:%.c=%.o)
+SIFT_SOURCES_C := $(filter-out $(SIFT_SRC)/example.c $(SIFT_SRC)/demo_extract_patch.c $(SIFT_SRC)/match_cli.c $(SIFT_SRC)/sift_cli.c $(SIFT_SRC)/sift_cli_default.c $(SIFT_SRC)/anatomy2lowe.c, $(wildcard $(SIFT_SRC)/*.c))
+SIFT_SOURCES_CPP := $(wildcard $(SIFT_SRC)/*.cpp)
+SIFT_OBJECTS := $(SIFT_SOURCES_CPP:%.cpp=%.o) $(SIFT_SOURCES_C:%.c=%.o)
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
 SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
@@ -96,9 +102,6 @@ common:
 
 # commandLine targets in general
 ADDITIONAL_CFLAGS_ALL_COMMANDLINE = -DUSE_COMMAND_LINE_ARGS
-ifeq ($(OS),Darwin)
-ADDITIONAL_CFLAGS_ALL_COMMANDLINE += -target x86_64-apple-macos10.15 #-isysroot $(shell xcrun --sdk macosx --show-sdk-path)
-endif
 
 # release target
 # NOTE: -DNDEBUG turns off assertions (only for the code being compiled from source, not for libraries, including those from Nix like OpenCV unless we set it explicitly..).

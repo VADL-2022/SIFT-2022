@@ -1,6 +1,15 @@
 # https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/backward-cpp/default.nix
 { stdenv, lib, fetchFromGitHub, fixDarwinDylibNames, libunwind }:
 
+# let
+#   replaceStr = ''
+#                      // try to forward the signal.
+#                      raise(info->si_signo);
+                 
+#                      // terminate the process immediately.
+#                      puts("watf? exit");
+#                '';
+# in
 stdenv.mkDerivation rec {
   pname = "backward";
   version = "1.6";
@@ -27,6 +36,16 @@ stdenv.mkDerivation rec {
   #   substituteInPlace backward.hpp \
   #       --replace 'os << ":\n";' ' '
   # '';
+  
+  postPatch = ''
+    substituteInPlace backward.hpp \
+        --replace '
+        // try to forward the signal.
+        raise(info->si_signo);
+
+        // terminate the process immediately.
+        puts("watf? exit");' ' '
+  '';
 
   meta = with lib; {
     description = "Beautiful stack trace pretty printer for C++";
