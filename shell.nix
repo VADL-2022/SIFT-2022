@@ -15,8 +15,8 @@ with pkgs;
 let
   opencvGtk = opencv.override (old : { enableGtk2 = true; }); # https://stackoverflow.com/questions/40667313/how-to-get-opencv-to-work-in-nix , https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/opencv/default.nix
   my-python-packages = python39.withPackages(ps: with ps; [
-    (lib.optional stdenv.hostPlatform.isMacOS opencv)
-    (lib.optional useGtk (toPythonModule (pkgs.opencv.override { enableGTK2 = true; enablePython = true; pythonPackages = python39Packages; }))) # Temp hack
+    #(lib.optional stdenv.hostPlatform.isMacOS opencv)
+    #(lib.optional useGtk (toPythonModule (pkgs.opencv.override { enableGTK2 = true; enablePython = true; pythonPackages = python39Packages; }))) # Temp hack
     numpy
     matplotlib
   ]);
@@ -28,13 +28,15 @@ let
 in
 mkShell {
   buildInputs = [ my-python-packages
-                ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
-  ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ opencvGtk
-                                                               ]) ++ [
+                ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ]) ++ [
+  # ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ opencvGtk
+  #                                                              ]) ++ [
     clang_12 # Need >= clang 10 to fix fast-math bug (when using -Ofast) ( https://bugzilla.redhat.com/show_bug.cgi?id=1803203 )
     pkgconfig libpng
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ lldb x11 ]) ++ [
 
+    opencvGtk
+      
     #bear # Optional, for generating emacs compile_commands.json
 
     # For stack traces #
