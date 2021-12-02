@@ -39,7 +39,7 @@ endef
 SHELL := /usr/bin/env bash
 OS := $(shell uname -s)
 # -D_POSIX_C_SOURCE=200809L
-CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4` `pkg-config --cflags libpng` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_LIBUNWIND=1  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4` `pkg-config --cflags libpng` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 $(info $(OS))
 ifeq ($(OS),Darwin)
@@ -57,7 +57,7 @@ ifeq ($(OS),Darwin)
     LFLAGS += -framework CoreGraphics
 endif
 $(info $(LFLAGS))
-LFLAGS += -lunwind -lpng -lm -lpthread #-ljpeg -lrt -lm
+LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
 LDFLAGS = ${NIX_LDFLAGS} `pkg-config --libs opencv4` `pkg-config --libs libpng`
 
 #CC := clang-12

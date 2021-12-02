@@ -34,13 +34,13 @@ mkShell {
                                                                ]) ++ [
     clang_12 # Need >= clang 10 to fix fast-math bug (when using -Ofast) ( https://bugzilla.redhat.com/show_bug.cgi?id=1803203 )
     pkgconfig libpng
-    #] ++ (lib.optional (stdenv.hostPlatform.isLinux) lldb) ++ [
+    ] ++ (lib.optional (stdenv.hostPlatform.isLinux) lldb) ++ [
 
     #bear # Optional, for generating emacs compile_commands.json
 
     # For stack traces #
     (callPackage ./backward-cpp.nix {}) # https://github.com/bombela/backward-cpp
-    ] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [
+    #] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [
     # #
 
     llvmPackages.libstdcxxClang
