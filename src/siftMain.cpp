@@ -28,8 +28,10 @@
 // For stack traces on segfault, etc.
 #include <backward.hpp> // https://github.com/bombela/backward-cpp
 namespace backward {
-backward::SignalHandling sh;
+backward::SignalHandling* sh;
 } // namespace backward
+
+#include "./optick/src/optick.h"
 
 #include "Queue.hpp"
 thread_local SIFT_T sift;
@@ -90,6 +92,11 @@ int mainMission(DataSourceT* src,
 #endif
 int main(int argc, char **argv)
 {
+    //namespace backward {
+    backward::SignalHandling sh;
+    backward::sh = &sh;
+    //} // namespace backward
+    
 //#define SEGFAULT_TEST
 //#define SEGFAULT_TEST2
 #ifdef SEGFAULT_TEST
@@ -100,6 +107,9 @@ int main(int argc, char **argv)
 #ifdef SLEEP_BEFORE_RUNNING
 	std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BEFORE_RUNNING));
 #endif
+    
+    OPTICK_APP("SIFT");
+    
     SIFTState s;
     SIFTParams p;
     
@@ -194,6 +204,8 @@ DataSourceBase* g_src;
 #endif
 void* matcherThreadFunc(void* arg) {
     do {
+        OPTICK_THREAD("Worker");
+        
         ProcessedImage<SIFT_T> img1, img2;
         std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
         pthread_mutex_lock( &processedImageQueue.mutex );
@@ -268,7 +280,7 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     stopMain();
     
     // Print stack trace
-    backward::sh.handleSignal(s, si, arg);
+    backward::sh->handleSignal(s, si, arg);
 }
 FileDataOutput* g_o2 = nullptr;
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
@@ -284,7 +296,7 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     }
     
     // Print stack trace
-    backward::sh.handleSignal(signal, si, arg);
+    backward::sh->handleSignal(signal, si, arg);
     
     exit(5);
 }
@@ -355,6 +367,8 @@ int mainMission(DataSourceT* src,
     std::cout << "Target fps: " << fps << std::endl;
     //std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
     for (size_t i = src->currentIndex; !stoppedMain(); i++) {
+        OPTICK_FRAME("MainThread"); // https://github.com/bombomby/optick
+        
         std::cout << "i: " << i << std::endl;
         if (src->wantsCustomFPS()) {
             auto sinceLast_milliseconds = since(last).count();
@@ -389,6 +403,7 @@ int mainMission(DataSourceT* src,
         
         std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
         tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
+            OPTICK_EVENT();
             std::cout << "hello from " << id << std::endl;
 
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)

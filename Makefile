@@ -89,8 +89,8 @@ SIFT_SOURCES_CPP := $(wildcard $(SIFT_SRC)/*.cpp)
 SIFT_OBJECTS := $(SIFT_SOURCES_CPP:%.cpp=%.o) $(SIFT_SOURCES_C:%.c=%.o)
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
-SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
-SOURCES_C := $(wildcard $(SRC)/*.c)
+SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
+SOURCES_C := $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c)
 ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
 $(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile

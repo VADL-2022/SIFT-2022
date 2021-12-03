@@ -1,3 +1,6 @@
 [submodule "sift_anatomy_20141201"]
 	path = sift_anatomy_20141201
 	url = https://github.com/sbond75/sift_anatomy_20141201.git
+[submodule "src/optick"]
+	path = src/optick
+	url = https://github.com/bombomby/optick.git
