@@ -109,6 +109,8 @@ int main(int argc, char **argv)
     
     // Command-line args //
 #ifdef USE_COMMAND_LINE_ARGS
+    system("export DISPLAY=:0.0"); // Needed to show windows with GTK/X11 correctly
+    
     FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
 
