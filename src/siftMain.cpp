@@ -31,7 +31,7 @@ namespace backward {
 backward::SignalHandling* sh;
 } // namespace backward
 
-#include "./optick/src/optick.h"
+//#include "./optick/src/optick.h"
 
 #include "Queue.hpp"
 thread_local SIFT_T sift;
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 	std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BEFORE_RUNNING));
 #endif
     
-    OPTICK_APP("SIFT");
+//    OPTICK_APP("SIFT");
     
     SIFTState s;
     SIFTParams p;
@@ -204,7 +204,7 @@ DataSourceBase* g_src;
 #endif
 void* matcherThreadFunc(void* arg) {
     do {
-        OPTICK_THREAD("Worker");
+//        OPTICK_THREAD("Worker");
         
         ProcessedImage<SIFT_T> img1, img2;
         std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
@@ -367,7 +367,7 @@ int mainMission(DataSourceT* src,
     std::cout << "Target fps: " << fps << std::endl;
     //std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
     for (size_t i = src->currentIndex; !stoppedMain(); i++) {
-        OPTICK_FRAME("MainThread"); // https://github.com/bombomby/optick
+//        OPTICK_FRAME("MainThread"); // https://github.com/bombomby/optick
         
         std::cout << "i: " << i << std::endl;
         if (src->wantsCustomFPS()) {
@@ -403,7 +403,7 @@ int mainMission(DataSourceT* src,
         
         std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
         tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
-            OPTICK_EVENT();
+//            OPTICK_EVENT();
             std::cout << "hello from " << id << std::endl;
 
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
