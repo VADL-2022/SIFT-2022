@@ -61,6 +61,10 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--video-file-data-source"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--main-mission"
             isEnabled = "YES">
          </CommandLineArgument>

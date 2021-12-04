@@ -11,13 +11,20 @@
 
 #include <chrono>
 
+#include <iostream>
+
 class Timer {
 public:
     Timer();
     void reset();
-    double elapsed() const;
+    std::chrono::milliseconds::rep elapsed() const;
+    std::chrono::nanoseconds::rep elapsedNanos() const;
     void logElapsed(const char* name) const;
     void logElapsed(int threadID, const char* name) const;
+    template <typename ThreadInfoT /* can be threadID or thread name */>
+    static void logNanos(ThreadInfoT threadInfo, const char* name, std::chrono::nanoseconds::rep nanos) {
+        std::cout << "Thread " << threadInfo << ": " << name << " took " << nanos / 1000.0 << " milliseconds" << std::endl;
+    }
 private:
     typedef std::chrono::high_resolution_clock clock_;
     clock_::time_point beg_;

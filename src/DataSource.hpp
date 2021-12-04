@@ -16,14 +16,6 @@
 #include <unordered_map>
 #include "Config.hpp"
 
-#ifdef USE_COMMAND_LINE_ARGS
-#define MaybeVirtual virtual
-#define MaybePureVirtual = 0
-#else
-#define MaybeVirtual
-#define MaybePureVirtual
-#endif
-
 // Note: cv::Mat is reference counted automatically
 
 struct DataSourceBase {

@@ -13,10 +13,10 @@
 
 // Config //
 // SIFT implementation
-//#define SIFT_IMPL SIFTAnatomy
-//#define SIFTAnatomy_
-#define SIFT_IMPL SIFTOpenCV
-#define SIFTOpenCV_
+#define SIFT_IMPL SIFTAnatomy
+#define SIFTAnatomy_
+//#define SIFT_IMPL SIFTOpenCV
+//#define SIFTOpenCV_
 
 
 //#define SLEEP_BEFORE_RUNNING 30 * 3000 // Milliseconds
@@ -29,10 +29,14 @@
 
 #ifdef USE_COMMAND_LINE_ARGS
 struct CommandLineConfig {
-    bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false, mainMission = false, noPreviewWindow;
+    bool imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false, videoFileDataSource = false, mainMission = false, noPreviewWindow;
     
-    bool showPreviewWindow() {
+    bool showPreviewWindow() const {
         return !noPreviewWindow;
+    }
+    
+    bool cameraDataSource() const {
+        return !folderDataSource && !videoFileDataSource;
     }
 };
 #endif
@@ -50,5 +54,13 @@ struct CommandLineConfig {
 struct SIFTAnatomy;
 struct SIFTOpenCV;
 using SIFT_T = SIFT_IMPL;
+
+#ifdef USE_COMMAND_LINE_ARGS
+#define MaybeVirtual virtual
+#define MaybePureVirtual = 0
+#else
+#define MaybeVirtual
+#define MaybePureVirtual
+#endif
 
 #endif /* Config_h */

@@ -32,6 +32,7 @@ backward::SignalHandling* sh;
 } // namespace backward
 
 //#include "./optick/src/optick.h"
+#include "timers.hpp"
 
 #include "Queue.hpp"
 thread_local SIFT_T sift;
@@ -55,15 +56,20 @@ Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
 #ifndef USE_COMMAND_LINE_ARGS
 // Data source
 //using DataSourceT = FolderDataSource;
-//using DataSourceT = CameraDataSource;
-using DataSourceT = VideoFileDataSource;
+using DataSourceT = CameraDataSource;
+//using DataSourceT = VideoFileDataSource;
+
+//using DataOutputT = PreviewWindowDataOutput;
+using DataOutputT = FileDataOutput;
 #else
 // Fixed, not configurable:
+// The effective source changes only if not using certain command-line arguments.
 using DataSourceT = CameraDataSource;
-#endif
 
-// Data output
+// Fixed, not configurable:
+// The effective output changes only if not using certain command-line arguments.
 using DataOutputT = PreviewWindowDataOutput;
+#endif
 // //
 
 template <typename DataSourceT, typename DataOutputT>
@@ -78,6 +84,13 @@ int mainInteractive(DataSourceT* src,
                     #endif
 );
 
+template <typename ThreadInfoT /* can be threadID or thread name */>
+void showTimers(ThreadInfoT threadInfo) {
+    // Show timers for this thread
+    Timer::logNanos(threadInfo, "*malloc total*", mallocTimerAccumulator);
+    Timer::logNanos(threadInfo, "*free total*", freeTimerAccumulator);
+    mallocTimerAccumulator = freeTimerAccumulator = 0; // Reset
+}
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
@@ -126,9 +139,13 @@ int main(int argc, char **argv)
 
     // Parse arguments
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--folder-data-source") == 0) { // Get from folder instead of camera
+        if (strcmp(argv[i], "--folder-data-source") == 0) { // Get from folder (path is specified with --folder-data-source-path, otherwise the default is used) instead of camera
             src = std::make_unique<FolderDataSource>(argc, argv, skip); // Read folder determined by command-line arguments
             cfg.folderDataSource = true;
+        }
+        if (strcmp(argv[i], "--video-file-data-source") == 0) { // Get from video file (path is specified with --video-file-data-source-path, otherwise the default is used) instead of camera
+            src = std::make_unique<VideoFileDataSource>(argc, argv); // Read file determined by command-line arguments
+            cfg.videoFileDataSource = true;
         }
         else if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
             cfg.imageCaptureOnly = true;
@@ -165,7 +182,7 @@ int main(int argc, char **argv)
         }
     }
     
-    if (!cfg.folderDataSource) {
+    if (cfg.cameraDataSource()) {
         src = std::make_unique<DataSourceT>();
     }
     
@@ -173,8 +190,11 @@ int main(int argc, char **argv)
         p.params = sift_assign_default_parameters();
         mainInteractive(src.get(), s, p, skip, o, o2, cfg);
     }
-    else {
+    else if (cfg.noPreviewWindow || cfg.imageFileOutput) {
         mainMission(src.get(), p, o2, cfg);
+    }
+    else {
+        mainMission(src.get(), p, o, cfg);
     }
 #else
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
@@ -234,9 +254,11 @@ void* matcherThreadFunc(void* arg) {
                             , g_src, cfg
 #endif
                             );
+        if (CMD_CONFIG(showPreviewWindow())) {
 #ifdef USE_COMMAND_LINE_ARGS
-        canvasesReadyQueue.enqueue(img2);
+            canvasesReadyQueue.enqueue(img2);
 #endif
+        }
         // Accumulate homography
         if (lastImageToFirstImageTransformation.empty()) {
             lastImageToFirstImageTransformation = img2.transformation.inv();
@@ -249,6 +271,8 @@ void* matcherThreadFunc(void* arg) {
         end:
         // Free memory and mark this as an unused ProcessedImage:
         img2.resetMatching();
+        
+        showTimers("matcher");
     } while (!stoppedMain());
     return (void*)0;
 }
@@ -263,10 +287,10 @@ bool stoppedMain() {
     return g_stop;
 }
 
-#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
-//#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
-//ctpl::thread_pool tp(4); // Number of threads in the pool
-ctpl::thread_pool tp(8);
+//#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
+#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
+ctpl::thread_pool tp(4); // Number of threads in the pool
+//ctpl::thread_pool tp(8);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
 // Prints a stacktrace
 //void logTrace() {
@@ -282,13 +306,13 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     // Print stack trace
     backward::sh->handleSignal(s, si, arg);
 }
-FileDataOutput* g_o2 = nullptr;
+DataOutputBase* g_o2 = nullptr;
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
     printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
     
     if (g_o2) {
-        g_o2->writer.release(); // Save the file
+        g_o2->release(); // Save the file
         std::cout << "Saved the video" << std::endl;
     }
     else {
@@ -479,6 +503,8 @@ int mainMission(DataSourceT* src,
             end:
             ;
             // cleanup: nothing to do
+            // Log malloc, etc. timers and reset them
+            showTimers(std::string("SIFT ") + std::to_string(id));
         }, /*extra args:*/ i /*- offset*/, greyscale);
         
         // Save this image for next iteration
@@ -495,8 +521,8 @@ int mainMission(DataSourceT* src,
         }
         
 #ifdef USE_COMMAND_LINE_ARGS
-        // Show images
-        if (!canvasesReadyQueue.empty()) {
+        // Show images if we have them and if we are showing a preview window
+        if (!canvasesReadyQueue.empty() && CMD_CONFIG(showPreviewWindow())) {
             ProcessedImage<SIFT_T> img;
             canvasesReadyQueue.dequeue(&img);
             imshow("", img.canvas);
@@ -511,12 +537,14 @@ int mainMission(DataSourceT* src,
             }
         }
 #endif
+        
+        showTimers("main");
     }
     
-    o2.writer.release(); // Save the file
+    o2.release(); // Save the file
     
-    // Show the rest of the images only if we stopped because we finished reading all frames
-    if (!stoppedMain()) {
+    // Show the rest of the images only if we stopped because we finished reading all frames and if we are showing a preview window
+    if (!stoppedMain() && CMD_CONFIG(showPreviewWindow())) {
         #ifdef USE_COMMAND_LINE_ARGS
         std::cout << "Showing the rest of the images" << std::endl;
         // Show images
@@ -545,6 +573,7 @@ int mainMission(DataSourceT* src,
             }
             canvasesReadyQueue.dequeue(&img);
             imshow("", img.canvas);
+//            o2.showCanvas("", img.canvas);
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
             waitKey(); // Check if user wants to quit
@@ -713,7 +742,7 @@ int mainInteractive(DataSourceT* src,
     
     if (CMD_CONFIG(imageFileOutput)) {
         #ifdef USE_COMMAND_LINE_ARGS
-        o2.writer.release(); // Save the file
+        o2.release(); // Save the file
         #endif
     }
     

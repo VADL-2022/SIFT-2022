@@ -13,16 +13,21 @@
 #include "common.hpp"
 #include "DataSource.hpp"
 #include "KeypointsAndMatching.hpp"
+#include "Config.hpp"
 
-template <typename Wrapped>
 struct DataOutputBase {
-    void output(cv::Mat& m);
+    #ifdef USE_COMMAND_LINE_ARGS
+    virtual ~DataOutputBase() {}
+    #endif
+    
+    MaybeVirtual void showCanvas(std::string name, cv::Mat& canvas) MaybePureVirtual;
+    MaybeVirtual void release() {};
     
 protected:
     int waitKey(int delay=0);
 };
 
-struct PreviewWindowDataOutput : public DataOutputBase<PreviewWindowDataOutput>
+struct PreviewWindowDataOutput : public DataOutputBase
 {
     void showCanvas(std::string name, cv::Mat& canvas);
     
@@ -33,16 +38,17 @@ struct PreviewWindowDataOutput : public DataOutputBase<PreviewWindowDataOutput>
     protected:
 };
 
-struct FileDataOutput : public DataOutputBase<FileDataOutput>
+struct FileDataOutput : public DataOutputBase
 {
     FileDataOutput(std::string filenameNoExt, double fps = 30, cv::Size sizeFrame = {640,480});
     void run(cv::Mat frame);
     
-    cv::VideoWriter writer;
+    void release();
     
     void showCanvas(std::string name, cv::Mat& canvas);
     int waitKey(int delay=0);
 protected:
+    cv::VideoWriter writer;
     double fps;
     cv::Size sizeFrame;
     std::string filenameNoExt;

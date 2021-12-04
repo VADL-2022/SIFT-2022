@@ -69,6 +69,10 @@ void FileDataOutput::run(cv::Mat frame) {
     t.logElapsed("write frame for video writer");
 }
 
+void FileDataOutput::release() {
+    writer.release();
+}
+
 void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas) {
     t.reset();
     run(canvas);

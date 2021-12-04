@@ -64,7 +64,7 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
     // Parse arguments
     for (int i = 1; i < argc; i++) {
         if (i+1 < argc) {
-            if (strcmp(argv[i], "--folder") == 0) {
+            if (strcmp(argv[i], "--folder-data-source-path") == 0) {
                 folderPath = argv[i+1];
                 i++;
             }
@@ -366,7 +366,7 @@ VideoFileDataSource::VideoFileDataSource(int argc, char** argv) {
     std::string filePath = default_filePath;
     for (int i = 1; i < argc; i++) {
             if (i+1 < argc) {
-                if (strcmp(argv[i], "--file") == 0) {
+                if (strcmp(argv[i], "--video-file-data-source-path") == 0) {
                     filePath = argv[i+1];
                     i++;
                 }
