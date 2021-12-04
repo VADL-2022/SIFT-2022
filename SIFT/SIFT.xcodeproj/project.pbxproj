@@ -24,6 +24,7 @@
 		300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48F27209F9400969C5F /* Semaphore.cpp */; };
 		308B6C06275AA96D00FE86A9 /* mymalloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B6C05275AA96D00FE86A9 /* mymalloc.cpp */; };
 		308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */; };
+		308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */; };
 		30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBBE2731A01600473B25 /* DataSource.cpp */; };
 		30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBC72732EBF200473B25 /* DataOutput.cpp */; };
 		30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBCA2733137400473B25 /* DataOutputRun.cpp */; };
@@ -99,10 +100,12 @@
 		300EE4B827209FF000969C5F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		300EE4BA2720A98700969C5F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Config.xcconfig; path = ../Config.xcconfig; sourceTree = "<group>"; };
 		308B6C05275AA96D00FE86A9 /* mymalloc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mymalloc.cpp; sourceTree = "<group>"; };
-		308B7099275AD7CF00FE86A9 /* malloc_override_osx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = malloc_override_osx.h; sourceTree = "<group>"; };
+		308B7099275AD7CF00FE86A9 /* malloc_override_osx.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = malloc_override_osx.hpp; sourceTree = "<group>"; };
 		308B709A275ADF1A00FE86A9 /* timers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = timers.hpp; sourceTree = "<group>"; };
 		308B709B275AFBDD00FE86A9 /* jemalloc_wrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = jemalloc_wrapper.h; sourceTree = "<group>"; };
 		308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = jemalloc_wrapper.c; sourceTree = "<group>"; };
+		308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = malloc_with_free_all.cpp; sourceTree = "<group>"; };
+		308B70A0275BC77B00FE86A9 /* malloc_with_free_all.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = malloc_with_free_all.h; sourceTree = "<group>"; };
 		30CBDBBE2731A01600473B25 /* DataSource.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataSource.cpp; sourceTree = "<group>"; };
 		30CBDBBF2731A01600473B25 /* DataSource.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataSource.hpp; sourceTree = "<group>"; };
 		30CBDBC72732EBF200473B25 /* DataOutput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataOutput.cpp; sourceTree = "<group>"; };
@@ -263,9 +266,11 @@
 			isa = PBXGroup;
 			children = (
 				308B6C05275AA96D00FE86A9 /* mymalloc.cpp */,
-				308B7099275AD7CF00FE86A9 /* malloc_override_osx.h */,
+				308B7099275AD7CF00FE86A9 /* malloc_override_osx.hpp */,
 				308B709B275AFBDD00FE86A9 /* jemalloc_wrapper.h */,
 				308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */,
+				308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */,
+				308B70A0275BC77B00FE86A9 /* malloc_with_free_all.h */,
 			);
 			path = tools;
 			sourceTree = "<group>";
@@ -369,6 +374,7 @@
 				300EE49C27209F9400969C5F /* lib_matching.cpp in Sources */,
 				30FE900C2745924C0086957E /* SIFT.cpp in Sources */,
 				300EE4B527209F9400969C5F /* siftMain.cpp in Sources */,
+				308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */,
 				30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */,
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
 				300EE49527209F9400969C5F /* lib_keypoint.c in Sources */,

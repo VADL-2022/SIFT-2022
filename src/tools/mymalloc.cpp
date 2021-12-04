@@ -15,10 +15,10 @@ thread_local Timer mallocFreeTimer;
 thread_local std::chrono::nanoseconds::rep mallocTimerAccumulator = 0;
 thread_local std::chrono::nanoseconds::rep freeTimerAccumulator = 0;
 
-#define preMalloc() { mallocFreeTimer.reset(); }
-#define postMalloc() { mallocTimerAccumulator += mallocFreeTimer.elapsedNanos(); }
-#define preFree() { mallocFreeTimer.reset(); }
-#define postFree() { freeTimerAccumulator += mallocFreeTimer.elapsedNanos(); }
+// Stats
+thread_local size_t numMallocsThisFrame = 0;
+thread_local size_t numPointerIncMallocsThisFrame = 0;
+thread_local size_t mallocWithFreeAll_hitLimitCount = 0;
 
 #ifdef __APPLE__ // macOS
 #include "malloc_override_osx.h"

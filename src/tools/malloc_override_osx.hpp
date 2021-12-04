@@ -1,5 +1,5 @@
 //
-//  malloc_override_osx.h
+//  malloc_override_osx.hpp
 //  SIFT
 //
 //  Created by VADL on 12/3/21.
@@ -9,6 +9,9 @@
 
 #ifndef malloc_override_osx_h
 #define malloc_override_osx_h
+
+#include "../timers.hpp"
+#include "malloc_with_free_all.h"
 
 /* Overrides memory allocation functions so that allocation amounts can be
  * tracked. Note that the malloc'd size is not necessarily equal to the
@@ -89,9 +92,27 @@ void* malloc(size_t size){
         mtrace_init();
     }
 
+    // Thread-safe because thread_local (TLS) variables are used here:
     preMalloc();
+    // Check our malloc mode
+    if (currentMallocImpl == MallocImpl_PointerIncWithFreeAll) {
+        if (
+            // Pointer increment if we can.
+            mallocWithFreeAll_current + size < mallocWithFreeAll_max) {
+            // Pointer increment since we can.
+            void* ret = mallocWithFreeAll_current;
+            mallocWithFreeAll_current += size;
+            postMalloc();
+            numPointerIncMallocsThisFrame++;
+            return ret;
+        }
+        else {
+            mallocWithFreeAll_hitLimitCount++;
+        }
+    }
     void *p = CALL_r_malloc(size);
     postMalloc();
+    numMallocsThisFrame++;
     size_t realSize = malloc_size(p);
     memory::_internal::allocated += realSize;
     MALLOC_LOG("malloc", realSize, p);

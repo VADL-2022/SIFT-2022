@@ -84,12 +84,41 @@ int mainInteractive(DataSourceT* src,
                     #endif
 );
 
+#include "tools/malloc_with_free_all.h"
+// https://gist.github.com/dgoguerra/7194777
+static const char *humanSize(uint64_t bytes)
+{
+    char *suffix[] = {"B", "KB", "MB", "GB", "TB"};
+    char length = sizeof(suffix) / sizeof(suffix[0]);
+
+    int i = 0;
+    double dblBytes = bytes;
+
+    if (bytes > 1024) {
+        for (i = 0; (bytes / 1024) > 0 && i<length-1; i++, bytes /= 1024)
+            dblBytes = bytes / 1024.0;
+    }
+
+    static char output[200];
+    sprintf(output, "%.02lf %s", dblBytes, suffix[i]);
+    return output;
+}
+// Call this on the end of a "frame" of processing in any thread.
 template <typename ThreadInfoT /* can be threadID or thread name */>
 void showTimers(ThreadInfoT threadInfo) {
     // Show timers for this thread
     Timer::logNanos(threadInfo, "*malloc total*", mallocTimerAccumulator);
     Timer::logNanos(threadInfo, "*free total*", freeTimerAccumulator);
     mallocTimerAccumulator = freeTimerAccumulator = 0; // Reset
+    // Show malloc stats for this thread
+    std::cout << "Thread " << threadInfo << ": " << "numMallocsThisFrame" << " was " << numMallocsThisFrame << std::endl;
+    std::cout << "Thread " << threadInfo << ": " << "numPointerIncMallocsThisFrame" << " was " << numPointerIncMallocsThisFrame << std::endl;
+    std::cout << "Thread " << threadInfo << ": " << "used " << humanSize(mallocWithFreeAll_current - mallocWithFreeAll_origPtr) << " out of " << humanSize(mallocWithFreeAll_max - mallocWithFreeAll_origPtr) << std::endl;
+    std::cout << "Thread " << threadInfo << ": " << "hit malloc pointer inc limit" << " " << mallocWithFreeAll_hitLimitCount << " times" << std::endl;
+    // Reset them
+    numMallocsThisFrame = 0;
+    numPointerIncMallocsThisFrame = 0;
+    mallocWithFreeAll_hitLimitCount = 0;
 }
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
