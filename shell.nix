@@ -36,6 +36,8 @@ mkShell {
     pkgconfig libpng
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ lldb x11 ]) ++ [
 
+    jemalloc
+      
     #bear # Optional, for generating emacs compile_commands.json
 
     # For stack traces #

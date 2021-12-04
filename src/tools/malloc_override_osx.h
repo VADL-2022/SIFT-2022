@@ -35,6 +35,23 @@
 #include <string>
 #include <malloc/malloc.h>
 
+
+#ifdef USE_JEMALLOC
+#include "jemalloc_wrapper.h"
+#else
+#define IMPLmalloc_size(x) malloc_size(x)
+#endif
+
+//#define CALL_r_malloc(x) IMPLmalloc(x)
+//#define CALL_r_calloc(x, y) IMPLcalloc(x, y)
+//#define CALL_r_free(x) IMPLfree(x)
+#define CALLmalloc_size(x) IMPLmalloc_size(x)
+
+#define CALL_r_malloc(x) _r_malloc(x)
+#define CALL_r_calloc(x, y) _r_calloc(x, y)
+#define CALL_r_free(x) _r_free(x)
+
+
 typedef void* (*real_malloc)(size_t);
 typedef void* (*real_calloc)(size_t, size_t);
 typedef void (*real_free)(void*);
@@ -56,6 +73,7 @@ namespace memory{
     }
 }
 
+// NOTE: When linking jemalloc, these (at least in one case_ grab libjemalloc.2.dylib's malloc functions instead of the malloc, etc. from C standard library. It can be seen in the debugger of Xcode, and jemalloc_wrapper.h's functions cause infinite recursion if a call to them is implemented by the CALL_r_malloc(), etc. macros
 static void mtrace_init(void){
     _r_malloc = reinterpret_cast<real_malloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "malloc")));
     _r_calloc = reinterpret_cast<real_calloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "calloc")));
@@ -72,7 +90,7 @@ void* malloc(size_t size){
     }
 
     preMalloc();
-    void *p = _r_malloc(size);
+    void *p = CALL_r_malloc(size);
     postMalloc();
     size_t realSize = malloc_size(p);
     memory::_internal::allocated += realSize;
@@ -86,9 +104,9 @@ void* calloc(size_t nitems, size_t size){
     }
     
     preMalloc();
-    void *p = _r_calloc(nitems, size);
+    void *p = CALL_r_calloc(nitems, size);
     postMalloc();
-    size_t realSize = malloc_size(p);
+    size_t realSize = CALLmalloc_size(p);
     memory::_internal::allocated += realSize;
     MALLOC_LOG("calloc", realSize, p);
     return p;
@@ -100,15 +118,15 @@ void free(void* p){
     }
 
     if(p != nullptr){
-        size_t realSize = malloc_size(p);
+        size_t realSize = CALLmalloc_size(p);
         preFree();
-        _r_free(p);
+        CALL_r_free(p);
         postFree();
         memory::_internal::allocated -= realSize;
         MALLOC_LOG("free", realSize, p);
     } else {
         preFree();
-        _r_free(p);
+        CALL_r_free(p);
         postFree();
     }
 }

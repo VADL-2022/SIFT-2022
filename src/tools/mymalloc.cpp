@@ -12,8 +12,8 @@
 #include "../Timer.hpp"
 #include "../timers.hpp"
 thread_local Timer mallocFreeTimer;
-thread_local std::chrono::nanoseconds::rep mallocTimerAccumulator;
-thread_local std::chrono::nanoseconds::rep freeTimerAccumulator;
+thread_local std::chrono::nanoseconds::rep mallocTimerAccumulator = 0;
+thread_local std::chrono::nanoseconds::rep freeTimerAccumulator = 0;
 
 #define preMalloc() { mallocFreeTimer.reset(); }
 #define postMalloc() { mallocTimerAccumulator += mallocFreeTimer.elapsedNanos(); }
