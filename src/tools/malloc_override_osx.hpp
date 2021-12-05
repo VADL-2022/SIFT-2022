@@ -36,7 +36,9 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <string>
+#ifdef __APPLE__
 #include <malloc/malloc.h>
+#endif
 
 
 #ifdef USE_JEMALLOC
@@ -48,7 +50,11 @@
 //#define CALL_r_malloc(x) IMPLmalloc(x)
 //#define CALL_r_calloc(x, y) IMPLcalloc(x, y)
 //#define CALL_r_free(x) IMPLfree(x)
+#ifdef __APPLE__
 #define CALLmalloc_size(x) IMPLmalloc_size(x)
+#else
+#define CALLmalloc_size(x) 0
+#endif
 
 #define CALL_r_malloc(x) _r_malloc(x)
 #define CALL_r_calloc(x, y) _r_calloc(x, y)
@@ -127,8 +133,10 @@ void* malloc(size_t size){
         postMalloc();
     }
     numMallocsThisFrame++;
+    #ifdef __APPLE__
     size_t realSize = malloc_size(p);
     memory::_internal::allocated += realSize;
+    #endif
     MALLOC_LOG("malloc", realSize, p);
     return p;
 }
