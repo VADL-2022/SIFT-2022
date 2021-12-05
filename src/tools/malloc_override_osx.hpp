@@ -151,8 +151,22 @@ void* malloc(size_t size){
     return p;
 }
 
+#include <backward.hpp>
+#include <sstream>
 void* calloc(size_t nitems, size_t size){
     if(_r_calloc==NULL) {
+        using namespace backward;
+        StackTrace st; st.load_here();
+        Printer p;
+        p.print(st, stderr);
+        std::ostringstream ss;
+        p.print(st, ss);
+        auto s = ss.str();
+        if (s.find("_dlerror_run") != std::string::npos) {
+            // Let it calloc, this is from https://github.com/lattera/glibc/blob/master/dlfcn/dlerror.c , else infinite recursion
+            return CALL_r_calloc(nitems, size);
+        }
+        
         mtrace_init();
     }
     
