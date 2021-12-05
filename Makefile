@@ -70,7 +70,7 @@ else ifeq ($(OS),Linux)
     LFLAGS += -lX11
 endif
 $(info $(LFLAGS))
-LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
+LFLAGS += -lpng -lm -lpthread -ldl #-ljpeg -lrt -lm
 # ifeq ($(OS),Linux)
 #     # Needed if gtk; nix hack:
 #     LDFLAGS = -L/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib `bash ./filter-hack.sh "${NIX_LDFLAGS}"`
