@@ -73,10 +73,10 @@ extern "C" void* calloc(size_t, size_t);
 extern "C" void free(void*);
 extern "C" void* realloc(void*, size_t);
 
-static real_malloc _r_malloc;
-static real_calloc _r_calloc;
-static real_free _r_free;
-static real_realloc _r_realloc;
+static real_malloc _r_malloc = nullptr;
+static real_calloc _r_calloc = nullptr;
+static real_free _r_free = nullptr;
+static real_realloc _r_realloc = nullptr;
 
 namespace memory{
     namespace _internal{
