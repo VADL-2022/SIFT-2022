@@ -35,10 +35,11 @@
 
 #include <stdio.h>
 #include <dlfcn.h>
-#include <string>
+#include <string.h>
 #ifdef __APPLE__
 #include <malloc/malloc.h>
 #endif
+#include <atomic>
 
 
 #ifdef USE_JEMALLOC
@@ -78,7 +79,12 @@ static real_realloc _r_realloc;
 
 namespace memory{
     namespace _internal{
+
+    #ifdef __APPLE__
         std::atomic_ulong allocated(0);
+    #else
+       std::atomic<unsigned long> allocated(0);
+    #endif
     }
 
     unsigned long current(){
