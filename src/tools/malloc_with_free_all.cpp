@@ -12,10 +12,10 @@
 
 extern "C" {
 
-thread_local char* mallocWithFreeAll_origPtr;
-thread_local char* mallocWithFreeAll_current;
-thread_local char* mallocWithFreeAll_max;
-thread_local enum MallocImpl currentMallocImpl = MallocImpl_Default;
+_Thread_local char* mallocWithFreeAll_origPtr;
+_Thread_local char* mallocWithFreeAll_current;
+_Thread_local char* mallocWithFreeAll_max;
+_Thread_local enum MallocImpl currentMallocImpl = MallocImpl_Default;
 
 void beginMallocWithFreeAll(size_t reservedBytes) {
     preMalloc();

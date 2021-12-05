@@ -53,18 +53,22 @@
 #define CALL_r_malloc(x) _r_malloc(x)
 #define CALL_r_calloc(x, y) _r_calloc(x, y)
 #define CALL_r_free(x) _r_free(x)
+#define CALL_r_realloc(x, y) _r_realloc(x, y)
 
 
 typedef void* (*real_malloc)(size_t);
 typedef void* (*real_calloc)(size_t, size_t);
 typedef void (*real_free)(void*);
+typedef void* (*real_realloc)(void*, size_t);
 extern "C" void* malloc(size_t);
 extern "C" void* calloc(size_t, size_t);
 extern "C" void free(void*);
+extern "C" void* realloc(void*, size_t);
 
 static real_malloc _r_malloc;
 static real_calloc _r_calloc;
 static real_free _r_free;
+static real_realloc _r_realloc;
 
 namespace memory{
     namespace _internal{
@@ -81,19 +85,13 @@ static void mtrace_init(void){
     _r_malloc = reinterpret_cast<real_malloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "malloc")));
     _r_calloc = reinterpret_cast<real_calloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "calloc")));
     _r_free = reinterpret_cast<real_free>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "free")));
-    if (NULL == _r_malloc || NULL == _r_calloc || NULL == _r_free) {
+    _r_realloc = reinterpret_cast<real_realloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "realloc")));
+    if (NULL == _r_malloc || NULL == _r_calloc || NULL == _r_free || NULL == _r_realloc) {
         fprintf(stderr, "Error in `dlsym`: %s\n", dlerror());
     }
 }
 
-
-void* malloc(size_t size){
-    if(_r_malloc==NULL) {
-        mtrace_init();
-    }
-
-    // Thread-safe because thread_local (TLS) variables are used here:
-    preMalloc();
+void* mallocModeDidHandle(size_t size) {
     // Check our malloc mode
     if (currentMallocImpl == MallocImpl_PointerIncWithFreeAll) {
         if (
@@ -110,8 +108,24 @@ void* malloc(size_t size){
             mallocWithFreeAll_hitLimitCount++;
         }
     }
-    void *p = CALL_r_malloc(size);
-    postMalloc();
+    else {
+        return nullptr;
+    }
+}
+
+void* malloc(size_t size){
+    if(_r_malloc==NULL) {
+        mtrace_init();
+    }
+
+    // Thread-safe because thread_local (TLS) variables are used here:
+    preMalloc();
+    // Check our malloc mode
+    void *p;
+    if ((p = mallocModeDidHandle(size)) == nullptr) {
+        p = CALL_r_malloc(size);
+        postMalloc();
+    }
     numMallocsThisFrame++;
     size_t realSize = malloc_size(p);
     memory::_internal::allocated += realSize;
@@ -125,8 +139,15 @@ void* calloc(size_t nitems, size_t size){
     }
     
     preMalloc();
-    void *p = CALL_r_calloc(nitems, size);
-    postMalloc();
+    // Check our malloc mode
+    void *p;
+    if ((p = mallocModeDidHandle(size)) == nullptr) {
+        p = CALL_r_calloc(nitems, size);
+        postMalloc();
+    }
+    else {
+        memset(p, 0, size); // calloc implementation
+    }
     size_t realSize = CALLmalloc_size(p);
     memory::_internal::allocated += realSize;
     MALLOC_LOG("calloc", realSize, p);
@@ -141,15 +162,36 @@ void free(void* p){
     if(p != nullptr){
         size_t realSize = CALLmalloc_size(p);
         preFree();
-        CALL_r_free(p);
+        // Check our malloc mode
+        if (currentMallocImpl == MallocImpl_PointerIncWithFreeAll) {
+            // No-op, nothing to free
+        }
+        else {
+            CALL_r_free(p);
+        }
         postFree();
         memory::_internal::allocated -= realSize;
         MALLOC_LOG("free", realSize, p);
     } else {
         preFree();
-        CALL_r_free(p);
+        if (currentMallocImpl == MallocImpl_Default) {
+            CALL_r_free(p);
+        }
         postFree();
     }
+}
+
+void* realloc(void* p, size_t new_size){
+    if(_r_realloc==nullptr) {
+        mtrace_init();
+    }
+
+    preMalloc();
+    // No malloc-mode supported
+    assert(currentMallocImpl == MallocImpl_Default);
+    p = CALL_r_realloc(p, new_size);
+    postMalloc();
+    return p;
 }
 
 void *operator new(size_t size) noexcept(false){

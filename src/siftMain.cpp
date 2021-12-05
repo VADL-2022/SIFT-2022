@@ -316,8 +316,8 @@ bool stoppedMain() {
     return g_stop;
 }
 
-//#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
-#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
+#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
+//#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 ctpl::thread_pool tp(4); // Number of threads in the pool
 //ctpl::thread_pool tp(8);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
@@ -459,6 +459,7 @@ int mainMission(DataSourceT* src,
 //            OPTICK_EVENT();
             std::cout << "hello from " << id << std::endl;
 
+            beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */); // 8 is 8 bytes to align to a reasonable block size malloc might be using
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
             p.params = sift_assign_default_parameters();
             //v2Params(p.params);
@@ -475,6 +476,7 @@ int mainMission(DataSourceT* src,
 #endif
             std::cout << id << " findKeypoints end" << std::endl;
             
+            endMallocWithFreeAll();
             t.reset();
             bool isFirstSleep = true;
             do {

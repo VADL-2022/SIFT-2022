@@ -21,7 +21,7 @@ thread_local size_t numPointerIncMallocsThisFrame = 0;
 thread_local size_t mallocWithFreeAll_hitLimitCount = 0;
 
 #ifdef __APPLE__ // macOS
-#include "malloc_override_osx.h"
+#include "malloc_override_osx.hpp"
 #else
 //#define LINKTIME
 #error Unimplemented for now
