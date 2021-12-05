@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <string.h>
+#include <assert.h>
 #ifdef __APPLE__
 #include <malloc/malloc.h>
 #endif
