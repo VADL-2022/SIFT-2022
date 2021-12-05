@@ -119,6 +119,9 @@ void* mallocModeDidHandle(size_t size) {
         }
         else {
             mallocWithFreeAll_hitLimitCount++;
+            void* p = malloc(size);
+            postMalloc();
+            return p;
         }
     }
     else {
