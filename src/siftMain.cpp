@@ -353,6 +353,7 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     
     exit(5);
 }
+thread_local void* bigMallocBlock; // Never freed on purpose
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
@@ -459,7 +460,7 @@ int mainMission(DataSourceT* src,
 //            OPTICK_EVENT();
             std::cout << "hello from " << id << std::endl;
 
-            beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */); // 8 is 8 bytes to align to a reasonable block size malloc might be using
+            bigMallocBlock = beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */, bigMallocBlock); // 8 is 8 bytes to align to a reasonable block size malloc might be using
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
             p.params = sift_assign_default_parameters();
             //v2Params(p.params);

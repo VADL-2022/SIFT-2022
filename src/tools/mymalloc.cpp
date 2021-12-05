@@ -20,12 +20,11 @@ thread_local size_t numMallocsThisFrame = 0;
 thread_local size_t numPointerIncMallocsThisFrame = 0;
 thread_local size_t mallocWithFreeAll_hitLimitCount = 0;
 
-#ifdef __APPLE__ // macOS
+//#ifdef __APPLE__ // macOS
 #include "malloc_override_osx.hpp"
-#else
+//#else
 //#define LINKTIME
-#error Unimplemented for now
-#endif
+//#endif
 //#include "../optick/src/optick.h"
 extern "C" {
 // https://www.cs.cmu.edu/afs/cs/academic/class/15213-s03/src/interposition/mymalloc.c , https://stackoverflow.com/questions/262439/create-a-wrapper-function-for-malloc-and-free-in-c
@@ -91,47 +90,47 @@ extern "C" {
 //    freep(ptr);
 //}
 //#endif
-//
-//
-//#ifdef LINKTIME
-///*
-// * Link-time interposition of malloc and free using the static
-// * linker's (ld) "--wrap symbol" flag.
-// *
-// * Compile the executable using "-Wl,--wrap,malloc -Wl,--wrap,free".
-// * This tells the linker to resolve references to malloc as
-// * __wrap_malloc, free as __wrap_free, __real_malloc as malloc, and
-// * __real_free as free.
-// */
-//#include <stdio.h>
-//
-//void *__real_malloc(size_t size);
-//void __real_free(void *ptr);
-//
-//
-///*
-// * __wrap_malloc - malloc wrapper function
-// */
-//void *__wrap_malloc(size_t size)
-//{
-////    OPTICK_EVENT();
-//    void *ptr = __real_malloc(size);
-//    printf("malloc(%d) = %p\n", size, ptr);
-//    return ptr;
-//}
-//
-///*
-// * __wrap_free - free wrapper function
-// */
-//void __wrap_free(void *ptr)
-//{
-////    OPTICK_EVENT();
-//    __real_free(ptr);
-//    printf("free(%p)\n", ptr);
-//}
-//#endif
-//
-//
+
+
+#ifdef LINKTIME
+/*
+ * Link-time interposition of malloc and free using the static
+ * linker's (ld) "--wrap symbol" flag.
+ *
+ * Compile the executable using "-Wl,--wrap,malloc -Wl,--wrap,free".
+ * This tells the linker to resolve references to malloc as
+ * __wrap_malloc, free as __wrap_free, __real_malloc as malloc, and
+ * __real_free as free.
+ */
+#include <stdio.h>
+
+void *__real_malloc(size_t size);
+void __real_free(void *ptr);
+
+
+/*
+ * __wrap_malloc - malloc wrapper function
+ */
+void *__wrap_malloc(size_t size)
+{
+//    OPTICK_EVENT();
+    void *ptr = __real_malloc(size);
+    printf("malloc(%d) = %p\n", size, ptr);
+    return ptr;
+}
+
+/*
+ * __wrap_free - free wrapper function
+ */
+void __wrap_free(void *ptr)
+{
+//    OPTICK_EVENT();
+    __real_free(ptr);
+    printf("free(%p)\n", ptr);
+}
+#endif
+
+
 //#ifdef COMPILETIME
 ///*
 // * Compile-time interposition of malloc and free using C

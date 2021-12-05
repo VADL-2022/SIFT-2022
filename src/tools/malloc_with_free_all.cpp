@@ -17,16 +17,16 @@ _Thread_local char* mallocWithFreeAll_current;
 _Thread_local char* mallocWithFreeAll_max;
 _Thread_local enum MallocImpl currentMallocImpl = MallocImpl_Default;
 
-void beginMallocWithFreeAll(size_t reservedBytes) {
+void* beginMallocWithFreeAll(size_t reservedBytes, void* p) {
     preMalloc();
-    mallocWithFreeAll_origPtr = mallocWithFreeAll_current = (char*)malloc(reservedBytes); // Call the real malloc to get memory
+    mallocWithFreeAll_origPtr = mallocWithFreeAll_current = (p != NULL) ? (char*)p : (char*)malloc(reservedBytes); // Call the real malloc to get memory
     postMalloc();
     mallocWithFreeAll_max = mallocWithFreeAll_current + reservedBytes;
     currentMallocImpl = MallocImpl_PointerIncWithFreeAll;
+    return mallocWithFreeAll_origPtr;
 }
 
 void endMallocWithFreeAll() {
-    free(mallocWithFreeAll_origPtr);
     currentMallocImpl = MallocImpl_Default;
 }
 
