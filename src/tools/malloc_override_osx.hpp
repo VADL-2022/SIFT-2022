@@ -102,12 +102,32 @@ namespace memory{
 #ifdef MYMALLOC
 thread_local bool isMtraceHack = false;
 #endif
+// default file descriptors
+#define STDIN  0
+#define STDOUT 1
+#define STDERR 2
 static void mtrace_init(void){
     // Calling dlsym can call _dlerror_run which can call calloc to show error messages, causing an infinite recursion.
     _r_malloc = reinterpret_cast<real_malloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "malloc")));
+    if (!_r_malloc) {
+        char* e = dlerror()
+        write(STDOUT, e, strlen(e));
+    }
     _r_calloc = reinterpret_cast<real_calloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "calloc")));
+    if (!_r_calloc) {
+        char* e = dlerror()
+        write(STDOUT, e, strlen(e));
+    }
     _r_free = reinterpret_cast<real_free>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "free")));
+    if (!_r_free) {
+        char* e = dlerror()
+        write(STDOUT, e, strlen(e));
+    }
     _r_realloc = reinterpret_cast<real_realloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "realloc")));
+    if (!_r_realloc) {
+        char* e = dlerror()
+        write(STDOUT, e, strlen(e));
+    }
     if (NULL == _r_malloc || NULL == _r_calloc || NULL == _r_free || NULL == _r_realloc) {
         fprintf(stderr, "Error in `dlsym`: %s\n", dlerror());
     }
