@@ -42,6 +42,9 @@
 #endif
 #include <atomic>
 
+#include <backward.hpp>
+#include <sstream>
+
 
 #ifdef USE_JEMALLOC
 #include "jemalloc_wrapper.h"
@@ -94,7 +97,9 @@ namespace memory{
 }
 
 // NOTE: When linking jemalloc, these (at least in one case_ grab libjemalloc.2.dylib's malloc functions instead of the malloc, etc. from C standard library. It can be seen in the debugger of Xcode, and jemalloc_wrapper.h's functions cause infinite recursion if a call to them is implemented by the CALL_r_malloc(), etc. macros
+thread_local bool isMtraceHack = false;
 static void mtrace_init(void){
+    // Calling dlsym can call _dlerror_run which can call calloc to show error messages, causing an infinite recursion.
     _r_malloc = reinterpret_cast<real_malloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "malloc")));
     _r_calloc = reinterpret_cast<real_calloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "calloc")));
     _r_free = reinterpret_cast<real_free>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "free")));
@@ -151,11 +156,11 @@ void* malloc(size_t size){
     return p;
 }
 
-#include <backward.hpp>
-#include <sstream>
+#include "myMalloc_.h"
 void* calloc(size_t nitems, size_t size){
     if(_r_calloc==NULL) {
         using namespace backward;
+        isMtraceHack = true;
         StackTrace st; st.load_here();
         Printer p;
         p.print(st, stderr);
@@ -164,7 +169,9 @@ void* calloc(size_t nitems, size_t size){
         auto s = ss.str();
         if (s.find("_dlerror_run") != std::string::npos) {
             // Let it calloc, this is from https://github.com/lattera/glibc/blob/master/dlfcn/dlerror.c , else infinite recursion
-            return CALL_r_calloc(nitems, size);
+            void* p = _malloc(size);
+            memset(p, 0, size);
+            return p;
         }
         
         mtrace_init();
@@ -227,14 +234,23 @@ void* realloc(void* p, size_t new_size){
 }
 
 void *operator new(size_t size) noexcept(false){
+    if (isMtraceHack) {
+        return _malloc(size);
+    }
     return malloc(size);
 }
 
 void *operator new [](size_t size) noexcept(false){
+    if (isMtraceHack) {
+        return _malloc(size);
+    }
     return malloc(size);
 }
 
 void operator delete(void * p) throw(){
+    if (isMtraceHack) {
+        return _free(p);
+    }
     free(p);
 }
 

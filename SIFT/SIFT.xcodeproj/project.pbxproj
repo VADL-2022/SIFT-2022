@@ -35,6 +35,7 @@
 		30CE61F527238409001C987F /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61F327238409001C987F /* common.cpp */; };
 		30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE49227209F9400969C5F /* strnatcmp.cpp */; };
 		30EF9790273C588B00E3D538 /* Info.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 30EF978F273C582100E3D538 /* Info.plist */; };
+		30F00229275D89EF000A3D25 /* myMalloc_.c in Sources */ = {isa = PBXBuildFile; fileRef = 30F00227275D89EF000A3D25 /* myMalloc_.c */; };
 		30FE900A27458CD20086957E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30FE900927458CD20086957E /* CoreGraphics.framework */; };
 		30FE900C2745924C0086957E /* SIFT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30FE900B2745924C0086957E /* SIFT.cpp */; };
 /* End PBXBuildFile section */
@@ -123,6 +124,8 @@
 		30CE61F427238409001C987F /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
 		30CE61F727238787001C987F /* strnatcmp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = strnatcmp.hpp; sourceTree = "<group>"; };
 		30EF978F273C582100E3D538 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		30F00227275D89EF000A3D25 /* myMalloc_.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = myMalloc_.c; sourceTree = "<group>"; };
+		30F00228275D89EF000A3D25 /* myMalloc_.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = myMalloc_.h; sourceTree = "<group>"; };
 		30FE900927458CD20086957E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		30FE900B2745924C0086957E /* SIFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SIFT.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -271,6 +274,8 @@
 				308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */,
 				308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */,
 				308B70A0275BC77B00FE86A9 /* malloc_with_free_all.h */,
+				30F00227275D89EF000A3D25 /* myMalloc_.c */,
+				30F00228275D89EF000A3D25 /* myMalloc_.h */,
 			);
 			path = tools;
 			sourceTree = "<group>";
@@ -384,6 +389,7 @@
 				30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */,
 				300EE4A527209F9400969C5F /* lib_scalespace.c in Sources */,
 				300EE4B427209F9400969C5F /* my_sift_additions.c in Sources */,
+				30F00229275D89EF000A3D25 /* myMalloc_.c in Sources */,
 				300EE49D27209F9400969C5F /* lib_discrete.c in Sources */,
 				300EE4A027209F9400969C5F /* io_png.c in Sources */,
 				30CE61EB27235141001C987F /* Timer.cpp in Sources */,
