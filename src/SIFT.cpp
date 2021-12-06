@@ -181,7 +181,7 @@ std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKe
     if (keypoints.size() < 4) {
         printf("Not enough keypoints to find homography! Ignoring this image\n");
         // TODO: Simply let the transformation be an identity matrix?
-        exit(3);
+        //exit(3);
     }
     t.logElapsed(threadID, "compute features");
     
