@@ -271,13 +271,24 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     backward::sh.handleSignal(s, si, arg);
 }
 FileDataOutput* g_o2 = nullptr;
+std::mutex releaseWriter;
+bool releasedWriter;
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
     printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
     
     if (g_o2) {
-        g_o2->writer.release(); // Save the file
-        std::cout << "Saved the video" << std::endl;
+        releaseWriter.lock();
+        if (!releasedWriter) {
+            g_o2->writer.release(); // Save the file
+            std::cout << "Saved the video" << std::endl;
+            releasedWriter = true;
+            releaseWriter.unlock();
+        }
+        else {
+            releaseWriter.unlock();
+            std::cout << "Video was saved already" << std::endl;
+        }
     }
     else {
         std::cout << "No video to save" << std::endl;
