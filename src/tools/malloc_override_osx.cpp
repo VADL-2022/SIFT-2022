@@ -9,6 +9,8 @@
 
 #include "malloc_override_osx.hpp"
 
+#ifdef USE_PTR_INC_MALLOC
+
 real_malloc _r_malloc = nullptr;
 real_calloc _r_calloc = nullptr;
 real_free _r_free = nullptr;
@@ -228,3 +230,5 @@ void operator delete(void * p) throw(){
 #endif
     free(p);
 }
+
+#endif

@@ -39,6 +39,8 @@ endef
 # If not using this, need to avoid linking jemalloc too:
 USE_JEMALLOC=1
 
+USE_PTR_INC_MALLOC=0
+
 # END CONFIG #
 
 
@@ -49,6 +51,9 @@ OS := $(shell uname -s)
 ifeq ($(USE_JEMALLOC),1)
 additionalPkgconfigPackages = jemalloc
 CFLAGS += -DUSE_JEMALLOC
+endif
+ifeq ($(USE_PTR_INC_MALLOC),1)
+CFLAGS += -DUSE_PTR_INC_MALLOC
 endif
 CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng ${additionalPkgconfigPackages}` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
