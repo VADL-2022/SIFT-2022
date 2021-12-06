@@ -7,6 +7,8 @@
 //
 // https://gist.github.com/monitorjbl/3dc6d62cf5514892d5ab22a59ff34861
 
+#define MYMALLOC
+
 #ifndef malloc_override_osx_h
 #define malloc_override_osx_h
 
@@ -97,7 +99,9 @@ namespace memory{
 }
 
 // NOTE: When linking jemalloc, these (at least in one case_ grab libjemalloc.2.dylib's malloc functions instead of the malloc, etc. from C standard library. It can be seen in the debugger of Xcode, and jemalloc_wrapper.h's functions cause infinite recursion if a call to them is implemented by the CALL_r_malloc(), etc. macros
+#ifdef MYMALLOC
 thread_local bool isMtraceHack = false;
+#endif
 static void mtrace_init(void){
     // Calling dlsym can call _dlerror_run which can call calloc to show error messages, causing an infinite recursion.
     _r_malloc = reinterpret_cast<real_malloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "malloc")));
@@ -159,6 +163,7 @@ void* malloc(size_t size){
 #include "myMalloc_.h"
 void* calloc(size_t nitems, size_t size){
     if(_r_calloc==NULL) {
+#ifdef MYMALLOC
         using namespace backward;
         isMtraceHack = true;
         StackTrace st; st.load_here();
@@ -173,6 +178,7 @@ void* calloc(size_t nitems, size_t size){
             memset(p, 0, size);
             return p;
         }
+#endif
         
         mtrace_init();
     }
@@ -234,23 +240,29 @@ void* realloc(void* p, size_t new_size){
 }
 
 void *operator new(size_t size) noexcept(false){
+#ifdef MYMALLOC
     if (isMtraceHack) {
         return _malloc(size);
     }
+#endif
     return malloc(size);
 }
 
 void *operator new [](size_t size) noexcept(false){
+#ifdef MYMALLOC
     if (isMtraceHack) {
         return _malloc(size);
     }
+#endif
     return malloc(size);
 }
 
 void operator delete(void * p) throw(){
+#ifdef MYMALLOC
     if (isMtraceHack) {
         return _free(p);
     }
+#endif
     free(p);
 }
 

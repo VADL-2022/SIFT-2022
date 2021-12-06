@@ -9,6 +9,8 @@
 
 #include "myMalloc_.h"
 
+#ifdef MYMALLOC
+
 /* Simple Malloc implementation. */
 
 #include <stdio.h>
@@ -238,3 +240,5 @@ void cleanup() {
 //   _free( p1 );
 //   return 0;
 //}
+
+#endif
