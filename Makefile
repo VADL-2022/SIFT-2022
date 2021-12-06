@@ -37,7 +37,8 @@ endef
 # BEGIN CONFIG #
 
 # If not using this, need to avoid linking jemalloc too:
-USE_JEMALLOC=1
+USE_JEMALLOC=0
+#1
 
 USE_PTR_INC_MALLOC=0
 
