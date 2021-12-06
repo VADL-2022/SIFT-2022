@@ -34,12 +34,28 @@ endef
 
 # END LIBRARY FUNCTIONS #
 
+# BEGIN CONFIG #
+
+# If not using this, need to avoid linking jemalloc too:
+USE_JEMALLOC=1
+
+USE_PTR_INC_MALLOC=0
+
+# END CONFIG #
+
 
 
 SHELL := /usr/bin/env bash
 OS := $(shell uname -s)
 # -D_POSIX_C_SOURCE=200809L
-CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4` `pkg-config --cflags libpng` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+ifeq ($(USE_JEMALLOC),1)
+additionalPkgconfigPackages = jemalloc
+CFLAGS += -DUSE_JEMALLOC
+endif
+ifeq ($(USE_PTR_INC_MALLOC),1)
+CFLAGS += -DUSE_PTR_INC_MALLOC
+endif
+CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng ${additionalPkgconfigPackages}` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 $(info $(OS))
 ifeq ($(OS),Darwin)
@@ -59,14 +75,14 @@ else ifeq ($(OS),Linux)
     LFLAGS += -lX11
 endif
 $(info $(LFLAGS))
-LFLAGS += -lpng -lm -lpthread #-ljpeg -lrt -lm
+LFLAGS += -lpng -lm -lpthread -ldl #-ljpeg -lrt -lm
 # ifeq ($(OS),Linux)
 #     # Needed if gtk; nix hack:
 #     LDFLAGS = -L/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib `bash ./filter-hack.sh "${NIX_LDFLAGS}"`
 # else
     LDFLAGS = ${NIX_LDFLAGS}
 # endif
-LDFLAGS += `pkg-config --libs opencv4` `pkg-config --libs libpng`
+LDFLAGS += `pkg-config --libs opencv4 libpng ${additionalPkgconfigPackages}`
 
 #CC := clang-12
 #CXX := clang-12 -x c++
@@ -89,8 +105,8 @@ SIFT_SOURCES_CPP := $(wildcard $(SIFT_SRC)/*.cpp)
 SIFT_OBJECTS := $(SIFT_SOURCES_CPP:%.cpp=%.o) $(SIFT_SOURCES_C:%.c=%.o)
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
-SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
-SOURCES_C := $(wildcard $(SRC)/*.c)
+SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/tools/*.cpp) #$(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
+SOURCES_C := $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c)
 ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
 $(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile
