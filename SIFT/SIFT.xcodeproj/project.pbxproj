@@ -36,6 +36,7 @@
 		30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE49227209F9400969C5F /* strnatcmp.cpp */; };
 		30EF9790273C588B00E3D538 /* Info.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 30EF978F273C582100E3D538 /* Info.plist */; };
 		30F00229275D89EF000A3D25 /* myMalloc_.c in Sources */ = {isa = PBXBuildFile; fileRef = 30F00227275D89EF000A3D25 /* myMalloc_.c */; };
+		30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */; };
 		30FE900A27458CD20086957E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30FE900927458CD20086957E /* CoreGraphics.framework */; };
 		30FE900C2745924C0086957E /* SIFT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30FE900B2745924C0086957E /* SIFT.cpp */; };
 /* End PBXBuildFile section */
@@ -126,6 +127,7 @@
 		30EF978F273C582100E3D538 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		30F00227275D89EF000A3D25 /* myMalloc_.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = myMalloc_.c; sourceTree = "<group>"; };
 		30F00228275D89EF000A3D25 /* myMalloc_.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = myMalloc_.h; sourceTree = "<group>"; };
+		30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = malloc_override_osx.cpp; sourceTree = "<group>"; };
 		30FE900927458CD20086957E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		30FE900B2745924C0086957E /* SIFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SIFT.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -270,6 +272,7 @@
 			children = (
 				308B6C05275AA96D00FE86A9 /* mymalloc.cpp */,
 				308B7099275AD7CF00FE86A9 /* malloc_override_osx.hpp */,
+				30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */,
 				308B709B275AFBDD00FE86A9 /* jemalloc_wrapper.h */,
 				308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */,
 				308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */,
@@ -384,6 +387,7 @@
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
 				300EE49527209F9400969C5F /* lib_keypoint.c in Sources */,
 				300EE4A427209F9400969C5F /* lib_description.c in Sources */,
+				30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */,
 				300EE4AA27209F9400969C5F /* lib_sift_anatomy.c in Sources */,
 				300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */,
 				30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */,
