@@ -353,7 +353,7 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     
     exit(5);
 }
-thread_local void* bigMallocBlock; // Never freed on purpose
+thread_local void* bigMallocBlock = nullptr; // Never freed on purpose
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTParams& p,
