@@ -226,7 +226,7 @@ OpenCVVideoCaptureDataSource::OpenCVVideoCaptureDataSource() {
 
 const double OpenCVVideoCaptureDataSource::default_fps =
 #ifdef USE_COMMAND_LINE_ARGS
-4 //30
+1 //4 //30
 #else
 1
 #endif
