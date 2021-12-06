@@ -208,7 +208,7 @@ void* calloc(size_t nitems, size_t size){
 
 void free(void* p){
     if(_r_free==nullptr) {
-        if (callocCounter++ <= 3 /* <-- num dlsym() calls in mtrace_init() */) {
+        if (callocCounter <= 3 /* <-- num dlsym() calls in mtrace_init() */) {
             // First calloc must be semi-normal since dyld uses it with dlsym error messages
             _free(p);
             return;
