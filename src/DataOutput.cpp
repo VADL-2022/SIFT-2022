@@ -25,6 +25,7 @@ FileDataOutput::FileDataOutput(std::string filenameNoExt_, double fps_, cv::Size
 fps(fps_), sizeFrame(sizeFrame_), filenameNoExt(filenameNoExt_) {}
 
 void FileDataOutput::run(cv::Mat frame) {
+    writerMutex.lock();
     bool first = !writer.isOpened();
     if (first) {
         int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
@@ -34,6 +35,7 @@ void FileDataOutput::run(cv::Mat frame) {
         std::string filename = openFileWithUniqueName(filenameNoExt, ".mp4");
         writer.open(filename, codec, fps, sizeFrame, isColor);
     }
+    writerMutex.unlock();
 
     // Resize/convert, then write to video writer
     cv::Mat newFrame;
@@ -65,7 +67,9 @@ void FileDataOutput::run(cv::Mat frame) {
     t.reset();
     std::cout << "newFrame.data: " << (void*)newFrame.data << std::endl;
     std::cout << "Writing frame with type " << mat_type2str(newFrame.type()) << std::endl;
+    writerMutex.lock();
     writer.write(newFrame);
+    writerMutex.unlock();
     t.logElapsed("write frame for video writer");
 }
 

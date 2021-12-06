@@ -271,22 +271,21 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     backward::sh.handleSignal(s, si, arg);
 }
 FileDataOutput* g_o2 = nullptr;
-std::mutex releaseWriter;
-bool releasedWriter;
+bool releasedWriter; // Protected by g_o2->writerMutex since multiple threads could call segfault_sigaction below at the same time, resulting in the video not saving since the second save overwrites the first I think
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
     printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
     
     if (g_o2) {
-        releaseWriter.lock();
+        g_o2->writerMutex.lock();
         if (!releasedWriter) {
             g_o2->writer.release(); // Save the file
             std::cout << "Saved the video" << std::endl;
             releasedWriter = true;
-            releaseWriter.unlock();
+            g_o2->writerMutex.unlock();
         }
         else {
-            releaseWriter.unlock();
+            g_o2->writerMutex.unlock();
             std::cout << "Video was saved already" << std::endl;
         }
     }

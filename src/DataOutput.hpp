@@ -39,6 +39,7 @@ struct FileDataOutput : public DataOutputBase<FileDataOutput>
     void run(cv::Mat frame);
     
     cv::VideoWriter writer;
+    std::mutex writerMutex;
     
     void showCanvas(std::string name, cv::Mat& canvas);
     int waitKey(int delay=0);
