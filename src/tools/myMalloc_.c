@@ -226,15 +226,15 @@ void cleanup() {
    head = NULL;
 }
 
-int main() {
-   atexit( cleanup );
-
-   printf( "Malloc implementation\n" );
-
-   stats( "beginning" );
-   int *p1 =_malloc( 64 );
-   stats( "after allocating 64 bytes" );
-   int *p2 = _malloc( 1 );
-   _free( p1 );
-   return 0;
-}
+//int main() {
+//   atexit( cleanup );
+//
+//   printf( "Malloc implementation\n" );
+//
+//   stats( "beginning" );
+//   int *p1 =_malloc( 64 );
+//   stats( "after allocating 64 bytes" );
+//   int *p2 = _malloc( 1 );
+//   _free( p1 );
+//   return 0;
+//}
