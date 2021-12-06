@@ -403,7 +403,7 @@ int mainMission(DataSourceT* src,
             if (n < 4) {
                 // Not enough keypoints to find homography, ignore it
                 // TODO: don't ignore it, but retry match with previous image? You can store the previous image as a cv::Mat ref inside the current one to allow for this if you want..
-                goto end;
+                return; //goto end;
             }
             struct sift_keypoints* keypoints = pair.first;
             struct sift_keypoint_std *k = pair.second.first;
