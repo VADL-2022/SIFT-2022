@@ -161,24 +161,31 @@ void* malloc(size_t size){
 }
 
 #include "myMalloc_.h"
+thread_local int callocCounter = 0;
 void* calloc(size_t nitems, size_t size){
     if(_r_calloc==NULL) {
-#ifdef MYMALLOC
-        using namespace backward;
-        isMtraceHack = true;
-        StackTrace st; st.load_here();
-        Printer p;
-        p.print(st, stderr);
-        std::ostringstream ss;
-        p.print(st, ss);
-        auto s = ss.str();
-        if (s.find("_dlerror_run") != std::string::npos) {
-            // Let it calloc, this is from https://github.com/lattera/glibc/blob/master/dlfcn/dlerror.c , else infinite recursion
+        if (callocCounter++ <= 3 /* <-- num dlsym() calls in mtrace_init() */) {
+            // First calloc must be semi-normal since dyld uses it with dlsym error messages
             void* p = _malloc(size);
             memset(p, 0, size);
             return p;
         }
-#endif
+//#ifdef MYMALLOC
+//        using namespace backward;
+//        isMtraceHack = true;
+//        StackTrace st; st.load_here();
+//        Printer p;
+//        p.print(st, stderr);
+//        std::ostringstream ss;
+//        p.print(st, ss);
+//        auto s = ss.str();
+//        if (s.find("_dlerror_run") != std::string::npos) {
+//            // Let it calloc, this is from https://github.com/lattera/glibc/blob/master/dlfcn/dlerror.c , else infinite recursion
+//            void* p = _malloc(size);
+//            memset(p, 0, size);
+//            return p;
+//        }
+//#endif
         
         mtrace_init();
     }
