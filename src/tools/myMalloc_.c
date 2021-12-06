@@ -76,8 +76,8 @@ block * splitBlock( block *b, size_t size ) {
  * begin address, this helps when scanning continous blocks
  */
 void addToFreeList( block *freeBlock ) {
-   printf( "Adding %ld with size %ld to free list \n", freeBlock,
-           freeBlock->size );
+//   printf( "Adding %ld with size %ld to free list \n", freeBlock,
+//           freeBlock->size );
    freeBlock->next = NULL;
    freeBlock->prev = NULL;
    if( !head || (unsigned long) head >= (unsigned long) freeBlock ) {
