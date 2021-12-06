@@ -34,7 +34,7 @@ std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int
         printf("Not enough keypoints to find homography! Ignoring this image\n");
         // TODO: Simply let the transformation be an identity matrix?
         //exit(3);
-        stopMain();
+        //stopMain();
         
 //                t.logElapsed(id, "compute features");
 //                goto end;
