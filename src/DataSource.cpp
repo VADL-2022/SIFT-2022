@@ -208,7 +208,7 @@ cv::Mat OpenCVVideoCaptureDataSource::siftImageForMat(size_t index) {
     t.reset();
     std::cout << mat_type2str(grey.type()) << std::endl;
     cv::cvtColor(grey, mat, cv::COLOR_RGB2GRAY);
-    mat.convertTo(mat, CV_32F, 1/255.0); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values down to float image's range of 0-1););
+    mat.convertTo(mat, CV_32F);//, 1/255.0); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values down to float image's range of 0-1););
     std::cout << mat_type2str(mat.type()) << std::endl;
     t.logElapsed("convert image to greyscale and float");
     return mat;
