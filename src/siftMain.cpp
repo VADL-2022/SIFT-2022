@@ -176,6 +176,9 @@ int main(int argc, char **argv)
             src = std::make_unique<VideoFileDataSource>(argc, argv); // Read file determined by command-line arguments
             cfg.videoFileDataSource = true;
         }
+        else if (strcmp(argv[i], "--camera-test-only") == 0) {
+            cfg.cameraTestOnly = true;
+        }
         else if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
             cfg.imageCaptureOnly = true;
         }
@@ -209,6 +212,28 @@ int main(int argc, char **argv)
             }
             i++;
         }
+    }
+    
+    if (cfg.cameraTestOnly) {
+        // Simple camera test to isolate issues
+        // https://answers.opencv.org/question/1/how-can-i-get-frames-from-my-webcam/
+        
+        cv::VideoCapture cap;
+        // open the default camera, use something different from 0 otherwise;
+        // Check VideoCapture documentation.
+        if(!cap.open(0))
+            return 0;
+        for(;;)
+        {
+              cv::Mat frame;
+              cap >> frame;
+              if( frame.empty() ) break; // end of video stream
+              imshow("this is you, smile! :)", frame);
+              if( cv::waitKey(10) == 27 ) break; // stop capturing by pressing ESC
+        }
+        // the camera will be closed automatically upon exit
+        // cap.close();
+        return 0;
     }
     
     if (cfg.cameraDataSource()) {
