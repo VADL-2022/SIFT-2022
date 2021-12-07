@@ -21,7 +21,7 @@ struct DataOutputBase {
     #endif
     
     MaybeVirtual void showCanvas(std::string name, cv::Mat& canvas) MaybePureVirtual;
-    MaybeVirtual void release() {};
+    MaybeVirtual void release() {}
     
 protected:
     int waitKey(int delay=0);
@@ -45,10 +45,13 @@ struct FileDataOutput : public DataOutputBase
     
     void release();
     
+    cv::VideoWriter writer;
+    std::mutex writerMutex;
+    bool releasedWriter; // Protected by g_o2->writerMutex since multiple threads could call segfault_sigaction below at the same time, resulting in the video not saving since the second save overwrites the first I think
+    
     void showCanvas(std::string name, cv::Mat& canvas);
     int waitKey(int delay=0);
 protected:
-    cv::VideoWriter writer;
     double fps;
     cv::Size sizeFrame;
     std::string filenameNoExt;

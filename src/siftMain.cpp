@@ -161,7 +161,7 @@ int main(int argc, char **argv)
     
     // Command-line args //
 #ifdef USE_COMMAND_LINE_ARGS
-    system("export DISPLAY=:0.0"); // Needed to show windows with GTK/X11 correctly
+    system("bash -c 'export DISPLAY=:0.0'"); // Needed to show windows with GTK/X11 correctly
     
     FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
@@ -318,8 +318,8 @@ bool stoppedMain() {
 
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
-ctpl::thread_pool tp(4); // Number of threads in the pool
-//ctpl::thread_pool tp(8);
+//ctpl::thread_pool tp(4); // Number of threads in the pool
+ctpl::thread_pool tp(8);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
 // Prints a stacktrace
 //void logTrace() {
@@ -341,8 +341,7 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
     
     if (g_o2) {
-        g_o2->release(); // Save the file
-        std::cout << "Saved the video" << std::endl;
+        g_o2->release();
     }
     else {
         std::cout << "No video to save" << std::endl;
@@ -467,13 +466,18 @@ int mainMission(DataSourceT* src,
 #endif
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
             p.params = sift_assign_default_parameters();
-            //v2Params(p.params);
+//            v2Params(p.params);
 
             // compute sift keypoints
             std::cout << id << " findKeypoints" << std::endl;
 #ifdef SIFTAnatomy_
             auto pair = sift.findKeypoints(id, p, greyscale);
             int n = pair.second.second; // Number of keypoints
+            if (n < 4) {
+                // Not enough keypoints to find homography, ignore it
+                // TODO: don't ignore it, but retry match with previous image? You can store the previous image as a cv::Mat ref inside the current one to allow for this if you want..
+                return; //goto end;
+            }
             struct sift_keypoints* keypoints = pair.first;
             struct sift_keypoint_std *k = pair.second.first;
 #elif defined(SIFTOpenCV_)
