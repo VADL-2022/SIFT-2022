@@ -208,7 +208,7 @@ cv::Mat OpenCVVideoCaptureDataSource::siftImageForMat(size_t index) {
     t.reset();
     std::cout << mat_type2str(grey.type()) << std::endl;
     cv::cvtColor(grey, mat, cv::COLOR_RGB2GRAY);
-    mat.convertTo(mat, CV_32F);//, 1/255.0); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values down to float image's range of 0-1););
+    mat.convertTo(mat, CV_32F, 1/255.0); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values down to float image's range of 0-1););
     std::cout << mat_type2str(mat.type()) << std::endl;
     t.logElapsed("convert image to greyscale and float");
     return mat;
@@ -226,9 +226,11 @@ OpenCVVideoCaptureDataSource::OpenCVVideoCaptureDataSource() {
 
 const double OpenCVVideoCaptureDataSource::default_fps =
 #ifdef USE_COMMAND_LINE_ARGS
-1 //4 //30
+2 //4 //30
+// NOTE: FPS of 1 will make the camera really dark! Don't use it!
 #else
-1
+2
+// NOTE: FPS of 1 will make the camera really dark! Don't use it!
 #endif
 ;
 const cv::Size CameraDataSource::default_sizeFrame = {640,480};
@@ -270,6 +272,9 @@ CameraDataSource::CameraDataSource(int argc, char** argv) {
 
 void CameraDataSource::init(double fps, cv::Size sizeFrame) {
     currentIndex = 0; // Index to save into next
+    
+    // NOTE: FPS of 1 will make the camera really dark! Don't use it!
+    assert(fps > 1);
     
     // Instanciate the capture
     cap.open(0);
