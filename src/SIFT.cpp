@@ -50,6 +50,7 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
     , DataSourceBase* src, CommandLineConfig& cfg
 #endif
 ) {
+    t.reset();
     struct sift_keypoints* keypointsPrev = img1.computedKeypoints.get();
     struct sift_keypoints* keypoints = img2.computedKeypoints.get();
     std::cout << keypointsPrev << ", " << keypoints << std::endl;

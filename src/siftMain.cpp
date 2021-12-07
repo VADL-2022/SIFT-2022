@@ -343,8 +343,8 @@ bool stoppedMain() {
 
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
-//ctpl::thread_pool tp(4); // Number of threads in the pool
-ctpl::thread_pool tp(8);
+ctpl::thread_pool tp(4); // Number of threads in the pool
+//ctpl::thread_pool tp(8);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
 // Prints a stacktrace
 //void logTrace() {

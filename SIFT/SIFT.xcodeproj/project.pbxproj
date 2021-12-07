@@ -128,6 +128,7 @@
 		30F00227275D89EF000A3D25 /* myMalloc_.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = myMalloc_.c; sourceTree = "<group>"; };
 		30F00228275D89EF000A3D25 /* myMalloc_.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = myMalloc_.h; sourceTree = "<group>"; };
 		30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = malloc_override_osx.cpp; sourceTree = "<group>"; };
+		30F0022C275F101B000A3D25 /* Queue.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Queue.hpp; sourceTree = "<group>"; };
 		30FE900927458CD20086957E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		30FE900B2745924C0086957E /* SIFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SIFT.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -262,6 +263,7 @@
 				30CBDBBF2731A01600473B25 /* DataSource.hpp */,
 				30CBDBC72732EBF200473B25 /* DataOutput.cpp */,
 				30CBDBC82732EBF200473B25 /* DataOutput.hpp */,
+				30F0022C275F101B000A3D25 /* Queue.hpp */,
 			);
 			name = src;
 			path = ../../src;
@@ -360,7 +362,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ -z \"$IN_NIX_SHELL\" ]; then\n    if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then\n        source ~/.nix-profile/etc/profile.d/nix.sh\n    fi # added by Nix installer\n    \n    #~/.nix-profile/bin/nix-shell --run \"bash \\\"$0\\\"\" -p opencv pkgconfig\n    cd \"$SRCROOT/..\"\n    ~/.nix-profile/bin/nix-shell --run \"bash \\\"$0\\\"\"\n    exit 0\nfi\n\nSIFT=\"sift_anatomy_20141201\"\nSIFT_SRC=\"$SIFT/src\"\nXCCONFIG=\"Config.xcconfig\"\n#truncate –s 0 \"$XCCONFIG\"\necho `which pkg-config`\necho \"$OPENCV_CFLAGS\"\nIFLAGS=\"$(pkg-config --cflags-only-I opencv4 libpng jemalloc) -I\"'$(SRCROOT)/../'\"$SIFT_SRC -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include\"\necho \"$IFLAGS\"\n\n# Use a heredoc:\ncat <<InputComesFromHERE > \"$XCCONFIG\"\nCXXFLAGS = -std=c++17 \\$(CXXFLAGS)\nOPENCV_CFLAGS=`pkg-config --cflags opencv4 libpng`\nHEADER_SEARCH_PATHS=$(echo -n \"$IFLAGS\" | awk 'BEGIN { ORS=\" \"; RS = \" \" } ; { sub(/^-I/, \"\"); print $0 }')\n\nOTHER_LDFLAGS = -lm -lpthread `pkg-config --libs opencv4 libpng jemalloc` -L/nix/store/g5w2hcjkax12ixx8wq1g6r6nqri15ggx-libunwind-7.1.0/lib // Works but segfaults: -Wl,-alias,_malloc,vadlTemp -Wl,-alias,___wrap_malloc,_malloc -Wl,-alias,vadlTemp,___real_malloc -Wl,-alias,_free,vadlTemp2 -Wl,-alias,___wrap_free,_free -Wl,-alias,vadlTemp2,___real_free //-Wl,-alias,_malloc,___wrap_malloc -Wl,-alias,_free,___wrap_free -Wl,-alias,___real_malloc,_malloc -Wl,-alias,___real_free,_free //-Wl,--wrap,malloc -Wl,--wrap,free //-ljpeg -lrt -lm\n\nCLANG_CXX_LIBRARY=libc++\nCLANG_CXX_LANGUAGE_STANDARD=c++17\n\nGCC_PREPROCESSOR_DEFINITIONS = \\$(inherited) BACKWARD_HAS_UNWIND=1 USE_COMMAND_LINE_ARGS\nInputComesFromHERE\n";
+			shellScript = "source \"$SRCROOT/../commonXcode.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -66,6 +66,29 @@ void mtrace_init(void){
     }
 }
 
+// https://stackoverflow.com/questions/4840410/how-to-align-a-pointer-in-c //
+#include <cstdint>
+/** Returns the number to add to align the given pointer to a 8, 16, 32, or 64-bit
+    boundary.
+    @author Cale McCollough.
+    @param  ptr The address to align.
+    @return The offset to add to the ptr to align it. */
+template<typename T>
+inline uintptr_t MemoryAlignOffset (const void* ptr) {
+    return ((~reinterpret_cast<uintptr_t> (ptr)) + 1) & (sizeof (T) - 1);
+}
+
+/** Word aligns the given byte pointer up in addresses.
+    @author Cale McCollough.
+    @param ptr Pointer to align.
+    @return Next word aligned up pointer. */
+template<typename T>
+inline T* MemoryAlign (T* ptr) {
+    uintptr_t offset = MemoryAlignOffset<uintptr_t> (ptr);
+    char* aligned_ptr = reinterpret_cast<char*> (ptr) + offset;
+    return reinterpret_cast<T*> (aligned_ptr);
+}
+// //
 void* mallocModeDidHandle(size_t size) {
     // Check our malloc mode
     if (currentMallocImpl == MallocImpl_PointerIncWithFreeAll) {
@@ -75,6 +98,9 @@ void* mallocModeDidHandle(size_t size) {
             // Pointer increment since we can.
             void* ret = mallocWithFreeAll_current;
             mallocWithFreeAll_current += size;
+            using AlignT = uint64_t;
+            mallocWithFreeAll_current = (char*)MemoryAlign<AlignT>((AlignT*)mallocWithFreeAll_current); // uint64_t is used for 8 byte alignment (arbitrary type of 64-bit size)
+            static_assert(sizeof(AlignT*) == 8, "Find a type with size 8 bytes and use it instead");
             postMalloc();
             numPointerIncMallocsThisFrame++;
             return ret;
