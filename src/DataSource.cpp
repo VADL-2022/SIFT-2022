@@ -425,7 +425,10 @@ cv::Mat VideoFileDataSource::get(size_t index) {
     // and seek to the new time.
     cap.set(cv::CAP_PROP_POS_MSEC, video_time_);
     
-    return OpenCVVideoCaptureDataSource::get(index);
+    cv::Mat res = OpenCVVideoCaptureDataSource::get(index);
+
+    cv::Mat cropped_image = res(cv::Rect(cv::Point(137,62), cv::Point(490,401)));
+    return cropped_image;
 }
 
 template<>

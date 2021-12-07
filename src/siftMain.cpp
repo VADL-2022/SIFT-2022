@@ -358,7 +358,7 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     stopMain();
     
     // Print stack trace
-    backward::sh->handleSignal(s, si, arg);
+    //backward::sh->handleSignal(s, si, arg);
 }
 DataOutputBase* g_o2 = nullptr;
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
@@ -366,14 +366,17 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
     
     if (g_o2) {
-        g_o2->release();
+        //g_o2->release();
+	
+	            ((FileDataOutput*)g_o2)->writer.release(); // Save the file
+		            std::cout << "Saved the video" << std::endl;
     }
     else {
         std::cout << "No video to save" << std::endl;
     }
     
     // Print stack trace
-    backward::sh->handleSignal(signal, si, arg);
+    //backward::sh->handleSignal(signal, si, arg);
     
     exit(5);
 }
