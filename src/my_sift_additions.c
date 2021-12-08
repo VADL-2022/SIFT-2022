@@ -64,6 +64,24 @@ void v3Params(struct sift_parameters* p) {
     p->sigma_min=1.1;
 }
 
+void lowEdgeParams(struct sift_parameters* p) {
+    // Defaults:
+    p->n_oct = 8;
+    p->n_spo = 3;
+    p->sigma_min = 0.8;
+    p->delta_min = 0.5;
+    p->sigma_in = 0.5;
+    p->C_DoG = 0.013333333;  // = 0.04/3
+    p->C_edge = 2; //10;
+    p->n_bins = 36;
+    p->lambda_ori = 1.5;
+    p->t = 0.80;
+    p->n_hist = 4;
+    p->n_ori = 8;
+    p->lambda_descr = 6;
+    p->itermax = 5;
+}
+
 /** @brief Extracts oriented keypoints (without description
  *
  *

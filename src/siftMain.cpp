@@ -343,8 +343,8 @@ bool stoppedMain() {
 
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
-ctpl::thread_pool tp(4); // Number of threads in the pool
-//ctpl::thread_pool tp(8);
+//ctpl::thread_pool tp(4); // Number of threads in the pool
+ctpl::thread_pool tp(8);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
 // Prints a stacktrace
 //void logTrace() {
@@ -358,7 +358,7 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     stopMain();
     
     // Print stack trace
-    backward::sh->handleSignal(s, si, arg);
+    //backward::sh->handleSignal(s, si, arg);
 }
 DataOutputBase* g_o2 = nullptr;
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
@@ -366,14 +366,18 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
     
     if (g_o2) {
-        g_o2->release();
+        //g_o2->release();
+        
+        // Temp hack:
+        ((FileDataOutput*)g_o2)->writer.release(); // Save the file
+        std::cout << "Saved the video" << std::endl;
     }
     else {
         std::cout << "No video to save" << std::endl;
     }
     
     // Print stack trace
-    backward::sh->handleSignal(signal, si, arg);
+    //backward::sh->handleSignal(signal, si, arg);
     
     exit(5);
 }
@@ -492,6 +496,7 @@ int mainMission(DataSourceT* src,
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
             p.params = sift_assign_default_parameters();
 //            v2Params(p.params);
+            lowEdgeParams(p.params);
 
             // compute sift keypoints
             std::cout << id << " findKeypoints" << std::endl;

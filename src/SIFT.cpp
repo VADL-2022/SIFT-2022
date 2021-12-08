@@ -149,8 +149,10 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
                 // fprintf_one_keypoint(f, k2B->list[i], dim, n_bins, 2);
                 // fprintf(f, "\n");
 
-                drawSquare(img2.canvas, cv::Point(s.out_k2A->list[i]->x, s.out_k2A->list[i]->y), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
-                cv::line(img2.canvas, cv::Point(s.out_k1->list[i]->x, s.out_k1->list[i]->y), cv::Point(s.out_k2A->list[i]->x, s.out_k2A->list[i]->y), lastColor, 1);
+                auto xoff= 100;
+                auto yoff=-100;
+                drawSquare(img2.canvas, cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
+                cv::line(img2.canvas, cv::Point(s.out_k1->list[i]->x+xoff, s.out_k1->list[i]->y+yoff), cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), lastColor, 1);
             }
         }
         t.logElapsed("draw matches");

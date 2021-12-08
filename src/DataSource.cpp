@@ -353,8 +353,14 @@ cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     
     // Cache it
     cache.emplace(i, mat);
-    
+
+#define CROP_FOR_FISHEYE_CAMERA
+    #ifdef CROP_FOR_FISHEYE_CAMERA
+    cv::Mat cropped_image = mat(cv::Rect(cv::Point(137,62), cv::Point(490,401)));
+    return cropped_image;
+    #else
     return mat;
+    #endif
 }
 
 std::string OpenCVVideoCaptureDataSource::nameForIndex(size_t index) {
