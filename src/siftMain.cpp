@@ -262,6 +262,74 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+// Signal handling //
+std::atomic<bool> g_stop;
+void stopMain() {
+    g_stop = true;
+}
+bool stoppedMain() {
+    return g_stop;
+}
+
+// Prints a stacktrace
+//void logTrace() {
+//    using namespace backward;
+//    StackTrace st; st.load_here();
+//    Printer p;
+//    p.print(st, stderr);
+//}
+void ctrlC(int s, siginfo_t *si, void *arg){
+    printf("Caught signal %d. Threads are stopping...\n",s);
+    stopMain();
+    
+    // Print stack trace
+    //backward::sh->handleSignal(s, si, arg);
+}
+DataOutputBase* g_o2 = nullptr;
+void segfault_sigaction(int signal, siginfo_t *si, void *arg)
+{
+    printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
+    
+    if (g_o2) {
+        g_o2->release();
+    
+//        ((FileDataOutput*)g_o2)->writer.release(); // Save the file
+//                    std::cout << "Saved the video" << std::endl;
+    }
+    else {
+        std::cout << "No video to save" << std::endl;
+    }
+    
+    // Print stack trace
+    //backward::sh->handleSignal(signal, si, arg);
+    
+    exit(5);
+}
+// Installs signal handlers for the current thread.
+void installSignalHandlers() {
+    // Install ctrl-c handler
+    // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_sigaction = ctrlC;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, NULL);
+    
+    // Install segfault handler
+    // https://stackoverflow.com/questions/2350489/how-to-catch-segmentation-fault-in-linux
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(struct sigaction));
+    sigemptyset(&sa.sa_mask);
+    sa.sa_sigaction = segfault_sigaction;
+    sa.sa_flags   = SA_SIGINFO;
+    sigaction(SIGSEGV, &sa, NULL); // Segfault handler! Tries to save stuff ASAP, unlike sigIntHandler.
+    
+    // Install SIGBUS (?), SIGILL (illegal instruction), and EXC_BAD_ACCESS (similar to segfault but is for "A crash due to a memory access issue occurs when an app uses memory in an unexpected way. Memory access problems have numerous causes, such as dereferencing a pointer to an invalid memory address, writing to read-only memory, or jumping to an instruction at an invalid address. These crashes are most often identified by the EXC_BAD_ACCESS (SIGSEGV) or EXC_BAD_ACCESS (SIGBUS) exceptions" ( https://developer.apple.com/documentation/xcode/investigating-memory-access-crashes )) handlers
+    sigaction(SIGBUS, &sa, NULL);
+    sigaction(SIGILL, &sa, NULL);
+}
+// //
+
 // https://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
 template <
     class result_t   = std::chrono::milliseconds,
@@ -277,6 +345,8 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 DataSourceBase* g_src;
 #endif
 void* matcherThreadFunc(void* arg) {
+    installSignalHandlers();
+    
     do {
 //        OPTICK_THREAD("Worker");
         
@@ -333,53 +403,12 @@ void* matcherThreadFunc(void* arg) {
 
 cv::Rect g_desktopSize;
 
-std::atomic<bool> g_stop;
-void stopMain() {
-    g_stop = true;
-}
-bool stoppedMain() {
-    return g_stop;
-}
-
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 //ctpl::thread_pool tp(4); // Number of threads in the pool
-ctpl::thread_pool tp(8);
+//ctpl::thread_pool tp(8);
+ctpl::thread_pool tp(6);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
-// Prints a stacktrace
-//void logTrace() {
-//    using namespace backward;
-//    StackTrace st; st.load_here();
-//    Printer p;
-//    p.print(st, stderr);
-//}
-void ctrlC(int s, siginfo_t *si, void *arg){
-    printf("Caught signal %d. Threads are stopping...\n",s);
-    stopMain();
-    
-    // Print stack trace
-    //backward::sh->handleSignal(s, si, arg);
-}
-DataOutputBase* g_o2 = nullptr;
-void segfault_sigaction(int signal, siginfo_t *si, void *arg)
-{
-    printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
-    
-    if (g_o2) {
-        //g_o2->release();
-	
-	            ((FileDataOutput*)g_o2)->writer.release(); // Save the file
-		            std::cout << "Saved the video" << std::endl;
-    }
-    else {
-        std::cout << "No video to save" << std::endl;
-    }
-    
-    // Print stack trace
-    //backward::sh->handleSignal(signal, si, arg);
-    
-    exit(5);
-}
 #ifdef USE_PTR_INC_MALLOC
 thread_local void* bigMallocBlock = nullptr; // Never freed on purpose
 #endif
@@ -395,27 +424,8 @@ int mainMission(DataSourceT* src,
     g_src = src;
     #endif
     
-    // Install ctrl-c handler
-    // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
-    struct sigaction sigIntHandler;
-    sigIntHandler.sa_sigaction = ctrlC;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-    sigaction(SIGINT, &sigIntHandler, NULL);
-    
-    // Install segfault handler
-    // https://stackoverflow.com/questions/2350489/how-to-catch-segmentation-fault-in-linux
     g_o2 = &o2;
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(struct sigaction));
-    sigemptyset(&sa.sa_mask);
-    sa.sa_sigaction = segfault_sigaction;
-    sa.sa_flags   = SA_SIGINFO;
-    sigaction(SIGSEGV, &sa, NULL); // Segfault handler! Tries to save stuff ASAP, unlike sigIntHandler.
-    
-    // Install SIGBUS (?), SIGILL (illegal instruction), and EXC_BAD_ACCESS (similar to segfault but is for "A crash due to a memory access issue occurs when an app uses memory in an unexpected way. Memory access problems have numerous causes, such as dereferencing a pointer to an invalid memory address, writing to read-only memory, or jumping to an instruction at an invalid address. These crashes are most often identified by the EXC_BAD_ACCESS (SIGSEGV) or EXC_BAD_ACCESS (SIGBUS) exceptions" ( https://developer.apple.com/documentation/xcode/investigating-memory-access-crashes )) handlers
-    sigaction(SIGBUS, &sa, NULL);
-    sigaction(SIGILL, &sa, NULL);
+    installSignalHandlers();
 
     if (CMD_CONFIG(showPreviewWindow())) {
         #ifdef USE_COMMAND_LINE_ARGS
@@ -488,6 +498,7 @@ int mainMission(DataSourceT* src,
         tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
 //            OPTICK_EVENT();
             std::cout << "hello from " << id << std::endl;
+            installSignalHandlers();
 
 #ifdef USE_PTR_INC_MALLOC
             bigMallocBlock = beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */, bigMallocBlock); // 8 is 8 bytes to align to a reasonable block size malloc might be using
