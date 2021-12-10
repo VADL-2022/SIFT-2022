@@ -37,6 +37,7 @@ struct SIFTParams {
     
     SIFTParams();
     ~SIFTParams();
+    SIFTParams(const SIFTParams& p);
     
     // Set params //
     struct sift_parameters* params = nullptr;

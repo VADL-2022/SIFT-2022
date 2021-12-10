@@ -46,6 +46,11 @@ SIFTParams::~SIFTParams() {
     //free(params); // FIXME: free
 }
 
+SIFTParams::SIFTParams(const SIFTParams& p) {
+    params = sift_assign_default_parameters();
+    memcpy(params, p.params, sizeof(*params));
+}
+
 SIFTState::~SIFTState() {
     // Cleanup
     for (struct sift_keypoints* keypoints : computedKeypoints) {

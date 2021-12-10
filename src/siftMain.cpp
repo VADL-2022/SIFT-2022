@@ -158,6 +158,7 @@ int main(int argc, char **argv)
     
     SIFTState s;
     SIFTParams p;
+    p.params = sift_assign_default_parameters();
     
 	// Set the default "skip"
     size_t skip = 0;//120;//60;//100;//38;//0;
@@ -206,8 +207,58 @@ int main(int argc, char **argv)
 //            }
 //            std::this_thread::sleep_for(std::chrono::milliseconds(time));
 //        }
-        else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) { // Outputs to video instead of preview window
-            cfg.imageFileOutput = true;
+        else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
+            for (int j = i+1; j < argc; j++) {
+                if (j+1 < argc && strcmp(argv[j], "-n_oct") == 0) {
+                    p.params->n_oct = std::stoi(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-n_spo") == 0) {
+                    p.params->n_spo = std::stoi(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-sigma_min") == 0) {
+                    p.params->sigma_min = std::stof(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-delta_min") == 0) {
+                    p.params->delta_min = std::stof(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-sigma_in") == 0) {
+                    p.params->sigma_in = std::stof(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-C_DoG") == 0) {
+                    p.params->C_DoG = std::stof(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-C_edge") == 0) {
+                    p.params->C_edge = std::stof(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-n_bins") == 0) {
+                    p.params->n_bins = std::stoi(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-lambda_ori") == 0) {
+                    p.params->lambda_ori = std::stof(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-t") == 0) {
+                    p.params->t = std::stof(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-n_hist") == 0) {
+                    p.params->n_hist = std::stoi(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-n_ori") == 0) {
+                    p.params->n_ori = std::stoi(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-lambda_descr") == 0) {
+                    p.params->lambda_descr = std::stof(argv[j+1]);
+                }
+                else if (j+1 < argc && strcmp(argv[j], "-itermax") == 0) {
+                    p.params->itermax = std::stoi(argv[j+1]);
+                }
+                else {
+                    // Continue with these parameters as the next arguments
+                    i = j;
+                    break;
+                }
+            }
+        }
+        else if (i+1 < argc && strcmp(argv[i], "--sift-params-func") == 0) {
             if (SIFTParams::call_params_function(argv[i+1], p.params) < 0) {
                 printf("Invalid params function name given: %s. Value options are:", argv[i+1]);
                 SIFTParams::print_params_functions();
@@ -544,7 +595,7 @@ int mainMission(DataSourceT* src,
             bigMallocBlock = beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */, bigMallocBlock); // 8 is 8 bytes to align to a reasonable block size malloc might be using
 #endif
             SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
-            p.params = sift_assign_default_parameters();
+            // Overrides for the params of `pOrig` (into `p`) go below:
 //            v2Params(p.params);
 //            lowEdgeParams(p.params);
             p.params->C_edge = 8;    // 5 <-- too many outliers when run in the lab
