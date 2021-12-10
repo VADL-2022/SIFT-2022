@@ -291,7 +291,7 @@ void ctrlC(int s, siginfo_t *si, void *arg){
 DataOutputBase* g_o2 = nullptr;
 void terminate_handler() {
     if (g_o2) {
-        g_o2->release();
+        ((FileDataOutput*)g_o2)->release();
     
 //        ((FileDataOutput*)g_o2)->writer.release(); // Save the file
 //                    std::cout << "Saved the video" << std::endl;
