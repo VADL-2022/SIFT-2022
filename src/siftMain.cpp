@@ -26,9 +26,9 @@
 #include <fstream>
 
 // For stack traces on segfault, etc.
-#include <backward.hpp> // https://github.com/bombela/backward-cpp
+//#include <backward.hpp> // https://github.com/bombela/backward-cpp
 namespace backward {
-backward::SignalHandling* sh;
+//backward::SignalHandling* sh;
 } // namespace backward
 
 //#include "./optick/src/optick.h"
@@ -135,8 +135,8 @@ int mainMission(DataSourceT* src,
 int main(int argc, char **argv)
 {
     //namespace backward {
-    backward::SignalHandling sh;
-    backward::sh = &sh;
+    //backward::SignalHandling sh;
+    //backward::sh = &sh;
     //} // namespace backward
     
 //#define SEGFAULT_TEST
