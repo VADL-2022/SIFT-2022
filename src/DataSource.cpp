@@ -332,7 +332,9 @@ cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     }
     
     if (i < currentIndex) {
-        throw "Index given has no cached image";
+        const char* msg = "Index given has no cached image";
+        std::cout << msg << std::endl;
+        throw msg;
     }
     else if (i == currentIndex) {
         currentIndex++;
@@ -343,7 +345,9 @@ cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     
     cv::Mat mat;
     if (!cap.read(mat)) {
-        throw "Error reading from camera";
+        const char* msg = "Error reading from camera";
+        std::cout << msg << std::endl;
+        throw msg;
     }
     
 #ifndef USE_COMMAND_LINE_ARGS

@@ -44,8 +44,12 @@ std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int
     return std::make_pair(keypoints, std::make_pair(k, n));
 }
 
+void handleNotEnoughDescriptors(ProcessedImage<SIFTAnatomy>& img2) {
+    img2.transformation = cv::Mat::eye(3, 3, CV_64F); // 3x3 identity matrix ( https://docs.opencv.org/4.x/d3/d63/classcv_1_1Mat.html )
+}
+
 // Finds matching and homography
-void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2
+bool SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2
 #ifdef USE_COMMAND_LINE_ARGS
     , DataSourceBase* src, CommandLineConfig& cfg
 #endif
@@ -60,10 +64,11 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
     img2.out_k2A.reset(sift_malloc_keypoints());
     img2.out_k2B.reset(sift_malloc_keypoints());
     if (keypointsPrev->size == 0 || keypoints->size == 0) {
-        std::cout << "Matcher thread: zero keypoints, cannot match" << std::endl;
-        throw ""; // TODO: temp, need to notify main thread and retry matching maybe
+        std::cout << "Matcher thread: zero keypoints, cannot match. Saving identity transformation." << std::endl;
+        //throw ""; // TODO: temp, need to notify main thread and retry matching maybe
+        return false;
     }
-    matching(keypointsPrev, keypoints, img2.out_k1.get(), img2.out_k2A.get(), img2.out_k2B.get(), img2.p.thresh, img2.p.meth_flag);
+    matching(keypointsPrev, keypoints, img2.out_k1.get(), img2.out_k2A.get(), img2.out_k2B.get(), img2.p.thresh, img2.p.meth_flag); // NOTE: there can be less descriptors in out_k1 etc. than in keypoints->size or the n value.
     t.logElapsed("Matcher thread: find matches");
     
     // Find homography
@@ -104,8 +109,8 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
         //printf("Not enough keypoints to find homography! Ignoring this image\n");
         //goto end;
         
-        printf("Not enough keypoints to find homography! Exiting..");
-        exit(3);
+        printf("Matcher thread: not enough descriptors to find homography. Saving identity transformation.\n");
+        return false;
     }
     
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
@@ -164,6 +169,8 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
         // //
 #endif
     }
+    
+    return true;
 }
 
 std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {

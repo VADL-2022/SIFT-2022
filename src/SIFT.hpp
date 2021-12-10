@@ -131,7 +131,8 @@ struct SIFTAnatomy : public SIFTBase {
     std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int /*n*/>> findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale);
     
     // Finds matching and homography
-    void findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2
+    // Returns false if not enough descriptors.
+    bool findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2
 #ifdef USE_COMMAND_LINE_ARGS
     , DataSourceBase* src, CommandLineConfig& cfg
 #endif
