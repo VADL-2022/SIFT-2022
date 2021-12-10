@@ -45,3 +45,6 @@ bool startsWith(const std::string& str, const char* prefix);
 #ifdef USE_COMMAND_LINE_ARGS
 void getScreenResolution(int &width, int &height);
 #endif
+
+// For errors that a sigint could handle. Program execution must be able to continue normally after a call to this function, until a thread can teardown.
+void recoverableError(const char* msg);

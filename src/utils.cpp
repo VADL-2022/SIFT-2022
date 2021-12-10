@@ -10,6 +10,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <fstream>
+#include <signal.h>
 
 std::string mat_type2str(int type) {
   std::string r;
@@ -160,3 +161,16 @@ int main() {
 */
 #endif
 // //
+
+void recoverableError(const char* msg) {
+//        throw msg; // Problem is that this generates segfault if no exception handler exists. Instead, we generate a sigint to stop the program:
+    
+    // https://www.tutorialspoint.com/c_standard_library/c_function_raise.htm
+    printf("%s, going to raise a signal\n", msg);
+    int ret = raise(SIGINT);
+    
+    if( ret !=0 ) {
+       printf("Error: unable to raise SIGINT signal.\n");
+       throw msg;
+    }
+}

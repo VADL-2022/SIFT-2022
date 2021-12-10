@@ -132,7 +132,9 @@ int mainMission(DataSourceT* src,
                 );
 
 #ifdef USE_COMMAND_LINE_ARGS
-    CommandLineConfig cfg;
+CommandLineConfig cfg;
+
+#include <type_traits>
 #endif
 int main(int argc, char **argv)
 {
@@ -252,7 +254,8 @@ int main(int argc, char **argv)
         mainInteractive(src.get(), s, p, skip, o, o2, cfg);
     }
     else {
-        mainMission(src.get(), p, o2, cfg); // Always use the FileDataOutput instead of PreviewWindowDataOutput here, since mainMission() has custom imshow code enabled if `CMD_CONFIG(showPreviewWindow())` instead of using PreviewWindowDataOutput.
+        static_assert(std::is_same<decltype(o2), FileDataOutput>::value, "Always use the FileDataOutput instead of PreviewWindowDataOutput here for the mainMission() call, since mainMission() has custom imshow code enabled if `CMD_CONFIG(showPreviewWindow())` instead of using PreviewWindowDataOutput.");
+        mainMission(src.get(), p, o2, cfg);
     }
 #else
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
@@ -305,7 +308,7 @@ DataOutputBase* g_o2 = nullptr;
 void terminate_handler() {
     if (g_o2) {
         // [!] Take a risk and do something that can't always succeed in a segfault handler: possible malloc and state mutation:
-        ((FileDataOutput*)g_o2->release();
+        ((FileDataOutput*)g_o2)->release();
     
 //        ((FileDataOutput*)g_o2)->writer.release(); // Save the file
 //                    std::cout << "Saved the video" << std::endl;
