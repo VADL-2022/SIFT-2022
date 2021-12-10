@@ -323,6 +323,7 @@ cv::Mat OpenCVVideoCaptureDataSource::next() {
     return get(currentIndex++);
 }
 
+#include <signal.h>
 cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     size_t i = index;
     
@@ -343,7 +344,19 @@ cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     
     cv::Mat mat;
     if (!cap.read(mat)) {
-        throw "Error reading from camera";
+        const char* msg = "Error reading from camera";
+//        throw msg; // Problem is that this generates segfault if no exception handler exists. Instead, we generate a sigint to stop the program:
+        
+        // https://www.tutorialspoint.com/c_standard_library/c_function_raise.htm
+        printf("%s, going to raise a signal\n", msg);
+        int ret = raise(SIGINT);
+        
+        if( ret !=0 ) {
+           printf("Error: unable to raise SIGINT signal.\n");
+           throw msg;
+        }
+        
+        return mat;
     }
     
 #ifndef USE_COMMAND_LINE_ARGS

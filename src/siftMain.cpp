@@ -34,6 +34,8 @@ namespace backward {
 //#include "./optick/src/optick.h"
 #include "timers.hpp"
 
+#include "tools/printf.h"
+
 #include "Queue.hpp"
 thread_local SIFT_T sift;
 Queue<ProcessedImage<SIFT_T>, 1024 /*256*/ /*32*/> processedImageQueue;
@@ -224,8 +226,10 @@ int main(int argc, char **argv)
         cv::VideoCapture cap;
         // open the default camera, use something different from 0 otherwise;
         // Check VideoCapture documentation.
-        if(!cap.open(0))
-            return 0;
+        if(!cap.open(0)) {
+            std::cout << "Failed to open camera. Exiting." << std::endl;
+            return 1;
+        }
         for(;;)
         {
               cv::Mat frame;
@@ -247,11 +251,8 @@ int main(int argc, char **argv)
         p.params = sift_assign_default_parameters();
         mainInteractive(src.get(), s, p, skip, o, o2, cfg);
     }
-    else if (cfg.noPreviewWindow || cfg.imageFileOutput) {
-        mainMission(src.get(), p, o2, cfg);
-    }
     else {
-        mainMission(src.get(), p, o, cfg);
+        mainMission(src.get(), p, o2, cfg); // Always use the FileDataOutput instead of PreviewWindowDataOutput here, since mainMission() has custom imshow code enabled if `CMD_CONFIG(showPreviewWindow())` instead of using PreviewWindowDataOutput.
     }
 #else
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
@@ -282,7 +283,19 @@ bool stoppedMain() {
 //    p.print(st, stderr);
 //}
 void ctrlC(int s, siginfo_t *si, void *arg){
-    printf("Caught signal %d. Threads are stopping...\n",s);
+    printf_("Caught signal %d. Threads are stopping...\n",s); // Can't call printf because it might call malloc but the ctrlC might have happened in the middle of a malloc or free call, leaving data structures for it invalid. So we use `printf_` from https://github.com/mpaland/printf which is thread-safe and malloc-free but slow because it just write()'s all the characters one by one. Generally, "the signal handler code must not call non-reentrant functions that modify the global program data underneath the hood." ( https://www.delftstack.com/howto/c/sigint-in-c/ )
+    // Notes:
+    /* https://stackoverflow.com/questions/11487900/best-pratice-to-free-allocated-memory-on-sigint :
+     Handling SIGINT: I can think of four common ways to handle a SIGINT:
+
+     Use the default handler. Highly recommended, this requires the least amount of code and is unlikely to result in any abnormal program behavior. Your program will simply exit.
+
+     Use longjmp to exit immediately. This is for folk who like to ride fast motorcycles without helmets. It's like playing Russian roulette with library calls. Not recommended.
+
+     Set a flag, and interrupt the main loop's pselect/ppoll. This is a pain to get right, since you have to twiddle with signal masks. You want to interrupt pselect/ppoll only, and not non-reentrant functions like malloc or free, so you have to be very careful with things like signal masks. Not recommended. You have to use pselect/ppoll instead of select/poll, because the "p" versions can set the signal mask atomically. If you use select or poll, a signal can arrive after you check the flag but before you call select/poll, this is bad.
+
+     Create a pipe to communicate between the main thread and the signal handler. Always include this pipe in the call to select/poll. The signal handler simply writes one byte to the pipe, and if the main loop successfully reads one byte from the other end, then it exits cleanly. Highly recommended. You can also have the signal handler uninstall itself, so an impatient user can hit CTRL+C twice to get an immediate exit.
+     */
     stopMain();
     
     // Print stack trace
@@ -291,18 +304,20 @@ void ctrlC(int s, siginfo_t *si, void *arg){
 DataOutputBase* g_o2 = nullptr;
 void terminate_handler() {
     if (g_o2) {
-        ((FileDataOutput*)g_o2)->release();
+        // [!] Take a risk and do something that can't always succeed in a segfault handler: possible malloc and state mutation:
+        ((FileDataOutput*)g_o2->release();
     
 //        ((FileDataOutput*)g_o2)->writer.release(); // Save the file
 //                    std::cout << "Saved the video" << std::endl;
     }
     else {
+        // [!] Take a risk and do something that can't always succeed in a segfault handler: possible malloc and state mutation:
         std::cout << "No video to save" << std::endl;
     }
 }
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
-    printf("Caught segfault (%s) at address %p. Running terminate_handler().\n", strsignal(signal), si->si_addr);
+    printf_("Caught segfault (%s) at address %p. Running terminate_handler().\n", strsignal(signal), si->si_addr);
     
     terminate_handler();
     

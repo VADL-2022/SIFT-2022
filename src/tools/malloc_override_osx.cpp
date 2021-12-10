@@ -8,6 +8,7 @@
 // https://gist.github.com/monitorjbl/3dc6d62cf5514892d5ab22a59ff34861
 
 #include "malloc_override_osx.hpp"
+#include "file_descriptors.h"
 
 #ifdef USE_PTR_INC_MALLOC
 
@@ -35,10 +36,6 @@ namespace memory{
 #ifdef MYMALLOC
 thread_local bool isMtraceHack = false;
 #endif
-// default file descriptors
-#define STDIN  0
-#define STDOUT 1
-#define STDERR 2
 void mtrace_init(void){
     // Calling dlsym can call _dlerror_run which can call calloc to show error messages, causing an infinite recursion.
     _r_malloc = reinterpret_cast<real_malloc>(reinterpret_cast<long>(dlsym(RTLD_NEXT, "malloc")));

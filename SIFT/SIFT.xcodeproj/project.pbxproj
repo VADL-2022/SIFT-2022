@@ -22,6 +22,8 @@
 		300EE4B427209F9400969C5F /* my_sift_additions.c in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48D27209F9400969C5F /* my_sift_additions.c */; };
 		300EE4B527209F9400969C5F /* siftMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48E27209F9400969C5F /* siftMain.cpp */; };
 		300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE48F27209F9400969C5F /* Semaphore.cpp */; };
+		303CB676276319A700ABDBF1 /* printf.c in Sources */ = {isa = PBXBuildFile; fileRef = 303CB674276319A700ABDBF1 /* printf.c */; };
+		303CB67827631A0200ABDBF1 /* _putchar.c in Sources */ = {isa = PBXBuildFile; fileRef = 303CB67727631A0200ABDBF1 /* _putchar.c */; };
 		308B6C06275AA96D00FE86A9 /* mymalloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B6C05275AA96D00FE86A9 /* mymalloc.cpp */; };
 		308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */; };
 		308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */; };
@@ -101,6 +103,10 @@
 		300EE49227209F9400969C5F /* strnatcmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = strnatcmp.cpp; sourceTree = "<group>"; };
 		300EE4B827209FF000969C5F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		300EE4BA2720A98700969C5F /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Config.xcconfig; path = ../Config.xcconfig; sourceTree = "<group>"; };
+		303CB674276319A700ABDBF1 /* printf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = printf.c; sourceTree = "<group>"; };
+		303CB675276319A700ABDBF1 /* printf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = printf.h; sourceTree = "<group>"; };
+		303CB67727631A0200ABDBF1 /* _putchar.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = _putchar.c; sourceTree = "<group>"; };
+		303CB67927631A4800ABDBF1 /* file_descriptors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = file_descriptors.h; sourceTree = "<group>"; };
 		308B6C05275AA96D00FE86A9 /* mymalloc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mymalloc.cpp; sourceTree = "<group>"; };
 		308B7099275AD7CF00FE86A9 /* malloc_override_osx.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = malloc_override_osx.hpp; sourceTree = "<group>"; };
 		308B709A275ADF1A00FE86A9 /* timers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = timers.hpp; sourceTree = "<group>"; };
@@ -279,6 +285,10 @@
 				308B70A0275BC77B00FE86A9 /* malloc_with_free_all.h */,
 				30F00227275D89EF000A3D25 /* myMalloc_.c */,
 				30F00228275D89EF000A3D25 /* myMalloc_.h */,
+				303CB674276319A700ABDBF1 /* printf.c */,
+				303CB675276319A700ABDBF1 /* printf.h */,
+				303CB67727631A0200ABDBF1 /* _putchar.c */,
+				303CB67927631A4800ABDBF1 /* file_descriptors.h */,
 			);
 			path = tools;
 			sourceTree = "<group>";
@@ -374,6 +384,7 @@
 				300EE4B027209F9400969C5F /* utils.cpp in Sources */,
 				300EE4A227209F9400969C5F /* lib_io_scalespace.c in Sources */,
 				30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */,
+				303CB676276319A700ABDBF1 /* printf.c in Sources */,
 				308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */,
 				300EE49327209F9400969C5F /* Makefile in Sources */,
 				30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */,
@@ -385,6 +396,7 @@
 				308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */,
 				30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */,
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
+				303CB67827631A0200ABDBF1 /* _putchar.c in Sources */,
 				300EE49527209F9400969C5F /* lib_keypoint.c in Sources */,
 				300EE4A427209F9400969C5F /* lib_description.c in Sources */,
 				30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */,

@@ -62,7 +62,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--camera-test-only"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--video-file-data-source"
@@ -70,7 +70,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--main-mission"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--size-frame"
