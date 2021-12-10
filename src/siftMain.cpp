@@ -482,15 +482,18 @@ int mainMission(DataSourceT* src,
 //        OPTICK_FRAME("MainThread"); // https://github.com/bombomby/optick
         
         std::cout << "i: " << i << std::endl;
+        auto sinceLast_milliseconds = since(last).count();
         if (src->wantsCustomFPS()) {
-            auto sinceLast_milliseconds = since(last).count();
             if (sinceLast_milliseconds < timeBetweenFrames_milliseconds) {
                 // Sleep
                 auto sleepTime = timeBetweenFrames_milliseconds - sinceLast_milliseconds;
                 std::cout << "Sleeping for " << sleepTime << " milliseconds" << std::endl;
                 std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
             }
-            last = std::chrono::steady_clock::now();
+        }
+        last = std::chrono::steady_clock::now();
+        if (sinceLast_milliseconds > timeBetweenFrames_milliseconds) {
+            std::cout << "WARNING: Lagging behind in video capture by " << sinceLast_milliseconds - timeBetweenFrames_milliseconds << " milliseconds" << std::endl;
         }
 #ifdef STOP_AFTER
 	if (since(start).count() > STOP_AFTER) {

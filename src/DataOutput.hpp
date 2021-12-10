@@ -43,7 +43,7 @@ struct FileDataOutput : public DataOutputBase
     FileDataOutput(std::string filenameNoExt, double fps = 30, cv::Size sizeFrame = {640,480});
     void run(cv::Mat frame);
     
-    void release();
+    void release() MaybeOverride;
     
     cv::VideoWriter writer;
     std::mutex writerMutex;

@@ -58,9 +58,11 @@ using SIFT_T = SIFT_IMPL;
 #ifdef USE_COMMAND_LINE_ARGS
 #define MaybeVirtual virtual
 #define MaybePureVirtual = 0
+#define MaybeOverride override
 #else
 #define MaybeVirtual
 #define MaybePureVirtual
+#define MaybeOverride
 #endif
 
 #endif /* Config_h */
