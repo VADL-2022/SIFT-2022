@@ -548,6 +548,8 @@ int mainMission(DataSourceT* src,
 //            v2Params(p.params);
 //            lowEdgeParams(p.params);
             p.params->C_edge = 8;    // 5 <-- too many outliers when run in the lab
+	    p.params->n_spo = 2;
+	    p.params->delta_min = 0.3;
 
             // compute sift keypoints
             std::cout << id << " findKeypoints" << std::endl;
