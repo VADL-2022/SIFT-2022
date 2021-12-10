@@ -161,7 +161,10 @@ int main(int argc, char **argv)
     
     // Command-line args //
 #ifdef USE_COMMAND_LINE_ARGS
-    system("bash -c 'export DISPLAY=:0.0'"); // Needed to show windows with GTK/X11 correctly
+    if (putenv("DISPLAY=:0.0") != 0) { // Equivalent to running `export DISPLAY=:0.0` in bash.  // Needed to show windows with GTK/X11 correctly
+        perror("Failed to set X11 display");
+        exit(EXIT_FAILURE);
+    }
     
     FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
@@ -286,10 +289,7 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     //backward::sh->handleSignal(s, si, arg);
 }
 DataOutputBase* g_o2 = nullptr;
-void segfault_sigaction(int signal, siginfo_t *si, void *arg)
-{
-    printf("Caught %s at address %p\n", strsignal(signal), si->si_addr);
-    
+void terminate_handler() {
     if (g_o2) {
         g_o2->release();
     
@@ -299,14 +299,27 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     else {
         std::cout << "No video to save" << std::endl;
     }
+}
+void segfault_sigaction(int signal, siginfo_t *si, void *arg)
+{
+    printf("Caught segfault (%s) at address %p. Running terminate_handler().\n", strsignal(signal), si->si_addr);
+    
+    terminate_handler();
     
     // Print stack trace
     //backward::sh->handleSignal(signal, si, arg);
     
-    exit(5);
+    exit(5); // Probably doesn't call atexit since signal handlers don't.
 }
 // Installs signal handlers for the current thread.
 void installSignalHandlers() {
+    // https://en.cppreference.com/w/cpp/error/set_terminate
+    std::set_terminate([](){
+        std::cout << "Unhandled exception detected by SIFT. Running terminate_handler()." << std::endl;
+        terminate_handler();
+        std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
+    });
+    
     // Install ctrl-c handler
     // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
     struct sigaction sigIntHandler;
@@ -425,6 +438,12 @@ int mainMission(DataSourceT* src,
     #endif
     
     g_o2 = &o2;
+//    if (atexit(atexit_handler) != 0) { // https://man7.org/linux/man-pages/man3/atexit.3.html : "The atexit() function registers the given function to be called
+//        // at normal process termination, either via exit(3) or via return
+//        // from the program's main()."
+//        printf("Failed to set atexit handler");
+//        exit(EXIT_FAILURE);
+//    }
     installSignalHandlers();
 
     if (CMD_CONFIG(showPreviewWindow())) {
