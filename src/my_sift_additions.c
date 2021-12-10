@@ -12,6 +12,32 @@
 #include <lib_sift_anatomy.h>
 #include <lib_util.h>
 
+/*  From `sift_anatomy_20141201/README.txt`:
+ -------------------------------------------------------------------------------
+ Parameter    std value  Definition
+ -------------------------------------------------------------------------------
+ n_oct           8        number of octaves in the scale-space,
+ n_spo           3        number of scales per octave,
+ sigma_min       0.8      minimal level of blur featured in the scale-space,
+ delta_min       0.5      minimal inter-pixel distance  featured in the
+                          scale-space,
+ sigma_in        0.5      assumed level of blur in the input image,
+
+ C_DoG     1.33 (0.04/3)  threshold on DoG operator (expressed for n_spo = 3),
+ C_edge          10       threshold on the ratio of principal curvatures,
+
+ n_bins          36       number of bins in the orientation histogram,
+ lambda_ori      1.5      sets the width of the orientation patch,
+ t               0.8      reference orientation minimal value in the histogram,
+
+ n_hist          4        the descriptor is composed of n_histXnhist weighted
+                          histograms,
+ n_ori           8        each weighted histogram is composed of n_ori bins,
+ lambda_descr    6.0      sets the width of the descriptor patch.
+
+ label                    string used to label all the extra output files.
+*/
+
 //void defaultParams(struct sift_parameters* p) {
     // Defaults:
     /* p->n_oct = 8; */
@@ -62,6 +88,24 @@ void v3Params(struct sift_parameters* p) {
     p->delta_min=1;
     p->sigma_in=1.1;
     p->sigma_min=1.1;
+}
+
+void lowEdgeParams(struct sift_parameters* p) {
+    // Defaults:
+    p->n_oct = 8;
+    p->n_spo = 3;
+    p->sigma_min = 0.8;
+    p->delta_min = 0.5;
+    p->sigma_in = 0.5;
+    p->C_DoG = 0.013333333;  // = 0.04/3
+    p->C_edge = 2; //10;
+    p->n_bins = 36;
+    p->lambda_ori = 1.5;
+    p->t = 0.80;
+    p->n_hist = 4;
+    p->n_ori = 8;
+    p->lambda_descr = 6;
+    p->itermax = 5;
 }
 
 /** @brief Extracts oriented keypoints (without description

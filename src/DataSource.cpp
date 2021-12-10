@@ -332,8 +332,9 @@ cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     }
     
     if (i < currentIndex) {
-        recoverableError("Index given has no cached image");
-        return cv::Mat();
+        const char* msg = "Index given has no cached image";
+        std::cout << msg << std::endl;
+        throw msg;
     }
     else if (i == currentIndex) {
         currentIndex++;
@@ -344,8 +345,9 @@ cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     
     cv::Mat mat;
     if (!cap.read(mat)) {
-        recoverableError("Error reading from camera");
-        return mat;
+        const char* msg = "Error reading from camera";
+        std::cout << msg << std::endl;
+        throw msg;
     }
     
 #ifndef USE_COMMAND_LINE_ARGS
@@ -355,8 +357,14 @@ cv::Mat OpenCVVideoCaptureDataSource::get(size_t index) {
     
     // Cache it
     cache.emplace(i, mat);
-    
+
+#define CROP_FOR_FISHEYE_CAMERA
+    #ifdef CROP_FOR_FISHEYE_CAMERA
+    cv::Mat cropped_image = mat(cv::Rect(cv::Point(137,62), cv::Point(490,401)));
+    return cropped_image;
+    #else
     return mat;
+    #endif
 }
 
 std::string OpenCVVideoCaptureDataSource::nameForIndex(size_t index) {
@@ -427,10 +435,7 @@ cv::Mat VideoFileDataSource::get(size_t index) {
     // and seek to the new time.
     cap.set(cv::CAP_PROP_POS_MSEC, video_time_);
     
-    cv::Mat res = OpenCVVideoCaptureDataSource::get(index);
-
-    cv::Mat cropped_image = res(cv::Rect(cv::Point(137,62), cv::Point(490,401)));
-    return cropped_image;
+    return OpenCVVideoCaptureDataSource::get(index);
 }
 
 template<>

@@ -29,7 +29,7 @@ OBJECTS_$(1) = $(OBJECTS) $(SIFT_OBJECTS)
 OBJECTS_$(1) := $$(addsuffix _$(1).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)))) src/siftMain_$(1).o
 ALL_OBJECTS_FROM_TARGETS += $$(OBJECTS_$(1))
 sift_exe_$(1): $$(OBJECTS_$(1))
-	$(CXX_LINK) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(2)
+	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(2)
 endef
 
 # END LIBRARY FUNCTIONS #
@@ -112,25 +112,16 @@ ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
 $(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile
 
-# https://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile/58316463#58316463
-list:
-	@echo
-	@echo "The default target is not supported. Run one of the specific targets such as one of the below targets:"
-	@sh -c "$(MAKE) -p no_targets__ | awk -F':' '/^[a-zA-Z0-9][^\$$#\/\\t=]*:([^=]|$$)/ {split(\$$1,A,/ /);for(i in A) { if (A[i] !~ /make\[1\]/ && A[i] !~ /Makefile/) print \"   \",A[i]} }' | grep -v '__\$$' | sort"
-.PHONY: no_targets__ list
-no_targets__:
-# ^Empty
-
-#all: common sift_exe quadcopter
+all: common sift_exe quadcopter
 # gcc -std=c99 -o example example2.c $(SIFT)/lib_sift.o $(SIFT)/lib_sift_anatomy.o \
 # $(SIFT)/lib_keypoint.o  $(SIFT)/lib_scalespace.o $(SIFT)/lib_description.o \
 # $(SIFT)/lib_discrete.o $(SIFT)/lib_util.o -lm -I$(SIFT)
 
-# setup:
-# 	mkdir -p $(OBJ)
+setup:
+	mkdir -p $(OBJ)
 
-# common:
-# 	cd $(SIFT) && $(MAKE)
+common:
+	cd $(SIFT) && $(MAKE)
 
 
 

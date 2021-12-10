@@ -25,6 +25,8 @@ void v2Params(struct sift_parameters* p);
 // Based off v1 params, similar
 void v3Params(struct sift_parameters* p);
   
+void lowEdgeParams(struct sift_parameters* p);
+
 /** @brief Extracts oriented keypoints (without description
  *  Need to free *outKeypoints with sift_free_keypoints()
  *
