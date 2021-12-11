@@ -126,6 +126,7 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
+	bool sendOnRadio_ = false;
 	for (int i = 1; i < argc; i++) {
           if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 	    callback = nullptr;
@@ -140,7 +141,7 @@ VADL2022::VADL2022(int argc, char** argv)
             }
           }
           else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
-	    sendOnRadio();
+	    sendOnRadio_ = true;
           }
         }
 
@@ -151,7 +152,10 @@ VADL2022::VADL2022(int argc, char** argv)
 
         connect_GPIO();
 	connect_Python();
-	mImu = new IMU();
+        if (sendOnRadio_) {
+          sendOnRadio();
+        }
+        mImu = new IMU();
 	// mLidar = new LIDAR();
 	// mLds = new LDS();
 	// mMotor = new MOTOR();
