@@ -5,6 +5,7 @@
 #include <python3.7m/frameobject.h>
 #include <stdbool.h>
 
+static void s_print_err_text(int offset, const char *text, size_t maxout, char out[maxout]);
 bool s_print_source_line(const char *filename, int lineno, int indent,
                          size_t maxout, char out[static maxout]);
 
