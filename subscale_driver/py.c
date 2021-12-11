@@ -116,6 +116,7 @@ void S_Error_Update(struct py_err_ctx *err_ctx) {
         }else{
             repr = PyObject_Str(err_ctx->type);
             if(repr) {
+                #define PyString_AS_STRING PyUnicode_AS_UNICODE
                 pf_strlcpy(buff, PyString_AS_STRING(repr), sizeof(buff));
             }
             Py_XDECREF(repr);
