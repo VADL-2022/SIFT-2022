@@ -23,13 +23,15 @@ CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 #-include $(SRC:%.cpp=%.d)
 endef
 
-# Usage: `$(eval $(call OBJECTS_LINKING_template,release_orWhateverTargetYouWant,flagsHere))`
+# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFileFolderPathHere,flagsHere))`
+# Main file should be named `targetNameHere` followed by `Main` and `.cpp` or `.c`.
 define OBJECTS_LINKING_template =
-OBJECTS_$(1) = $(OBJECTS) $(SIFT_OBJECTS)
-OBJECTS_$(1) := $$(addsuffix _$(1).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)))) src/siftMain_$(1).o
-ALL_OBJECTS_FROM_TARGETS += $$(OBJECTS_$(1))
-sift_exe_$(1): $$(OBJECTS_$(1))
-	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(2)
+OBJECTS_$(1)_$(2) = $(3)
+OBJECTS_$(1)_$(2) := $$(addsuffix _$(2).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)_$(2)))) $(4)/$(1)Main_$(2).o
+ALL_OBJECTS_FROM_TARGETS += $$(OBJECTS_$(1)_$(2))
+$(info $$(OBJECTS_$(1)_$(2)))
+$(1)_exe_$(2): $$(OBJECTS_$(1)_$(2))
+	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(5)
 endef
 
 # END LIBRARY FUNCTIONS #
@@ -65,11 +67,11 @@ endif
 CXXFLAGS += -std=c++17 $(CFLAGS)
 CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*) .*/\1/' | awk '{$$1=$$1;print}') # https://stackoverflow.com/questions/5188267/checking-the-gcc-version-in-a-makefile
 $(info $(CLANGVERSION)) # Example: "7.1.0 "
-ifeq ($(shell foo="$(CLANGVERSION)"; if [ "$${foo//./}" -le 710 ]; then echo 0; fi),0) #ifeq ($(shell foo="$(CLANGVERSION)"; test ${foo//./} -le 710; echo $$?),0) # TODO: check if version less than or equal to this
+#ifeq ($(shell foo="$(CLANGVERSION)"; if [ "$${foo//./}" -le 710 ]; then echo 0; fi),0) #ifeq ($(shell foo="$(CLANGVERSION)"; test ${foo//./} -le 710; echo $$?),0) # TODO: check if version less than or equal to this
 ifeq ($(OS),Darwin)
     LFLAGS += -lc++fs
 endif
-endif
+#endif
 ifeq ($(OS),Darwin)
     LFLAGS += -framework CoreGraphics
 else ifeq ($(OS),Linux)
@@ -125,6 +127,8 @@ common:
 
 
 
+############################# SIFT targets #############################
+
 # commandLine targets in general
 ADDITIONAL_CFLAGS_ALL_COMMANDLINE = -DUSE_COMMAND_LINE_ARGS
 
@@ -148,13 +152,23 @@ $(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEB
 
 # release linking
 ADDITIONAL_CFLAGS_RELEASE += -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
-$(eval $(call OBJECTS_LINKING_template,release,$(ADDITIONAL_CFLAGS_RELEASE)))
-$(eval $(call OBJECTS_LINKING_template,release_commandLine,$(ADDITIONAL_CFLAGS_RELEASE)))
+$(eval $(call OBJECTS_LINKING_template,sift,release,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE)))
+$(eval $(call OBJECTS_LINKING_template,sift,release_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE)))
 
 # debug linking
 #ADDITIONAL_CFLAGS_DEBUG += 
-$(eval $(call OBJECTS_LINKING_template,debug,$(ADDITIONAL_CFLAGS_DEBUG)))
-$(eval $(call OBJECTS_LINKING_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEBUG)))
+$(eval $(call OBJECTS_LINKING_template,sift,debug,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG)))
+$(eval $(call OBJECTS_LINKING_template,sift,debug_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG)))
+
+############################# Driver targets #############################
+
+#$(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
+SUBSCALE_SRC := ./subscale_driver/
+SUBSCALE_SOURCES := $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp))
+SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o)
+$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE)))
+
+############################# End of targets #############################
 
 
 
