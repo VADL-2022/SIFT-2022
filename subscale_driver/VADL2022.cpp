@@ -139,6 +139,9 @@ VADL2022::VADL2022(int argc, char** argv)
 	      exit(1);
             }
           }
+          else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
+	    sendOnRadio();
+          }
         }
 
         if (timeFromTakeoffToMainDeploymentAndStabilization == nullptr) {
