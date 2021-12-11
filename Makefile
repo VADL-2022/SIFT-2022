@@ -23,15 +23,15 @@ CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 #-include $(SRC:%.cpp=%.d)
 endef
 
-# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFile_folderPathHere,flagsHere))`
+# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFile_folderPathHere,flagsHere,additionalDepsHere))`
 # Main file should be named `targetNameHere` followed by `Main` and `.cpp` or `.c`.
 define OBJECTS_LINKING_template =
 OBJECTS_$(1)_$(2) = $(3)
 OBJECTS_$(1)_$(2) := $$(addsuffix _$(2).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)_$(2)))) $(4)/$(1)Main_$(2).o
 ALL_OBJECTS_FROM_TARGETS += $$(OBJECTS_$(1)_$(2))
 #$$(info $$(OBJECTS_$(1)_$(2)))
-$(1)_exe_$(2): $$(OBJECTS_$(1)_$(2))
-	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(5)
+$(1)_exe_$(2): $$(OBJECTS_$(1)_$(2)) $(6)
+	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(5) $(6)
 endef
 
 # END LIBRARY FUNCTIONS #
@@ -160,21 +160,21 @@ $(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEB
 
 # release linking
 ADDITIONAL_CFLAGS_RELEASE += -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
-$(eval $(call OBJECTS_LINKING_template,sift,release,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE)))
-$(eval $(call OBJECTS_LINKING_template,sift,release_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE)))
+$(eval $(call OBJECTS_LINKING_template,sift,release,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE),))
+$(eval $(call OBJECTS_LINKING_template,sift,release_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE),))
 
 # debug linking
 #ADDITIONAL_CFLAGS_DEBUG += 
-$(eval $(call OBJECTS_LINKING_template,sift,debug,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG)))
-$(eval $(call OBJECTS_LINKING_template,sift,debug_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG)))
+$(eval $(call OBJECTS_LINKING_template,sift,debug,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG),))
+$(eval $(call OBJECTS_LINKING_template,sift,debug_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG),))
 
 ############################# Driver targets #############################
 
 #$(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
 SUBSCALE_SRC := ./subscale_driver/
 SUBSCALE_SOURCES := $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp))
-SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o) ./VectorNav/build/bin/libvncxx.a
-$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -IVectorNav/include))
+SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o)
+$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -IVectorNav/include,./VectorNav/build/bin/libvncxx.a))
 
 ############################# VectorNav targets #############################
 
