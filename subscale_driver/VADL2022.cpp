@@ -62,7 +62,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
       #else
-      v->log->userCallback = nullptr;
+      v->mLog->userCallback = nullptr;
       #endif
       
       puts("Target time reached, we are considered having just lifted off");
