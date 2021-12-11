@@ -20,7 +20,7 @@ using namespace std;
 const float GS = 6;
 const float IMU_ACCEL_MAGNITUDE_THRESHOLD = GS * 9.81; // g's converted to meters per second squared.
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
-const long long timeFromTakeoffToMainDeploymentAndStabilization = 2/*TODO: TEMP*/ * 1000; // Milliseconds
+const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabilization = "2000"; // Milliseconds
 
 void startDelayedSIFT(VADL2022 *v) {
   pid_t pid = fork(); // create a new child process
@@ -38,7 +38,7 @@ void startDelayedSIFT(VADL2022 *v) {
       printf("Error waiting!\n");
     }
   } else if (pid == 0) {
-    char *args[] = { "./sift_exe_release_commandLine", "--sleep-before-running", timeFromTakeoffToMainDeploymentAndStabilization, (char *)0 };
+    char *args[] = { "./sift_exe_release_commandLine", "--sleep-before-running", (timeFromTakeoffToMainDeploymentAndStabilization), (char *)0 };
     execvp(args[0], args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
     exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
@@ -78,7 +78,7 @@ VADL2022::VADL2022(int argc, char** argv)
 	cout << "Main: Initiating" << endl;
 
 	// Parse command-line args
-	UserCallback callback = checkTakeoffCallback;
+	Log::UserCallback callback = checkTakeoffCallback;
 	for (int i = 1; i < argc; i++) {
           if (strcmp(argv[i], "--imu-record-only") == 0) {
 	    callback = nullptr;
