@@ -11,9 +11,9 @@ class VADL2022
 public:
     LOG *mLog;     // LOG
     IMU *mImu;     // IMU
-    LIDAR *mLidar; // LIDAR
-    LDS *mLds;     // LDS
-    MOTOR *mMotor; // ODRIVE
+    // LIDAR *mLidar; // LIDAR
+    // LDS *mLds;     // LDS
+    // MOTOR *mMotor; // ODRIVE
 
     VADL2022();
     ~VADL2022();
