@@ -59,7 +59,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
     v->currentTime = fseconds;
     if (duration >= IMU_ACCEL_DURATION) {
       // Stop these checkTakeoffCallback callbacks
-      #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__)
+      #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
       #else
       v->log->userCallback = nullptr;
