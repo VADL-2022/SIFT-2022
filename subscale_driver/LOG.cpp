@@ -50,7 +50,7 @@ void LOG::callback(void *userData)
     }
 }
 
-LOG::LOG(UserCallback userCallback_, IMU *imu) : userCallback(userCallback_), mImu(imu)
+LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu) : userCallback(userCallback_), callbackUserData(callbackUserData_), mImu(imu)
 {
     if (LOG_ACTIVE || VERBOSE)
     {

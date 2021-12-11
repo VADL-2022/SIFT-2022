@@ -9,19 +9,89 @@
 // #include "LDS.hpp"
 // #include "MOTOR.hpp"
 
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
 using namespace std;
 
-VADL2022::VADL2022()
+const float GS = 6;
+const float IMU_ACCEL_MAGNITUDE_THRESHOLD = GS * 9.81; // g's converted to meters per second squared.
+const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
+const long long timeFromTakeoffToMainDeploymentAndStabilization = 2/*TODO: TEMP*/ * 1000; // Milliseconds
+
+void startDelayedSIFT(VADL2022 *v) {
+  pid_t pid = fork(); // create a new child process
+  if (pid > 0) {
+    int status = 0;
+    if (wait(&status) != -1) {
+      if (WIFEXITED(status)) {
+	// now check to see what its exit status was
+	printf("The exit status was: %d\n", WEXITSTATUS(status));
+      } else if (WIFSIGNALED(status)) {
+	// it was killed by a signal
+	printf("The signal that killed me was %d\n", WTERMSIG(status));
+      }
+    } else {
+      printf("Error waiting!\n");
+    }
+  } else if (pid == 0) {
+    char *args[] = { "./sift_exe_release_commandLine", "--sleep-before-running", timeFromTakeoffToMainDeploymentAndStabilization, (char *)0 };
+    execvp(args[0], args); // one variant of exec
+    perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
+    exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
+  } else {
+    perror("Error with fork");
+  }
+}
+
+void checkTakeoffCallback(LOG *log, float fseconds) {
+  VADL2022* v = (VADL2022*)log->callbackUserData;
+  static float timer = 0;
+  float magnitude = log->mImu->linearAccelNed.mag();
+  if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD) {
+    // Record this, it must last for IMU_ACCEL_DURATION
+    float duration = v->currentTime - v->startTime;
+    printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
+    v->currentTime = fseconds;
+    if (duration >= IMU_ACCEL_DURATION) {
+      puts("Target time reached, we are considered having just lifted off");
+      
+      // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
+      startDelayedSIFT(v);
+    }
+  }
+  else {
+    // Reset timer
+    if (v->currentTime != 0) {
+      puts("Not enough acceleration; resetting timer");
+    }
+    v->startTime = fseconds;
+    v->currentTime = 0;
+  }
+}
+
+VADL2022::VADL2022(int argc, char** argv)
 {
 	cout << "Main: Initiating" << endl;
 
+	// Parse command-line args
+	UserCallback callback = checkTakeoffCallback;
+	for (int i = 1; i < argc; i++) {
+          if (strcmp(argv[i], "--imu-record-only") == 0) {
+	    callback = nullptr;
+          }
+        }
+	
 	connect_GPIO();
 	connect_Python();
 	mImu = new IMU();
 	// mLidar = new LIDAR();
 	// mLds = new LDS();
 	// mMotor = new MOTOR();
-	mLog = new LOG(nullptr, mImu);//, nullptr /*mLidar*/, nullptr /*mLds*/);
+	mLog = new LOG(callback, this, mImu);//, nullptr /*mLidar*/, nullptr /*mLds*/);
 
 	mImu->receive();
 	mLog->receive();
