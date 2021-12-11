@@ -1,4 +1,8 @@
 #include "py.h"
+#include "lib/pf_string.h"
+
+#include <osdefs.h>
+#include <frameobject.h>
 
 struct py_err_ctx{
     bool           occurred;
@@ -41,6 +45,7 @@ int s_parse_syntax_error(PyObject *err, PyObject **message, const char **filenam
         *filename = NULL;
     }
     else {
+      #define PyString_AsString PyUnicode_AsUTF8
         *filename = PyString_AsString(v);
         Py_DECREF(v);
         if (!*filename)
@@ -50,6 +55,7 @@ int s_parse_syntax_error(PyObject *err, PyObject **message, const char **filenam
     v = PyObject_GetAttrString(err, "lineno");
     if (!v)
         goto finally;
+    #define PyInt_AsLong PyLong_AsLong
     hold = PyInt_AsLong(v);
     Py_DECREF(v);
     if (hold < 0 && PyErr_Occurred())
@@ -232,7 +238,7 @@ void S_ShowLastError(void)
     PyErr_NormalizeException(&s_err_ctx.type, &s_err_ctx.value, &s_err_ctx.traceback);
 
     if(s_err_ctx.occurred) {
-      S_Error_Update(s_err_ctx);
-      s_err_clear(s_err_ctx);
+      S_Error_Update(&s_err_ctx);
+      s_err_clear(&s_err_ctx);
     }
 }
