@@ -1,8 +1,8 @@
 #include <iostream>
 #include <pigpio.h>
 #include "vn/sensors.h"
-#include "../include/config.hpp"
-#include "../include/IMU.hpp"
+#include "config.hpp"
+#include "IMU.hpp"
 
 using namespace std;
 using namespace vn::protocol::uart;

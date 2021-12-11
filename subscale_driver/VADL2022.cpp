@@ -21,7 +21,7 @@ VADL2022::VADL2022()
 	// mLidar = new LIDAR();
 	// mLds = new LDS();
 	// mMotor = new MOTOR();
-	mLog = new LOG(nullptr, mImu, nullptr /*mLidar*/, nullptr /*mLds*/);
+	mLog = new LOG(nullptr, mImu);//, nullptr /*mLidar*/, nullptr /*mLds*/);
 
 	mImu->receive();
 	mLog->receive();

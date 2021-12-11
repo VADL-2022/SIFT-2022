@@ -46,7 +46,7 @@ void LOG::callback(void *userData)
     {
         cout << "Yaw: " << data->mImu->yprNed[0] << " Pitch: " << data->mImu->yprNed[1] << " Roll: " << data->mImu->yprNed[2]
              << " Accel: " << data->mImu->linearAccelBody.mag()
-             << " Distance: " << data->mLidar->distance << endl;
+             << " Distance: " << 0.0f /*data->mLidar->distance*/ << endl;
     }
 }
 

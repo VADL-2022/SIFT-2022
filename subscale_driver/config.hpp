@@ -7,7 +7,7 @@
 using namespace std;
 using namespace vn::sensors;
 using namespace vn::protocol::uart;
-using namespace LeddarConnection;
+//using namespace LeddarConnection;
 
 const uint16_t FREQUENCY = 40;                        // Hertz
 const bool TEST = 0;                                  // Boolean
@@ -48,7 +48,7 @@ static BinaryOutputRegister IMU_OUTPUT(               // IMU Output
     GPSGROUP_NONE);
 const string LIDAR_PORT = "/dev/ttyUSB1";                                                    // Port
 const uint32_t LIDAR_BAUD_RATE = 115200;                                                     // Baud
-const LdConnectionInfoModbus::eParity LIDAR_PARITY = LdConnectionInfoModbus::MB_PARITY_NONE; // Bits
+//const LdConnectionInfoModbus::eParity LIDAR_PARITY = LdConnectionInfoModbus::MB_PARITY_NONE; // Bits
 const uint8_t LIDAR_DATA_BITS = 8;                                                           // Bits
 const uint8_t LIDAR_STOP_BITS = 1;                                                           // Bits
 const uint8_t LIDAR_MODBUS_ADDRESS = 1;                                                      // Bits
