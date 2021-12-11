@@ -54,8 +54,9 @@ mkShell {
     # #
     
     # VADL2022 "library" #
-    (python37m.withPackages [ (callPackage ./nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
-                            ])
+    (python37m.withPackages (p: with p; [
+      (callPackage ./nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
+    ]))
     (callPackage ./nix/pigpio.nix {})
     libusb1
     # #
