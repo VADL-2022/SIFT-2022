@@ -25,7 +25,6 @@ public:
     IMU *mImu;     // IMU
     
 private:
-    UserCallback userCallback;
     // LIDAR *mLidar; // LIDAR
     // LDS *mLds;     // LDS
 
