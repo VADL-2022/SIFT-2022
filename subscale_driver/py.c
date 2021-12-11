@@ -5,6 +5,9 @@
 #include <python3.7m/frameobject.h>
 #include <stdbool.h>
 
+bool s_print_source_line(const char *filename, int lineno, int indent,
+                         size_t maxout, char out[static maxout]);
+
 struct py_err_ctx{
     bool           occurred;
     PyObject      *type;
@@ -243,4 +246,99 @@ void S_ShowLastError(void)
       S_Error_Update(&s_err_ctx);
       s_err_clear(&s_err_ctx);
     }
+}
+
+bool s_print_source_line(const char *filename, int lineno, int indent,
+                        size_t maxout, char out[static maxout])
+{
+    if(!maxout)
+        return true;
+    out[0] = '\0';
+
+    FILE *xfp = NULL;
+    char linebuf[2000];
+    int i;
+    char namebuf[MAXPATHLEN+1];
+
+    if (filename == NULL)
+        return false;
+    xfp = fopen(filename, "r" PY_STDIOTEXTMODE);
+    if (xfp == NULL) {
+        /* Search tail of filename in sys.path before giving up */
+        PyObject *path;
+        const char *tail = strrchr(filename, SEP);
+        if (tail == NULL)
+            tail = filename;
+        else
+            tail++;
+        path = PySys_GetObject("path");
+        if (path != NULL && PyList_Check(path)) {
+            Py_ssize_t _npath = PyList_Size(path);
+            int npath = Py_SAFE_DOWNCAST(_npath, Py_ssize_t, int);
+            size_t taillen = strlen(tail);
+            for (i = 0; i < npath; i++) {
+                PyObject *v = PyList_GetItem(path, i);
+                if (v == NULL) {
+                    PyErr_Clear();
+                    break;
+                }
+                if (PyString_Check(v)) {
+                    size_t len;
+                    len = PyString_GET_SIZE(v);
+                    if (len + 1 + taillen >= MAXPATHLEN)
+                        continue; /* Too long */
+                    strcpy(namebuf, PyString_AsString(v));
+                    if (strlen(namebuf) != len)
+                        continue; /* v contains '\0' */
+                    if (len > 0 && namebuf[len-1] != SEP)
+                        namebuf[len++] = SEP;
+                    strcpy(namebuf+len, tail);
+                    xfp = fopen(namebuf, "r" PY_STDIOTEXTMODE);
+                    if (xfp != NULL) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (xfp == NULL)
+        return false;
+
+    for (i = 0; i < lineno; i++) {
+        char* pLastChar = &linebuf[sizeof(linebuf)-2];
+        do {
+            *pLastChar = '\0';
+            if (Py_UniversalNewlineFgets(linebuf, sizeof linebuf, xfp, NULL) == NULL)
+                break;
+            /* fgets read *something*; if it didn't get as
+               far as pLastChar, it must have found a newline
+               or hit the end of the file;              if pLastChar is \n,
+               it obviously found a newline; else we haven't
+               yet seen a newline, so must continue */
+        } while (*pLastChar != '\0' && *pLastChar != '\n');
+    }
+    if (i == lineno) {
+        char buf[11];
+        char *p = linebuf;
+        while (*p == ' ' || *p == '\t' || *p == '\014')
+            p++;
+
+        /* Write some spaces before the line */
+        strcpy(buf, "          ");
+        assert (strlen(buf) == 10);
+        while (indent > 0) {
+            if(indent < 10)
+                buf[indent] = '\0';
+            pf_strlcat(out, buf, maxout);
+            indent -= 10;
+        }
+
+        pf_strlcat(out, p, maxout);
+        if (strchr(p, '\n') == NULL)
+            pf_strlcat(out, "\n", maxout);
+    }
+
+    fclose(xfp);
+    return true;
 }
