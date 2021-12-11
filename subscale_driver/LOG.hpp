@@ -2,9 +2,9 @@
 #define LOG_HPP
 
 #include <fstream>
-#include "../include/IMU.hpp"
-#include "../include/LIDAR.hpp"
-#include "../include/LDS.hpp"
+#include "IMU.hpp"
+#include "LIDAR.hpp"
+#include "LDS.hpp"
 
 using namespace std;
 class LOG

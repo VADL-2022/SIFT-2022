@@ -2,7 +2,7 @@
 #define CONFIG_HPP
 
 #include "vn/sensors.h"
-#include "LdSensorOneModbus.h"
+//#include "LdSensorOneModbus.h"
 
 using namespace std;
 using namespace vn::sensors;

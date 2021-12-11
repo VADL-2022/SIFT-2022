@@ -1,11 +1,11 @@
 #include <iostream>
 #include <pigpio.h>
 #include <fstream>
-#include "../include/config.hpp"
-#include "../include/LOG.hpp"
-#include "../include/IMU.hpp"
-#include "../include/LIDAR.hpp"
-#include "../include/LDS.hpp"
+#include "config.hpp"
+#include "LOG.hpp"
+#include "IMU.hpp"
+#include "LIDAR.hpp"
+#include "LDS.hpp"
 
 using namespace std;
 
