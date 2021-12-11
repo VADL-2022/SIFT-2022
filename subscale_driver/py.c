@@ -3,6 +3,7 @@
 
 #include <python3.7m/osdefs.h>
 #include <python3.7m/frameobject.h>
+#include <stdbool.h>
 
 struct py_err_ctx{
     bool           occurred;
