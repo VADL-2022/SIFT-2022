@@ -35,11 +35,11 @@ if __name__ == '__main__':
     
     while True:
         Data = random.randint(1,4)
-        ser.write(str(data).encode('utf-8')))"
+        ser.write(str(data).encode('utf-8')))";
     
     PyObject *main_module = PyImport_AddModule("__main__"); /* borrowed */
     if(!main_module)
-        goto done;
+      return false;
     
     PyObject *global_dict = PyModule_GetDict(main_module); /* borrowed */
     
