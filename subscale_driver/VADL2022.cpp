@@ -153,7 +153,8 @@ VADL2022::VADL2022(int argc, char** argv)
         connect_GPIO();
 	connect_Python();
         if (sendOnRadio_) {
-          sendOnRadio();
+	  std::cout << "sendOnRadio returned: " << sendOnRadio() << std::endl;
+	  return;
         }
         mImu = new IMU();
 	// mLidar = new LIDAR();
