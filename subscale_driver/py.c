@@ -282,6 +282,7 @@ bool s_print_source_line(const char *filename, int lineno, int indent,
                     PyErr_Clear();
                     break;
                 }
+                #define PyString_Check PyUnicode_Check
                 if (PyString_Check(v)) {
                     size_t len;
                     len = PyString_GET_SIZE(v);
