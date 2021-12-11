@@ -323,6 +323,7 @@ bool s_print_source_line(const char *filename, int lineno, int indent,
                 #define PyString_Check PyUnicode_Check
                 if (PyString_Check(v)) {
                     size_t len;
+                    #define PyString_GET_SIZE PyUnicode_GET_SIZE
                     len = PyString_GET_SIZE(v);
                     if (len + 1 + taillen >= MAXPATHLEN)
                         continue; /* Too long */
