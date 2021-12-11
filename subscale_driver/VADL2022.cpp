@@ -15,12 +15,44 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "py.h"
+
 using namespace std;
 
-const float GS = 6;
+const float GS = 3; // Takeoff is 5-7 g's or etc.; around middle is 3 g's
+const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
 const float IMU_ACCEL_MAGNITUDE_THRESHOLD = GS * 9.81; // g's converted to meters per second squared.
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
-const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabilization = "2000"; // Milliseconds
+const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabilization = nullptr; // Milliseconds
+
+// Returns true on success
+bool sendOnRadio() {
+    const char* str = R"(import serial
+import random
+if __name__ == '__main__':
+    ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+    ser.reset_input_buffer()
+    
+    while True:
+        Data = random.randint(1,4)
+        ser.write(str(data).encode('utf-8')))"
+    
+    PyObject *main_module = PyImport_AddModule("__main__"); /* borrowed */
+    if(!main_module)
+        goto done;
+    
+    PyObject *global_dict = PyModule_GetDict(main_module); /* borrowed */
+    
+    PyObject *result = PyRun_StringFlags(str, Py_single_input /* Py_single_input for a single statement, or Py_file_input for more than a statement */, global_dict, global_dict, NULL);
+    Py_XDECREF(result);
+
+    if(PyErr_Occurred()) {
+        S_ShowLastError();
+	return false;
+    }
+
+    return true;
+}
 
 void startDelayedSIFT(VADL2022 *v) {
   puts("Forking");
@@ -31,6 +63,12 @@ void startDelayedSIFT(VADL2022 *v) {
       if (WIFEXITED(status)) {
 	// now check to see what its exit status was
 	printf("The exit status was: %d\n", WEXITSTATUS(status));
+
+	// Check for saved image
+	// TODO: ^
+
+	// Send the image over the radio
+	sendOnRadio();
       } else if (WIFSIGNALED(status)) {
 	// it was killed by a signal
 	printf("The signal that killed me was %d\n", WTERMSIG(status));
@@ -89,12 +127,26 @@ VADL2022::VADL2022(int argc, char** argv)
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
 	for (int i = 1; i < argc; i++) {
-          if (strcmp(argv[i], "--imu-record-only") == 0) {
+          if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 	    callback = nullptr;
           }
+          else if (strcmp(argv[i], "--sift-start-time") == 0) { // Don't run anything but IMU data recording
+            if (i+1 < argc) {
+	      timeFromTakeoffToMainDeploymentAndStabilization = argv[i+1]; // Must be long long
+            }
+	    else {
+	      puts("Expected start time");
+	      exit(1);
+            }
+          }
         }
-	
-	connect_GPIO();
+
+        if (timeFromTakeoffToMainDeploymentAndStabilization == nullptr) {
+	  puts("Need to provide --sift-start-time");
+	  exit(1);
+        }
+
+        connect_GPIO();
 	connect_Python();
 	mImu = new IMU();
 	// mLidar = new LIDAR();
