@@ -52,6 +52,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   static float timer = 0;
   float magnitude = log->mImu->linearAccelNed.mag();
+  printf("Accel mag: %f\n", magnitude);
   if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD) {
     // Record this, it must last for IMU_ACCEL_DURATION
     float duration = v->currentTime - v->startTime;
