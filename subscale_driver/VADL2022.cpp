@@ -36,6 +36,7 @@ if __name__ == '__main__':
     while True:
         Data = random.randint(1,4)
         ser.write(str(data).encode('utf-8')))";
+    std::cout << str << std::endl;
     
     PyObject *main_module = PyImport_AddModule("__main__"); /* borrowed */
     if(!main_module)
@@ -153,7 +154,8 @@ VADL2022::VADL2022(int argc, char** argv)
         connect_GPIO();
 	connect_Python();
         if (sendOnRadio_) {
-	  std::cout << "sendOnRadio returned: " << sendOnRadio() << std::endl;
+	  auto ret = sendOnRadio();
+	  std::cout << "sendOnRadio returned: " << ret << std::endl;
 	  return;
         }
         mImu = new IMU();
