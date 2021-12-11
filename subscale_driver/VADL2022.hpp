@@ -1,8 +1,8 @@
 #ifndef VADL2022_HPP
 #define VADL2022_HPP
 
-#include <VADL2021-Source-Continued/include/LOG.hpp>
-#include <VADL2021-Source-Continued/include/IMU.hpp>
+#include "LOG.hpp"
+#include "IMU.hpp"
 
 using namespace std;
 
