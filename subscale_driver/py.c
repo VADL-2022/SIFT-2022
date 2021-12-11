@@ -248,6 +248,43 @@ void S_ShowLastError(void)
     }
 }
 
+static void s_print_err_text(int offset, const char *text, size_t maxout, char out[maxout])
+{
+    if(!maxout)
+        return;
+    out[0] = '\0';
+
+    char *nl;
+    if (offset >= 0) {
+        if (offset > 0 && offset == strlen(text) && text[offset - 1] == '\n')
+            offset--;
+        for (;;) {
+            nl = strchr(text, '\n');
+            if (nl == NULL || nl-text >= offset)
+                break;
+            offset -= (int)(nl+1-text);
+            text = nl+1;
+        }
+        while (*text == ' ' || *text == '\t') {
+            text++;
+            offset--;
+        }
+    }
+    pf_strlcat(out, "    ", maxout);
+    pf_strlcat(out, text, maxout);
+    if (*text == '\0' || text[strlen(text)-1] != '\n')
+        pf_strlcat(out, "\n", maxout);
+    if (offset == -1)
+        return;
+    pf_strlcat(out, "    ", maxout);
+    offset--;
+    while (offset > 0) {
+        pf_strlcat(out, " ", maxout);
+        offset--;
+    }
+    pf_strlcat(out, "^\n", maxout);
+}
+
 bool s_print_source_line(const char *filename, int lineno, int indent,
                         size_t maxout, char out[static maxout])
 {
