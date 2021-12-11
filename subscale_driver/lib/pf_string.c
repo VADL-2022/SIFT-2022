@@ -33,7 +33,7 @@
  *
  */
 
-#include "public/pf_string.h"
+#include "pf_string.h"
 
 #include <string.h>
 #include <stdlib.h>
