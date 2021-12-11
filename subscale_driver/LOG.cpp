@@ -50,7 +50,7 @@ void LOG::callback(void *userData)
     }
 }
 
-LOG::LOG(UserCallback userCallback_, IMU *imu, LIDAR *lidar, LDS *lds) : userCallback(userCallback_), mImu(imu), mLidar(lidar), mLds(lds)
+LOG::LOG(UserCallback userCallback_, IMU *imu) : userCallback(userCallback_), mImu(imu)
 {
     if (LOG_ACTIVE || VERBOSE)
     {
