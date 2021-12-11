@@ -20,8 +20,9 @@ public:
     void halt();
     void write(string);
 
-    IMU *mImu;     // IMU
+    UserCallback userCallback;
     void* callbackUserData;
+    IMU *mImu;     // IMU
     
 private:
     UserCallback userCallback;

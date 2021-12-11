@@ -58,6 +58,13 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
     printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
     v->currentTime = fseconds;
     if (duration >= IMU_ACCEL_DURATION) {
+      // Stop these checkTakeoffCallback callbacks
+      #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__)
+      #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
+      #else
+      v->log->userCallback = nullptr;
+      #endif
+      
       puts("Target time reached, we are considered having just lifted off");
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
