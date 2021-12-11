@@ -66,7 +66,7 @@ endif
 ifeq ($(USE_PTR_INC_MALLOC),1)
 CFLAGS += -DUSE_PTR_INC_MALLOC
 endif
-CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng ${additionalPkgconfigPackages}` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng ${additionalPkgconfigPackages}` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1  -IVectorNav/include  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 $(info $(OS))
 ifeq ($(OS),Darwin)
@@ -174,7 +174,7 @@ $(eval $(call OBJECTS_LINKING_template,sift,debug_commandLine,$(OBJECTS) $(SIFT_
 SUBSCALE_SRC := ./subscale_driver/
 SUBSCALE_SOURCES := $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp))
 SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o)
-$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -I ./VectorNav/include,./VectorNav/build/bin/libvncxx.a))
+$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE),./VectorNav/build/bin/libvncxx.a))
 
 ############################# VectorNav targets #############################
 
