@@ -1,8 +1,8 @@
 #include "py.h"
 #include "lib/pf_string.h"
 
-#include <osdefs.h>
-#include <frameobject.h>
+#include <python3.7m/osdefs.h>
+#include <python3.7m/frameobject.h>
 
 struct py_err_ctx{
     bool           occurred;
