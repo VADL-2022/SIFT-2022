@@ -23,6 +23,7 @@ const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabilization = "2000"; // Milliseconds
 
 void startDelayedSIFT(VADL2022 *v) {
+  puts("Forking");
   pid_t pid = fork(); // create a new child process
   if (pid > 0) {
     int status = 0;
@@ -38,7 +39,7 @@ void startDelayedSIFT(VADL2022 *v) {
       printf("Error waiting!\n");
     }
   } else if (pid == 0) {
-    const char *args[] = { "./sift_exe_release_commandLine", "--sleep-before-running", (timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
+    const char *args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge 2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
     exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
