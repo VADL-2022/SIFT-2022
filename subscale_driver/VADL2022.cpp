@@ -29,7 +29,9 @@ const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabil
 bool sendOnRadio() {
     const char* str = R"(
 
-import random
+
+
+
 if __name__ == '__main__':
     ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1) # gpio14
     ser.reset_input_buffer()
