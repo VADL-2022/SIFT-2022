@@ -23,13 +23,13 @@ CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 #-include $(SRC:%.cpp=%.d)
 endef
 
-# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFileFolderPathHere,flagsHere))`
+# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFile_folderPathHere,flagsHere))`
 # Main file should be named `targetNameHere` followed by `Main` and `.cpp` or `.c`.
 define OBJECTS_LINKING_template =
 OBJECTS_$(1)_$(2) = $(3)
 OBJECTS_$(1)_$(2) := $$(addsuffix _$(2).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)_$(2)))) $(4)/$(1)Main_$(2).o
 ALL_OBJECTS_FROM_TARGETS += $$(OBJECTS_$(1)_$(2))
-$(info $$(OBJECTS_$(1)_$(2)))
+#$$(info $$(OBJECTS_$(1)_$(2)))
 $(1)_exe_$(2): $$(OBJECTS_$(1)_$(2))
 	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(5)
 endef
@@ -48,6 +48,14 @@ USE_PTR_INC_MALLOC=0
 
 
 
+# https://stackoverflow.com/questions/12230230/what-gnu-makefile-rule-can-ensure-the-version-of-make-is-at-least-v3-82
+# Check Make version (we need at least GNU Make 3.82). Fortunately,
+# 'undefine' directive has been introduced exactly in GNU Make 3.82.
+ifeq ($(filter undefine,$(value .FEATURES)),)
+$(error Unsupported Make version. \
+    The build system does not work properly with GNU Make $(MAKE_VERSION), \
+    please use GNU Make 4.3 or above.) # Specifically, version 3.81 on macOS does all sorts of things wrongly
+endif
 SHELL := /usr/bin/env bash
 OS := $(shell uname -s)
 # -D_POSIX_C_SOURCE=200809L

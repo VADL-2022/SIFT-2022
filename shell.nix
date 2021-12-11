@@ -25,6 +25,14 @@ let
   libunwind_modded = llvmPackages.libunwind.overrideAttrs (oldAttrs: rec {
       nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ fixDarwinDylibNames ];
   });
+
+  # VADL2022 "library" #
+  python37m = (pkgs.python37.overrideAttrs (oldAttrs: rec {
+    configureFlags = oldAttrs.configureFlags ++ [ "--with-pymalloc" ]; # Enable Pymalloc
+  })).override {
+    #enableOptimizations = true; # If enabled: longer build time but 10% faster performance.. but the build is no longer reproducible 100% apparently (source: "15.21.2.2. Optimizations" of https://nixos.org/manual/nixpkgs/stable/ )
+  };
+  # #
 in
 mkShell {
   buildInputs = [ my-python-packages
@@ -43,6 +51,12 @@ mkShell {
     # For stack traces #
     (callPackage ./backward-cpp.nix {}) # https://github.com/bombela/backward-cpp
     #] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [
+    # #
+    
+    # VADL2022 "library" #
+    python37m
+    (callPackage ./nix/pigpio.nix {})
+    libusb1
     # #
 
     llvmPackages.libstdcxxClang

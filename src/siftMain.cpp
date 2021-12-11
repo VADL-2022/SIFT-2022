@@ -209,47 +209,62 @@ int main(int argc, char **argv)
 //        }
         else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
             for (int j = i+1; j < argc; j++) {
+#define LOG_PARAM(x) std::cout << "Set " #x << " to " << p.params->x << std::endl
                 if (j+1 < argc && strcmp(argv[j], "-n_oct") == 0) {
                     p.params->n_oct = std::stoi(argv[j+1]);
+                    LOG_PARAM(n_oct);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-n_spo") == 0) {
                     p.params->n_spo = std::stoi(argv[j+1]);
+                    LOG_PARAM(n_spo);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-sigma_min") == 0) {
                     p.params->sigma_min = std::stof(argv[j+1]);
+                    LOG_PARAM(sigma_min);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-delta_min") == 0) {
                     p.params->delta_min = std::stof(argv[j+1]);
+                    LOG_PARAM(sigma_min);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-sigma_in") == 0) {
                     p.params->sigma_in = std::stof(argv[j+1]);
+                    LOG_PARAM(sigma_min);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-C_DoG") == 0) {
                     p.params->C_DoG = std::stof(argv[j+1]);
+                    LOG_PARAM(sigma_min);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-C_edge") == 0) {
                     p.params->C_edge = std::stof(argv[j+1]);
+                    LOG_PARAM(C_edge);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-n_bins") == 0) {
                     p.params->n_bins = std::stoi(argv[j+1]);
+                    LOG_PARAM(n_bins);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-lambda_ori") == 0) {
                     p.params->lambda_ori = std::stof(argv[j+1]);
+                    LOG_PARAM(lambda_ori);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-t") == 0) {
                     p.params->t = std::stof(argv[j+1]);
+                    LOG_PARAM(t);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-n_hist") == 0) {
                     p.params->n_hist = std::stoi(argv[j+1]);
+                    LOG_PARAM(n_hist);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-n_ori") == 0) {
                     p.params->n_ori = std::stoi(argv[j+1]);
+                    LOG_PARAM(n_ori);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-lambda_descr") == 0) {
                     p.params->lambda_descr = std::stof(argv[j+1]);
+                    LOG_PARAM(lambda_descr);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-itermax") == 0) {
                     p.params->itermax = std::stoi(argv[j+1]);
+                    LOG_PARAM(itermax);
                 }
                 else {
                     // Continue with these parameters as the next arguments

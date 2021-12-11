@@ -1,0 +1,20 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 383c445..1caf370 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -9,7 +9,7 @@ find_package(RT REQUIRED)
+ 
+ option(BUILD_SHARED_LIBS "Create shared libraries" ON)
+ 
+-add_compile_options(-Wall)
++add_compile_options(-Wall -g)
+ 
+ # libpigpio.(so|a)
+ add_library(pigpio pigpio.c command.c custom.cext)
+@@ -124,4 +124,4 @@ endif()
+ 
+ # package project
+ 
+-include (CPack)
+\ No newline at end of file
++include (CPack)
