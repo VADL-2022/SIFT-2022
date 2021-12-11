@@ -20,11 +20,11 @@ public:
     void halt();
     void write(string);
 
+    IMU *mImu;     // IMU
     void* callbackUserData;
     
 private:
     UserCallback userCallback;
-    IMU *mImu;     // IMU
     // LIDAR *mLidar; // LIDAR
     // LDS *mLds;     // LDS
 
