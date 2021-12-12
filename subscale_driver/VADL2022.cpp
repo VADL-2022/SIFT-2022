@@ -97,7 +97,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   printf("Accel mag: %f\n", magnitude);
   if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD) {
     // Record this, it must last for IMU_ACCEL_DURATION
-    if (v->startTime == NAN) {
+    if (isnan(v->startTime)) {
       v->startTime = fseconds;
     }
     float duration = fseconds - v->startTime;
@@ -118,7 +118,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   }
   else {
     // Reset timer
-    if (v->startTime != NAN) {
+    if (!isnan(v->startTime)) {
       puts("Not enough acceleration; resetting timer");
       v->startTime = NAN;
     }
