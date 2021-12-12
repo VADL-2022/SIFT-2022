@@ -244,8 +244,18 @@ void S_ShowLastError(void)
     PyErr_NormalizeException(&s_err_ctx.type, &s_err_ctx.value, &s_err_ctx.traceback);
 
     if(s_err_ctx.occurred) {
-      S_Error_Update(&s_err_ctx);
-      s_err_clear(&s_err_ctx);
+        /* PyObject *ptype, *pvalue, *ptraceback; */
+        /* PyErr_Fetch(&ptype, &pvalue, &s_err_ctx.traceback); */
+        //pvalue contains error message
+        //ptraceback contains stack snapshot and many other information
+        //(see python traceback structure)
+
+        //Get error message
+        char *pStrErrorMessage = PyString_AsString(s_err_ctx.value);
+        puts(pStrErrorMessage);
+        
+        S_Error_Update(&s_err_ctx); // Doesn't seem to work right
+        s_err_clear(&s_err_ctx);
     }
 }
 
