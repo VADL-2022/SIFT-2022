@@ -44,13 +44,22 @@ if __name__ == '__main__':
     return S_RunString(str);
 }
 
+enum State {
+  State_WaitingForTakeoff,
+  State_WaitingForMainStabilizationTime, // SIFT has been spawned at this point
+};
+State g_state = State_WaitingForTakeoff;
 //const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 //const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 bool startDelayedSIFT() {
     std::string s = R"(import subprocess
 p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",)" + std::string(timeFromTakeoffToMainDeploymentAndStabilization) + R"("])
+# Above process runs asynchronously unless you wait:
+p.wait()
 )";
-    return S_RunString(s.c_str());
+    bool ret = S_RunString(s.c_str());
+
+    return ret;
 }
 // void startDelayedSIFT_fork_notWorking() {
 //   puts("Forking");
@@ -84,12 +93,13 @@ p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift
 //   }
 // }
 
+// Will: this is called on a non-main thread (on a thread for the IMU)
 void checkTakeoffCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   static float timer = 0;
   float magnitude = log->mImu->linearAccelNed.mag();
   printf("Accel mag: %f\n", magnitude);
-  if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD) {
+  if (g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
       v->startTime = fseconds;
@@ -107,7 +117,8 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       puts("Target time reached, we are considered having just lifted off");
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-      startDelayedSIFT();
+      bool ok = startDelayedSIFT();
+      g_state = State_WaitingForMainStabilizationTime;
     }
   }
   else {
