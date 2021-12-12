@@ -41,8 +41,14 @@ State g_state = State_WaitingForTakeoff;
 //const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 //const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 bool startDelayedSIFT() {
-    bool ret = S_RunFile("sift.py",0,nullptr);
-    return ret;
+  //bool ret = S_RunFile("sift.py",0,nullptr);
+
+  std::string s = "./sift_exe_release_commandLine --main-mission --sift-params -C_edge --sleep-before-running" + std::string(timeFromTakeoffToMainDeploymentAndStabilization);
+  int ret = system(s.c_str());
+  printf("system returned %d\n", ret);
+  
+  return ret == 0;// "If command is NULL, then a nonzero value if a shell is
+  // available, or 0 if no shell is available." ( https://man7.org/linux/man-pages/man3/system.3.html )
 }
 // void startDelayedSIFT_fork_notWorking() {
 //   puts("Forking");
