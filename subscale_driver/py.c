@@ -251,8 +251,8 @@ void S_ShowLastError(void)
         //(see python traceback structure)
 
         //Get error message
-        char *pStrErrorMessage = PyString_AsString(s_err_ctx.value);
-        puts(pStrErrorMessage);
+        /* char *pStrErrorMessage = PyString_AsString(s_err_ctx.value); */
+        /* puts(pStrErrorMessage); */
         
         S_Error_Update(&s_err_ctx); // Doesn't seem to work right
         s_err_clear(&s_err_ctx);
