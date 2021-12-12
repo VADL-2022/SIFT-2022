@@ -122,6 +122,21 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   }
 }
 
+bool RunFile(const std::string& path)
+	{
+		FILE* fp = fopen( path.c_str(), "r" );
+		if ( fp == NULL )
+		{
+		  //Engine::out(Engine::ERROR) << "[PyScript] Error opening file: " << path << std::endl;
+		  std::cout << "[PyScript] Error opening file: " << path << std::endl;
+			return false;
+		}
+		int re = PyRun_SimpleFile( fp, path.c_str() );
+		fclose( fp );
+
+		return (re == 0);
+	}
+
 VADL2022::VADL2022(int argc, char** argv)
 {
 	cout << "Main: Initiating" << endl;
@@ -203,7 +218,8 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	// Start video capture if doing so
         if (videoCaptureToo) {
-	  system("python3 ./subscale_driver/videoCapture.py");
+	  //system("python3 ./subscale_driver/videoCapture.py"); // Doesn't handle sigint
+	  RunFile("./subscale_driver/videoCapture.py");
         }
 }
 

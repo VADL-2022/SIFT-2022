@@ -5,7 +5,7 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]]; then
+if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]; then
    echo "This script must be run from /home/pi/VanderbiltRocketTeam" 
    exit 1
 fi
