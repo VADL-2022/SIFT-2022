@@ -18,7 +18,7 @@ sleep_ () {
 
 git checkout subscale
 # sha512 Checksum
-sudo -H -u pi nix-shell --run "make -j4 subscale_exe_release"
+sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run "make -j4 subscale_exe_release"
 if [ "$dontsleep" == "1" ]; then
     echo "@@@@ Sleeping before takeoff"
     
