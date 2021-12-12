@@ -49,7 +49,7 @@ if __name__ == '__main__':
 bool startDelayedSIFT() {
     const char* args = sift_args;
     std::string s = R"(import subprocess
-p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",)" + std::to_string(timeFromTakeoffToMainDeploymentAndStabilization) + R"("])
+p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",)" + std::string(timeFromTakeoffToMainDeploymentAndStabilization) + R"("])
 )";
     return S_RunString(s.c_str());
 }
