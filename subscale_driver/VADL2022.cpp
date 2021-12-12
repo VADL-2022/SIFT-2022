@@ -172,14 +172,32 @@ VADL2022::VADL2022(int argc, char** argv)
 	  startDelayedSIFT();
 	  return;
         }
-        mImu = new IMU();
-	// mLidar = new LIDAR();
+	bool vn = true;
+        try {
+          mImu = new IMU();
+        }
+	catch (const vn::not_found &e) {
+	  std::cout << "VectorNav not found: vn::not_found: " << e.what() << " ; continuing without it." << std::endl;
+	  vn=false;
+        }
+	catch (const char* e) {
+	  std::cout << "VectorNav not connected; continuing without it." << std::endl;
+	  vn = false;
+        }
+        // mLidar = new LIDAR();
 	// mLds = new LDS();
 	// mMotor = new MOTOR();
-	mLog = new LOG(callback, this, mImu);//, nullptr /*mLidar*/, nullptr /*mLds*/);
+        if (vn) {
+          mLog = new LOG(callback, this,
+                         mImu); //, nullptr /*mLidar*/, nullptr /*mLds*/);
 
-	mImu->receive();
-	mLog->receive();
+	  mImu->receive();
+	  mLog->receive();
+        }
+	else {
+	  mLog = nullptr;
+	  mImu = nullptr;
+        }
 
 	cout << "Main: Initiated" << endl;
 
