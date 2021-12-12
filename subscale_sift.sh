@@ -5,6 +5,11 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]]; then
+   echo "This script must be run from /home/pi/VanderbiltRocketTeam" 
+   exit 1
+fi
+
 dontsleep="$1"
 
 # https://stackoverflow.com/questions/35800082/how-to-trap-err-when-using-set-e-in-bash
@@ -30,6 +35,8 @@ fi
 echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
 sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time 26000 --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
+# Record temperature data
+bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
 # Stop SIFT after x seconds:
 if [ "$dontsleep" == "1" ]; then
     echo "@@@@ Waiting to stop SIFT"
@@ -37,4 +44,6 @@ if [ "$dontsleep" == "1" ]; then
 fi
 echo "@@@@ Stopping SIFT"
 pkill -SIGINT sift
+# Stop temperature data
+pkill -SIGINT vcgencmd
 # sha512 Checksum

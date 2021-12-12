@@ -5,6 +5,11 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]]; then
+   echo "This script must be run from /home/pi/VanderbiltRocketTeam" 
+   exit 1
+fi
+
 dontsleep="$1"
 
 # https://stackoverflow.com/questions/35800082/how-to-trap-err-when-using-set-e-in-bash
