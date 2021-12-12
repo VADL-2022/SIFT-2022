@@ -18,9 +18,9 @@ sleep_ () {
 
 git checkout subscale
 # TODO: checkout submodules
-make -j4 sift_exe_release_commandLine
+sudo -H -u pi bash -c "make -j4 sift_exe_release_commandLine"
 # sha512 Checksum
-make -j4 subscale_exe_release
+sudo -H -u pi bash -c "make -j4 subscale_exe_release"
 if [ "$dontsleep" == "1" ]; then
     echo "@@@@ Sleeping before takeoff"
     
