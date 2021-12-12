@@ -5,6 +5,31 @@
 #include <python3.7m/frameobject.h>
 #include <stdbool.h>
 
+static bool s_sys_path_add_dir(const char *filename)
+{
+    if(strlen(filename) >= 512)
+        return false;
+
+    char copy[512];
+    strcpy(copy, filename);
+
+    char *end = copy + (strlen(copy) - 1);
+    while(end > copy && *end != '/')
+        end--;
+
+    if(end == copy)
+        return false;
+    *end = '\0';
+
+    PyObject *sys_path = PySys_GetObject("path");
+    assert(sys_path);
+
+    if(0 != PyList_Append(sys_path, Py_BuildValue("s", copy)) )
+        return false;
+
+    return true;
+}
+
 static void s_print_err_text(int offset, const char *text, size_t maxout, char out[maxout]);
 bool s_print_source_line(const char *filename, int lineno, int indent,
                          size_t maxout, char out[static maxout]);
@@ -411,4 +436,56 @@ bool S_RunString(const char *str) {
     }
 
     return true;
+}
+
+// Returns true on success
+bool S_RunFile(const char *path, int argc, char **argv)
+{
+    printf("Running Python file: %s\n", path);
+    
+    bool ret = false;
+    FILE *script = fopen(path, "r");
+    if(!script)
+        return false;
+
+    char *cargv[argc + 1];
+    cargv[0] = (char*)path;
+    if(argc) {
+        memcpy(cargv + 1, argv, sizeof(*argv) * argc);
+    }
+
+    /* The directory of the script file won't be automatically added by 'PyRun_SimpleFile'.
+     * We add it manually to sys.path ourselves. */
+    if(!s_sys_path_add_dir(path))
+        goto done;
+
+    PyObject *main_module = PyImport_AddModule("__main__"); /* borrowed */
+    if(!main_module)
+        goto done;
+    
+    PyObject *global_dict = PyModule_GetDict(main_module); /* borrowed */
+
+    if(PyDict_GetItemString(global_dict, "__file__") == NULL) {
+        PyObject *f = PyString_FromString(path);
+        if(f == NULL)
+            goto done;
+        if(PyDict_SetItemString(global_dict, "__file__", f) < 0) {
+            Py_DECREF(f);
+            goto done;
+        }
+        Py_DECREF(f);
+    }
+
+    PySys_SetArgvEx(argc + 1, cargv, 0);
+    PyObject *result = PyRun_File(script, path, Py_file_input, global_dict, global_dict);
+    ret = (result != NULL);
+    Py_XDECREF(result);
+
+    if(PyErr_Occurred()) {
+        S_ShowLastError();
+    }
+
+done:
+    fclose(script);
+    return ret;
 }

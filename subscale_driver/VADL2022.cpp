@@ -30,18 +30,7 @@ const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabil
 
 // Returns true on success
 bool sendOnRadio() {
-    const char* str = R"(import serial
-import random
-if __name__ == '__main__':
-    ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1) # gpio14
-    ser.reset_input_buffer()
-    
-    while True:
-        Data = random.randint(1,4)
-        ser.write(str(data).encode('utf-8')))";
-    //std::cout << str << std::endl;
-
-    return S_RunString(str);
+  return S_RunFile("radio.py", 0, nullptr);
 }
 
 enum State {
@@ -52,13 +41,7 @@ State g_state = State_WaitingForTakeoff;
 //const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 //const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 bool startDelayedSIFT() {
-    std::string s = R"(import subprocess
-p = subprocess.Popen(["echo","aaaaaaaaaaaaaA"]) #["./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",)" + std::string(timeFromTakeoffToMainDeploymentAndStabilization) + R"("])
-# Above process runs asynchronously unless you wait:
-p.wait()
-)";
-    bool ret = S_RunString(s.c_str());
-
+    bool ret = S_RunFile("sift.py",0,nullptr);
     return ret;
 }
 // void startDelayedSIFT_fork_notWorking() {
