@@ -5,6 +5,8 @@
 #include <python3.7m/frameobject.h>
 #include <stdbool.h>
 
+#define PyString_FromString PyUnicode_FromString
+
 static bool s_sys_path_add_dir(const char *filename)
 {
     if(strlen(filename) >= 512)
