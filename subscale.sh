@@ -19,7 +19,7 @@ echo "@@@@ Sleeping before takeoff"
 sleep_ 30
 echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
-sudo ./subscale_exe_release --sift-params '-C_edge 2 -n_oct 6 -delta_min 0.3' --sift-start-time 26000 --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
+sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time 26000 --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
 # Stop SIFT after x seconds:
 echo "@@@@ Waiting to stop SIFT"
 sleep_ 69 # Ensure you don't subtract the above times, since we run the above sleep in the background.
