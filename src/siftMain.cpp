@@ -271,6 +271,7 @@ int main(int argc, char **argv)
                     i = j;
                     break;
                 }
+                j++; // Skip the number we parsed
             }
         }
         else if (i+1 < argc && strcmp(argv[i], "--sift-params-func") == 0) {

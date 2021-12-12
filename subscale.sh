@@ -1,3 +1,5 @@
+# Start with `bash ./subscale.sh`
+
 # https://stackoverflow.com/questions/35800082/how-to-trap-err-when-using-set-e-in-bash
 set -eE  # same as: `set -o errexit -o errtrace`
 trap 'echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"' ERR 
