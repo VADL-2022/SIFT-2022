@@ -58,7 +58,7 @@ if __name__ == '__main__':
     return true;
 }
 
-void startDelayedSIFT(VADL2022 *v) {
+void startDelayedSIFT() {
   puts("Forking");
   pid_t pid = fork(); // create a new child process
   if (pid > 0) {
@@ -113,7 +113,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       puts("Target time reached, we are considered having just lifted off");
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-      startDelayedSIFT(v);
+      startDelayedSIFT();
     }
   }
   else {
@@ -131,7 +131,7 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
-	bool sendOnRadio_ = false;
+	bool sendOnRadio_ = false, siftOnly = false;
 	for (int i = 1; i < argc; i++) {
           if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 	    callback = nullptr;
@@ -148,6 +148,9 @@ VADL2022::VADL2022(int argc, char** argv)
           else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
 	    sendOnRadio_ = true;
           }
+          else if (strcmp(argv[i], "--sift-only") == 0) { // Don't run anything but GPIO radio upload
+	    siftOnly = true;
+          }
         }
 
         if (timeFromTakeoffToMainDeploymentAndStabilization == nullptr) {
@@ -160,6 +163,10 @@ VADL2022::VADL2022(int argc, char** argv)
         if (sendOnRadio_) {
 	  auto ret = sendOnRadio();
 	  std::cout << "sendOnRadio returned: " << ret << std::endl;
+	  return;
+        }
+	else if (siftOnly) {
+	  startDelayedSIFT();
 	  return;
         }
         mImu = new IMU();
