@@ -40,4 +40,5 @@ if [ "$dontsleep" == "1" ]; then
 fi
 echo "@@@@ Stopping video cap"
 pkill -SIGINT subscale
+pkill -SIGINT videoCapture # Kill python video capture
 # sha512 Checksum

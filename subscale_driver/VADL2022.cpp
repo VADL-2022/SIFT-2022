@@ -218,8 +218,8 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	// Start video capture if doing so
         if (videoCaptureToo) {
-	  //system("python3 ./subscale_driver/videoCapture.py"); // Doesn't handle sigint
-	  RunFile("./subscale_driver/videoCapture.py");
+	  system("python3 ./subscale_driver/videoCapture.py"); // Doesn't handle sigint
+	  //RunFile("./subscale_driver/videoCapture.py");
         }
 }
 
