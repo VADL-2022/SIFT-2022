@@ -78,7 +78,7 @@ void startDelayedSIFT(VADL2022 *v) {
       printf("Error waiting!\n");
     }
   } else if (pid == 0) {
-    const char *args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge 2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
+    const char *args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
     exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
@@ -94,9 +94,11 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   printf("Accel mag: %f\n", magnitude);
   if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD) {
     // Record this, it must last for IMU_ACCEL_DURATION
-    float duration = v->currentTime - v->startTime;
+    if (v->startTime == NAN) {
+      v->startTime = fseconds;
+    }
+    float duration = fseconds - v->startTime;
     printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
-    v->currentTime = fseconds;
     if (duration >= IMU_ACCEL_DURATION) {
       // Stop these checkTakeoffCallback callbacks
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
@@ -113,11 +115,10 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   }
   else {
     // Reset timer
-    if (v->currentTime != 0) {
+    if (v->startTime != NAN) {
       puts("Not enough acceleration; resetting timer");
+      v->startTime = NAN;
     }
-    v->startTime = fseconds;
-    v->currentTime = 0;
   }
 }
 
@@ -210,10 +211,10 @@ void VADL2022::connect_Python()
 	cout << "Python: Connecting" << endl;
 
 	Py_Initialize();
-	PyRun_SimpleString("import sys; print(sys.path); \n\
+	PyRun_SimpleString("import sys; #print(sys.path); \n\
 for p in ['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/k9y7xyi8h0fpvsglq04hkggn5pzanb72-python3-3.7.11-env/lib/python3.7/site-packages']: \n\
     sys.path.append(p); \n\
-print(sys.path)");
+#print(sys.path)");
 
 	cout << "Python: Connected" << endl;
 }
