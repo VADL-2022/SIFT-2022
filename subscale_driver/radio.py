@@ -9,6 +9,8 @@ if __name__ == '__main__':
     while i < len(d):
         #Data = random.randint(1,4)
         data = d[i]
-        ser.write(str(data).encode('utf-8'))
+        res = str(data).encode('utf-8')
+        print(res)
+        ser.write(res)
         
         i+=1
