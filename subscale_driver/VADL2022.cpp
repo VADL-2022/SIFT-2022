@@ -128,7 +128,7 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
-	bool sendOnRadio_ = false, siftOnly = false;
+	bool sendOnRadio_ = false, siftOnly = false, videoCaptureToo = false;
 	for (int i = 1; i < argc; i++) {
           if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 	    callback = nullptr;
@@ -147,6 +147,9 @@ VADL2022::VADL2022(int argc, char** argv)
           }
           else if (strcmp(argv[i], "--sift-only") == 0) { // Don't run anything but GPIO radio upload
 	    siftOnly = true;
+          }
+          else if (strcmp(argv[i], "--video-capture-too") == 0) { // Run video saving from camera alongside everything else
+	    videoCaptureToo = true;
           }
           else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
 	    siftParams = argv[i+1];
@@ -179,6 +182,11 @@ VADL2022::VADL2022(int argc, char** argv)
 	mLog->receive();
 
 	cout << "Main: Initiated" << endl;
+
+	// Start video capture if doing so
+        if (videoCaptureToo) {
+	  system("python3 videoCapture.py");
+        }
 }
 
 VADL2022::~VADL2022()
