@@ -210,7 +210,10 @@ void VADL2022::connect_Python()
 	cout << "Python: Connecting" << endl;
 
 	Py_Initialize();
-	PyRun_SimpleString("import sys; print(sys.path); sys.path.append(['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/k9y7xyi8h0fpvsglq04hkggn5pzanb72-python3-3.7.11-env/lib/python3.7/site-packages']); print(sys.path)");
+	PyRun_SimpleString("import sys; print(sys.path); \n\
+for p in ['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/k9y7xyi8h0fpvsglq04hkggn5pzanb72-python3-3.7.11-env/lib/python3.7/site-packages']: \n\
+    sys.path.append(p); \n\
+print(sys.path)");
 
 	cout << "Python: Connected" << endl;
 }
