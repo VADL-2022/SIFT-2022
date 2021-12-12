@@ -224,7 +224,7 @@ int main(int argc, char **argv)
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-delta_min") == 0) {
                     p.params->delta_min = std::stof(argv[j+1]);
-                    LOG_PARAM(sigma_min);
+                    LOG_PARAM(delta_min);
                 }
                 else if (j+1 < argc && strcmp(argv[j], "-sigma_in") == 0) {
                     p.params->sigma_in = std::stof(argv[j+1]);

@@ -27,6 +27,7 @@ const float IMU_ACCEL_MAGNITUDE_THRESHOLD = 1;
 // //
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabilization = nullptr; // Milliseconds
+const char* siftParams = nullptr;
 
 // Returns true on success
 bool sendOnRadio() {
@@ -45,7 +46,7 @@ bool startDelayedSIFT() {
 
   // https://unix.stackexchange.com/questions/118811/why-cant-i-run-gui-apps-from-root-no-protocol-specified
   // https://askubuntu.com/questions/294736/run-a-shell-script-as-another-user-that-has-no-password
-  std::string s = "sudo -H -u pi bash -c \"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission --sift-params -C_edge 2 -n_oct 6 -delta_min 0.3 --sleep-before-running " + std::string(timeFromTakeoffToMainDeploymentAndStabilization) + std::string(" --no-preview-window \""); // --video-file-data-source
+  std::string s = "sudo -H -u pi bash -c \"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission " + (siftParams != nullptr ? ("--sift-params " + std::string(siftParams)) : std::string("")) + std::string(" --sleep-before-running ") + std::string(timeFromTakeoffToMainDeploymentAndStabilization) + std::string(" --no-preview-window \""); // --video-file-data-source
   int ret = system(s.c_str());
   printf("system returned %d\n", ret);
   
@@ -146,6 +147,9 @@ VADL2022::VADL2022(int argc, char** argv)
           }
           else if (strcmp(argv[i], "--sift-only") == 0) { // Don't run anything but GPIO radio upload
 	    siftOnly = true;
+          }
+          else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
+	    siftParams = argv[i+1];
           }
         }
 
