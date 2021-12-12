@@ -43,7 +43,7 @@ State g_state = State_WaitingForTakeoff;
 bool startDelayedSIFT() {
   //bool ret = S_RunFile("sift.py",0,nullptr);
 
-  std::string s = "./sift_exe_release_commandLine --main-mission --sift-params -C_edge --sleep-before-running" + std::string(timeFromTakeoffToMainDeploymentAndStabilization);
+  std::string s = "./sift_exe_release_commandLine --main-mission --sift-params -C_edge --sleep-before-running " + std::string(timeFromTakeoffToMainDeploymentAndStabilization);
   int ret = system(s.c_str());
   printf("system returned %d\n", ret);
   
