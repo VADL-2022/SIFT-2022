@@ -217,12 +217,12 @@ VADL2022::VADL2022(int argc, char** argv)
 	cout << "Main: Initiated" << endl;
 
 	// Start video capture if doing so
-        if (videoCaptureToo) {
-	  std::cout << "python3" << std::endl;
-	  system("bash -c 'sudo -H -u pi `which nix-shell` --run \"`which python3` ./subscale_driver/videoCapture.py\"'"); // Doesn't handle sigint
-	  //RunFile("./subscale_driver/videoCapture.py");
-	  std::cout << "end python3" << std::endl;
-        }
+        // if (videoCaptureToo) {
+	//   std::cout << "python3" << std::endl;
+	//   system("sudo -H -u pi `which nix-shell` --run \"`which python3` ./subscale_driver/videoCapture.py\""); // Doesn't handle sigint
+	//   //RunFile("./subscale_driver/videoCapture.py");
+	//   std::cout << "end python3" << std::endl;
+        // }
 }
 
 VADL2022::~VADL2022()

@@ -32,8 +32,9 @@ if [ "$dontsleep" != "1" ]; then
 fi
 echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
-sudo ./subscale_exe_release --sift-start-time 26000 --imu-record-only --video-capture-too 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").video_cap.log.txt" &
+sudo ./subscale_exe_release --sift-start-time 26000 --imu-record-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").video_cap.log.txt" &
 # Stop SIFT after x seconds:
+sudo -H -u pi `which nix-shell` --run "`which python3` ./subscale_driver/videoCapture.py"
 #if [ "$dontsleep" != "1" ]; then
     echo "@@@@ Waiting to stop video cap"
     sleep_ 69 # Ensure you don't subtract the above times, since we run the above sleep in the background.
