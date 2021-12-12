@@ -47,7 +47,6 @@ if __name__ == '__main__':
 //const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 //const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 bool startDelayedSIFT() {
-    const char* args = sift_args;
     std::string s = R"(import subprocess
 p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",)" + std::string(timeFromTakeoffToMainDeploymentAndStabilization) + R"("])
 )";
