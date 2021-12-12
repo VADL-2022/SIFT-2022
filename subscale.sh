@@ -7,5 +7,15 @@ git checkout subscale
 make -j4 sift_exe_release_commandLine
 # sha512 Checksum
 make -j4 subscale_exe_release
-sudo ./subscale_exe_release --sift-start-time 0 --sift-only
+echo "@@@@ Sleeping before takeoff"
+# Sleep x seconds:
+sleep 30
+echo "@@@@ Starting driver"
+# SIFT start time in milliseconds:
+./subscale_exe_release --sift-start-time 26000 --sift-only | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%p").log.txt" &
+# Stop SIFT after x seconds:
+echo "@@@@ Waiting to stop SIFT"
+sleep 30
+echo "@@@@ Stopping SIFT"
+pkill -SIGINT sift
 # sha512 Checksum
