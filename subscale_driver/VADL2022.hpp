@@ -24,7 +24,7 @@ public:
     // void LS();
     // void COMMS();
 
-    float startTime = NAN; // Seconds
+    float startTime = -1; // Seconds
 
 private:
     //bool GDSTimeout = 0;
