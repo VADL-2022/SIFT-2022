@@ -392,3 +392,23 @@ bool s_print_source_line(const char *filename, int lineno, int indent,
     fclose(xfp);
     return true;
 }
+
+// Returns true on success
+bool S_RunString(const char *str) {
+    printf("Running Python: %s\n", str);
+    PyObject *main_module = PyImport_AddModule("__main__"); /* borrowed */
+    if(!main_module)
+      return false;
+    
+    PyObject *global_dict = PyModule_GetDict(main_module); /* borrowed */
+    
+    PyObject *result = PyRun_StringFlags(str, Py_file_input /* Py_single_input for a single statement, or Py_file_input for more than a statement */, global_dict, global_dict, NULL);
+    Py_XDECREF(result);
+
+    if(PyErr_Occurred()) {
+        S_ShowLastError();
+	return false;
+    }
+
+    return true;
+}

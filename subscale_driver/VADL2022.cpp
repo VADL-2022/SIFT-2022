@@ -40,25 +40,19 @@ if __name__ == '__main__':
         Data = random.randint(1,4)
         ser.write(str(data).encode('utf-8')))";
     //std::cout << str << std::endl;
-    
-    PyObject *main_module = PyImport_AddModule("__main__"); /* borrowed */
-    if(!main_module)
-      return false;
-    
-    PyObject *global_dict = PyModule_GetDict(main_module); /* borrowed */
-    
-    PyObject *result = PyRun_StringFlags(str, Py_file_input /* Py_single_input for a single statement, or Py_file_input for more than a statement */, global_dict, global_dict, NULL);
-    Py_XDECREF(result);
 
-    if(PyErr_Occurred()) {
-        S_ShowLastError();
-	return false;
-    }
-
-    return true;
+    return S_RunString(str);
 }
 
+//const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
+//const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 void startDelayedSIFT() {
+    const char* args = sift_args;
+    return S_RunString(R"(import subprocess\n\
+p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",)" + std::to_string(timeFromTakeoffToMainDeploymentAndStabilization) + R"("])\n \
+)");
+}
+void startDelayedSIFT_fork_notWorking() {
   puts("Forking");
   pid_t pid = fork(); // create a new child process
   if (pid > 0) {
@@ -81,7 +75,7 @@ void startDelayedSIFT() {
       printf("Error waiting!\n");
     }
   } else if (pid == 0) {
-    const char *args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
+    const char* args = sift_args;
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
     exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
