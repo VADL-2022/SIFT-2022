@@ -50,7 +50,7 @@ int s_parse_syntax_error(PyObject *err, PyObject **message, const char **filenam
         *filename = NULL;
     }
     else {
-#define PyString_AsString PyUnicode_AS_DATA //PyUnicode_AsUTF8
+#define PyString_AsString PyUnicode_AsUTF8
         *filename = PyString_AsString(v);
         Py_DECREF(v);
         if (!*filename)
@@ -120,7 +120,7 @@ void S_Error_Update(struct py_err_ctx *err_ctx) {
         }else{
             repr = PyObject_Str(err_ctx->type);
             if(repr) {
-                #define PyString_AS_STRING PyUnicode_AS_DATA
+                #define PyString_AS_STRING PyUnicode_AsUTF8
                 pf_strlcpy(buff, PyString_AS_STRING(repr), sizeof(buff));
             }
             Py_XDECREF(repr);
