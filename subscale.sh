@@ -2,10 +2,10 @@
 set -eE  # same as: `set -o errexit -o errtrace`
 trap 'echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"' ERR 
 
-git checkout submodule
+git checkout subscale
+# TODO: checkout submodules
 make -j4 sift_exe_release_commandLine
 # sha512 Checksum
-./sift_exe_release_commandLine --main-mission --no-preview-window --sift-params -C_edge 2 &
-cd ../VADL2021-Source
+make -j4 subscale_exe_release
+sudo ./subscale_exe_release --sift-start-time 0 --sift-only
 # sha512 Checksum
-./exe/MAIN or DATA -- test it, which is it?

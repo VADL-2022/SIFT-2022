@@ -199,14 +199,14 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
         }
-//        else if (i+1 < argc && strcmp(argv[i], "--sleep-before-running") == 0) {
-//            long long time = std::stoll(argv[i+1]); // Time in milliseconds
-//            // Special value: -1 means sleep default time
-//            if (time == -1) {
-//                time = 30 * 1000;
-//            }
-//            std::this_thread::sleep_for(std::chrono::milliseconds(time));
-//        }
+        else if (i+1 < argc && strcmp(argv[i], "--sleep-before-running") == 0) {
+            long long time = std::stoll(argv[i+1]); // Time in milliseconds
+            // Special value: -1 means sleep default time
+            if (time == -1) {
+                time = 30 * 1000;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(time));
+        }
         else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
             for (int j = i+1; j < argc; j++) {
 #define LOG_PARAM(x) std::cout << "Set " #x << " to " << p.params->x << std::endl

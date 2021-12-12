@@ -132,7 +132,7 @@ VADL2022::VADL2022(int argc, char** argv)
           if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 	    callback = nullptr;
           }
-          else if (strcmp(argv[i], "--sift-start-time") == 0) { // Don't run anything but IMU data recording
+          else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds
             if (i+1 < argc) {
 	      timeFromTakeoffToMainDeploymentAndStabilization = argv[i+1]; // Must be long long
             }
