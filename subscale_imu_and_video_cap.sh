@@ -34,7 +34,7 @@ echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
 sudo ./subscale_exe_release --sift-start-time 26000 --imu-record-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").video_cap.log.txt" &
 # Stop SIFT after x seconds:
-/home/pi/.nix-profile/bin/nix-shell --run "sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run \"/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/bin/python3 ./subscale_driver/videoCapture.py\""
+/home/pi/.nix-profile/bin/nix-shell --run "echo sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run \"/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/bin/python3 ./subscale_driver/videoCapture.py\""
 #if [ "$dontsleep" != "1" ]; then
     echo "@@@@ Waiting to stop video cap"
     sleep_ 69 # Ensure you don't subtract the above times, since we run the above sleep in the background.
