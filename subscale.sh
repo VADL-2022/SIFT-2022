@@ -3,7 +3,7 @@ set -eE  # same as: `set -o errexit -o errtrace`
 trap 'echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"' ERR 
 
 sleep_ () {
-    echo "Sleeping for $@"
+    echo "Sleeping for $@ seconds"
     sleep "$@"
 }
 
@@ -17,10 +17,10 @@ echo "@@@@ Sleeping before takeoff"
 sleep_ 30
 echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
-sudo ./subscale_exe_release --sift-start-time 26000 --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%p").log.txt" &
+sudo ./subscale_exe_release --sift-start-time 26000 --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
 # Stop SIFT after x seconds:
 echo "@@@@ Waiting to stop SIFT"
-sleep_ $((69-26)) # Ensure to subtract times, except first sleep, from the above in seconds
+sleep_ 69 # Ensure you don't subtract the above times, since we run the above sleep in the background.
 echo "@@@@ Stopping SIFT"
 pkill -SIGINT sift
 # sha512 Checksum
