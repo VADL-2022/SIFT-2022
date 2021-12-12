@@ -44,7 +44,7 @@ if __name__ == '__main__':
     
     PyObject *global_dict = PyModule_GetDict(main_module); /* borrowed */
     
-    PyObject *result = PyRun_StringFlags(str, Py_single_input /* Py_single_input for a single statement, or Py_file_input for more than a statement */, global_dict, global_dict, NULL);
+    PyObject *result = PyRun_StringFlags(str, Py_file_input /* Py_single_input for a single statement, or Py_file_input for more than a statement */, global_dict, global_dict, NULL);
     Py_XDECREF(result);
 
     if(PyErr_Occurred()) {
