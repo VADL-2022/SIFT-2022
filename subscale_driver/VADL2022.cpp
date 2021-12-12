@@ -21,7 +21,10 @@ using namespace std;
 
 const float GS = 3; // Takeoff is 5-7 g's or etc.; around middle is 3 g's
 const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
-const float IMU_ACCEL_MAGNITUDE_THRESHOLD = GS * 9.81; // g's converted to meters per second squared.
+//const float IMU_ACCEL_MAGNITUDE_THRESHOLD = GS * 9.81; // g's converted to meters per second squared.
+// For testing //
+const float IMU_ACCEL_MAGNITUDE_THRESHOLD = 1;
+// //
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabilization = nullptr; // Milliseconds
 
