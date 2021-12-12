@@ -43,6 +43,7 @@ State g_state = State_WaitingForTakeoff;
 bool startDelayedSIFT() {
   //bool ret = S_RunFile("sift.py",0,nullptr);
 
+  // https://unix.stackexchange.com/questions/118811/why-cant-i-run-gui-apps-from-root-no-protocol-specified
   std::string s = "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission --sift-params -C_edge 2 --sleep-before-running " + std::string(timeFromTakeoffToMainDeploymentAndStabilization);
   int ret = system(s.c_str());
   printf("system returned %d\n", ret);
