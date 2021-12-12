@@ -48,9 +48,10 @@ if __name__ == '__main__':
 //const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
 void startDelayedSIFT() {
     const char* args = sift_args;
-    return S_RunString(R"(import subprocess\n\
-p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",)" + std::to_string(timeFromTakeoffToMainDeploymentAndStabilization) + R"("])\n \
-)");
+    std::string s = R"(import subprocess
+p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",)" + std::to_string(timeFromTakeoffToMainDeploymentAndStabilization) + R"("])
+)";
+    return S_RunString(s.c_str());
 }
 void startDelayedSIFT_fork_notWorking() {
   puts("Forking");
