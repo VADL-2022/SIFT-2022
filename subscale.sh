@@ -12,7 +12,7 @@ echo "@@@@ Sleeping before takeoff"
 sleep 30
 echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
-./subscale_exe_release --sift-start-time 26000 --sift-only | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%p").log.txt" &
+sudo ./subscale_exe_release --sift-start-time 26000 --sift-only | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%p").log.txt" &
 # Stop SIFT after x seconds:
 echo "@@@@ Waiting to stop SIFT"
 sleep $((69-26)) # Ensure subtract times, except first sleep, from the above in seconds
