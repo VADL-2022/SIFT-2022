@@ -53,37 +53,37 @@ p = subprocess.Popen(["./sift_exe_release_commandLine","--main-mission", "--sift
 )";
     return S_RunString(s.c_str());
 }
-void startDelayedSIFT_fork_notWorking() {
-  puts("Forking");
-  pid_t pid = fork(); // create a new child process
-  if (pid > 0) {
-    int status = 0;
-    if (wait(&status) != -1) {
-      if (WIFEXITED(status)) {
-	// now check to see what its exit status was
-	printf("The exit status was: %d\n", WEXITSTATUS(status));
+// void startDelayedSIFT_fork_notWorking() {
+//   puts("Forking");
+//   pid_t pid = fork(); // create a new child process
+//   if (pid > 0) {
+//     int status = 0;
+//     if (wait(&status) != -1) {
+//       if (WIFEXITED(status)) {
+// 	// now check to see what its exit status was
+// 	printf("The exit status was: %d\n", WEXITSTATUS(status));
 
-	// Check for saved image
-	// TODO: ^
+// 	// Check for saved image
+// 	// TODO: ^
 
-	// Send the image over the radio
-	sendOnRadio();
-      } else if (WIFSIGNALED(status)) {
-	// it was killed by a signal
-	printf("The signal that killed me was %d\n", WTERMSIG(status));
-      }
-    } else {
-      printf("Error waiting!\n");
-    }
-  } else if (pid == 0) {
-    const char* args = sift_args;
-    execvp((char*)args[0], (char**)args); // one variant of exec
-    perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
-    exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
-  } else {
-    perror("Error with fork");
-  }
-}
+// 	// Send the image over the radio
+// 	sendOnRadio();
+//       } else if (WIFSIGNALED(status)) {
+// 	// it was killed by a signal
+// 	printf("The signal that killed me was %d\n", WTERMSIG(status));
+//       }
+//     } else {
+//       printf("Error waiting!\n");
+//     }
+//   } else if (pid == 0) {
+//     const char* args = sift_args;
+//     execvp((char*)args[0], (char**)args); // one variant of exec
+//     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
+//     exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
+//   } else {
+//     perror("Error with fork");
+//   }
+// }
 
 void checkTakeoffCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
