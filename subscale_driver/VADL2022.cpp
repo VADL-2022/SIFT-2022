@@ -122,13 +122,28 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   }
 }
 
+bool RunFile(const std::string& path)
+	{
+		FILE* fp = fopen( path.c_str(), "r" );
+		if ( fp == NULL )
+		{
+		  //Engine::out(Engine::ERROR) << "[PyScript] Error opening file: " << path << std::endl;
+		  std::cout << "[PyScript] Error opening file: " << path << std::endl;
+			return false;
+		}
+		int re = PyRun_SimpleFile( fp, path.c_str() );
+		fclose( fp );
+
+		return (re == 0);
+	}
+
 VADL2022::VADL2022(int argc, char** argv)
 {
 	cout << "Main: Initiating" << endl;
 
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
-	bool sendOnRadio_ = false, siftOnly = false;
+	bool sendOnRadio_ = false, siftOnly = false, videoCaptureToo = false;
 	for (int i = 1; i < argc; i++) {
           if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 	    callback = nullptr;
@@ -147,6 +162,9 @@ VADL2022::VADL2022(int argc, char** argv)
           }
           else if (strcmp(argv[i], "--sift-only") == 0) { // Don't run anything but GPIO radio upload
 	    siftOnly = true;
+          }
+          else if (strcmp(argv[i], "--video-capture-too") == 0) { // Run video saving from camera alongside everything else
+	    videoCaptureToo = true;
           }
           else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
 	    siftParams = argv[i+1];
@@ -169,16 +187,42 @@ VADL2022::VADL2022(int argc, char** argv)
 	  startDelayedSIFT();
 	  return;
         }
-        mImu = new IMU();
-	// mLidar = new LIDAR();
+	bool vn = true;
+        try {
+          mImu = new IMU();
+        }
+	catch (const vn::not_found &e) {
+	  std::cout << "VectorNav not found: vn::not_found: " << e.what() << " ; continuing without it." << std::endl;
+	  vn=false;
+        }
+	catch (const char* e) {
+	  std::cout << "VectorNav not connected; continuing without it." << std::endl;
+	  vn = false;
+        }
+        // mLidar = new LIDAR();
 	// mLds = new LDS();
 	// mMotor = new MOTOR();
-	mLog = new LOG(callback, this, mImu);//, nullptr /*mLidar*/, nullptr /*mLds*/);
+        if (vn) {
+          mLog = new LOG(callback, this,
+                         mImu); //, nullptr /*mLidar*/, nullptr /*mLds*/);
 
-	mImu->receive();
-	mLog->receive();
+	  mImu->receive();
+	  mLog->receive();
+        }
+	else {
+	  mLog = nullptr;
+	  mImu = nullptr;
+        }
 
 	cout << "Main: Initiated" << endl;
+
+	// Start video capture if doing so
+        // if (videoCaptureToo) {
+	//   std::cout << "python3" << std::endl;
+	//   system("sudo -H -u pi `which nix-shell` --run \"`which python3` ./subscale_driver/videoCapture.py\""); // Doesn't handle sigint
+	//   //RunFile("./subscale_driver/videoCapture.py");
+	//   std::cout << "end python3" << std::endl;
+        // }
 }
 
 VADL2022::~VADL2022()

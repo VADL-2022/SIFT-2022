@@ -54,7 +54,8 @@ IMU::IMU()
 		if (!mImu.isConnected())
 		{
 			cout << "IMU: Failed to Connect" << endl;
-			exit(1);
+			throw "IMU: Failed to Connect";
+			//exit(1);
 		}
 
 		cout << "IMU: Connected" << endl;

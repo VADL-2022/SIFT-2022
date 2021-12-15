@@ -268,7 +268,7 @@ int main(int argc, char **argv)
                 }
                 else {
                     // Continue with these parameters as the next arguments
-                    i = j;
+                    i = j-1; // It will increment next iteration, so -1.
                     break;
                 }
                 j++; // Skip the number we parsed
