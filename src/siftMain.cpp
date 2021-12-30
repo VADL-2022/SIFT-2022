@@ -723,6 +723,9 @@ int mainMission(DataSourceT* src,
             ProcessedImage<SIFT_T> img;
             canvasesReadyQueue.dequeue(&img);
             imshow("", img.canvas);
+            if (CMD_CONFIG(siftVideoOutput)) {
+                o2.showCanvas("", img.canvas);
+            }
             //cv::waitKey(30);
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
