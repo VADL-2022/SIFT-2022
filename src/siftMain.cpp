@@ -193,6 +193,9 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--image-file-output") == 0) { // Outputs to video, usually also instead of preview window
             cfg.imageFileOutput = true;
         }
+        else if (strcmp(argv[i], "--sift-video-output") == 0) { // Outputs frames with SIFT keypoints, etc. rendered to video file
+            cfg.siftVideoOutput = true;
+        }
         else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
             cfg.noPreviewWindow = true;
         }
@@ -595,7 +598,9 @@ int mainMission(DataSourceT* src,
             //stopMain();
             break;
         }
-        o2.showCanvas("", mat);
+        if (!CMD_CONFIG(siftVideoOutput)) {
+            o2.showCanvas("", mat);
+        }
         t.reset();
         cv::Mat greyscale = src->siftImageForMat(i);
         t.logElapsed("siftImageForMat");
@@ -765,7 +770,9 @@ int mainMission(DataSourceT* src,
             }
             canvasesReadyQueue.dequeue(&img);
             imshow("", img.canvas);
-//            o2.showCanvas("", img.canvas);
+            if (CMD_CONFIG(siftVideoOutput)) {
+                o2.showCanvas("", img.canvas);
+            }
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
             waitKey(); // Check if user wants to quit
