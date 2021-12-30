@@ -62,7 +62,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--no-preview-window"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--sift-params"

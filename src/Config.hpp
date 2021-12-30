@@ -29,7 +29,7 @@
 
 #ifdef USE_COMMAND_LINE_ARGS
 struct CommandLineConfig {
-    bool cameraTestOnly = false, imageCaptureOnly = false, imageFileOutput = false, folderDataSource = false, videoFileDataSource = false, mainMission = false, noPreviewWindow;
+    bool cameraTestOnly = false, imageCaptureOnly = false, imageFileOutput = false, siftVideoOutput = false, folderDataSource = false, videoFileDataSource = false, mainMission = false, noPreviewWindow;
     
     bool showPreviewWindow() const {
         return !noPreviewWindow;
