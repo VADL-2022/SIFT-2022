@@ -21,12 +21,14 @@ cleanup() {
 }
 
 ctrl_c() {
+    set +e
     echo "** Trapped CTRL-C"
     cleanup
 }
 
 onErr() {
-    'echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"'
+    set +e
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"
     cleanup
 }
 
