@@ -289,6 +289,11 @@ int main(int argc, char **argv)
             }
             i++;
         }
+        else {
+            printf("Unrecognized command-line argument given: %s\n", argv[i]);
+            puts("Exiting.");
+            return 1;
+        }
     }
     
     if (cfg.cameraTestOnly) {

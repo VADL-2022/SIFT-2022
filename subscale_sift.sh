@@ -12,9 +12,22 @@ fi
 
 dontsleep="$1"
 
+cleanup() {
+    echo "@@@@ Stopping SIFT"
+    pkill -SIGINT sift
+    # Stop temperature data
+    pkill -SIGINT vcgencmd
+    # sha512 Checksum
+}
+
+onErr() {
+    'echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"'
+    cleanup
+}
+
 # https://stackoverflow.com/questions/35800082/how-to-trap-err-when-using-set-e-in-bash
 set -eE  # same as: `set -o errexit -o errtrace`
-trap 'echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"' ERR 
+trap onErr ERR 
 
 sleep_ () {
     echo "Sleeping for $@ seconds"
@@ -43,8 +56,4 @@ if [ "$dontsleep" == "1" ]; then
     echo "@@@@ Waiting to stop SIFT"
     sleep_ 69 # Ensure you don't subtract the above times, since we run the above sleep in the background.
 fi
-echo "@@@@ Stopping SIFT"
-pkill -SIGINT sift
-# Stop temperature data
-pkill -SIGINT -f vcgencmd
-# sha512 Checksum
+cleanup
