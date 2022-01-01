@@ -5,7 +5,7 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]]; then
+if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]; then
    echo "This script must be run from /home/pi/VanderbiltRocketTeam" 
    exit 1
 fi
@@ -26,7 +26,7 @@ git checkout subscale
 sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run "make -j4 sift_exe_release_commandLine"
 # sha512 Checksum
 sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run "make -j4 subscale_exe_release"
-if [ "$dontsleep" == "1" ]; then
+if [ "$dontsleep" != "1" ]; then
     echo "@@@@ Sleeping before takeoff"
     
     # Sleep x seconds:
@@ -46,5 +46,5 @@ fi
 echo "@@@@ Stopping SIFT"
 pkill -SIGINT sift
 # Stop temperature data
-pkill -SIGINT vcgencmd
+pkill -SIGINT -f vcgencmd
 # sha512 Checksum
