@@ -11,6 +11,7 @@ if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]; then
 fi
 
 dontsleep="$1"
+dontsleep2="$2"
 
 cleanup() {
     echo "@@@@ Stopping SIFT"
@@ -56,7 +57,12 @@ if [ "$dontsleep" != "1" ]; then
 fi
 echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
-sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time 26000 --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
+if [ "$dontsleep2" != "1" ]; then
+    siftStart=26000
+else
+    siftStart=0
+fi
+sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time "$siftStart" --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
 # Record temperature data
 set +o errexit +o errtrace
 bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
