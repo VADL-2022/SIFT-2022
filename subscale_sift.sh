@@ -20,6 +20,11 @@ cleanup() {
     # sha512 Checksum
 }
 
+ctrl_c() {
+    echo "** Trapped CTRL-C"
+    cleanup
+}
+
 onErr() {
     'echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"'
     cleanup
@@ -28,6 +33,9 @@ onErr() {
 # https://stackoverflow.com/questions/35800082/how-to-trap-err-when-using-set-e-in-bash
 set -eE  # same as: `set -o errexit -o errtrace`
 trap onErr ERR 
+
+# trap ctrl-c and call ctrl_c()
+trap ctrl_c INT
 
 sleep_ () {
     echo "Sleeping for $@ seconds"
