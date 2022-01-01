@@ -21,13 +21,13 @@ cleanup() {
 }
 
 ctrl_c() {
-    set +e
+    set +eE
     echo "** Trapped CTRL-C"
     cleanup
 }
 
 onErr() {
-    set +e
+    set +eE
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@ Failed to prepare subscale @@@@@@@@@@@@@@@@@@@@@@@@@@"
     cleanup
 }
@@ -58,7 +58,7 @@ echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
 sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time 26000 --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
 # Record temperature data
-set +e
+set +eE
 bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
 # Stop SIFT after x seconds:
 if [ "$dontsleep" == "1" ]; then
