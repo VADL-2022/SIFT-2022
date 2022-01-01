@@ -19,6 +19,8 @@ cleanup() {
     # Stop temperature data
     pkill -f vcgencmd
     # sha512 Checksum
+
+    exit
 }
 
 ctrl_c() {
