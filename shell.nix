@@ -50,7 +50,7 @@ mkShell {
 
     # For stack traces #
     (callPackage ./backward-cpp.nix {}) # https://github.com/bombela/backward-cpp
-    #] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [
+    ] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [
     # #
     
     # VADL2022 "library" #

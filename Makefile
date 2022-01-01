@@ -66,7 +66,7 @@ endif
 ifeq ($(USE_PTR_INC_MALLOC),1)
 CFLAGS += -DUSE_PTR_INC_MALLOC
 endif
-CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng ${additionalPkgconfigPackages}` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1 -I/nix/store/gilc17g399q13hghm8zzkdcn0mv1n7y7-libunwind-1.4.0-dev/include  -IVectorNav/include  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng ${additionalPkgconfigPackages}` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1  -IVectorNav/include  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 $(info $(OS))
 ifeq ($(OS),Darwin)
@@ -86,7 +86,7 @@ else ifeq ($(OS),Linux)
     LFLAGS += -lX11
 endif
 $(info $(LFLAGS))
-LFLAGS += -lpng -lm -lpthread -ldl -lunwind #-ljpeg -lrt -lm
+LFLAGS += -lpng -lm -lpthread -ldl #-ljpeg -lrt -lm
 # ifeq ($(OS),Linux)
 #     # Needed if gtk; nix hack:
 #     LDFLAGS = -L/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib `bash ./filter-hack.sh "${NIX_LDFLAGS}"`
