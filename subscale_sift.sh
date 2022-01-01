@@ -16,7 +16,7 @@ cleanup() {
     echo "@@@@ Stopping SIFT"
     pkill -SIGINT sift
     # Stop temperature data
-    pkill -SIGINT vcgencmd
+    pkill -SIGINT -f vcgencmd
     # sha512 Checksum
 }
 
