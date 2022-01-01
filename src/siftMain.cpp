@@ -202,7 +202,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
         }
-        else if (i+1 < argc && strcmp(argv[i], "--sleep-before-running") == 0) {
+        else if (i+1 < argc && strcmp(argv[i++], "--sleep-before-running") == 0) {
             long long time = std::stoll(argv[i+1]); // Time in milliseconds
             // Special value: -1 means sleep default time
             if (time == -1) {
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
         }
         else {
             printf("Unrecognized command-line argument given: %s", argv[i]);
-            printf(" (command line was:");
+            printf(" (command line was:\n");
             for (int i = 0; i < argc; i++) {
                 printf("\t%s\n", argv[i]);
             }
