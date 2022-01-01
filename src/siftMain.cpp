@@ -25,6 +25,8 @@
 
 #include <fstream>
 
+#include "tools/stacktrace/backtrace_on_terminate.hpp"
+
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp
 namespace backward {
@@ -35,6 +37,11 @@ namespace backward {
 #include "timers.hpp"
 
 #include "tools/printf.h"
+#undef printf
+#undef sprintf
+#undef snprintf
+#undef vsnprintf
+#undef vprintf
 
 #include "Queue.hpp"
 thread_local SIFT_T sift;
@@ -416,6 +423,11 @@ void installSignalHandlers() {
     std::set_terminate([](){
         std::cout << "Unhandled exception detected by SIFT. Running terminate_handler()." << std::endl;
         terminate_handler();
+        
+        // Show a backtrace as a last attempt to show more info, although this very well might be using a corrupt heap.
+        // Future TODO: set the allocator or something in this backtrace_on_terminate function to use a static buffer or some printf_ call
+        backtrace_on_terminate();
+        
         std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
     });
     

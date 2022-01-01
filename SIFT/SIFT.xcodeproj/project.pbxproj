@@ -27,6 +27,9 @@
 		308B6C06275AA96D00FE86A9 /* mymalloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B6C05275AA96D00FE86A9 /* mymalloc.cpp */; };
 		308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */; };
 		308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */; };
+		3099D51E278119F30040D6B3 /* demangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3099D51C278119F30040D6B3 /* demangle.cpp */; };
+		3099D52127811A270040D6B3 /* backtrace.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3099D51F27811A270040D6B3 /* backtrace.cpp */; };
+		3099D52427811A8B0040D6B3 /* backtrace_on_terminate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3099D52227811A8B0040D6B3 /* backtrace_on_terminate.cpp */; };
 		30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBBE2731A01600473B25 /* DataSource.cpp */; };
 		30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBC72732EBF200473B25 /* DataOutput.cpp */; };
 		30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBCA2733137400473B25 /* DataOutputRun.cpp */; };
@@ -114,6 +117,12 @@
 		308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = jemalloc_wrapper.c; sourceTree = "<group>"; };
 		308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = malloc_with_free_all.cpp; sourceTree = "<group>"; };
 		308B70A0275BC77B00FE86A9 /* malloc_with_free_all.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = malloc_with_free_all.h; sourceTree = "<group>"; };
+		3099D51C278119F30040D6B3 /* demangle.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = demangle.cpp; sourceTree = "<group>"; };
+		3099D51D278119F30040D6B3 /* demangle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = demangle.hpp; sourceTree = "<group>"; };
+		3099D51F27811A270040D6B3 /* backtrace.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backtrace.cpp; sourceTree = "<group>"; };
+		3099D52027811A270040D6B3 /* backtrace.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backtrace.hpp; sourceTree = "<group>"; };
+		3099D52227811A8B0040D6B3 /* backtrace_on_terminate.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backtrace_on_terminate.cpp; sourceTree = "<group>"; };
+		3099D52327811A8B0040D6B3 /* backtrace_on_terminate.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backtrace_on_terminate.hpp; sourceTree = "<group>"; };
 		30CBDBBE2731A01600473B25 /* DataSource.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataSource.cpp; sourceTree = "<group>"; };
 		30CBDBBF2731A01600473B25 /* DataSource.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataSource.hpp; sourceTree = "<group>"; };
 		30CBDBC72732EBF200473B25 /* DataOutput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataOutput.cpp; sourceTree = "<group>"; };
@@ -276,6 +285,7 @@
 		308B6C04275AA95400FE86A9 /* tools */ = {
 			isa = PBXGroup;
 			children = (
+				3099D51B278119E00040D6B3 /* stacktrace */,
 				308B6C05275AA96D00FE86A9 /* mymalloc.cpp */,
 				308B7099275AD7CF00FE86A9 /* malloc_override_osx.hpp */,
 				30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */,
@@ -291,6 +301,19 @@
 				303CB67927631A4800ABDBF1 /* file_descriptors.h */,
 			);
 			path = tools;
+			sourceTree = "<group>";
+		};
+		3099D51B278119E00040D6B3 /* stacktrace */ = {
+			isa = PBXGroup;
+			children = (
+				3099D51C278119F30040D6B3 /* demangle.cpp */,
+				3099D51D278119F30040D6B3 /* demangle.hpp */,
+				3099D51F27811A270040D6B3 /* backtrace.cpp */,
+				3099D52027811A270040D6B3 /* backtrace.hpp */,
+				3099D52227811A8B0040D6B3 /* backtrace_on_terminate.cpp */,
+				3099D52327811A8B0040D6B3 /* backtrace_on_terminate.hpp */,
+			);
+			path = stacktrace;
 			sourceTree = "<group>";
 		};
 		30FE900827458CD10086957E /* Frameworks */ = {
@@ -384,6 +407,8 @@
 				300EE4B027209F9400969C5F /* utils.cpp in Sources */,
 				300EE4A227209F9400969C5F /* lib_io_scalespace.c in Sources */,
 				30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */,
+				3099D52427811A8B0040D6B3 /* backtrace_on_terminate.cpp in Sources */,
+				3099D51E278119F30040D6B3 /* demangle.cpp in Sources */,
 				303CB676276319A700ABDBF1 /* printf.c in Sources */,
 				308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */,
 				300EE49327209F9400969C5F /* Makefile in Sources */,
@@ -402,6 +427,7 @@
 				30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */,
 				300EE4AA27209F9400969C5F /* lib_sift_anatomy.c in Sources */,
 				300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */,
+				3099D52127811A270040D6B3 /* backtrace.cpp in Sources */,
 				30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */,
 				300EE4A527209F9400969C5F /* lib_scalespace.c in Sources */,
 				300EE4B427209F9400969C5F /* my_sift_additions.c in Sources */,
