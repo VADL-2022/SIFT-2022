@@ -290,7 +290,12 @@ int main(int argc, char **argv)
             i++;
         }
         else {
-            printf("Unrecognized command-line argument given: %s\n", argv[i]);
+            printf("Unrecognized command-line argument given: %s", argv[i]);
+            printf(" (command line was:");
+            for (int i = 0; i < argc; i++) {
+                printf("\t%s\n", i);
+            }
+            printf(")\n");
             puts("Exiting.");
             return 1;
         }

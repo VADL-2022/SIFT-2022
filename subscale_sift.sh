@@ -12,6 +12,7 @@ fi
 
 dontsleep="$1"
 dontsleep2="$2"
+dontsleep3="$3"
 
 cleanup() {
     echo "@@@@ Stopping SIFT"
@@ -69,7 +70,7 @@ sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time "$siftSt
 set +o errexit +o errtrace
 bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
 # Stop SIFT after x seconds:
-if [ "$dontsleep" == "1" ]; then
+if [ "$dontsleep3" != "1" ]; then
     echo "@@@@ Waiting to stop SIFT"
     sleep_ 69 # Ensure you don't subtract the above times, since we run the above sleep in the background.
 fi
