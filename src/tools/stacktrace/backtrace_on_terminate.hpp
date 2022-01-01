@@ -14,7 +14,7 @@ namespace
 {
 
 [[noreturn]]
-void
+extern void
 backtrace_on_terminate() noexcept;
 
 }
