@@ -426,7 +426,7 @@ void installSignalHandlers() {
         
         // Show a backtrace as a last attempt to show more info, although this very well might be using a corrupt heap.
         // Future TODO: set the allocator or something in this backtrace_on_terminate function to use a static buffer or some printf_ call
-        backtrace_on_terminate();
+        ::backtrace_on_terminate();
         
         std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
     });

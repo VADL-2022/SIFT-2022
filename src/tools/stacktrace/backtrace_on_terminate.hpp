@@ -10,8 +10,13 @@
 #ifndef backtrace_on_terminate_hpp
 #define backtrace_on_terminate_hpp
 
+namespace
+{
+
 [[noreturn]]
 void
 backtrace_on_terminate() noexcept;
+
+}
 
 #endif /* backtrace_on_terminate_hpp */
