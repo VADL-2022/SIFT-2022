@@ -199,6 +199,7 @@
 		30F99A5F278E825700DBD9C8 /* demangle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = demangle.hpp; sourceTree = "<group>"; };
 		30F99A61278F706D00DBD9C8 /* custom_strstream.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = custom_strstream.cpp; sourceTree = "<group>"; };
 		30F99A62278F706D00DBD9C8 /* custom_strstream.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = custom_strstream.hpp; sourceTree = "<group>"; };
+		30F99A64278FA1AF00DBD9C8 /* Queue.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Queue.hpp; sourceTree = "<group>"; };
 		30FE900927458CD20086957E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		30FE900B2745924C0086957E /* SIFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SIFT.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -334,6 +335,7 @@
 				30CBDBBF2731A01600473B25 /* DataSource.hpp */,
 				30CBDBC72732EBF200473B25 /* DataOutput.cpp */,
 				30CBDBC82732EBF200473B25 /* DataOutput.hpp */,
+				30F99A64278FA1AF00DBD9C8 /* Queue.hpp */,
 			);
 			name = src;
 			path = ../../src;
