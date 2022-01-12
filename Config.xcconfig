@@ -7,6 +7,7 @@ OTHER_LDFLAGS = -lm -lpthread -L/nix/store/gzmldcqhy7scwriamp4jlvqzhm6s2kqg-open
 CLANG_CXX_LIBRARY=libc++
 CLANG_CXX_LANGUAGE_STANDARD=c++17
 
-impl = SIFT_IMPL=SIFTGPU SIFTGPU_ // <-- Be sure to change both of these defines for an impl change
+//impl = SIFT_IMPL=SIFTGPU SIFTGPU_ // <-- Be sure to change both of these defines for an impl change
+impl = SIFT_IMPL=SIFTAnatomy SIFTAnatomy_
 //tests = SIFTGPU_TEST
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) BACKWARD_HAS_UNWIND=1 USE_COMMAND_LINE_ARGS WINDOW_PREFER_GLUT CL_SIFTGPU_ENABLED $(impl) $(tests)

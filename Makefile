@@ -42,9 +42,9 @@ endef
 #CONFIG_TEST_DEFINES = -DSIFTGPU_TEST
 
 # Choose a SIFT implementation here:
-#SIFT_IMPL=SIFTAnatomy
+SIFT_IMPL=SIFTAnatomy
 #SIFT_IMPL=SIFTOpenCV
-SIFT_IMPL=SIFTGPU
+#SIFT_IMPL=SIFTGPU
 
 # If not using this, need to avoid linking jemalloc too:
 USE_JEMALLOC=1
