@@ -74,6 +74,7 @@ using DataOutputT = PreviewWindowDataOutput;
 #endif
 // //
 
+#ifdef SIFTAnatomy_
 template <typename DataSourceT, typename DataOutputT>
 int mainInteractive(DataSourceT* src,
                     SIFTState& s,
@@ -85,6 +86,7 @@ int mainInteractive(DataSourceT* src,
                       const CommandLineConfig& cfg
                     #endif
 );
+#endif
 
 #include "tools/malloc_with_free_all.h"
 // https://gist.github.com/dgoguerra/7194777
@@ -124,6 +126,7 @@ void showTimers(ThreadInfoT threadInfo) {
 }
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
+                SIFTState& s,
                 SIFTParams& p,
                 DataOutputT& o
                 #ifdef USE_COMMAND_LINE_ARGS
@@ -149,16 +152,21 @@ int main(int argc, char **argv)
     char* a = nullptr;
     *a = 0;
 #endif
+#ifdef SIFTGPU_TEST
+    return SIFTGPU::test(argc, argv);
+#endif
     
 #ifdef SLEEP_BEFORE_RUNNING
 	std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BEFORE_RUNNING));
 #endif
     
 //    OPTICK_APP("SIFT");
-    
+
     SIFTState s;
     SIFTParams p;
+#ifdef SIFTAnatomy_
     p.params = sift_assign_default_parameters();
+#endif
     
 	// Set the default "skip"
     size_t skip = 0;//120;//60;//100;//38;//0;
@@ -211,6 +219,7 @@ int main(int argc, char **argv)
             std::this_thread::sleep_for(std::chrono::milliseconds(time));
             i++;
         }
+#ifdef SIFTAnatomy_
         else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
             for (int j = i+1; j < argc; j++) {
 #define LOG_PARAM(x) std::cout << "Set " #x << " to " << p.params->x << std::endl
@@ -290,6 +299,7 @@ int main(int argc, char **argv)
             }
             i++;
         }
+#endif
         else {
             printf("Unrecognized command-line argument given: %s", argv[i]);
             printf(" (command line was:\n");
@@ -331,19 +341,25 @@ int main(int argc, char **argv)
     }
     
     if (!cfg.mainMission) {
+        #ifdef SIFTAnatomy_
         p.params = sift_assign_default_parameters();
         mainInteractive(src.get(), s, p, skip, o, o2, cfg);
+        #else
+        puts("SIFTAnatomy_ was not defined and mainInteractive requires this to be available for use. To fix this, run with --main-mission or recompile with SIFTAnatomy_ defined.");
+        puts("Exiting.");
+        return 1;
+        #endif
     }
     else {
         static_assert(std::is_same<decltype(o2), FileDataOutput>::value, "Always use the FileDataOutput instead of PreviewWindowDataOutput here for the mainMission() call, since mainMission() has custom imshow code enabled if `CMD_CONFIG(showPreviewWindow())` instead of using PreviewWindowDataOutput.");
-        mainMission(src.get(), p, o2, cfg);
+        mainMission(src.get(), s, p, o2, cfg);
     }
 #else
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
     
     FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
-    mainMission(src, p, o2);
+    mainMission(src, s, p, o2);
 #endif
     // //
     
@@ -399,6 +415,7 @@ void terminate_handler() {
         std::cout << "No video to save" << std::endl;
     }
 }
+#include "tools/backtrace/backtrace.hpp"
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
     printf_("Caught segfault (%s) at address %p. Running terminate_handler().\n", strsignal(signal), si->si_addr);
@@ -407,6 +424,7 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
     
     // Print stack trace
     //backward::sh->handleSignal(signal, si, arg);
+    backtrace(std::cout);
     
     exit(5); // Probably doesn't call atexit since signal handlers don't.
 }
@@ -459,6 +477,8 @@ DataSourceBase* g_src;
 void* matcherThreadFunc(void* arg) {
     installSignalHandlers();
     
+    SIFTState* s = (SIFTState*)arg;
+    
     do {
 //        OPTICK_THREAD("Worker");
         
@@ -485,7 +505,7 @@ void* matcherThreadFunc(void* arg) {
 
         // Matching and homography
         t.reset();
-        sift.findHomography(img1, img2
+        sift.findHomography(img1, img2, *s
 #ifdef USE_COMMAND_LINE_ARGS
                             , g_src, cfg
 #endif
@@ -515,8 +535,8 @@ void* matcherThreadFunc(void* arg) {
 
 cv::Rect g_desktopSize;
 
-#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
-//#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
+//#define tpPush(x, ...) tp.push(x, __VA_ARGS__)
+#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 //ctpl::thread_pool tp(4); // Number of threads in the pool
 //ctpl::thread_pool tp(8);
 ctpl::thread_pool tp(6);
@@ -526,6 +546,7 @@ thread_local void* bigMallocBlock = nullptr; // Never freed on purpose
 #endif
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
+                SIFTState& s,
                 SIFTParams& p,
                 DataOutputT& o2
 #ifdef USE_COMMAND_LINE_ARGS
@@ -569,7 +590,7 @@ int mainMission(DataSourceT* src,
     cv::Mat firstImage;
     cv::Mat prevImage;
     pthread_t matcherThread;
-    pthread_create(&matcherThread, NULL, matcherThreadFunc, NULL);
+    pthread_create(&matcherThread, NULL, matcherThreadFunc, &s);
     
     auto start = std::chrono::steady_clock::now();
     auto last = std::chrono::steady_clock::now();
@@ -648,6 +669,14 @@ int mainMission(DataSourceT* src,
             struct sift_keypoint_std *k = pair.second.first;
 #elif defined(SIFTOpenCV_)
             auto vecPair = sift.findKeypoints(id, p, greyscale);
+#elif defined(SIFTGPU_)
+            static thread_local SIFTState s;
+            auto pair = sift.findKeypoints(id, s, p, greyscale);
+            auto& keys1 = pair.first;
+            auto& descriptors1 = pair.second.first;
+            auto& num1 = pair.second.second;
+#else
+#error "No known SIFT implementation"
 #endif
             std::cout << id << " findKeypoints end" << std::endl;
             
@@ -685,6 +714,14 @@ int mainMission(DataSourceT* src,
                                                       vecPair.second,
                                                       std::vector< cv::DMatch >(),
                                             cv::Mat());
+                    #elif defined(SIFTGPU_)
+                    processedImageQueue.enqueueNoLock(greyscale,
+                                                      keys1,
+                                                      descriptors1,
+                                                      num1,
+                                            cv::Mat());
+                    #else
+                    #error "No known SIFT implementation"
                     #endif
                 }
                 else {
@@ -847,6 +884,7 @@ int mainMission(DataSourceT* src,
 }
 
 #ifdef USE_COMMAND_LINE_ARGS
+#ifdef SIFTAnatomy_
 template <typename DataSourceT, typename DataOutputT>
 int mainInteractive(DataSourceT* src,
                     SIFTState& s,
@@ -961,4 +999,5 @@ int mainInteractive(DataSourceT* src,
     
     return 0;
 }
+#endif
 #endif // USE_COMMAND_LINE_ARGS

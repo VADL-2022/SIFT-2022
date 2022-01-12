@@ -39,6 +39,25 @@
 		30EF9790273C588B00E3D538 /* Info.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 30EF978F273C582100E3D538 /* Info.plist */; };
 		30F00229275D89EF000A3D25 /* myMalloc_.c in Sources */ = {isa = PBXBuildFile; fileRef = 30F00227275D89EF000A3D25 /* myMalloc_.c */; };
 		30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */; };
+		30F99A48278CF14000DBD9C8 /* GlobalUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A22278CF13F00DBD9C8 /* GlobalUtil.cpp */; };
+		30F99A49278CF14000DBD9C8 /* SiftMatchCU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A23278CF13F00DBD9C8 /* SiftMatchCU.cpp */; };
+		30F99A4A278CF14000DBD9C8 /* GLTexImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A24278CF13F00DBD9C8 /* GLTexImage.cpp */; };
+		30F99A4B278CF14000DBD9C8 /* PyramidCU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A27278CF13F00DBD9C8 /* PyramidCU.cpp */; };
+		30F99A4C278CF14000DBD9C8 /* ProgramCL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A28278CF13F00DBD9C8 /* ProgramCL.cpp */; };
+		30F99A4D278CF14000DBD9C8 /* SiftPyramid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A2E278CF13F00DBD9C8 /* SiftPyramid.cpp */; };
+		30F99A4E278CF14000DBD9C8 /* PyramidGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A31278CF13F00DBD9C8 /* PyramidGL.cpp */; };
+		30F99A4F278CF14000DBD9C8 /* ProgramGLSL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A33278CF13F00DBD9C8 /* ProgramGLSL.cpp */; };
+		30F99A50278CF14000DBD9C8 /* ProgramGPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A35278CF13F00DBD9C8 /* ProgramGPU.cpp */; };
+		30F99A51278CF14000DBD9C8 /* SiftGPU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A36278CF13F00DBD9C8 /* SiftGPU.cpp */; };
+		30F99A52278CF14000DBD9C8 /* CuTexImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A37278CF13F00DBD9C8 /* CuTexImage.cpp */; };
+		30F99A53278CF14000DBD9C8 /* FrameBufferObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A39278CF13F00DBD9C8 /* FrameBufferObject.cpp */; };
+		30F99A54278CF14000DBD9C8 /* CLTexImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A3E278CF13F00DBD9C8 /* CLTexImage.cpp */; };
+		30F99A55278CF14000DBD9C8 /* ProgramCG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A3F278CF13F00DBD9C8 /* ProgramCG.cpp */; };
+		30F99A56278CF14000DBD9C8 /* SiftMatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A41278CF13F00DBD9C8 /* SiftMatch.cpp */; };
+		30F99A57278CF14000DBD9C8 /* ShaderMan.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A44278CF13F00DBD9C8 /* ShaderMan.cpp */; };
+		30F99A58278CF14000DBD9C8 /* PyramidCL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A47278CF13F00DBD9C8 /* PyramidCL.cpp */; };
+		30F99A5C278E819C00DBD9C8 /* backtrace.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A5A278E819C00DBD9C8 /* backtrace.cpp */; };
+		30F99A60278E825700DBD9C8 /* demangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A5E278E825700DBD9C8 /* demangle.cpp */; };
 		30FE900A27458CD20086957E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30FE900927458CD20086957E /* CoreGraphics.framework */; };
 		30FE900C2745924C0086957E /* SIFT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30FE900B2745924C0086957E /* SIFT.cpp */; };
 /* End PBXBuildFile section */
@@ -134,6 +153,49 @@
 		30F00227275D89EF000A3D25 /* myMalloc_.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = myMalloc_.c; sourceTree = "<group>"; };
 		30F00228275D89EF000A3D25 /* myMalloc_.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = myMalloc_.h; sourceTree = "<group>"; };
 		30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = malloc_override_osx.cpp; sourceTree = "<group>"; };
+		30F99A22278CF13F00DBD9C8 /* GlobalUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GlobalUtil.cpp; sourceTree = "<group>"; };
+		30F99A23278CF13F00DBD9C8 /* SiftMatchCU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SiftMatchCU.cpp; sourceTree = "<group>"; };
+		30F99A24278CF13F00DBD9C8 /* GLTexImage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GLTexImage.cpp; sourceTree = "<group>"; };
+		30F99A25278CF13F00DBD9C8 /* SiftMatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SiftMatch.h; sourceTree = "<group>"; };
+		30F99A26278CF13F00DBD9C8 /* SiftMatchCU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SiftMatchCU.h; sourceTree = "<group>"; };
+		30F99A27278CF13F00DBD9C8 /* PyramidCU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PyramidCU.cpp; sourceTree = "<group>"; };
+		30F99A28278CF13F00DBD9C8 /* ProgramCL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ProgramCL.cpp; sourceTree = "<group>"; };
+		30F99A29278CF13F00DBD9C8 /* ProgramGPU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgramGPU.h; sourceTree = "<group>"; };
+		30F99A2A278CF13F00DBD9C8 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		30F99A2B278CF13F00DBD9C8 /* PyramidCL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PyramidCL.h; sourceTree = "<group>"; };
+		30F99A2C278CF13F00DBD9C8 /* FrameBufferObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrameBufferObject.h; sourceTree = "<group>"; };
+		30F99A2D278CF13F00DBD9C8 /* PyramidGL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PyramidGL.h; sourceTree = "<group>"; };
+		30F99A2E278CF13F00DBD9C8 /* SiftPyramid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SiftPyramid.cpp; sourceTree = "<group>"; };
+		30F99A2F278CF13F00DBD9C8 /* ProgramGLSL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgramGLSL.h; sourceTree = "<group>"; };
+		30F99A30278CF13F00DBD9C8 /* ProgramCL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgramCL.h; sourceTree = "<group>"; };
+		30F99A31278CF13F00DBD9C8 /* PyramidGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PyramidGL.cpp; sourceTree = "<group>"; };
+		30F99A32278CF13F00DBD9C8 /* GLTexImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GLTexImage.h; sourceTree = "<group>"; };
+		30F99A33278CF13F00DBD9C8 /* ProgramGLSL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ProgramGLSL.cpp; sourceTree = "<group>"; };
+		30F99A34278CF13F00DBD9C8 /* SiftGPU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SiftGPU.h; sourceTree = "<group>"; };
+		30F99A35278CF13F00DBD9C8 /* ProgramGPU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ProgramGPU.cpp; sourceTree = "<group>"; };
+		30F99A36278CF13F00DBD9C8 /* SiftGPU.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SiftGPU.cpp; sourceTree = "<group>"; };
+		30F99A37278CF13F00DBD9C8 /* CuTexImage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CuTexImage.cpp; sourceTree = "<group>"; };
+		30F99A38278CF13F00DBD9C8 /* LiteWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LiteWindow.h; sourceTree = "<group>"; };
+		30F99A39278CF13F00DBD9C8 /* FrameBufferObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FrameBufferObject.cpp; sourceTree = "<group>"; };
+		30F99A3A278CF13F00DBD9C8 /* CuTexImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CuTexImage.h; sourceTree = "<group>"; };
+		30F99A3B278CF13F00DBD9C8 /* ProgramCU.cu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ProgramCU.cu; sourceTree = "<group>"; };
+		30F99A3C278CF13F00DBD9C8 /* ShaderMan.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderMan.h; sourceTree = "<group>"; };
+		30F99A3D278CF13F00DBD9C8 /* GlobalUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlobalUtil.h; sourceTree = "<group>"; };
+		30F99A3E278CF13F00DBD9C8 /* CLTexImage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CLTexImage.cpp; sourceTree = "<group>"; };
+		30F99A3F278CF13F00DBD9C8 /* ProgramCG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ProgramCG.cpp; sourceTree = "<group>"; };
+		30F99A40278CF13F00DBD9C8 /* PyramidCU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PyramidCU.h; sourceTree = "<group>"; };
+		30F99A41278CF13F00DBD9C8 /* SiftMatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SiftMatch.cpp; sourceTree = "<group>"; };
+		30F99A42278CF13F00DBD9C8 /* ProgramCU.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgramCU.h; sourceTree = "<group>"; };
+		30F99A43278CF13F00DBD9C8 /* SiftPyramid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SiftPyramid.h; sourceTree = "<group>"; };
+		30F99A44278CF13F00DBD9C8 /* ShaderMan.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ShaderMan.cpp; sourceTree = "<group>"; };
+		30F99A45278CF13F00DBD9C8 /* CLTexImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLTexImage.h; sourceTree = "<group>"; };
+		30F99A46278CF13F00DBD9C8 /* ProgramCG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgramCG.h; sourceTree = "<group>"; };
+		30F99A47278CF13F00DBD9C8 /* PyramidCL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PyramidCL.cpp; sourceTree = "<group>"; };
+		30F99A5A278E819C00DBD9C8 /* backtrace.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backtrace.cpp; sourceTree = "<group>"; };
+		30F99A5B278E819C00DBD9C8 /* backtrace.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backtrace.hpp; sourceTree = "<group>"; };
+		30F99A5D278E822E00DBD9C8 /* backtrace_on_terminate.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backtrace_on_terminate.hpp; sourceTree = "<group>"; };
+		30F99A5E278E825700DBD9C8 /* demangle.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = demangle.cpp; sourceTree = "<group>"; };
+		30F99A5F278E825700DBD9C8 /* demangle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = demangle.hpp; sourceTree = "<group>"; };
 		30FE900927458CD20086957E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		30FE900B2745924C0086957E /* SIFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SIFT.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -172,6 +234,7 @@
 			isa = PBXGroup;
 			children = (
 				300EE45527209F9400969C5F /* sift_anatomy_20141201 */,
+				30F99A21278CF13F00DBD9C8 /* SiftGPU */,
 				300EE48327209F9400969C5F /* src */,
 				300EE4B827209FF000969C5F /* Config.xcconfig */,
 				30EF978F273C582100E3D538 /* Info.plist */,
@@ -276,6 +339,7 @@
 		308B6C04275AA95400FE86A9 /* tools */ = {
 			isa = PBXGroup;
 			children = (
+				30F99A59278E814E00DBD9C8 /* backtrace */,
 				308B6C05275AA96D00FE86A9 /* mymalloc.cpp */,
 				308B7099275AD7CF00FE86A9 /* malloc_override_osx.hpp */,
 				30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */,
@@ -291,6 +355,64 @@
 				303CB67927631A4800ABDBF1 /* file_descriptors.h */,
 			);
 			path = tools;
+			sourceTree = "<group>";
+		};
+		30F99A21278CF13F00DBD9C8 /* SiftGPU */ = {
+			isa = PBXGroup;
+			children = (
+				30F99A22278CF13F00DBD9C8 /* GlobalUtil.cpp */,
+				30F99A23278CF13F00DBD9C8 /* SiftMatchCU.cpp */,
+				30F99A24278CF13F00DBD9C8 /* GLTexImage.cpp */,
+				30F99A25278CF13F00DBD9C8 /* SiftMatch.h */,
+				30F99A26278CF13F00DBD9C8 /* SiftMatchCU.h */,
+				30F99A27278CF13F00DBD9C8 /* PyramidCU.cpp */,
+				30F99A28278CF13F00DBD9C8 /* ProgramCL.cpp */,
+				30F99A29278CF13F00DBD9C8 /* ProgramGPU.h */,
+				30F99A2A278CF13F00DBD9C8 /* CMakeLists.txt */,
+				30F99A2B278CF13F00DBD9C8 /* PyramidCL.h */,
+				30F99A2C278CF13F00DBD9C8 /* FrameBufferObject.h */,
+				30F99A2D278CF13F00DBD9C8 /* PyramidGL.h */,
+				30F99A2E278CF13F00DBD9C8 /* SiftPyramid.cpp */,
+				30F99A2F278CF13F00DBD9C8 /* ProgramGLSL.h */,
+				30F99A30278CF13F00DBD9C8 /* ProgramCL.h */,
+				30F99A31278CF13F00DBD9C8 /* PyramidGL.cpp */,
+				30F99A32278CF13F00DBD9C8 /* GLTexImage.h */,
+				30F99A33278CF13F00DBD9C8 /* ProgramGLSL.cpp */,
+				30F99A34278CF13F00DBD9C8 /* SiftGPU.h */,
+				30F99A35278CF13F00DBD9C8 /* ProgramGPU.cpp */,
+				30F99A36278CF13F00DBD9C8 /* SiftGPU.cpp */,
+				30F99A37278CF13F00DBD9C8 /* CuTexImage.cpp */,
+				30F99A38278CF13F00DBD9C8 /* LiteWindow.h */,
+				30F99A39278CF13F00DBD9C8 /* FrameBufferObject.cpp */,
+				30F99A3A278CF13F00DBD9C8 /* CuTexImage.h */,
+				30F99A3B278CF13F00DBD9C8 /* ProgramCU.cu */,
+				30F99A3C278CF13F00DBD9C8 /* ShaderMan.h */,
+				30F99A3D278CF13F00DBD9C8 /* GlobalUtil.h */,
+				30F99A3E278CF13F00DBD9C8 /* CLTexImage.cpp */,
+				30F99A3F278CF13F00DBD9C8 /* ProgramCG.cpp */,
+				30F99A40278CF13F00DBD9C8 /* PyramidCU.h */,
+				30F99A41278CF13F00DBD9C8 /* SiftMatch.cpp */,
+				30F99A42278CF13F00DBD9C8 /* ProgramCU.h */,
+				30F99A43278CF13F00DBD9C8 /* SiftPyramid.h */,
+				30F99A44278CF13F00DBD9C8 /* ShaderMan.cpp */,
+				30F99A45278CF13F00DBD9C8 /* CLTexImage.h */,
+				30F99A46278CF13F00DBD9C8 /* ProgramCG.h */,
+				30F99A47278CF13F00DBD9C8 /* PyramidCL.cpp */,
+			);
+			name = SiftGPU;
+			path = ../../SiftGPU/src/SiftGPU;
+			sourceTree = "<group>";
+		};
+		30F99A59278E814E00DBD9C8 /* backtrace */ = {
+			isa = PBXGroup;
+			children = (
+				30F99A5A278E819C00DBD9C8 /* backtrace.cpp */,
+				30F99A5B278E819C00DBD9C8 /* backtrace.hpp */,
+				30F99A5D278E822E00DBD9C8 /* backtrace_on_terminate.hpp */,
+				30F99A5E278E825700DBD9C8 /* demangle.cpp */,
+				30F99A5F278E825700DBD9C8 /* demangle.hpp */,
+			);
+			path = backtrace;
 			sourceTree = "<group>";
 		};
 		30FE900827458CD10086957E /* Frameworks */ = {
@@ -370,7 +492,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ -z \"$IN_NIX_SHELL\" ]; then\n    if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then\n        source ~/.nix-profile/etc/profile.d/nix.sh\n    fi # added by Nix installer\n    \n    #~/.nix-profile/bin/nix-shell --run \"bash \\\"$0\\\"\" -p opencv pkgconfig\n    cd \"$SRCROOT/..\"\n    ~/.nix-profile/bin/nix-shell --run \"bash \\\"$0\\\"\"\n    exit 0\nfi\n\nSIFT=\"sift_anatomy_20141201\"\nSIFT_SRC=\"$SIFT/src\"\nXCCONFIG=\"Config.xcconfig\"\n#truncate –s 0 \"$XCCONFIG\"\necho `which pkg-config`\necho \"$OPENCV_CFLAGS\"\nIFLAGS=\"$(pkg-config --cflags-only-I opencv4 libpng jemalloc) -I\"'$(SRCROOT)/../'\"$SIFT_SRC -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include\"\necho \"$IFLAGS\"\n\n# Use a heredoc:\ncat <<InputComesFromHERE > \"$XCCONFIG\"\nCXXFLAGS = -std=c++17 \\$(CXXFLAGS)\nOPENCV_CFLAGS=`pkg-config --cflags opencv4 libpng`\nHEADER_SEARCH_PATHS=$(echo -n \"$IFLAGS\" | awk 'BEGIN { ORS=\" \"; RS = \" \" } ; { sub(/^-I/, \"\"); print $0 }')\n\nOTHER_LDFLAGS = -lm -lpthread `pkg-config --libs opencv4 libpng jemalloc` -L/nix/store/g5w2hcjkax12ixx8wq1g6r6nqri15ggx-libunwind-7.1.0/lib // Works but segfaults: -Wl,-alias,_malloc,vadlTemp -Wl,-alias,___wrap_malloc,_malloc -Wl,-alias,vadlTemp,___real_malloc -Wl,-alias,_free,vadlTemp2 -Wl,-alias,___wrap_free,_free -Wl,-alias,vadlTemp2,___real_free //-Wl,-alias,_malloc,___wrap_malloc -Wl,-alias,_free,___wrap_free -Wl,-alias,___real_malloc,_malloc -Wl,-alias,___real_free,_free //-Wl,--wrap,malloc -Wl,--wrap,free //-ljpeg -lrt -lm\n\nCLANG_CXX_LIBRARY=libc++\nCLANG_CXX_LANGUAGE_STANDARD=c++17\n\nGCC_PREPROCESSOR_DEFINITIONS = \\$(inherited) BACKWARD_HAS_UNWIND=1 USE_COMMAND_LINE_ARGS\nInputComesFromHERE\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ -z \"$IN_NIX_SHELL\" ]; then\n    if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then\n        source ~/.nix-profile/etc/profile.d/nix.sh\n    fi # added by Nix installer\n    \n    #~/.nix-profile/bin/nix-shell --run \"bash \\\"$0\\\"\" -p opencv pkgconfig\n    cd \"$SRCROOT/..\"\n    ~/.nix-profile/bin/nix-shell --run \"bash \\\"$0\\\"\"\n    exit 0\nfi\n\nSIFT=\"sift_anatomy_20141201\"\nSIFT_SRC=\"$SIFT/src\"\nXCCONFIG=\"Config.xcconfig\"\n#truncate –s 0 \"$XCCONFIG\"\necho `which pkg-config`\necho \"$OPENCV_CFLAGS\"\nIFLAGS=\"$(pkg-config --cflags-only-I opencv4 libpng jemalloc gl glew IL) -I\"'$(SRCROOT)/../'\"$SIFT_SRC -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -I/nix/store/i0rmp3app7yqd37ihgxlx9c3lwsj16kq-opencl-headers-2020.06.16/include\"\necho \"$IFLAGS\"\n\n# Use a heredoc:\ncat <<InputComesFromHERE > \"$XCCONFIG\"\nCXXFLAGS = -std=c++17 \\$(CXXFLAGS)\nOPENCV_CFLAGS=`pkg-config --cflags opencv4 libpng`\nHEADER_SEARCH_PATHS=$(echo -n \"$IFLAGS\" | awk 'BEGIN { ORS=\" \"; RS = \" \" } ; { sub(/^-I/, \"\"); print $0 }')\n\nOTHER_LDFLAGS = -lm -lpthread `pkg-config --libs opencv4 libpng jemalloc gl glew glut IL` -framework OpenCL -L/nix/store/g5w2hcjkax12ixx8wq1g6r6nqri15ggx-libunwind-7.1.0/lib // Works but segfaults: -Wl,-alias,_malloc,vadlTemp -Wl,-alias,___wrap_malloc,_malloc -Wl,-alias,vadlTemp,___real_malloc -Wl,-alias,_free,vadlTemp2 -Wl,-alias,___wrap_free,_free -Wl,-alias,vadlTemp2,___real_free //-Wl,-alias,_malloc,___wrap_malloc -Wl,-alias,_free,___wrap_free -Wl,-alias,___real_malloc,_malloc -Wl,-alias,___real_free,_free //-Wl,--wrap,malloc -Wl,--wrap,free //-ljpeg -lrt -lm\n\nCLANG_CXX_LIBRARY=libc++\nCLANG_CXX_LANGUAGE_STANDARD=c++17\n\nimpl = SIFT_IMPL=SIFTGPU SIFTGPU_ // <-- Be sure to change both of these defines for an impl change\n//tests = SIFTGPU_TEST\nGCC_PREPROCESSOR_DEFINITIONS = \\$(inherited) BACKWARD_HAS_UNWIND=1 USE_COMMAND_LINE_ARGS WINDOW_PREFER_GLUT CL_SIFTGPU_ENABLED \\$(impl) \\$(tests)\nInputComesFromHERE\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -381,33 +503,52 @@
 			files = (
 				30CE61F227237F18001C987F /* KeypointsAndMatching.cpp in Sources */,
 				308B6C06275AA96D00FE86A9 /* mymalloc.cpp in Sources */,
+				30F99A4C278CF14000DBD9C8 /* ProgramCL.cpp in Sources */,
 				300EE4B027209F9400969C5F /* utils.cpp in Sources */,
 				300EE4A227209F9400969C5F /* lib_io_scalespace.c in Sources */,
 				30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */,
+				30F99A49278CF14000DBD9C8 /* SiftMatchCU.cpp in Sources */,
 				303CB676276319A700ABDBF1 /* printf.c in Sources */,
+				30F99A52278CF14000DBD9C8 /* CuTexImage.cpp in Sources */,
 				308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */,
+				30F99A4B278CF14000DBD9C8 /* PyramidCU.cpp in Sources */,
 				300EE49327209F9400969C5F /* Makefile in Sources */,
 				30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */,
+				30F99A51278CF14000DBD9C8 /* SiftGPU.cpp in Sources */,
+				30F99A5C278E819C00DBD9C8 /* backtrace.cpp in Sources */,
+				30F99A4D278CF14000DBD9C8 /* SiftPyramid.cpp in Sources */,
 				30CE61F527238409001C987F /* common.cpp in Sources */,
+				30F99A54278CF14000DBD9C8 /* CLTexImage.cpp in Sources */,
 				300EE49F27209F9400969C5F /* lib_sift.c in Sources */,
 				300EE49C27209F9400969C5F /* lib_matching.cpp in Sources */,
+				30F99A56278CF14000DBD9C8 /* SiftMatch.cpp in Sources */,
+				30F99A58278CF14000DBD9C8 /* PyramidCL.cpp in Sources */,
+				30F99A53278CF14000DBD9C8 /* FrameBufferObject.cpp in Sources */,
 				30FE900C2745924C0086957E /* SIFT.cpp in Sources */,
+				30F99A4A278CF14000DBD9C8 /* GLTexImage.cpp in Sources */,
+				30F99A4F278CF14000DBD9C8 /* ProgramGLSL.cpp in Sources */,
 				300EE4B527209F9400969C5F /* siftMain.cpp in Sources */,
 				308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */,
+				30F99A4E278CF14000DBD9C8 /* PyramidGL.cpp in Sources */,
 				30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */,
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
 				303CB67827631A0200ABDBF1 /* _putchar.c in Sources */,
 				300EE49527209F9400969C5F /* lib_keypoint.c in Sources */,
 				300EE4A427209F9400969C5F /* lib_description.c in Sources */,
 				30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */,
+				30F99A60278E825700DBD9C8 /* demangle.cpp in Sources */,
+				30F99A57278CF14000DBD9C8 /* ShaderMan.cpp in Sources */,
 				300EE4AA27209F9400969C5F /* lib_sift_anatomy.c in Sources */,
+				30F99A48278CF14000DBD9C8 /* GlobalUtil.cpp in Sources */,
 				300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */,
 				30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */,
 				300EE4A527209F9400969C5F /* lib_scalespace.c in Sources */,
 				300EE4B427209F9400969C5F /* my_sift_additions.c in Sources */,
 				30F00229275D89EF000A3D25 /* myMalloc_.c in Sources */,
+				30F99A50278CF14000DBD9C8 /* ProgramGPU.cpp in Sources */,
 				300EE49D27209F9400969C5F /* lib_discrete.c in Sources */,
 				300EE4A027209F9400969C5F /* io_png.c in Sources */,
+				30F99A55278CF14000DBD9C8 /* ProgramCG.cpp in Sources */,
 				30CE61EB27235141001C987F /* Timer.cpp in Sources */,
 				300EE4A727209F9400969C5F /* lib_util.c in Sources */,
 				30CE61E827234CD2001C987F /* SIFT.hpp in Sources */,

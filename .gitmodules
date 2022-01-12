@@ -4,3 +4,6 @@
 [submodule "src/optick"]
 	path = src/optick
 	url = https://github.com/bombomby/optick.git
+[submodule "SiftGPU"]
+	path = SiftGPU
+	url = https://github.com/sbond75/SiftGPU.git

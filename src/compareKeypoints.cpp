@@ -10,6 +10,7 @@
 
 #include "KeypointsAndMatching.hpp"
 
+#ifdef SIFTAnatomy_
 bool compareKeypoints(cv::Mat& canvas, SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoints, cv::Mat& backtorgb COMPARE_KEYPOINTS_ADDITIONAL_PARAMS) {
     bool retval = false;
     
@@ -123,3 +124,4 @@ bool compareKeypoints(cv::Mat& canvas, SIFTState& s, SIFTParams& p, struct sift_
     
     return retval;
 }
+#endif

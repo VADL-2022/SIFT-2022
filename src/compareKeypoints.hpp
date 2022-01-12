@@ -17,7 +17,9 @@
 struct SIFTState;
 struct SIFTParams;
 
+#ifdef SIFTAnatomy_
 // Returns true to mean you need to retry with the modified params (modified by this function) on the previous file.
 bool compareKeypoints(cv::Mat& canvas, SIFTState& s, SIFTParams& p, struct sift_keypoints* keypoints, cv::Mat& backtorgb COMPARE_KEYPOINTS_ADDITIONAL_PARAMS);
+#endif
 
 #endif /* compareKeypoints_hpp */

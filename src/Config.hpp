@@ -12,11 +12,16 @@
 #include "SIFT.hpp"
 
 // Config //
+
+// Config: Define these in the Makefile instead of here: //
 // SIFT implementation
-#define SIFT_IMPL SIFTAnatomy
-#define SIFTAnatomy_
+//#define SIFT_IMPL SIFTAnatomy
+//#define SIFTAnatomy_
 //#define SIFT_IMPL SIFTOpenCV
 //#define SIFTOpenCV_
+//#define SIFT_IMPL SIFTGPU
+//#define SIFTGPU_
+// //
 
 
 //#define SLEEP_BEFORE_RUNNING 30 * 3000 // Milliseconds
@@ -53,6 +58,7 @@ struct CommandLineConfig {
 
 struct SIFTAnatomy;
 struct SIFTOpenCV;
+struct SIFTGPU;
 using SIFT_T = SIFT_IMPL;
 
 #ifdef USE_COMMAND_LINE_ARGS

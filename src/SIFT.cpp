@@ -16,6 +16,7 @@
 #include "DataSource.hpp"
 #endif
 
+#ifdef SIFTAnatomy_
 std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int /*n*/>> SIFTAnatomy::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
     assert(greyscale.depth() == CV_32F);
     assert(greyscale.type() == CV_32FC1);
@@ -165,6 +166,7 @@ void SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
     }
 }
 
+#elif defined(SIFTOpenCV_)
 std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
 //    t.reset();
 //    auto ret = detect(greyscale);
@@ -264,3 +266,167 @@ void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage
 #endif
     }
 }
+
+#elif defined(SIFTGPU_)
+#include <GL/glew.h>
+
+#ifdef SIFTGPU_TEST
+int SIFTGPU::test(int argc, char** argv) {
+    SiftGPU sift;
+    
+    //Parse parameters
+    sift.ParseParam(argc - 1, argv + 1);
+    //sift.SetVerbose(0);
+    sift.SetVerbose();
+    
+    std::cout<<"Initialize and warm up...\n";
+    //create an OpenGL context for computation
+    if(sift.CreateContextGL() ==0) {
+        std::cout << "CreateContextGL() failed" << std::endl;
+        return 1;
+    }
+    // Warm up
+    if(sift.RunSIFT()==0) { // Should fail due to _image_loaded == 0 (we didn't load any images)
+        std::cout << "RunSIFT() failed" << std::endl;
+        return 1;
+    }
+
+    sift.RunSIFT();
+    
+    return 0;
+}
+#endif
+
+std::pair<std::vector<SiftGPU::SiftKeypoint> /*keys1*/, std::pair<std::vector<float> /*descriptors1*/, int /*num1*/>> SIFTGPU::findKeypoints(int threadID, SIFTState& s, SIFTParams& p, cv::Mat& greyscale) {
+    if (s.sift.RunSIFT(greyscale.cols, greyscale.rows, greyscale.data, GL_LUMINANCE, GL_UNSIGNED_BYTE) == 0) { // Greyscale gl types (see SiftGPU/src/SiftGPU/GLTexImage.h under `static int  IsSimpleGlFormat(unsigned int gl_format, unsigned int gl_type)`)
+        std::cout << "RunSIFT() failed" << std::endl;
+        throw ""; // TODO: don't throw
+    }
+    
+    std::vector<float > descriptors1(1), descriptors2(1);
+    std::vector<SiftGPU::SiftKeypoint> keys1(1), keys2(1);
+    int num1 = 0, num2 = 0;
+    
+    //get feature count
+    num1 = s.sift.GetFeatureNum();
+
+    //allocate memory
+    keys1.resize(num1);    descriptors1.resize(128*num1);
+
+    //reading back feature vectors is faster than writing files
+    //if you dont need keys or descriptors, just put NULLs here
+    s.sift.GetFeatureVector(&keys1[0], &descriptors1[0]);
+    
+    return std::make_pair(keys1, std::make_pair(descriptors1, num1));
+}
+
+template <typename T>
+struct DeleteArray {
+    static void action(T p) {
+        delete[] p;
+    }
+};
+template <typename F, typename T>
+struct ScopedAction {
+    void* userdata;
+    ScopedAction(void* userdata_) : userdata(userdata_) {}
+    ~ScopedAction() {
+        F::action((T)userdata);
+    }
+};
+
+void SIFTGPU::findHomography(ProcessedImage<SIFTGPU>& img1, ProcessedImage<SIFTGPU>& img2, SIFTState& s
+#ifdef USE_COMMAND_LINE_ARGS
+    , DataSourceBase* src, CommandLineConfig& cfg
+#endif
+) {
+    SiftMatchGPU* matcher = &s.matcher;
+    auto& keys1 = img1.keys1;
+    auto& keys2 = img2.keys1;
+    auto& descriptors1 = img1.descriptors1;
+    auto& descriptors2 = img2.descriptors1;
+    auto& num1 = img1.num1;
+    auto& num2 = img2.num1;
+    
+    //Verify current OpenGL Context and initialize the Matcher;
+    //If you don't have an OpenGL Context, call matcher->CreateContextGL instead;
+    matcher->VerifyContextGL(); //must call once
+
+    //Set descriptors to match, the first argument must be either 0 or 1
+    //if you want to use more than 4096 or less than 4096
+    //call matcher->SetMaxSift() to change the limit before calling setdescriptor
+    matcher->SetDescriptors(0, num1, &descriptors1[0]); //image 1
+    matcher->SetDescriptors(1, num2, &descriptors2[0]); //image 2
+
+    //match and get result.
+    int (*match_buf)[2] = new int[num1][2];
+    using T = decltype(match_buf);
+    using Freer = DeleteArray<T>;
+    ScopedAction<Freer, T> freer(match_buf);
+    //use the default thresholds. Check the declaration in SiftGPU.h
+    int num_match = matcher->GetSiftMatch(num1, match_buf);
+    std::cout << num_match << " sift matches were found;\n";
+    
+    //enumerate all the feature matches
+//    for(int i  = 0; i < num_match; ++i)
+//    {
+//        //How to get the feature matches:
+//        SiftGPU::SiftKeypoint & key1 = keys1[match_buf[i][0]];
+//        SiftGPU::SiftKeypoint & key2 = keys2[match_buf[i][1]];
+//        //key1 in the first image matches with key2 in the second image
+//    }
+    
+    // TODO: maybe speed up by not copying, maybe using a stride instead since we have 2 floats x and y in the SiftGPU::SiftKeypoint but then 2 extra floats (see its definition). cv::Point2f has 2 floats and we would need to match that data layout.
+//    auto& scene = keys1;
+//    auto& obj = keys2;
+    
+    std::vector<cv::Point2f> obj; // The `obj` is the current image's keypoints
+    std::vector<cv::Point2f> scene;
+    obj.reserve(keys2.size());
+    for (size_t i = 0; i < keys2.size(); i++) {
+        obj.emplace_back(keys2[i].x, keys2[i].y);
+    }
+    scene.reserve(keys1.size());
+    for (size_t i = 0; i < keys1.size(); i++) {
+        obj.emplace_back(keys1[i].x, keys1[i].y);
+    }
+    
+    img2.transformation = cv::findHomography(obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+
+    if (CMD_CONFIG(mainMission)) {
+#ifdef USE_COMMAND_LINE_ARGS
+        // Draw it //
+        cv::Mat backtorgb = src->colorImageForMat(img2.i);
+        backtorgb.copyTo(img2.canvas);
+        
+        // Draw keypoints on `img2.canvas`
+        t.reset();
+        for(int i=0; i<keys2.size(); i++){
+            drawSquare(img2.canvas, cv::Point(keys2[i].x, keys2[i].y), keys2[i].s, keys2[i].o, 1);
+        }
+        t.logElapsed("draw keypoints");
+        
+        // Draw matches
+        t.reset();
+        for(int i = 0; i < num_match; i++){
+            SiftGPU::SiftKeypoint & key1 = keys1[match_buf[i][0]];
+            SiftGPU::SiftKeypoint & key2 = keys2[match_buf[i][1]];
+            //key1 in the first image matches with key2 in the second image
+            
+            auto xoff= 0;//100;
+            auto yoff=0;//-100;
+//            drawSquare(img2.canvas, cv::Point(key2.x+xoff, key2.y+yoff), key2.sigma /* need to choose something better here */, key2.theta, 2); // <-- Note: sigma and theta are not defined for keypoint struct in SiftGPU, need an alternative
+            cv::line(img2.canvas, cv::Point(key1.x+xoff, key1.y+yoff), cv::Point(key2.x+xoff, key2.y+yoff), lastColor, 1);
+        }
+        t.logElapsed("draw matches");
+        
+        t.reset();
+        // Reset RNG so some colors coincide
+        resetRNG();
+        t.logElapsed("reset RNG");
+        // //
+#endif
+    }
+}
+
+#endif

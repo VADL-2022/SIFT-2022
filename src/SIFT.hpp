@@ -21,9 +21,12 @@ struct ProcessedImage {};
 // Forward declarations //
 struct SIFTAnatomy;
 struct SIFTOpenCV;
+struct SIFTGPU;
+
 struct DataSourceBase;
 // //
 
+#ifdef SIFTAnatomy_
 template <>
 struct ProcessedImage<SIFTAnatomy> {
     ProcessedImage() = default;
@@ -94,6 +97,7 @@ struct ProcessedImage<SIFTAnatomy> {
 #endif
 };
 
+#elif defined(SIFTOpenCV_)
 template <>
 struct ProcessedImage<SIFTOpenCV> {
     ProcessedImage() = default;
@@ -118,11 +122,54 @@ struct ProcessedImage<SIFTOpenCV> {
 #endif
 };
 
+#elif defined(SIFTGPU_)
+#include "SiftGPU.h"
+template <>
+struct ProcessedImage<SIFTGPU> {
+    ProcessedImage() = default;
+    
+    cv::Mat image;
+    
+    std::vector<SiftGPU::SiftKeypoint> keys1;
+    std::vector<float> descriptors1;
+    int num1;
+    
+//    shared_keypoints_ptr_t computedKeypoints;
+//    std::shared_ptr<struct sift_keypoint_std> k;
+//    int n; // Number of keypoints in `k`
+//
+//    // Matching with the previous image, if any //
+//    shared_keypoints_ptr_t out_k1;
+//    shared_keypoints_ptr_t out_k2A;
+//    shared_keypoints_ptr_t out_k2B;
+    cv::Mat transformation;
+    void applyDefaultMatchingParams() {
+//        p.meth_flag = 1;
+//        p.thresh = 0.6;
+    }
+    void resetMatching() {
+        // Free memory and mark this as an unused ProcessedImage:
+//        out_k1.reset();
+//        out_k2A.reset();
+//        out_k2B.reset();
+    }
+    // //
+    
+    SIFTParams p;
+    size_t i;
+
+#ifdef USE_COMMAND_LINE_ARGS
+    cv::Mat canvas;
+#endif
+};
+#endif
+
 
 struct SIFTBase {
     
 };
 
+#ifdef SIFTAnatomy_
 struct SIFTAnatomy : public SIFTBase {
     SIFTAnatomy() {
         
@@ -138,6 +185,7 @@ struct SIFTAnatomy : public SIFTBase {
                         );
 };
 
+#elif defined(SIFTOpenCV_)
 struct SIFTOpenCV : public SIFTBase {
     // Defaults //
 //    int     nfeatures = 0;
@@ -256,6 +304,23 @@ protected:
  std::vector< DMatch > matches;
  matcher.match( descriptors_1, descriptors_2, matches );
  */
+
+#elif defined(SIFTGPU_)
+struct SIFTGPU : public SIFTBase {
+    std::pair<std::vector<SiftGPU::SiftKeypoint> /*keys1*/, std::pair<std::vector<float> /*descriptors1*/, int /*num1*/>> findKeypoints(int threadID, SIFTState& s, SIFTParams& p, cv::Mat& greyscale);
+
+    // Finds matching and homography
+    void findHomography(ProcessedImage<SIFTGPU>& img1, ProcessedImage<SIFTGPU>& img2, SIFTState& s
+    #ifdef USE_COMMAND_LINE_ARGS
+        , DataSourceBase* src, CommandLineConfig& cfg
+    #endif
+    );
+
+#ifdef SIFTGPU_TEST
+    static int test(int argc, char** argv);
+#endif
+};
+#endif
 
 
 // Idea here: done: Use this sometime to wrap all SIFT implementations you can choose from: https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern

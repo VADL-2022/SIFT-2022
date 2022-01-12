@@ -11,6 +11,7 @@
 
 #include "Includes.hpp"
 
+#ifdef SIFTAnatomy_
 struct SIFTParams {
     #define USE(paramsFunc) { p.paramsName = #paramsFunc; paramsFunc(p.params); }
     #define DeclareParamsFunc(p) { #p, p },
@@ -94,5 +95,18 @@ struct SIFTState {
     unique_keypoints_ptr loaded_out_k2B = nullptr;
     // //
 };
+#elif defined(SIFTGPU_)
+struct SIFTParams {
+    
+};
+
+#include "SiftGPU.h"
+struct SIFTState {
+    SIFTState();
+    
+    SiftGPU sift;
+    SiftMatchGPU matcher;
+};
+#endif
 
 #endif /* KeypointsAndMatching_hpp */

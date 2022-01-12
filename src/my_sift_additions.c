@@ -6,6 +6,7 @@
 //  Copyright © 2021 VADL. All rights reserved.
 //
 
+#ifdef SIFTAnatomy_
 #include "my_sift_additions.h"
 
 #include <lib_sift.h>
@@ -423,3 +424,4 @@ void my_save_pairs_extra(FILE* stream,
         }
     }
 }
+#endif

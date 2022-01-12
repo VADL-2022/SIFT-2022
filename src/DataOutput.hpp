@@ -74,6 +74,7 @@ protected:
 //#undef ARGS
 
 
+#ifdef SIFTAnatomy_
 template <typename DataSourceT, typename DataOutputT>
 bool run(DataOutputT& o, cv::Mat& canvas, DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n // Number of keypoints
 ) {
@@ -303,5 +304,6 @@ bool run(DataOutputT& o, cv::Mat& canvas, DataSourceT& src, SIFTState& s, SIFTPa
     
     return false;
 }
+#endif
 
 #endif /* DataOutput_hpp */

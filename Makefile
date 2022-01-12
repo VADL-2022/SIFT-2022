@@ -38,6 +38,14 @@ endef
 
 # BEGIN CONFIG #
 
+# Leave empty to avoid running a specific test:
+#CONFIG_TEST_DEFINES = -DSIFTGPU_TEST
+
+# Choose a SIFT implementation here:
+#SIFT_IMPL=SIFTAnatomy
+#SIFT_IMPL=SIFTOpenCV
+SIFT_IMPL=SIFTGPU
+
 # If not using this, need to avoid linking jemalloc too:
 USE_JEMALLOC=1
 #1
@@ -59,14 +67,19 @@ endif
 SHELL := /usr/bin/env bash
 OS := $(shell uname -s)
 # -D_POSIX_C_SOURCE=200809L
+additionalPkgconfigPackages=
 ifeq ($(USE_JEMALLOC),1)
-additionalPkgconfigPackages = jemalloc
+additionalPkgconfigPackages += jemalloc
 CFLAGS += -DUSE_JEMALLOC
 endif
 ifeq ($(USE_PTR_INC_MALLOC),1)
 CFLAGS += -DUSE_PTR_INC_MALLOC
 endif
-CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng ${additionalPkgconfigPackages}` -I$(SIFT_SRC) -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1  -IVectorNav/include  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+ifeq ($(SIFT_IMPL),SIFTGPU)
+additionalPkgconfigPackages += gl glew glut IL
+additionalCFLAGS = -isystem /nix/store/0khrl4yrg1qyz93nk6kq1s79c4a0w8i0-libdevil-1.7.8-dev/include -isystem /nix/store/i0rmp3app7yqd37ihgxlx9c3lwsj16kq-opencl-headers-2020.06.16/include
+endif
+CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng ${additionalPkgconfigPackages}` -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1 -DSIFT_IMPL=$(SIFT_IMPL) -D$(SIFT_IMPL)_ $(CONFIG_TEST_DEFINES) -IVectorNav/include    $(additionalCFLAGS) #$(NIX_CFLAGS_COMPILE)  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 $(info $(OS))
 ifeq ($(OS),Darwin)
@@ -81,12 +94,15 @@ ifeq ($(OS),Darwin)
 endif
 #endif
 ifeq ($(OS),Darwin)
-    LFLAGS += -framework CoreGraphics
+    LFLAGS += -framework CoreGraphics -framework Foundation
+    ifeq ($(SIFT_IMPL),SIFTGPU)
+        LFLAGS += -framework OpenCL
+    endif
 else ifeq ($(OS),Linux)
     LFLAGS += -lX11
 endif
 $(info $(LFLAGS))
-LFLAGS += -lpng -lm -lpthread -ldl #-ljpeg -lrt -lm
+LFLAGS += -lpng -lm -lpthread -ldl -lunwind #-ljpeg -lrt -lm
 # ifeq ($(OS),Linux)
 #     # Needed if gtk; nix hack:
 #     LDFLAGS = -L/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib `bash ./filter-hack.sh "${NIX_LDFLAGS}"`
@@ -108,16 +124,32 @@ endif
 SRC := src
 OBJ := obj
 
+SIFT_ANATOMY := sift_anatomy_20141201
+SIFT_ANATOMY_SRC := ./$(SIFT_ANATOMY)/src
+ifeq ($(SIFT_IMPL),SIFTAnatomy)
 #SIFT_SRC := /Volumes/MyTestVolume/SeniorSemester1_Vanderbilt_University/RocketTeam/MyWorkspaceAndTempFiles/MyDocuments/SIFT_articleAndImplementation/sift_anatomy_20141201/src
-SIFT := sift_anatomy_20141201
-SIFT_SRC := ./$(SIFT)/src
+SIFT := $(SIFT_ANATOMY)
+SIFT_SRC := $(SIFT_ANATOMY_SRC)
 SIFT_SOURCES_C := $(filter-out $(SIFT_SRC)/example.c $(SIFT_SRC)/demo_extract_patch.c $(SIFT_SRC)/match_cli.c $(SIFT_SRC)/sift_cli.c $(SIFT_SRC)/sift_cli_default.c $(SIFT_SRC)/anatomy2lowe.c, $(wildcard $(SIFT_SRC)/*.c))
+else ifeq ($(SIFT_IMPL),SIFTGPU)
+SIFT := SiftGPU
+SIFT_SRC := ./$(SIFT)/src/SiftGPU
+CFLAGS += -DWINDOW_PREFER_GLUT -DCL_SIFTGPU_ENABLED
+endif
+ifneq ($(SIFT_IMPL),SIFTOpenCV)
 SIFT_SOURCES_CPP := $(wildcard $(SIFT_SRC)/*.cpp)
 SIFT_OBJECTS := $(SIFT_SOURCES_CPP:%.cpp=%.o) $(SIFT_SOURCES_C:%.c=%.o)
+CFLAGS += -I$(SIFT_SRC)
+endif
+ifneq ($(SIFT_IMPL),SIFTAnatomy)
+# From SIFTAnatomy: for loading in PNGs we need io_png.c, and for fatal_error we need lib_util.c
+CFLAGS += -I$(SIFT_ANATOMY_SRC)
+SOURCES_C += $(SIFT_ANATOMY_SRC)/io_png.c $(SIFT_ANATOMY_SRC)/lib_util.c
+endif
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
-SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/tools/*.cpp) #$(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
-SOURCES_C := $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c)
+SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/tools/*.cpp) $(wildcard $(SRC)/tools/backtrace/*.cpp) #$(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
+SOURCES_C := $(SOURCES_C) $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c)
 ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
 $(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile
@@ -143,7 +175,8 @@ ADDITIONAL_CFLAGS_ALL_COMMANDLINE = -DUSE_COMMAND_LINE_ARGS
 # release target
 # NOTE: -DNDEBUG turns off assertions (only for the code being compiled from source, not for libraries, including those from Nix like OpenCV unless we set it explicitly..).
 # NOTE: -g is needed for stack traces for https://github.com/bombela/backward-cpp
-ADDITIONAL_CFLAGS_RELEASE = -Ofast -g -DNDEBUG #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
+ADDITIONAL_CFLAGS_RELEASE = -march=native -mtune=native -Ofast -g -DNDEBUG #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
+# ^ `-mtune=native` optimizes for the machine being compiled on
 $(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
 
 # release_commandLine target

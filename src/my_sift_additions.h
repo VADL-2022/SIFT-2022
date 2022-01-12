@@ -8,6 +8,7 @@
 
 #pragma once
 
+#ifdef SIFTAnatomy_
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -98,4 +99,5 @@ int meth_flag,
 
 #ifdef __cplusplus
 }
+#endif
 #endif

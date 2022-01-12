@@ -8,6 +8,7 @@
 
 #include "KeypointsAndMatching.hpp"
 
+#ifdef SIFTAnatomy_
 void sift_free_keypoints_withNullCheck(struct sift_keypoints* x) {
     if (x != nullptr) {
         sift_free_keypoints(x);
@@ -63,3 +64,10 @@ SIFTState::~SIFTState() {
         sift_free_keypoints(out_k2B);
     }
 }
+#elif defined(SIFTGPU_)
+SIFTState::SIFTState() :
+sift(),
+//matcher(4096)
+matcher(2048)
+{}
+#endif
