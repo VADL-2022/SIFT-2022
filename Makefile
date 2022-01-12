@@ -101,7 +101,7 @@ ifeq ($(OS),Darwin)
 else ifeq ($(OS),Linux)
     LFLAGS += -lX11
     ifeq ($(SIFT_IMPL),SIFTGPU)
-        LFLAGS += -lOpenCL
+        #LFLAGS += -lOpenCL
     endif
 endif
 $(info $(LFLAGS))
@@ -137,7 +137,11 @@ SIFT_SOURCES_C := $(filter-out $(SIFT_SRC)/example.c $(SIFT_SRC)/demo_extract_pa
 else ifeq ($(SIFT_IMPL),SIFTGPU)
 SIFT := SiftGPU
 SIFT_SRC := ./$(SIFT)/src/SiftGPU
-CFLAGS += -DWINDOW_PREFER_GLUT -DCL_SIFTGPU_ENABLED
+CFLAGS += -DWINDOW_PREFER_GLUT
+ifeq ($(OS),Darwin)
+# OpenCL isn't supported on Raspberry Pi 4B yet apparently.. ( https://forums.raspberrypi.com/viewtopic.php?t=312646 )
+CFLAGS += -DCL_SIFTGPU_ENABLED
+endif
 endif
 ifneq ($(SIFT_IMPL),SIFTOpenCV)
 SIFT_SOURCES_CPP := $(wildcard $(SIFT_SRC)/*.cpp)
