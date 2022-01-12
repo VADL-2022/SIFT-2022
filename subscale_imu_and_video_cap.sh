@@ -22,6 +22,8 @@ sleep_ () {
 }
 
 git checkout subscale
+# Checkout submodules from the above commit as well:
+git submodule update --init --recursive 
 # sha512 Checksum
 sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run "make -j4 subscale_exe_release"
 if [ "$dontsleep" != "1" ]; then

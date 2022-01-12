@@ -58,6 +58,7 @@
 		30F99A58278CF14000DBD9C8 /* PyramidCL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A47278CF13F00DBD9C8 /* PyramidCL.cpp */; };
 		30F99A5C278E819C00DBD9C8 /* backtrace.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A5A278E819C00DBD9C8 /* backtrace.cpp */; };
 		30F99A60278E825700DBD9C8 /* demangle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A5E278E825700DBD9C8 /* demangle.cpp */; };
+		30F99A63278F706D00DBD9C8 /* custom_strstream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F99A61278F706D00DBD9C8 /* custom_strstream.cpp */; };
 		30FE900A27458CD20086957E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30FE900927458CD20086957E /* CoreGraphics.framework */; };
 		30FE900C2745924C0086957E /* SIFT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30FE900B2745924C0086957E /* SIFT.cpp */; };
 /* End PBXBuildFile section */
@@ -196,6 +197,8 @@
 		30F99A5D278E822E00DBD9C8 /* backtrace_on_terminate.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = backtrace_on_terminate.hpp; sourceTree = "<group>"; };
 		30F99A5E278E825700DBD9C8 /* demangle.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = demangle.cpp; sourceTree = "<group>"; };
 		30F99A5F278E825700DBD9C8 /* demangle.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = demangle.hpp; sourceTree = "<group>"; };
+		30F99A61278F706D00DBD9C8 /* custom_strstream.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = custom_strstream.cpp; sourceTree = "<group>"; };
+		30F99A62278F706D00DBD9C8 /* custom_strstream.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = custom_strstream.hpp; sourceTree = "<group>"; };
 		30FE900927458CD20086957E /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		30FE900B2745924C0086957E /* SIFT.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SIFT.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -398,6 +401,8 @@
 				30F99A45278CF13F00DBD9C8 /* CLTexImage.h */,
 				30F99A46278CF13F00DBD9C8 /* ProgramCG.h */,
 				30F99A47278CF13F00DBD9C8 /* PyramidCL.cpp */,
+				30F99A61278F706D00DBD9C8 /* custom_strstream.cpp */,
+				30F99A62278F706D00DBD9C8 /* custom_strstream.hpp */,
 			);
 			name = SiftGPU;
 			path = ../../SiftGPU/src/SiftGPU;
@@ -501,6 +506,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30F99A63278F706D00DBD9C8 /* custom_strstream.cpp in Sources */,
 				30CE61F227237F18001C987F /* KeypointsAndMatching.cpp in Sources */,
 				308B6C06275AA96D00FE86A9 /* mymalloc.cpp in Sources */,
 				30F99A4C278CF14000DBD9C8 /* ProgramCL.cpp in Sources */,
