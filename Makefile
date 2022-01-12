@@ -100,6 +100,9 @@ ifeq ($(OS),Darwin)
     endif
 else ifeq ($(OS),Linux)
     LFLAGS += -lX11
+    ifeq ($(SIFT_IMPL),SIFTGPU)
+        LFLAGS += -lOpenCL
+    endif
 endif
 $(info $(LFLAGS))
 LFLAGS += -lpng -lm -lpthread -ldl -lunwind #-ljpeg -lrt -lm
