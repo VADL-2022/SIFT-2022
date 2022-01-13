@@ -20,7 +20,7 @@ struct DataOutputBase {
     virtual ~DataOutputBase() {}
     #endif
     
-    MaybeVirtual void showCanvas(std::string name, cv::Mat& canvas) MaybePureVirtual;
+    MaybeVirtual void showCanvas(std::string name, cv::Mat& canvas, bool flush) MaybePureVirtual;
     MaybeVirtual void release() {}
     
 protected:
@@ -29,7 +29,7 @@ protected:
 
 struct PreviewWindowDataOutput : public DataOutputBase
 {
-    void showCanvas(std::string name, cv::Mat& canvas);
+    void showCanvas(std::string name, cv::Mat& canvas, bool flush = false);
     
     template <typename DataSourceT>
     void run(DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n);
@@ -41,7 +41,7 @@ struct PreviewWindowDataOutput : public DataOutputBase
 struct FileDataOutput : public DataOutputBase
 {
     FileDataOutput(std::string filenameNoExt, double fps = 30, cv::Size sizeFrame = {640,480});
-    void run(cv::Mat frame);
+    void run(cv::Mat frame, bool flush);
     
     void release() MaybeOverride;
     
@@ -49,7 +49,7 @@ struct FileDataOutput : public DataOutputBase
     std::mutex writerMutex;
     bool releasedWriter; // Protected by g_o2->writerMutex since multiple threads could call segfault_sigaction below at the same time, resulting in the video not saving since the second save overwrites the first I think
     
-    void showCanvas(std::string name, cv::Mat& canvas);
+    void showCanvas(std::string name, cv::Mat& canvas, bool flush = false);
     int waitKey(int delay=0);
 protected:
     double fps;

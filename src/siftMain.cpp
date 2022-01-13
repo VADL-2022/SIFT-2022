@@ -124,6 +124,35 @@ void showTimers(ThreadInfoT threadInfo) {
     numPointerIncMallocsThisFrame = 0;
     mallocWithFreeAll_hitLimitCount = 0;
 }
+// https://www.cplusplus.com/reference/ctime/strftime/
+#include <time.h>       /* time_t, struct tm, time, localtime, strftime */
+#include <sys/stat.h> // https://pubs.opengroup.org/onlinepubs/009695299/functions/mkdir.html
+std::string cachedDataOutputFolderPath;
+const std::string& getDataOutputFolder() {
+    if (cachedDataOutputFolderPath.empty()) {
+        const std::string root = "dataOutput/";
+        
+        time_t rawtime;
+        struct tm * timeinfo;
+        time (&rawtime);
+        timeinfo = localtime (&rawtime);
+        
+        char buf[128];
+        if (strftime(buf, sizeof(buf), "%Y-%m-%d_%H_%M_%S_%Z", timeinfo) == 0) {
+            std::cout << "Failed to compute strftime for getDataOutputFolder(). Will use the seconds since 00:00:00 UTC, January 1, 1970 instead." << std::endl;
+            cachedDataOutputFolderPath = root + std::to_string(rawtime);
+        }
+        cachedDataOutputFolderPath = root + buf;
+        
+        // Make destination directory
+        if (mkdir(cachedDataOutputFolderPath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH /* default mkdir permissions are probably: user can read, write, execute; group and others can read and execute */ ) != 0) {
+            perror("mkdir failed");
+            puts("Exiting.");
+            exit(1);
+        }
+    }
+    return cachedDataOutputFolderPath;
+}
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTState& s,
@@ -156,6 +185,11 @@ int main(int argc, char **argv)
     return SIFTGPU::test(argc, argv);
 #endif
     
+    // Warm up (in case mkdir fails)
+    getDataOutputFolder();
+    
+    // Main area //
+    
 #ifdef SLEEP_BEFORE_RUNNING
 	std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_BEFORE_RUNNING));
 #endif
@@ -179,7 +213,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     
-    FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
+    FileDataOutput o2(getDataOutputFolder() + "/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
 
     // Parse arguments
@@ -198,7 +232,7 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
             cfg.imageCaptureOnly = true;
         }
-        else if (strcmp(argv[i], "--image-file-output") == 0) { // Outputs to video, usually also instead of preview window
+        else if (strcmp(argv[i], "--image-file-output") == 0) { // [mainInteractive() only] Outputs to video, usually also instead of preview window
             cfg.imageFileOutput = true;
         }
         else if (strcmp(argv[i], "--sift-video-output") == 0) { // Outputs frames with SIFT keypoints, etc. rendered to video file
@@ -206,6 +240,9 @@ int main(int argc, char **argv)
         }
         else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
             cfg.noPreviewWindow = true;
+        }
+        else if (i+1 < argc && strcmp(argv[i], "--save-every-n-seconds") == 0) { // [mainMission() only] Save video and transformation matrices every n (given) seconds. Set to -1 to disable flushing until SIFT exits.
+            cfg.flushVideoOutputEveryNSeconds = std::stoi(argv[i+1]);
         }
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
@@ -358,7 +395,7 @@ int main(int argc, char **argv)
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
     
-    FileDataOutput o2("dataOutput/live", 1.0 /* fps */ /*, sizeFrame */);
+    FileDataOutput o2(getDataOutputFolder() + "/live", 1.0 /* fps */ /*, sizeFrame */);
     mainMission(src, s, p, o2);
 #endif
     // //
@@ -594,6 +631,7 @@ int mainMission(DataSourceT* src,
     
     auto start = std::chrono::steady_clock::now();
     auto last = std::chrono::steady_clock::now();
+    auto timeSinceLastFlush = std::chrono::steady_clock::now();
     auto fps = src->fps();
     const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
     std::cout << "Target fps: " << fps << std::endl;
@@ -631,7 +669,20 @@ int mainMission(DataSourceT* src,
             break;
         }
         if (!CMD_CONFIG(siftVideoOutput)) {
-            o2.showCanvas("", mat);
+            // Save original frame to the video output file
+            
+            // If enabled: every n frames, flush the video (creating more videos in the process which have to be joined together outside this program)
+            bool maybeFlush = CMD_CONFIG(shouldFlushVideoOutputEveryNSeconds());
+            bool flush = maybeFlush;
+
+            if (maybeFlush) {
+                auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(last - timeSinceLastFlush);
+                if (millis.count() > cfg.flushVideoOutputEveryNSeconds*1000) {
+                    flush = true;
+                }
+            }
+            
+            o2.showCanvas("", mat, flush);
         }
         t.reset();
         cv::Mat greyscale = src->siftImageForMat(i);
@@ -772,7 +823,8 @@ int mainMission(DataSourceT* src,
             canvasesReadyQueue.dequeue(&img);
             imshow("", img.canvas);
             if (CMD_CONFIG(siftVideoOutput)) {
-                o2.showCanvas("", img.canvas);
+                // Save frame with SIFT keypoints rendered on it to the video output file
+                o2.showCanvas("", img.canvas, false);
             }
             //cv::waitKey(30);
             auto size = canvasesReadyQueue.size();
@@ -822,7 +874,8 @@ int mainMission(DataSourceT* src,
             canvasesReadyQueue.dequeue(&img);
             imshow("", img.canvas);
             if (CMD_CONFIG(siftVideoOutput)) {
-                o2.showCanvas("", img.canvas);
+                // Save frame with SIFT keypoints rendered on it to the video output file
+                o2.showCanvas("", img.canvas, false);
             }
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
@@ -857,7 +910,7 @@ int mainMission(DataSourceT* src,
     std::cout << str << std::endl;
     
     // Save final homography matrix
-    auto name = M.empty() ? openFileWithUniqueName("dataOutput/firstImage", ".png") : openFileWithUniqueName("dataOutput/scaled", ".png");
+    auto name = M.empty() ? openFileWithUniqueName(getDataOutputFolder() + "/firstImage", ".png") : openFileWithUniqueName(getDataOutputFolder() + "/scaled", ".png");
     auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
     std::ofstream(matName.c_str()) << str << std::endl;
     
