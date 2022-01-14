@@ -12,7 +12,11 @@
 void
 backtrace_on_terminate() noexcept
 {
+#ifdef BACKTRACE_SET_TERMINATE
     std::set_terminate(terminate_handler.release()); // to avoid infinite looping if any
+#else
+    std::set_terminate(nullptr); // to avoid infinite looping if any
+#endif
     backtrace(std::clog);
     if (std::exception_ptr ep = std::current_exception()) {
         try {
