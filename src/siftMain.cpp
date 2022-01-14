@@ -741,6 +741,7 @@ int mainMission(DataSourceT* src,
             //stopMain();
             break;
         }
+        // Possibly saving it:
         if (!CMD_CONFIG(siftVideoOutput)) {
             // Save original frame to the video output file
             
@@ -786,6 +787,25 @@ int mainMission(DataSourceT* src,
         cv::Mat greyscale = src->siftImageForMat(i);
         t.logElapsed("siftImageForMat");
         //auto path = src->nameForIndex(i);
+        
+        // Apply filters to possibly discard the image //
+        // Blur detection
+        cv::Mat laplacianImage;
+        // https://stackoverflow.com/questions/24080123/opencv-with-laplacian-formula-to-detect-image-is-blur-or-not-in-ios/44579247#44579247 , https://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/ , https://github.com/WillBrennan/BlurDetection2/blob/master/blur_detection/detection.py
+        cv::Laplacian(greyscale, laplacianImage, CV_64F);
+        cv::Scalar mean, stddev; // 0:1st channel, 1:2nd channel and 2:3rd channel
+        cv::meanStdDev(laplacianImage, mean, stddev, cv::Mat());
+        double variance = stddev.val[0] * stddev.val[0];
+        double threshold = 2900; // TODO: dynamically adjust threshold
+
+        if (variance <= threshold) {
+            // Blurry
+            puts("Blurry");
+        } else {
+            // Not blurry
+            puts("Not blurry");
+        }
+        // //
         
         std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
         tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
