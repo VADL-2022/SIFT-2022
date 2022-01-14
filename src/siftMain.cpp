@@ -461,7 +461,9 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     //backward::sh->handleSignal(s, si, arg);
 }
 DataOutputBase* g_o2 = nullptr;
-void terminate_handler() {
+#undef BACKTRACE_SET_TERMINATE
+#include "tools/backtrace/backtrace_on_terminate.hpp"
+void terminate_handler(bool backtrace) {
     if (g_o2) {
         // [!] Take a risk and do something that can't always succeed in a segfault handler: possible malloc and state mutation:
         ((FileDataOutput*)g_o2)->release();
@@ -473,13 +475,16 @@ void terminate_handler() {
         // [!] Take a risk and do something that can't always succeed in a segfault handler: possible malloc and state mutation:
         std::cout << "No video to save" << std::endl;
     }
+    
+    if (backtrace) {
+        backtrace_on_terminate();
+    }
 }
-#include "tools/backtrace/backtrace.hpp"
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
     printf_("Caught segfault (%s) at address %p. Running terminate_handler().\n", strsignal(signal), si->si_addr);
     
-    terminate_handler();
+    terminate_handler(false);
     
     // Print stack trace
     //backward::sh->handleSignal(signal, si, arg);
@@ -492,7 +497,7 @@ void installSignalHandlers() {
     // https://en.cppreference.com/w/cpp/error/set_terminate
     std::set_terminate([](){
         std::cout << "Unhandled exception detected by SIFT. Running terminate_handler()." << std::endl;
-        terminate_handler();
+        terminate_handler(true);
         std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
     });
     
