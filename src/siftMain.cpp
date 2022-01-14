@@ -699,26 +699,32 @@ int mainMission(DataSourceT* src,
             bool flush = maybeFlush;
 
             if (maybeFlush) {
-                auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(last - timeSinceLastFlush);
+                auto now = std::chrono::steady_clock::now();
+                auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now - timeSinceLastFlush);
                 if (millis.count() > cfg.flushVideoOutputEveryNSeconds*1000) {
                     flush = true;
                     
                     // Flush the matrix too //
                     lastImageToFirstImageTransformationMutex.lock();
-                    // Print the intermediate homography matrix
-                    cv::Mat& M = lastImageToFirstImageTransformation;
-                    cv::Ptr<cv::Formatted> str;
-                    matrixToString(M, str);
-                    std::cout << "Flushing homography: " << str << std::endl;
-                    
-                    // Save the intermediate homography matrix
-                    std::string name;
-                    saveMatrixGivenStr(M, name /* <--output */, str);
+                    if (!lastImageToFirstImageTransformation.empty()) {
+                        // Print the intermediate homography matrix
+                        cv::Mat& M = lastImageToFirstImageTransformation;
+                        cv::Ptr<cv::Formatted> str;
+                        matrixToString(M, str);
+                        std::cout << "Flushing homography: " << str << std::endl;
+                        
+                        // Save the intermediate homography matrix
+                        std::string name;
+                        saveMatrixGivenStr(M, name /* <--output */, str);
+                    }
+                    else {
+                        std::cout << "Homography not flushed since it is empty" << std::endl;
+                    }
                     lastImageToFirstImageTransformationMutex.unlock();
                     // //
                     
                     // Mark this as a finished flush
-                    timeSinceLastFlush = last;
+                    timeSinceLastFlush = now;
                 }
             }
             
