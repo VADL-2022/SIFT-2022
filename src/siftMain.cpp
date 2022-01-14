@@ -40,6 +40,7 @@ namespace backward {
 thread_local SIFT_T sift;
 Queue<ProcessedImage<SIFT_T>, 1024 /*256*/ /*32*/> processedImageQueue;
 cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
+std::mutex lastImageToFirstImageTransformationMutex;
 #ifdef USE_COMMAND_LINE_ARGS
 Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
 #endif
@@ -152,6 +153,26 @@ const std::string& getDataOutputFolder() {
         }
     }
     return cachedDataOutputFolderPath;
+}
+void saveMatrixGivenStr(const cv::Mat& M, std::string& name/*image name output*/,
+                        const cv::Ptr<cv::Formatted>& str /*matrix contents input*/) {
+    name = M.empty() ? openFileWithUniqueName(getDataOutputFolder() + "/firstImage", ".png") : openFileWithUniqueName(getDataOutputFolder() + "/scaled", ".png");
+    auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
+    std::ofstream(matName.c_str()) << str << std::endl;
+}
+void matrixToString(const cv::Mat& M,
+                    cv::Ptr<cv::Formatted>& str /*matrix contents output*/) {
+    cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
+//    fmt->set64fPrecision(4);
+//    fmt->set32fPrecision(4);
+    fmt->set64fPrecision(16);
+    fmt->set32fPrecision(8);
+    str = fmt->format(M);
+}
+void saveMatrix(const cv::Mat& M, std::string& name/*image name output*/,
+                cv::Ptr<cv::Formatted>& str /*matrix contents output*/) {
+    matrixToString(M, str);
+    saveMatrixGivenStr(M, name, str);
 }
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
@@ -553,12 +574,14 @@ void* matcherThreadFunc(void* arg) {
 #endif
         }
         // Accumulate homography
+        lastImageToFirstImageTransformationMutex.lock();
         if (lastImageToFirstImageTransformation.empty()) {
             lastImageToFirstImageTransformation = img2.transformation.inv();
         }
         else {
             lastImageToFirstImageTransformation *= img2.transformation.inv();
         }
+        lastImageToFirstImageTransformationMutex.unlock();
         t.logElapsed("find homography");
         
         end:
@@ -679,6 +702,23 @@ int mainMission(DataSourceT* src,
                 auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(last - timeSinceLastFlush);
                 if (millis.count() > cfg.flushVideoOutputEveryNSeconds*1000) {
                     flush = true;
+                    
+                    // Flush the matrix too //
+                    lastImageToFirstImageTransformationMutex.lock();
+                    // Print the intermediate homography matrix
+                    cv::Mat& M = lastImageToFirstImageTransformation;
+                    cv::Ptr<cv::Formatted> str;
+                    matrixToString(M, str);
+                    std::cout << "Flushing homography: " << str << std::endl;
+                    
+                    // Save the intermediate homography matrix
+                    std::string name;
+                    saveMatrixGivenStr(M, name /* <--output */, str);
+                    lastImageToFirstImageTransformationMutex.unlock();
+                    // //
+                    
+                    // Mark this as a finished flush
+                    timeSinceLastFlush = last;
                 }
             }
             
@@ -902,17 +942,16 @@ int mainMission(DataSourceT* src,
     pthread_join(matcherThread, (void**)&ret1);
     
     // Print the final homography
+    //[unnecessary since matcherThread is stopped now:] lastImageToFirstImageTransformationMutex.lock();
     cv::Mat& M = lastImageToFirstImageTransformation;
-    cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
-    fmt->set64fPrecision(4);
-    fmt->set32fPrecision(4);
-    auto str = fmt->format(M);
-    std::cout << str << std::endl;
+    cv::Ptr<cv::Formatted> str;
+    matrixToString(M, str);
+    std::cout << "Final homography: " << str << std::endl;
     
     // Save final homography matrix
-    auto name = M.empty() ? openFileWithUniqueName(getDataOutputFolder() + "/firstImage", ".png") : openFileWithUniqueName(getDataOutputFolder() + "/scaled", ".png");
-    auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
-    std::ofstream(matName.c_str()) << str << std::endl;
+    std::string name;
+    saveMatrixGivenStr(M, name /* <--output */, str);
+    //lastImageToFirstImageTransformationMutex.unlock();
     
     // Save final homography to an image
     if (firstImage.empty()) {
