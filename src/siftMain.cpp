@@ -750,8 +750,10 @@ int mainMission(DataSourceT* src,
             if (maybeFlush) {
                 auto now = std::chrono::steady_clock::now();
                 auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now - timeSinceLastFlush);
-                if (millis.count() > cfg.flushVideoOutputEveryNSeconds*1000) {
+                auto destMillis = cfg.flushVideoOutputEveryNSeconds*1000;
+                if (millis.count() > destMillis) {
                     flush = true;
+                    std::cout << "Flushing with lag " << millis.count() - destMillis << " milliseconds" << std::endl;
                     
                     // Flush the matrix too //
                     lastImageToFirstImageTransformationMutex.lock();
