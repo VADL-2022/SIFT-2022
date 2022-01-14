@@ -532,6 +532,39 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 #ifdef USE_COMMAND_LINE_ARGS
 DataSourceBase* g_src;
 #endif
+void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool dequeueTwice) {
+    std::cout << "Matcher thread: dequeue" << std::endl;
+    ProcessedImage<SIFT_T> img1; // Unused
+    if (!dequeueTwice) {
+        processedImageQueue.dequeue(&img1); // For side effect only; img1 is unused.
+    }
+    else {
+        processedImageQueue.dequeueTwice();
+    }
+    std::cout << "Matcher thread: dequeue done" << std::endl;
+    
+    if (CMD_CONFIG(showPreviewWindow())) {
+#ifdef USE_COMMAND_LINE_ARGS
+        canvasesReadyQueue.enqueue(img2);
+#endif
+    }
+    // Accumulate homography
+    lastImageToFirstImageTransformationMutex.lock();
+    if (lastImageToFirstImageTransformation.empty()) {
+        lastImageToFirstImageTransformation = img2.transformation.inv();
+    }
+    else {
+        lastImageToFirstImageTransformation *= img2.transformation.inv();
+    }
+    lastImageToFirstImageTransformationMutex.unlock();
+    t.logElapsed("find homography");
+    
+    end:
+    // Free memory and mark this as an unused ProcessedImage:
+    img2.resetMatching();
+    
+    showTimers("matcher");
+}
 void* matcherThreadFunc(void* arg) {
     installSignalHandlers();
     
@@ -543,7 +576,7 @@ void* matcherThreadFunc(void* arg) {
         ProcessedImage<SIFT_T> img1, img2;
         std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
         pthread_mutex_lock( &processedImageQueue.mutex );
-        while( processedImageQueue.count <= 1 ) // Wait until not empty.
+        while( processedImageQueue.count <= 1 ) // Wait until more than 1 image in the queue.
         {
             pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
             std::cout << "Matcher thread: Unlocking for dequeueOnceOnTwoImages 2" << std::endl;
@@ -552,43 +585,59 @@ void* matcherThreadFunc(void* arg) {
             std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 2" << std::endl;
             pthread_mutex_lock( &processedImageQueue.mutex );
         }
-        std::cout << "Matcher thread: Unlocking for dequeueOnceOnTwoImages 3" << std::endl;
+        processedImageQueue.peekTwoImagesNoLock(&img1, &img2);
         pthread_mutex_unlock( &processedImageQueue.mutex );
-        std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 3" << std::endl;
-        processedImageQueue.dequeueOnceOnTwoImages(&img1, &img2);
-        std::cout << "Matcher thread: Unlocked for dequeueOnceOnTwoImages" << std::endl;
+        std::cout << "Matcher thread: Unlocked for peekTwoImagesNoLock" << std::endl;
         
         // Setting current parameters for matching
         img2.applyDefaultMatchingParams();
 
         // Matching and homography
         t.reset();
-        sift.findHomography(img1, img2, *s
+        bool enoughDescriptors = sift.findHomography(img1, img2, *s // Writes to img2.transformation
 #ifdef USE_COMMAND_LINE_ARGS
                             , g_src, cfg
 #endif
                             );
-        if (CMD_CONFIG(showPreviewWindow())) {
-#ifdef USE_COMMAND_LINE_ARGS
-            canvasesReadyQueue.enqueue(img2);
-#endif
-        }
-        // Accumulate homography
-        lastImageToFirstImageTransformationMutex.lock();
-        if (lastImageToFirstImageTransformation.empty()) {
-            lastImageToFirstImageTransformation = img2.transformation.inv();
+        if (!enoughDescriptors) {
+            std::cout << "Matcher thread: Not enough descriptors detected. Retrying on third image." << std::endl;
+            
+            // Usually, SIFT threads can predict this by too low numbers of keypoints. 50 keypoints minimum, raises parameters over time beforehand.
+            // Retry matching with the next image that comes in. If this fails, discard the last two images and continue.
+            ProcessedImage<SIFT_T> img3;
+            std::cout << "Matcher thread: Locking for peek third image" << std::endl;
+            pthread_mutex_lock( &processedImageQueue.mutex );
+            while( processedImageQueue.count <= 2 ) // Wait until more than 2 images in queue.
+            {
+                pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
+                std::cout << "Matcher thread: Unlocking for peek third image" << std::endl;
+                pthread_mutex_unlock( &processedImageQueue.mutex );
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::cout << "Matcher thread: Locking for peek third image 2" << std::endl;
+                pthread_mutex_lock( &processedImageQueue.mutex );
+            }
+            processedImageQueue.peekThirdImageNoLock(&img3);
+            pthread_mutex_unlock( &processedImageQueue.mutex );
+            
+            bool enoughDescriptors2 = sift.findHomography(img1, img3, *s // Writes to img3.transformation
+            #ifdef USE_COMMAND_LINE_ARGS
+                                        , g_src, cfg
+            #endif
+                                );
+            
+            if (!enoughDescriptors2) {
+                std::cout << "Not enough descriptors the second time around" << std::endl;
+            }
+            else {
+                std::cout << "Got enough descriptors the second time around" << std::endl;
+            }
+
+            onMatcherFinishedMatching(img2, enoughDescriptors2);
+            // Regardless of enoughDescriptors2, we still continue with next iteration.
         }
         else {
-            lastImageToFirstImageTransformation *= img2.transformation.inv();
+            onMatcherFinishedMatching(img2, false /* <--dequeueTwice parameter */);
         }
-        lastImageToFirstImageTransformationMutex.unlock();
-        t.logElapsed("find homography");
-        
-        end:
-        // Free memory and mark this as an unused ProcessedImage:
-        img2.resetMatching();
-        
-        showTimers("matcher");
     } while (!stoppedMain());
     return (void*)0;
 }
@@ -757,9 +806,34 @@ int mainMission(DataSourceT* src,
 #ifdef SIFTAnatomy_
             auto pair = sift.findKeypoints(id, p, greyscale);
             int n = pair.second.second; // Number of keypoints
+            
+            // SIFT threads can provide an upper bound on the number of matches produced by the matching phase by too low numbers of keypoints. 50 keypoints minimum, raises parameters over time beforehand.
+            float DEC = 1;
+            float INC = DEC;
+            if (n > 500) {
+                printf("Too many keypoints\n");
+                if (p.params->C_edge <= 1) {
+                    printf("C_edge too low, runtime will probably be slow\n");
+                }
+                else {
+                    p.params->C_edge -= DEC;
+                }
+            }
+            if (n < 80) {
+                printf("Low keypoints\n");
+                p.params->C_edge += INC; // We noticed that as C_edge goes up, we get more keypoints.
+            }
+            if (n < 50) {
+                printf("Critically low keypoints\n");
+            }
             if (n < 4) {
-                // Not enough keypoints to find homography, ignore it
-                // TODO: don't ignore it, but retry match with previous image? You can store the previous image as a cv::Mat ref inside the current one to allow for this if you want..
+                // Not enough keypoints, ignore it
+                printf("Not enough keypoints generated by SIFT. Skipping this image.\n");
+                // Option 1: Now we can retry at most once or so, then skip this image.
+                // Option 2: Just skip this image. We will do this, since the parameters will be adjusted already from the above if statements like C_edge.
+                // DONETODO: don't ignore it, but retry match with previous image? You can store the previous image as a cv::Mat ref inside the current one to allow for this if you want..
+                // This return skips the image since we don't enqueue it:
+                //need to change i
                 return; //goto end;
             }
             struct sift_keypoints* keypoints = pair.first;

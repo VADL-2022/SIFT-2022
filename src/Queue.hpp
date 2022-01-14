@@ -127,6 +127,40 @@ struct Queue {
         pthread_mutex_unlock(&mutex);
     }
     
+    void peekTwoImagesNoLock(T* output1, T* output2) {
+        assert( count > 1 );
+
+        // remove the next element from the buffer, increment the read pointer (modulo buffer size)
+        // and decrement the counter,
+        // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
+        T* e = &content[readPtr];
+        *output1 = *e;
+        T* e2 = &content[(readPtr + 1) % BUFFER_SIZE];
+        *output2 = *e2;
+
+        printf("Peek on two images: %p and %p with %d left\n", e, e2, count); // Need to print inside
+        // the lock! Because print could get preempted (a context switch could happen) *right* between print
+        // and fflush, so that the actual printing to the console that we see happens way later, after already
+        // context switching!
+        fflush(stdout);
+    }
+    
+    void peekThirdImageNoLock(T* output) {
+        assert( count > 2 );
+
+        // remove the next element from the buffer, increment the read pointer (modulo buffer size)
+        // and decrement the counter,
+        // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
+        T* e = &content[(readPtr + 2) % BUFFER_SIZE];
+        *output = *e;
+
+        printf("Peek on third image: %p with %d left\n", e, count); // Need to print inside
+        // the lock! Because print could get preempted (a context switch could happen) *right* between print
+        // and fflush, so that the actual printing to the console that we see happens way later, after already
+        // context switching!
+        fflush(stdout);
+    }
+    
     // Removes one item from the buffer but takes two items from the buffer (the previous one as well).
     void dequeueOnceOnTwoImages(T* output1, T* output2) {
         pthread_mutex_lock( &mutex );
@@ -140,12 +174,36 @@ struct Queue {
         // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
         T* e = &content[readPtr];
         *output1 = *e;
-        T* e2 = &content[readPtr + 1];
+        T* e2 = &content[(readPtr + 1) % BUFFER_SIZE];
         *output2 = *e2;
         readPtr = (readPtr + 1) % BUFFER_SIZE;
         count--;
 
         printf("Dequeue once on two images: %p and %p with %d left\n", e, e2, count); // Need to print inside
+        // the lock! Because print could get preempted (a context switch could happen) *right* between print
+        // and fflush, so that the actual printing to the console that we see happens way later, after already
+        // context switching!
+        fflush(stdout);
+
+        pthread_cond_broadcast(&condition);
+        pthread_mutex_unlock(&mutex);
+    }
+    
+    // Dequeue with no output
+    void dequeueTwice() {
+        pthread_mutex_lock( &mutex );
+        while( count <= 1 ) // Wait until not empty and not one left.
+        {
+           pthread_cond_wait( &condition, &mutex );
+        }
+
+        // remove the next element from the buffer, increment the read pointer (modulo buffer size)
+        // and decrement the counter,
+        // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
+        readPtr = (readPtr + 2) % BUFFER_SIZE;
+        count-=2;
+
+        printf("Dequeue twice: %d left\n", count); // Need to print inside
         // the lock! Because print could get preempted (a context switch could happen) *right* between print
         // and fflush, so that the actual printing to the console that we see happens way later, after already
         // context switching!
