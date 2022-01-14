@@ -264,6 +264,7 @@ int main(int argc, char **argv)
         }
         else if (i+1 < argc && strcmp(argv[i], "--save-every-n-seconds") == 0) { // [mainMission() only] Save video and transformation matrices every n (given) seconds. Set to -1 to disable flushing until SIFT exits.
             cfg.flushVideoOutputEveryNSeconds = std::stoi(argv[i+1]);
+            i++;
         }
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
