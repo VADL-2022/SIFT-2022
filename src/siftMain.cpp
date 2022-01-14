@@ -798,12 +798,13 @@ int mainMission(DataSourceT* src,
         double variance = stddev.val[0] * stddev.val[0];
         double threshold = 2900; // TODO: dynamically adjust threshold
 
+        printf("Blur detection: variance %f; ", variance);
         if (variance <= threshold) {
             // Blurry
-            puts("Blurry");
+            puts("blurry");
         } else {
             // Not blurry
-            puts("Not blurry");
+            puts("not blurry");
         }
         // //
         
