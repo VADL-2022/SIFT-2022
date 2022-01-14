@@ -46,7 +46,7 @@ struct CommandLineConfig {
     }
     
     bool shouldFlushVideoOutputEveryNSeconds() const {
-        return flushVideoOutputEveryNSeconds != 1;
+        return flushVideoOutputEveryNSeconds != -1;
     }
 };
 #endif
