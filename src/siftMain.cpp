@@ -797,7 +797,9 @@ int mainMission(DataSourceT* src,
         // Blur detection
         cv::Mat laplacianImage;
         // https://stackoverflow.com/questions/24080123/opencv-with-laplacian-formula-to-detect-image-is-blur-or-not-in-ios/44579247#44579247 , https://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/ , https://github.com/WillBrennan/BlurDetection2/blob/master/blur_detection/detection.py
-        cv::Laplacian(greyscale, laplacianImage, CV_64F);
+        auto type = CV_32F;
+        assert(type == greyscale.type()); // The type must be the same as `greyscale` else you get an error like `OpenCV(4.5.2) /build/source/modules/imgproc/src/filter.simd.hpp:3173: error: (-213:The function/feature is not implemented) Unsupported combination of source format (=5), and destination format (=6) in function 'getLinearFilter'`
+        cv::Laplacian(greyscale, laplacianImage, type);
         cv::Scalar mean, stddev; // 0:1st channel, 1:2nd channel and 2:3rd channel
         cv::meanStdDev(laplacianImage, mean, stddev, cv::Mat());
         double variance = stddev.val[0] * stddev.val[0];
