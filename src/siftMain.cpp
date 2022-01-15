@@ -359,7 +359,9 @@ int main(int argc, char **argv)
             i++;
         }
 #endif
-        else {
+        else if (
+                 // Whitelist: allow these to go through since they can be passed to DataSources, etc.
+                 !(strcmp(argv[i], "--video-file-data-source-path") == 0)) {
             printf("Unrecognized command-line argument given: %s", argv[i]);
             printf(" (command line was:\n");
             for (int i = 0; i < argc; i++) {
