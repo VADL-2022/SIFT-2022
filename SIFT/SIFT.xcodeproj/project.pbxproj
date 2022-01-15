@@ -27,7 +27,6 @@
 		308B6C06275AA96D00FE86A9 /* mymalloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B6C05275AA96D00FE86A9 /* mymalloc.cpp */; };
 		308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */; };
 		308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */; };
-		309956C42791E29600F090EC /* backtrace_on_terminate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 309956C32791E29600F090EC /* backtrace_on_terminate.cpp */; };
 		30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBBE2731A01600473B25 /* DataSource.cpp */; };
 		30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBC72732EBF200473B25 /* DataOutput.cpp */; };
 		30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBCA2733137400473B25 /* DataOutputRun.cpp */; };
@@ -135,7 +134,6 @@
 		308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = jemalloc_wrapper.c; sourceTree = "<group>"; };
 		308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = malloc_with_free_all.cpp; sourceTree = "<group>"; };
 		308B70A0275BC77B00FE86A9 /* malloc_with_free_all.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = malloc_with_free_all.h; sourceTree = "<group>"; };
-		309956C32791E29600F090EC /* backtrace_on_terminate.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = backtrace_on_terminate.cpp; sourceTree = "<group>"; };
 		30CBDBBE2731A01600473B25 /* DataSource.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataSource.cpp; sourceTree = "<group>"; };
 		30CBDBBF2731A01600473B25 /* DataSource.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataSource.hpp; sourceTree = "<group>"; };
 		30CBDBC72732EBF200473B25 /* DataOutput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataOutput.cpp; sourceTree = "<group>"; };
@@ -420,7 +418,6 @@
 				30F99A5A278E819C00DBD9C8 /* backtrace.cpp */,
 				30F99A5B278E819C00DBD9C8 /* backtrace.hpp */,
 				30F99A5D278E822E00DBD9C8 /* backtrace_on_terminate.hpp */,
-				309956C32791E29600F090EC /* backtrace_on_terminate.cpp */,
 				30F99A5E278E825700DBD9C8 /* demangle.cpp */,
 				30F99A5F278E825700DBD9C8 /* demangle.hpp */,
 			);
@@ -520,7 +517,6 @@
 				300EE4B027209F9400969C5F /* utils.cpp in Sources */,
 				300EE4A227209F9400969C5F /* lib_io_scalespace.c in Sources */,
 				30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */,
-				309956C42791E29600F090EC /* backtrace_on_terminate.cpp in Sources */,
 				30F99A49278CF14000DBD9C8 /* SiftMatchCU.cpp in Sources */,
 				303CB676276319A700ABDBF1 /* printf.c in Sources */,
 				30F99A52278CF14000DBD9C8 /* CuTexImage.cpp in Sources */,
