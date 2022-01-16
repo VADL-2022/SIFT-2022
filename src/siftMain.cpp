@@ -900,7 +900,7 @@ int mainMission(DataSourceT* src,
                 //if (!CMD_CONFIG(showPreviewWindow())) { // Speed up by putting this in anyway without waiting for proper `i` ordering in the ProcessedImages. This can't be done with a preview window since the matcher thread also renders them and that should ideally be done in order.
                     // We don't wait until `processedImageQueue.readPtr == i - 1` as an optimization, since the matcher thread will discard this image anyway:
                 // TODO: NOTE: visual glitch if the CMD_CONFIG isn't checked above, can continue without return; below if preview window is enabled
-                    processedImageQueue.enqueueNoLock(cv::Mat(),
+                    processedImageQueue.enqueueNoLock(greyscale,
                                             shared_keypoints_ptr(nullptr),
                                             std::shared_ptr<struct sift_keypoint_std>(nullptr),
                                             pair.second.second,
