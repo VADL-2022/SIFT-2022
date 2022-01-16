@@ -613,7 +613,7 @@ bool matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedI
         while (true) { // Breaks with a condition at bottom of loop
             // This indicates no keypoints found, so we ignore it and grab the next image.
             // Dequeue one image and show on the preview window if needed:
-            onMatcherFinishedMatching(*img1, *img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/, dequeueNone);
+            onMatcherFinishedMatching(dequeueNone ? *img1 : *img2, *img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/, dequeueNone);
             dequeueNone = true;
             // Get next image into img2
             while( processedImageQueue.count < 1 ) // Wait until 1 image in the queue.
