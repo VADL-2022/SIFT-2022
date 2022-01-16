@@ -564,7 +564,12 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool dequeueTwice, 
     
     if (CMD_CONFIG(showPreviewWindow())) {
 #ifdef USE_COMMAND_LINE_ARGS
-        canvasesReadyQueue.enqueue(img2);
+        if (!img2.image.empty()) {
+            canvasesReadyQueue.enqueue(img2);
+        }
+        else {
+            puts("-----------------Canvas tried to show empty image");
+        }
 #endif
     }
     // Accumulate homography
