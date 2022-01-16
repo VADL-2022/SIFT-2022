@@ -548,7 +548,7 @@ DataSourceBase* g_src;
 void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img1, ProcessedImage<SIFT_T>& img2, bool dequeueTwice, bool useIdentityMatrix = false, bool noLock = false, bool dequeueNone = false) {
     std::cout << "Matcher thread: dequeue" << std::endl;
     ProcessedImage<SIFT_T> img1_nvm; // Unused
-    if (dequeueNone) {
+    if (!dequeueNone) {
         if (!dequeueTwice) {
             if (noLock)
                 processedImageQueue.dequeueNoLock(&img1_nvm);
