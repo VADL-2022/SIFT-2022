@@ -591,7 +591,8 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool dequeueTwice, 
     
     showTimers("matcher");
 }
-void matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedImage<SIFT_T>* img2 /*output*/) {
+// Returns true if stoppedMain()
+bool matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedImage<SIFT_T>* img2 /*output*/) {
     std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
     pthread_mutex_lock( &processedImageQueue.mutex );
     while( processedImageQueue.count <= 1 ) // Wait until more than 1 image in the queue.
@@ -603,6 +604,7 @@ void matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedI
         std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 2" << std::endl;
         pthread_mutex_lock( &processedImageQueue.mutex );
     }
+    std::cout << "Matcher thread: processedImageQueue.count: " << processedImageQueue.count << std::endl;
     processedImageQueue.peekTwoImagesNoLock(img1, img2);
     if (img2->k == nullptr) {
         while (true) { // Breaks with a condition at bottom of loop
@@ -615,10 +617,15 @@ void matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedI
             // Get next image into img2
             matcherWaitForTwoImages(&img1_nvm, img2);
             if (img2->k == nullptr) {
+                if (stoppedMain()) {
+                    return true;
+                }
                 // Lock for next iteration
                 pthread_mutex_lock( &processedImageQueue.mutex );
             }
             else {
+                pthread_mutex_unlock( &processedImageQueue.mutex );
+                std::cout << "Matcher thread: Unlocked for peekTwoImagesNoLock" << std::endl;
                 break;
             }
         }
@@ -627,6 +634,7 @@ void matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedI
         pthread_mutex_unlock( &processedImageQueue.mutex );
         std::cout << "Matcher thread: Unlocked for peekTwoImagesNoLock" << std::endl;
     }
+    return false;
 }
 void* matcherThreadFunc(void* arg) {
     installSignalHandlers();
@@ -637,7 +645,10 @@ void* matcherThreadFunc(void* arg) {
 //        OPTICK_THREAD("Worker");
         
         ProcessedImage<SIFT_T> img1, img2;
-        matcherWaitForTwoImages(&img1, &img2);
+        bool wasMainStopped = matcherWaitForTwoImages(&img1, &img2);
+        if (wasMainStopped) {
+            break;
+        }
         
         // Setting current parameters for matching
         img2.applyDefaultMatchingParams();
