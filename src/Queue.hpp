@@ -100,15 +100,8 @@ struct Queue {
         pthread_mutex_unlock(&mutex);
         return ret;
     }
-        
-    // Removes from the buffer.
-    void dequeue(T* output) {
-        pthread_mutex_lock( &mutex );
-        while( count == 0 ) // Wait until not empty.
-        {
-           pthread_cond_wait( &condition, &mutex );
-        }
-
+    
+    void dequeueNoLock(T* output) {
         // remove the next element from the buffer, increment the read pointer (modulo buffer size)
         // and decrement the counter,
         // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
@@ -122,6 +115,17 @@ struct Queue {
         // and fflush, so that the actual printing to the console that we see happens way later, after already
         // context switching!
         fflush(stdout);
+    }
+        
+    // Removes from the buffer.
+    void dequeue(T* output) {
+        pthread_mutex_lock( &mutex );
+        while( count == 0 ) // Wait until not empty.
+        {
+           pthread_cond_wait( &condition, &mutex );
+        }
+
+        dequeueNoLock(output);
 
         pthread_cond_broadcast(&condition);
         pthread_mutex_unlock(&mutex);
@@ -189,14 +193,7 @@ struct Queue {
         pthread_mutex_unlock(&mutex);
     }
     
-    // Dequeue with no output
-    void dequeueTwice() {
-        pthread_mutex_lock( &mutex );
-        while( count <= 1 ) // Wait until not empty and not one left.
-        {
-           pthread_cond_wait( &condition, &mutex );
-        }
-
+    void dequeueTwiceNoLock() {
         // remove the next element from the buffer, increment the read pointer (modulo buffer size)
         // and decrement the counter,
         // wake up all other threads waiting on the condition variable, and then unlock the mutex and return.
@@ -208,6 +205,17 @@ struct Queue {
         // and fflush, so that the actual printing to the console that we see happens way later, after already
         // context switching!
         fflush(stdout);
+    }
+    
+    // Dequeue with no output
+    void dequeueTwice() {
+        pthread_mutex_lock( &mutex );
+        while( count <= 1 ) // Wait until not empty and not one left.
+        {
+           pthread_cond_wait( &condition, &mutex );
+        }
+
+        dequeueTwiceNoLock();
 
         pthread_cond_broadcast(&condition);
         pthread_mutex_unlock(&mutex);

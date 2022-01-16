@@ -50,7 +50,7 @@ void handleNotEnoughDescriptors(ProcessedImage<SIFTAnatomy>& img2) {
 }
 
 // Finds matching and homography
-bool SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2, SIFTState& s
+MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedImage<SIFTAnatomy>& img2, SIFTState& s
 #ifdef USE_COMMAND_LINE_ARGS
     , DataSourceBase* src, CommandLineConfig& cfg
 #endif
@@ -67,7 +67,7 @@ bool SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
     if (keypointsPrev->size == 0 || keypoints->size == 0) {
         std::cout << "Matcher thread: zero keypoints, cannot match. Saving identity transformation." << std::endl;
         //throw ""; // TODO: temp, need to notify main thread and retry matching maybe
-        return false;
+        return MatchResult::NotEnoughKeypoints;
     }
     matching(keypointsPrev, keypoints, img2.out_k1.get(), img2.out_k2A.get(), img2.out_k2B.get(), img2.p.thresh, img2.p.meth_flag); // NOTE: there can be less descriptors in out_k1 etc. than in keypoints->size or the n value.
     t.logElapsed("Matcher thread: find matches");
@@ -91,7 +91,9 @@ bool SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
     }
     
     // Make a matrix in transformations history
-    if (obj.size() < 4 || scene.size() < 4) { // Prevents "libc++abi.dylib: terminating with uncaught exception of type cv::Exception: OpenCV(4.5.2) /tmp/nix-build-opencv-4.5.2.drv-0/source/modules/calib3d/src/fundam.cpp:385: error: (-28:Unknown error code -28) The input arrays should have at least 4 corresponding point sets to calculate Homography in function 'findHomography'"
+    bool notEnoughSecond = obj.size() < 4;
+    bool notEnoughFirst = scene.size() < 4;
+    if (notEnoughSecond || notEnoughFirst) { // Prevents "libc++abi.dylib: terminating with uncaught exception of type cv::Exception: OpenCV(4.5.2) /tmp/nix-build-opencv-4.5.2.drv-0/source/modules/calib3d/src/fundam.cpp:385: error: (-28:Unknown error code -28) The input arrays should have at least 4 corresponding point sets to calculate Homography in function 'findHomography'"
         //printf("Not enough keypoints to find homography! Trying to find keypoints on previous image again with tweaked params\n");
 //            // Retry with tweaked params
 //            img2.p.params->n_oct++;
@@ -110,8 +112,9 @@ bool SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
         //printf("Not enough keypoints to find homography! Ignoring this image\n");
         //goto end;
         
-        printf("Matcher thread: not enough descriptors to find homography. Saving identity transformation.\n");
-        return false;
+        MatchResult retval = notEnoughFirst ? MatchResult::NotEnoughDescriptorsForFirstImage : MatchResult::NotEnoughDescriptorsForSecondImage;
+        printf("Matcher thread: not enough descriptors in %s to find homography. Saving identity transformation.\n", retval == MatchResult::NotEnoughDescriptorsForFirstImage ? "first image" : "second image");
+        return retval;
     }
     
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
@@ -171,7 +174,7 @@ bool SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, ProcessedIma
 #endif
     }
     
-    return true;
+    return MatchResult::Success;
 }
 
 #elif defined(SIFTOpenCV_)
