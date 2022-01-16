@@ -545,15 +545,15 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 #ifdef USE_COMMAND_LINE_ARGS
 DataSourceBase* g_src;
 #endif
-void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool dequeueTwice, bool useIdentityMatrix = false, bool noLock = false, bool dequeueNone = false) {
+void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img1, ProcessedImage<SIFT_T>& img2, bool dequeueTwice, bool useIdentityMatrix = false, bool noLock = false, bool dequeueNone = false) {
     std::cout << "Matcher thread: dequeue" << std::endl;
-    ProcessedImage<SIFT_T> img1; // Unused
+    ProcessedImage<SIFT_T> img1_nvm; // Unused
     if (dequeueNone) {
         if (!dequeueTwice) {
             if (noLock)
-                processedImageQueue.dequeueNoLock(&img1);
+                processedImageQueue.dequeueNoLock(&img1_nvm);
             else
-                processedImageQueue.dequeue(&img1); // For side effect only; img1 is unused.
+                processedImageQueue.dequeue(&img1_nvm); // For side effect only; img1_nvm is unused.
         }
         else {
             if (noLock)
@@ -566,8 +566,8 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool dequeueTwice, 
     
     if (CMD_CONFIG(showPreviewWindow())) {
 #ifdef USE_COMMAND_LINE_ARGS
-        assert(!img2.image.empty());
-        canvasesReadyQueue.enqueue(img2);
+        assert(!img1.image.empty());
+        canvasesReadyQueue.enqueue(img1);
 //        }
 //        else {
 //            puts("-----------------Canvas tried to show empty image");
@@ -613,7 +613,7 @@ bool matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedI
         while (true) { // Breaks with a condition at bottom of loop
             // This indicates no keypoints found, so we ignore it and grab the next image.
             // Dequeue one image and show on the preview window if needed:
-            onMatcherFinishedMatching(*img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/, dequeueNone);
+            onMatcherFinishedMatching(*img1, img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/, dequeueNone);
             dequeueNone = true;
             // Get next image into img2
             while( processedImageQueue.count < 1 ) // Wait until 1 image in the queue.
@@ -706,16 +706,16 @@ void* matcherThreadFunc(void* arg) {
                 std::cout << "Got enough descriptors the second time around" << std::endl;
             }
 
-            onMatcherFinishedMatching(img2, enoughDescriptors2);
+            onMatcherFinishedMatching(img1, img2, enoughDescriptors2);
             // Regardless of enoughDescriptors2, we still continue with next iteration.
         }
         else if (enoughDescriptors == MatchResult::NotEnoughDescriptorsForFirstImage) {
             // Nothing we can do with the third image since this first image is the problem, so we skip this image
             // (Use identity matrix for this transformation)
-            onMatcherFinishedMatching(img2, false, true);
+            onMatcherFinishedMatching(img1, img2, false, true);
         }
         else {
-            onMatcherFinishedMatching(img2, false /* <--dequeueTwice parameter */);
+            onMatcherFinishedMatching(img1, img2, false /* <--dequeueTwice parameter */);
         }
     } while (!stoppedMain());
     return (void*)0;
