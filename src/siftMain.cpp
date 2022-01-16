@@ -604,18 +604,25 @@ bool matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedI
         std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 2" << std::endl;
         pthread_mutex_lock( &processedImageQueue.mutex );
     }
-    std::cout << "Matcher thread: processedImageQueue.count: " << processedImageQueue.count << std::endl;
+//    std::cout << "Matcher thread: processedImageQueue.count: " << processedImageQueue.count << std::endl;
     processedImageQueue.peekTwoImagesNoLock(img1, img2);
     if (img2->k == nullptr) {
         while (true) { // Breaks with a condition at bottom of loop
             // This indicates no keypoints found, so we ignore it and grab the next image.
             // Dequeue one image and show on the preview window if needed:
             onMatcherFinishedMatching(*img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/);
-            pthread_mutex_unlock( &processedImageQueue.mutex );
-            std::cout << "Matcher thread: Unlocked for peekTwoImagesNoLock while waiting for non-dummy image" << std::endl;
-            ProcessedImage<SIFT_T> img1_nvm; // Don't change the first image since we want to match the first one we already had with the next one in the processedImageQueue
             // Get next image into img2
-            matcherWaitForTwoImages(&img1_nvm, img2);
+            while( processedImageQueue.count < 1 ) // Wait until 1 image in the queue.
+            {
+                pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
+                std::cout << "Matcher thread: Unlocking for dequeueOnceOnTwoImages 3" << std::endl;
+                pthread_mutex_unlock( &processedImageQueue.mutex );
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 3" << std::endl;
+                pthread_mutex_lock( &processedImageQueue.mutex );
+            }
+            processedImageQueue.peekNoLock(img2);
+            
             if (img2->k == nullptr) {
                 if (stoppedMain()) {
                     return true;
