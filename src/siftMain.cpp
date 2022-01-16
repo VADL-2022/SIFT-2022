@@ -545,20 +545,22 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 #ifdef USE_COMMAND_LINE_ARGS
 DataSourceBase* g_src;
 #endif
-void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool dequeueTwice, bool useIdentityMatrix = false, bool noLock = false) {
+void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool dequeueTwice, bool useIdentityMatrix = false, bool noLock = false, bool dequeueNone = false) {
     std::cout << "Matcher thread: dequeue" << std::endl;
     ProcessedImage<SIFT_T> img1; // Unused
-    if (!dequeueTwice) {
-        if (noLock)
-            processedImageQueue.dequeueNoLock(&img1);
-        else
-            processedImageQueue.dequeue(&img1); // For side effect only; img1 is unused.
-    }
-    else {
-        if (noLock)
-            processedImageQueue.dequeueTwiceNoLock();
-        else
-            processedImageQueue.dequeueTwice();
+    if (dequeueNone) {
+        if (!dequeueTwice) {
+            if (noLock)
+                processedImageQueue.dequeueNoLock(&img1);
+            else
+                processedImageQueue.dequeue(&img1); // For side effect only; img1 is unused.
+        }
+        else {
+            if (noLock)
+                processedImageQueue.dequeueTwiceNoLock();
+            else
+                processedImageQueue.dequeueTwice();
+        }
     }
     std::cout << "Matcher thread: dequeue done" << std::endl;
     
@@ -607,10 +609,12 @@ bool matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedI
 //    std::cout << "Matcher thread: processedImageQueue.count: " << processedImageQueue.count << std::endl;
     processedImageQueue.peekTwoImagesNoLock(img1, img2);
     if (img2->k == nullptr) {
+        bool dequeueNone = false;
         while (true) { // Breaks with a condition at bottom of loop
             // This indicates no keypoints found, so we ignore it and grab the next image.
             // Dequeue one image and show on the preview window if needed:
-            onMatcherFinishedMatching(*img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/);
+            onMatcherFinishedMatching(*img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/, dequeueNone);
+            dequeueNone = true;
             // Get next image into img2
             while( processedImageQueue.count < 1 ) // Wait until 1 image in the queue.
             {
@@ -625,10 +629,10 @@ bool matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedI
             
             if (img2->k == nullptr) {
                 if (stoppedMain()) {
+                    pthread_mutex_unlock( &processedImageQueue.mutex );
+                    std::cout << "Matcher thread: Unlocked for peekTwoImagesNoLock" << std::endl;
                     return true;
                 }
-                // Lock for next iteration
-                pthread_mutex_lock( &processedImageQueue.mutex );
             }
             else {
                 pthread_mutex_unlock( &processedImageQueue.mutex );
