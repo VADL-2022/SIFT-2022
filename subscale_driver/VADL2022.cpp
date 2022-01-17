@@ -224,7 +224,7 @@ VADL2022::VADL2022(int argc, char** argv)
 		}
 	}
 
-	if (timeAfterMainDeployment == nullptr) {
+	if (timeAfterMainDeployment == nullptr && !videoCapture) {
 		puts("Need to provide --sift-start-time");
 		exit(1);
 	}
