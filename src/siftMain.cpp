@@ -727,7 +727,7 @@ cv::Mat prepareCanvas(ProcessedImage<SIFT_T>& img) {
         // https://stackoverflow.com/questions/46500066/how-to-put-a-text-in-an-image-in-opencv-c/46500123
         cv::putText(c, //target image
                     std::to_string(img.i), //text
-                    cv::Point(10, 10), //top-left position
+                    cv::Point(10, 25), //top-left position
                     //cv::Point(10, c.rows / 2), //center position
                     cv::FONT_HERSHEY_DUPLEX,
                     1.0,
