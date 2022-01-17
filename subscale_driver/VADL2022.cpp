@@ -21,12 +21,13 @@ using namespace std;
 
 const float GS = 3; // Takeoff is 5-7 g's or etc.; around middle is 3 g's
 const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
-//const float IMU_ACCEL_MAGNITUDE_THRESHOLD = GS * 9.81; // g's converted to meters per second squared.
+//const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF = GS * 9.81; // g's converted to meters per second squared.
 // For testing //
-const float IMU_ACCEL_MAGNITUDE_THRESHOLD = 1;
+const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF = 1;
+const float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE = 2;
 // //
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
-const char* /* must fit in long long */ timeFromTakeoffToMainDeploymentAndStabilization = nullptr; // Milliseconds
+const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Milliseconds
 const char* siftParams = nullptr;
 
 // Returns true on success
@@ -35,18 +36,19 @@ bool sendOnRadio() {
 }
 
 enum State {
-  State_WaitingForTakeoff,
+  State_WaitingForTakeoff, //Waiting for rocket launch
+  STATE_WaitingForMainParachuteDeployment, //Waiting for the deployment of main parachute
   State_WaitingForMainStabilizationTime, // SIFT has been spawned at this point
 };
 State g_state = State_WaitingForTakeoff;
-//const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
-//const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeFromTakeoffToMainDeploymentAndStabilization), (const char *)0 };
+//const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeAfterMainDeployment), (const char *)0 };
+//const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeAfterMainDeployment), (const char *)0 };
 bool startDelayedSIFT() {
   //bool ret = S_RunFile("sift.py",0,nullptr);
 
   // https://unix.stackexchange.com/questions/118811/why-cant-i-run-gui-apps-from-root-no-protocol-specified
   // https://askubuntu.com/questions/294736/run-a-shell-script-as-another-user-that-has-no-password
-  std::string s = "sudo -H -u pi bash -c \"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission " + (siftParams != nullptr ? ("--sift-params " + std::string(siftParams)) : std::string("")) + std::string(" --sleep-before-running ") + std::string(timeFromTakeoffToMainDeploymentAndStabilization) + std::string(" --no-preview-window \""); // --video-file-data-source
+  std::string s = "sudo -H -u pi bash -c \"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission " + (siftParams != nullptr ? ("--sift-params " + std::string(siftParams)) : std::string("")) + std::string(" --sleep-before-running ") + std::string(timeAfterMainDeployment) + std::string(" --no-preview-window \""); // --video-file-data-source
   int ret = system(s.c_str());
   printf("system returned %d\n", ret);
   
@@ -86,12 +88,12 @@ bool startDelayedSIFT() {
 // }
 
 // Will: this is called on a non-main thread (on a thread for the IMU)
+// Callback for waiting on takeoff
 void checkTakeoffCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
-  static float timer = 0;
   float magnitude = log->mImu->linearAccelNed.mag();
   printf("Accel mag: %f\n", magnitude);
-  if (g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD) {
+  if (g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
       v->startTime = fseconds;
@@ -103,12 +105,55 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
       #else
+      v->mLog->userCallback = checkMainDeploymentCallback;
+      #endif
+      
+      puts("Target time reached, the rocket has launched");
+      
+    // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
+    //   bool ok = startDelayedSIFT();
+    //   g_state = State_WaitingForMainStabilizationTime;
+
+		// Take the ascent picture 
+		if (videoCapture) {
+			S_RunFile("./subscale_driver/videoCapture.py", 0, nullptr);
+		}
+    }
+  }
+  else {
+    // Reset timer
+    if (v->startTime != -1) {
+      puts("Not enough acceleration; resetting timer");
+      v->startTime = -1;
+    }
+  }
+}
+
+// Will: this is called on a non-main thread (on a thread for the IMU)
+// Callback for waiting on main parachute deployment
+void checkMainDeploymentCallback(LOG *log, float fseconds) {
+  VADL2022* v = (VADL2022*)log->callbackUserData;
+  float magnitude = log->mImu->linearAccelNed.mag();
+  printf("Accel mag: %f\n", magnitude);
+  if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE) {
+    // Record this, it must last for IMU_ACCEL_DURATION
+    if (v->startTime == -1) {
+      v->startTime = fseconds;
+    }
+    float duration = fseconds - v->startTime;
+    printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
+    if (duration >= IMU_ACCEL_DURATION) {
+      // Stop these checkMainDeploymentCallback callbacks
+      #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
+      #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
+      #else
       v->mLog->userCallback = nullptr;
       #endif
       
-      puts("Target time reached, we are considered having just lifted off");
+      puts("Target time reached, main parachute has deployed");
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
+	  if ()
       bool ok = startDelayedSIFT();
       g_state = State_WaitingForMainStabilizationTime;
     }
@@ -122,20 +167,20 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   }
 }
 
-bool RunFile(const std::string& path)
-	{
-		FILE* fp = fopen( path.c_str(), "r" );
-		if ( fp == NULL )
-		{
-		  //Engine::out(Engine::ERROR) << "[PyScript] Error opening file: " << path << std::endl;
-		  std::cout << "[PyScript] Error opening file: " << path << std::endl;
-			return false;
-		}
-		int re = PyRun_SimpleFile( fp, path.c_str() );
-		fclose( fp );
+// bool RunFile(const std::string& path)
+// 	{
+// 		FILE* fp = fopen( path.c_str(), "r" );
+// 		if ( fp == NULL )
+// 		{
+// 		  //Engine::out(Engine::ERROR) << "[PyScript] Error opening file: " << path << std::endl;
+// 		  std::cout << "[PyScript] Error opening file: " << path << std::endl;
+// 			return false;
+// 		}
+// 		int re = PyRun_SimpleFile( fp, path.c_str() );
+// 		fclose( fp );
 
-		return (re == 0);
-	}
+// 		return (re == 0);
+// 	}
 
 VADL2022::VADL2022(int argc, char** argv)
 {
@@ -143,81 +188,79 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
-	bool sendOnRadio_ = false, siftOnly = false, videoCaptureToo = false;
+	bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
 	for (int i = 1; i < argc; i++) {
-          if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
-	    callback = nullptr;
-          }
-          else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds
-            if (i+1 < argc) {
-	      timeFromTakeoffToMainDeploymentAndStabilization = argv[i+1]; // Must be long long
-            }
-	    else {
-	      puts("Expected start time");
-	      exit(1);
-            }
-          }
-          else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
-	    sendOnRadio_ = true;
-          }
-          else if (strcmp(argv[i], "--sift-only") == 0) { // Don't run anything but GPIO radio upload
-	    siftOnly = true;
-          }
-          else if (strcmp(argv[i], "--video-capture-too") == 0) { // Run video saving from camera alongside everything else
-	    videoCaptureToo = true;
-          }
-          else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
-	    siftParams = argv[i+1];
-          }
-        }
+		if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
+			callback = nullptr;
+		}
+		else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds
+			if (i+1 < argc) {
+				timeAfterMainDeployment = argv[i+1]; // Must be long long
+			}
+			else {
+				puts("Expected start time");
+				exit(1);
+			}
+		}
+		else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
+			sendOnRadio_ = true;
+		}
+		else if (strcmp(argv[i], "--sift-only") == 0) { // Don't run anything but SIFT
+			siftOnly = true;
+		}
+		else if (strcmp(argv[i], "--video-capture") == 0) { // Run video saving from camera only
+			videoCapture = true;
+		}
+		else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
+			siftParams = argv[i+1];
+		}
+	}
 
-        if (timeFromTakeoffToMainDeploymentAndStabilization == nullptr) {
-	  puts("Need to provide --sift-start-time");
-	  exit(1);
-        }
+	if (timeAfterMainDeployment == nullptr) {
+		puts("Need to provide --sift-start-time");
+		exit(1);
+	}
 
-        connect_GPIO();
+    connect_GPIO();
 	connect_Python();
-        if (sendOnRadio_) {
-	  auto ret = sendOnRadio();
-	  std::cout << "sendOnRadio returned: " << ret << std::endl;
-	  return;
-        }
+	if (sendOnRadio_) {
+		auto ret = sendOnRadio();
+		std::cout << "sendOnRadio returned: " << ret << std::endl;
+		return;
+	}
 	else if (siftOnly) {
-	  startDelayedSIFT();
-	  return;
-        }
+		startDelayedSIFT();
+		return;
+	}
 	bool vn = true;
-        try {
-          mImu = new IMU();
-        }
+	try {
+		mImu = new IMU();
+	}
 	catch (const vn::not_found &e) {
-	  std::cout << "VectorNav not found: vn::not_found: " << e.what() << " ; continuing without it." << std::endl;
-	  vn=false;
-        }
+		std::cout << "VectorNav not found: vn::not_found: " << e.what() << " ; continuing without it." << std::endl;
+		vn=false;
+	}
 	catch (const char* e) {
-	  std::cout << "VectorNav not connected; continuing without it." << std::endl;
-	  vn = false;
-        }
-        // mLidar = new LIDAR();
+		std::cout << "VectorNav not connected; continuing without it." << std::endl;
+		vn = false;
+	}
+	// mLidar = new LIDAR();
 	// mLds = new LDS();
 	// mMotor = new MOTOR();
-        if (vn) {
-          mLog = new LOG(callback, this,
-                         mImu); //, nullptr /*mLidar*/, nullptr /*mLds*/);
-
-	  mImu->receive();
-	  mLog->receive();
-        }
+	if (vn) {
+		mLog = new LOG(callback, this, mImu); //, nullptr /*mLidar*/, nullptr /*mLds*/);
+		mImu->receive();
+		mLog->receive();
+	}
 	else {
-	  mLog = nullptr;
-	  mImu = nullptr;
-        }
+		mLog = nullptr;
+		mImu = nullptr;
+	}
 
 	cout << "Main: Initiated" << endl;
 
 	// Start video capture if doing so
-        // if (videoCaptureToo) {
+        // if (videoCapture) {
 	//   std::cout << "python3" << std::endl;
 	//   system("sudo -H -u pi `which nix-shell` --run \"`which python3` ./subscale_driver/videoCapture.py\""); // Doesn't handle sigint
 	//   //RunFile("./subscale_driver/videoCapture.py");
