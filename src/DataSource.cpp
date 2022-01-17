@@ -201,14 +201,14 @@ cv::Mat FolderDataSource::colorImageForMat(size_t index) {
     t.logElapsed("convert image to color");
     return backtorgb;
 }
+#define CROP_FOR_FISHEYE_CAMERA
 cv::Mat OpenCVVideoCaptureDataSource::siftImageForMat(size_t index) {
     cv::Mat grey = cache.at(index);
     
-    #define CROP_FOR_FISHEYE_CAMERA
-    #ifdef CROP_FOR_FISHEYE_CAMERA
-    cv::Mat cropped_image = grey(cv::Rect(cv::Point(137,62), cv::Point(490,401)));
-    grey = cropped_image;
-    #endif
+    if (shouldCrop()) {
+        cv::Mat cropped_image = grey(crop());
+        grey = cropped_image;
+    }
     
 #ifdef SIFTAnatomy_
     cv::Mat mat;
@@ -229,6 +229,21 @@ cv::Mat OpenCVVideoCaptureDataSource::colorImageForMat(size_t index) {
 
 OpenCVVideoCaptureDataSource::OpenCVVideoCaptureDataSource() {
     currentIndex = 0;
+}
+
+bool OpenCVVideoCaptureDataSource::shouldCrop() const {
+    #ifdef CROP_FOR_FISHEYE_CAMERA
+    return true;
+    #else
+    return false;
+    #endif
+}
+cv::Rect OpenCVVideoCaptureDataSource::crop() const {
+    #ifdef CROP_FOR_FISHEYE_CAMERA
+    return cv::Rect(cv::Point(137,62), cv::Point(490,401));
+    #else
+    return cv::Rect();
+    #endif
 }
 
 const double OpenCVVideoCaptureDataSource::default_fps =
