@@ -720,6 +720,23 @@ void* matcherThreadFunc(void* arg) {
     return (void*)0;
 }
 
+cv::Mat prepareCanvas(ProcessedImage<SIFT_T>& img) {
+    cv::Mat c = img.canvas.empty() ? img.image : img.canvas;
+    if (CMD_CONFIG(showPreviewWindow())) {
+        // Draw the image index
+        // https://stackoverflow.com/questions/46500066/how-to-put-a-text-in-an-image-in-opencv-c/46500123
+        cv::putText(c, //target image
+                    std::to_string(img.i), //text
+                    cv::Point(10, 10), //top-left position
+                    //cv::Point(10, c.rows / 2), //center position
+                    cv::FONT_HERSHEY_DUPLEX,
+                    1.0,
+                    CV_RGB(118, 185, 0), //font color
+                    2);
+    }
+    return c;
+}
+
 cv::Rect g_desktopSize;
 
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
@@ -878,7 +895,7 @@ int mainMission(DataSourceT* src,
         double variance = stddev.val[0] * stddev.val[0];
         double threshold = 2900; // TODO: dynamically adjust threshold
 
-        printf("Blur detection: variance %f; ", variance);
+        printf("Image %zu: Blur detection: variance %f; ", i, variance);
         if (variance <= threshold) {
             // Blurry
             puts("blurry");
@@ -1046,7 +1063,8 @@ int mainMission(DataSourceT* src,
         if (!canvasesReadyQueue.empty() && CMD_CONFIG(showPreviewWindow())) {
             ProcessedImage<SIFT_T> img;
             canvasesReadyQueue.dequeue(&img);
-            imshow("", img.canvas.empty() ? img.image : img.canvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
+            cv::Mat realCanvas = prepareCanvas(img);
+            imshow("", realCanvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 o2.showCanvas("", img.canvas, false);
@@ -1097,10 +1115,11 @@ int mainMission(DataSourceT* src,
                 break;
             }
             canvasesReadyQueue.dequeue(&img);
-            imshow("", img.canvas);
+            cv::Mat realCanvas = prepareCanvas(img);
+            imshow("", realCanvas);
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
-                o2.showCanvas("", img.canvas, false);
+                o2.showCanvas("", realCanvas, false);
             }
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
