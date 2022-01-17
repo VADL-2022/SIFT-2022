@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     // entry.path().filename().string() == ".DS_Store") {
     //     continue;
     // }
-    if (!endsWith(entry.path().string(), ".keypoints.txt")) {
+    if (!endsWith(entry.path().string(), ".mp4")) {
       continue;
     }
     files.push_back(entry.path().string());
