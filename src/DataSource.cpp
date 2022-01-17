@@ -203,6 +203,13 @@ cv::Mat FolderDataSource::colorImageForMat(size_t index) {
 }
 cv::Mat OpenCVVideoCaptureDataSource::siftImageForMat(size_t index) {
     cv::Mat grey = cache.at(index);
+    
+    #define CROP_FOR_FISHEYE_CAMERA
+    #ifdef CROP_FOR_FISHEYE_CAMERA
+    cv::Mat cropped_image = grey(cv::Rect(cv::Point(137,62), cv::Point(490,401)));
+    grey = cropped_image;
+    #endif
+    
 #ifdef SIFTAnatomy_
     cv::Mat mat;
     t.reset();
@@ -211,18 +218,10 @@ cv::Mat OpenCVVideoCaptureDataSource::siftImageForMat(size_t index) {
     mat.convertTo(mat, CV_32F, 1/255.0); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values down to float image's range of 0-1););
     std::cout << mat_type2str(mat.type()) << std::endl;
     t.logElapsed("convert image to greyscale and float");
-    cv::Mat ret = mat;
+    return mat;
 #else
-    cv::Mat ret = grey;
+    return grey;
 #endif
-
-    #define CROP_FOR_FISHEYE_CAMERA
-    #ifdef CROP_FOR_FISHEYE_CAMERA
-    cv::Mat cropped_image = ret(cv::Rect(cv::Point(137,62), cv::Point(490,401)));
-    return cropped_image;
-    #else
-    return ret;
-    #endif
 }
 cv::Mat OpenCVVideoCaptureDataSource::colorImageForMat(size_t index) {
     return cache.at(index);
