@@ -29,6 +29,8 @@ const float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE = 2;
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Milliseconds
 const char* siftParams = nullptr;
+bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
+void checkMainDeploymentCallback(LOG *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
@@ -132,39 +134,40 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on main parachute deployment
 void checkMainDeploymentCallback(LOG *log, float fseconds) {
-  VADL2022* v = (VADL2022*)log->callbackUserData;
-  float magnitude = log->mImu->linearAccelNed.mag();
-  printf("Accel mag: %f\n", magnitude);
-  if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE) {
-    // Record this, it must last for IMU_ACCEL_DURATION
-    if (v->startTime == -1) {
-      v->startTime = fseconds;
-    }
-    float duration = fseconds - v->startTime;
-    printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
-    if (duration >= IMU_ACCEL_DURATION) {
-      // Stop these checkMainDeploymentCallback callbacks
-      #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
-      #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
-      #else
-      v->mLog->userCallback = nullptr;
-      #endif
-      
-      puts("Target time reached, main parachute has deployed");
-      
-      // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-	  if ()
-      bool ok = startDelayedSIFT();
-      g_state = State_WaitingForMainStabilizationTime;
-    }
-  }
-  else {
-    // Reset timer
-    if (v->startTime != -1) {
-      puts("Not enough acceleration; resetting timer");
-      v->startTime = -1;
-    }
-  }
+	VADL2022* v = (VADL2022*)log->callbackUserData;
+	float magnitude = log->mImu->linearAccelNed.mag();
+	printf("Accel mag: %f\n", magnitude);
+  	if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE) {
+		// Record this, it must last for IMU_ACCEL_DURATION
+		if (v->startTime == -1) {
+			v->startTime = fseconds;
+		}
+		float duration = fseconds - v->startTime;
+		printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
+		if (duration >= IMU_ACCEL_DURATION) {
+			// Stop these checkMainDeploymentCallback callbacks
+			#if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
+				#error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
+			#else
+				v->mLog->userCallback = nullptr;
+			#endif
+
+			puts("Target time reached, main parachute has deployed");
+
+			// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
+			if (!videoCapture) {
+				bool ok = startDelayedSIFT();
+			}
+			g_state = State_WaitingForMainStabilizationTime;
+		}
+	}
+	else {
+		// Reset timer
+		if (v->startTime != -1) {
+			puts("Not enough acceleration; resetting timer");
+			v->startTime = -1;
+		}
+	}
 }
 
 // bool RunFile(const std::string& path)
@@ -188,7 +191,7 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
-	bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
+	// bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 			callback = nullptr;
