@@ -381,8 +381,6 @@ int main(int argc, char **argv)
         }
     }
     
-    FileDataOutput o2(getDataOutputFolder() + "/live", src->fps() /* fps */ /*, sizeFrame */);
-    
     if (cfg.cameraTestOnly) {
         // Simple camera test to isolate issues
         // https://answers.opencv.org/question/1/how-can-i-get-frames-from-my-webcam/
@@ -410,6 +408,8 @@ int main(int argc, char **argv)
     if (cfg.cameraDataSource()) {
         src = std::make_unique<DataSourceT>();
     }
+    
+    FileDataOutput o2(getDataOutputFolder() + "/live", src->fps() /* fps */ /*, sizeFrame */);
     
     if (!cfg.mainMission) {
         #ifdef SIFTAnatomy_
