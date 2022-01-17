@@ -19,17 +19,22 @@
 
 using namespace std;
 
-const float GS = 3; // Takeoff is 5-7 g's or etc.; around middle is 3 g's
+// G Forces
+const float TAKEOFF_G_FORCE = 1; // Takeoff is 5-7 g's or etc.
+const float MAIN_DEPLOYMENT_G_FORCE = 2; //Main parachute deployment is 10-15 g's
+// Timings
 const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
-//const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF = GS * 9.81; // g's converted to meters per second squared.
-// For testing //
-const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF = 1;
-const float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE = 2;
-// //
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Milliseconds
-const char* siftParams = nullptr;
+// Acceleration (Meters per second squared)
+const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81; // Meters per second squared
+const float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 ; // Meters per second squared
+// Command Line Args
 bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
+// Sift params initialization
+const char* siftParams = nullptr;
+
+// Forward declare main deployment callback
 void checkMainDeploymentCallback(LOG *log, float fseconds);
 
 // Returns true on success
@@ -95,7 +100,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
   printf("Accel mag: %f\n", magnitude);
-  if (g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF) {
+  if (g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
       v->startTime = fseconds;
@@ -137,7 +142,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 	VADL2022* v = (VADL2022*)log->callbackUserData;
 	float magnitude = log->mImu->linearAccelNed.mag();
 	printf("Accel mag: %f\n", magnitude);
-  	if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE) {
+  	if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) {
 		// Record this, it must last for IMU_ACCEL_DURATION
 		if (v->startTime == -1) {
 			v->startTime = fseconds;

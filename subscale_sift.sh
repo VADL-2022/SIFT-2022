@@ -1,4 +1,4 @@
-# Start with `bash ./subscale.sh`
+# Start with `bash ./subscale_sift.sh`
 
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
@@ -62,11 +62,12 @@ fi
 echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
 if [ "$dontsleep2" != "1" ]; then
-    siftStart=26000
+    siftStart=10000
 else
     siftStart=0
 fi
-sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time "$siftStart" --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
+# sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time "$siftStart" --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
+sudo ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --sift-start-time "$siftStart" 
 # Record temperature data
 set +o errexit +o errtrace
 bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
