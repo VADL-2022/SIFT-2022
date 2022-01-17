@@ -124,13 +124,21 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
         // Draw it //
         cv::Mat backtorgb = src->colorImageForMat(img2.i);
         backtorgb.copyTo(img2.canvas);
+
+        auto xoff=0;//100;
+        auto yoff=0;//-100;
+        if (src->shouldCrop()) {
+            auto crop = src->crop();
+            xoff = crop.x;
+            yoff = crop.y;
+        }
         
         // Draw keypoints on `img2.canvas`
         struct sift_keypoint_std *k = img2.k.get();
         int n = img2.n;
         t.reset();
         for(int i=0; i<n; i++){
-            drawSquare(img2.canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
+            drawSquare(img2.canvas, cv::Point(k[i].x+xoff, k[i].y+yoff), k[i].scale, k[i].orientation, 1);
             //break;
             // fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
             // for(int j=0; j<128; j++){
@@ -158,13 +166,6 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
                 // fprintf_one_keypoint(f, k2B->list[i], dim, n_bins, 2);
                 // fprintf(f, "\n");
 
-                auto xoff=100;
-                auto yoff=100;
-                if (src->shouldCrop()) {
-                    auto crop = src->crop();
-                    xoff += crop.x;
-                    yoff += crop.y;
-                }
                 drawSquare(img2.canvas, cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
                 cv::line(img2.canvas, cv::Point(s.out_k1->list[i]->x+xoff, s.out_k1->list[i]->y+yoff), cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), lastColor, 1);
             }
