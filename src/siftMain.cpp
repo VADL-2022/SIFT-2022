@@ -235,7 +235,6 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     
-    FileDataOutput o2(getDataOutputFolder() + "/live", 1.0 /* fps */ /*, sizeFrame */);
     std::unique_ptr<DataSourceBase> src;
 
     // Parse arguments
@@ -382,6 +381,8 @@ int main(int argc, char **argv)
         }
     }
     
+    FileDataOutput o2(getDataOutputFolder() + "/live", src->fps() /* fps */ /*, sizeFrame */);
+    
     if (cfg.cameraTestOnly) {
         // Simple camera test to isolate issues
         // https://answers.opencv.org/question/1/how-can-i-get-frames-from-my-webcam/
@@ -428,7 +429,7 @@ int main(int argc, char **argv)
     DataSourceT src_ = makeDataSource<DataSourceT>(argc, argv, skip); // Read folder determined by command-line arguments
     DataSourceT* src = &src_;
     
-    FileDataOutput o2(getDataOutputFolder() + "/live", 1.0 /* fps */ /*, sizeFrame */);
+    FileDataOutput o2(getDataOutputFolder() + "/live", src->fps() /* fps */ /*, sizeFrame */);
     mainMission(src, s, p, o2);
 #endif
     // //
