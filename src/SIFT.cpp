@@ -158,8 +158,13 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
                 // fprintf_one_keypoint(f, k2B->list[i], dim, n_bins, 2);
                 // fprintf(f, "\n");
 
-                auto xoff= 100;
+                auto xoff=100;
                 auto yoff=-100;
+                if (src->shouldCrop()) {
+                    auto crop = src->crop();
+                    xoff += crop.x;
+                    yoff += crop.y;
+                }
                 drawSquare(img2.canvas, cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
                 cv::line(img2.canvas, cv::Point(s.out_k1->list[i]->x+xoff, s.out_k1->list[i]->y+yoff), cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), lastColor, 1);
             }
@@ -424,7 +429,7 @@ void SIFTGPU::findHomography(ProcessedImage<SIFTGPU>& img1, ProcessedImage<SIFTG
             SiftGPU::SiftKeypoint & key2 = keys2[match_buf[i][1]];
             //key1 in the first image matches with key2 in the second image
             
-            auto xoff= 0;//100;
+            auto xoff=0;//100;
             auto yoff=0;//-100;
 //            drawSquare(img2.canvas, cv::Point(key2.x+xoff, key2.y+yoff), key2.sigma /* need to choose something better here */, key2.theta, 2); // <-- Note: sigma and theta are not defined for keypoint struct in SiftGPU, need an alternative
             cv::line(img2.canvas, cv::Point(key1.x+xoff, key1.y+yoff), cv::Point(key2.x+xoff, key2.y+yoff), lastColor, 1);
