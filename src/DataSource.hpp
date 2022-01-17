@@ -61,8 +61,9 @@ struct FolderDataSource : public DataSourceBase
     
     size_t currentIndex; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
-private:
+//private:
     std::vector<std::string> files;
+private:
     cv::Size sizeFrame;
     
     void init(std::string folderPath);
