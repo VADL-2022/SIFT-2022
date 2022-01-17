@@ -28,8 +28,8 @@ struct DataSourceBase;
 
 enum MatchResult: uint8_t {
     Success = 0,
-    NotEnoughDescriptorsForFirstImage = 1,
-    NotEnoughDescriptorsForSecondImage = 2,
+    NotEnoughMatchesForFirstImage = 1,
+    NotEnoughMatchesForSecondImage = 2,
     NotEnoughKeypoints = 3 // Should be handled outside findKeypoints but we report it here as a courtesy
 };
 

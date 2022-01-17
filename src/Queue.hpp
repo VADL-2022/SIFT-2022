@@ -132,7 +132,7 @@ struct Queue {
     }
     
     void peekNoLock(T* output) {
-        assert( count > 1 );
+        assert( count > 0 );
 
         // remove the next element from the buffer, increment the read pointer (modulo buffer size)
         // and decrement the counter,

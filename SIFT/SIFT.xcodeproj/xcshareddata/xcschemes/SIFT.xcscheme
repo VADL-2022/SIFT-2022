@@ -62,11 +62,27 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--no-preview-window"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--sift-params"
-            isEnabled = "NO">
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-C_edge"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "2"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-delta_min"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "0.6"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-n_oct"
@@ -83,6 +99,14 @@
          <CommandLineArgument
             argument = "--video-file-data-source"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--video-file-data-source-path"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/testVideos/matcherTest.m4v"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--main-mission"

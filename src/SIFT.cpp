@@ -112,8 +112,8 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
         //printf("Not enough keypoints to find homography! Ignoring this image\n");
         //goto end;
         
-        MatchResult retval = notEnoughFirst ? MatchResult::NotEnoughDescriptorsForFirstImage : MatchResult::NotEnoughDescriptorsForSecondImage;
-        printf("Matcher thread: not enough descriptors in %s to find homography. Saving identity transformation.\n", retval == MatchResult::NotEnoughDescriptorsForFirstImage ? "first image" : "second image");
+        MatchResult retval = notEnoughFirst ? MatchResult::NotEnoughMatchesForFirstImage : MatchResult::NotEnoughMatchesForSecondImage;
+        printf("Matcher thread: not enough descriptors in %s to find homography. Saving identity transformation.\n", retval == MatchResult::NotEnoughMatchesForFirstImage ? "first image" : "second image");
         return retval;
     }
     

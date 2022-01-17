@@ -38,7 +38,8 @@ namespace backward {
 
 #include "Queue.hpp"
 thread_local SIFT_T sift;
-Queue<ProcessedImage<SIFT_T>, 1024 /*256*/ /*32*/> processedImageQueue;
+constexpr size_t processedImageQueueBufferSize = 1024 /*256*/ /*32*/;
+Queue<ProcessedImage<SIFT_T>, processedImageQueueBufferSize> processedImageQueue;
 cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
 std::mutex lastImageToFirstImageTransformationMutex;
 #ifdef USE_COMMAND_LINE_ARGS
@@ -365,6 +366,9 @@ int main(int argc, char **argv)
                 i++; // Also go past the extra argument for this argument
                 continue;
             }
+            else if (strcmp(argv[i], "--read-backwards") == 0) {
+                continue;
+            }
             // //
             
             printf("Unrecognized command-line argument given: %s", argv[i]);
@@ -545,35 +549,9 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 #ifdef USE_COMMAND_LINE_ARGS
 DataSourceBase* g_src;
 #endif
-void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img1, ProcessedImage<SIFT_T>& img2, bool dequeueTwice, bool useIdentityMatrix = false, bool noLock = false, bool dequeueNone = false) {
-    std::cout << "Matcher thread: dequeue" << std::endl;
-    ProcessedImage<SIFT_T> img1_nvm; // Unused
-    if (!dequeueNone) {
-        if (!dequeueTwice) {
-            if (noLock)
-                processedImageQueue.dequeueNoLock(&img1_nvm);
-            else
-                processedImageQueue.dequeue(&img1_nvm); // For side effect only; img1_nvm is unused.
-        }
-        else {
-            if (noLock)
-                processedImageQueue.dequeueTwiceNoLock();
-            else
-                processedImageQueue.dequeueTwice();
-        }
-    }
-    std::cout << "Matcher thread: dequeue done" << std::endl;
+void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewWindow, bool useIdentityMatrix = false) {
+    std::cout << "Matcher thread: finished matching" << std::endl;
     
-    if (CMD_CONFIG(showPreviewWindow())) {
-#ifdef USE_COMMAND_LINE_ARGS
-        assert(!img1.image.empty());
-        canvasesReadyQueue.enqueue(img1);
-//        }
-//        else {
-//            puts("-----------------Canvas tried to show empty image");
-//        }
-#endif
-    }
     // Accumulate homography
     if (!useIdentityMatrix) {
         lastImageToFirstImageTransformationMutex.lock();
@@ -585,62 +563,80 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img1, ProcessedImage<SIFT
         }
         lastImageToFirstImageTransformationMutex.unlock();
     }
-    t.logElapsed("find homography");
     
-    end:
-    // Free memory and mark this as an unused ProcessedImage:
-    img2.resetMatching();
-    
-    showTimers("matcher");
+    if (showInPreviewWindow) {
+        if (CMD_CONFIG(showPreviewWindow())) {
+            #ifdef USE_COMMAND_LINE_ARGS
+            assert(!img2.canvas.empty());
+            canvasesReadyQueue.enqueue(img2);
+            #endif
+        }
+    }
 }
-// Returns true if stoppedMain()
-bool matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedImage<SIFT_T>* img2 /*output*/) {
-    std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages" << std::endl;
+void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& currentIndex /*input and output*/) {
+    t.reset();
+    while (true) {
+        while( processedImageQueue.count < 1 + (seekInsteadOfDequeue ? currentIndex : 0) ) // Wait until more images relative to the starting position (`currentIndex`) are in the queue. (Usually `currentCount` is 0 but if it is >= 1 then it is because we're peeking further.)
+        {
+            pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
+            std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << std::endl;
+            pthread_mutex_unlock( &processedImageQueue.mutex );
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << std::endl;
+            pthread_mutex_lock( &processedImageQueue.mutex );
+        }
+
+        // Dequeue placeholder/null or non-null images as needed
+        ProcessedImage<SIFT_T>& front = seekInsteadOfDequeue ? processedImageQueue.get(currentIndex) : processedImageQueue.front();
+        currentIndex++;
+        if (front.n < 4 /*"null" image*/) {
+            if (seekInsteadOfDequeue) {
+                // Peek is done already since we did currentIndex++, nothing to do here.
+                std::cout << "Matcher thread: Seeked to null image with index " << currentIndex-1 << std::endl;
+            }
+            else {
+                std::cout << "Matcher thread: Dequeued null image with index " << currentIndex-1 << std::endl;
+                // Dequeue (till non-null using the loop containing these statements)
+                ProcessedImage<SIFT_T> placeholder;
+                processedImageQueue.dequeueNoLock(&placeholder);
+                if (CMD_CONFIG(showPreviewWindow()) && !seekInsteadOfDequeue) {
+                    #ifdef USE_COMMAND_LINE_ARGS
+                    assert(!placeholder.image.empty());
+                    canvasesReadyQueue.enqueue(placeholder);
+                    #endif
+                }
+            }
+        }
+        else {
+            std::cout << "Matcher thread: Found non-null image with index " << currentIndex-1 << std::endl;
+            // Dequeue and save the image outside this function, since we found it
+            break; // `currentIndex` now points to the image we found that is non-null
+        }
+    }
+    t.logElapsed("matcherWaitForNonPlaceholderImageNoLock");
+}
+int matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedImage<SIFT_T>* img2 /*output*/) {
+    std::cout << "Matcher thread: Locking for 2x matcherWaitForImageNoLock" << std::endl;
     pthread_mutex_lock( &processedImageQueue.mutex );
-    while( processedImageQueue.count <= 1 ) // Wait until more than 1 image in the queue.
-    {
-        pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-        std::cout << "Matcher thread: Unlocking for dequeueOnceOnTwoImages 2" << std::endl;
-        pthread_mutex_unlock( &processedImageQueue.mutex );
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 2" << std::endl;
-        pthread_mutex_lock( &processedImageQueue.mutex );
-    }
-//    std::cout << "Matcher thread: processedImageQueue.count: " << processedImageQueue.count << std::endl;
-    processedImageQueue.peekTwoImagesNoLock(img1, img2);
-    while (img1->k == nullptr) {
-        // Dequeue one image and show on the preview window if needed:
-        onMatcherFinishedMatching(*img1, *img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/);
-        // Get next image into img1
-        while( processedImageQueue.count < 1 ) // Wait until 1 image in the queue.
-        {
-            pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-            std::cout << "Matcher thread: Unlocking for dequeueOnceOnTwoImages 3" << std::endl;
-            pthread_mutex_unlock( &processedImageQueue.mutex );
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 3" << std::endl;
-            pthread_mutex_lock( &processedImageQueue.mutex );
-        }
-        processedImageQueue.peekNoLock(img1);
-    }
-    while (img2->k == nullptr) {
-        // Dequeue one image and show on the preview window if needed:
-        onMatcherFinishedMatching(*img2, *img2, false/*dequeue one image*/, true/*use identity matrix*/, true/*mutex is locked already for processedImageQueue*/);
-        // Get next image into img2
-        while( processedImageQueue.count < 1 ) // Wait until 1 image in the queue.
-        {
-            pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-            std::cout << "Matcher thread: Unlocking for dequeueOnceOnTwoImages 4" << std::endl;
-            pthread_mutex_unlock( &processedImageQueue.mutex );
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            std::cout << "Matcher thread: Locking for dequeueOnceOnTwoImages 4" << std::endl;
-            pthread_mutex_lock( &processedImageQueue.mutex );
-        }
-        processedImageQueue.peekNoLock(img2);
-    }
+    int currentIndex = 0;
+    std::cout << "matcherWaitForNonPlaceholderImageNoLock: first image" << std::endl;
+    matcherWaitForNonPlaceholderImageNoLock(false, currentIndex); // Dequeue a bunch of null images
+    
+    // Save the image from `matcherWaitForNonPlaceholderImageNoLock`
+    processedImageQueue.dequeueNoLock(img1);
+    //*img = processedImageQueue.content[processedImageQueue.readPtr + iMin];
+    
+    currentIndex = 0;
+    std::cout << "matcherWaitForNonPlaceholderImageNoLock: second image" << std::endl;
+    matcherWaitForNonPlaceholderImageNoLock(false, currentIndex); // Dequeue a bunch of null images
+    
+    // Save the image from `matcherWaitForNonPlaceholderImageNoLock` but with a peek instead of dequeue since the next matching round requires img2 as its img1
+    processedImageQueue.peekNoLock(img2);
+    
     pthread_mutex_unlock( &processedImageQueue.mutex );
-    std::cout << "Matcher thread: Unlocked for peekTwoImagesNoLock" << std::endl;
-    return false;
+    std::cout << "Matcher thread: Unlocked for 2x matcherWaitForImageNoLock" << std::endl;
+    
+    return currentIndex;
 }
 void* matcherThreadFunc(void* arg) {
     installSignalHandlers();
@@ -651,10 +647,7 @@ void* matcherThreadFunc(void* arg) {
 //        OPTICK_THREAD("Worker");
         
         ProcessedImage<SIFT_T> img1, img2;
-        bool wasMainStopped = matcherWaitForTwoImages(&img1, &img2);
-        if (wasMainStopped) {
-            break;
-        }
+        int currentIndex = matcherWaitForTwoImages(&img1, &img2);
         
         // Setting current parameters for matching
         img2.applyDefaultMatchingParams();
@@ -666,51 +659,62 @@ void* matcherThreadFunc(void* arg) {
                             , g_src, cfg
 #endif
                             );
-        assert(enoughDescriptors != MatchResult::NotEnoughKeypoints);
+        t.logElapsed("find homography for second image");
+        assert(enoughDescriptors != MatchResult::NotEnoughKeypoints); // This should be handled beforehand in the SIFT threads
         // If not enough for second image, we can match with a third.
-        if (enoughDescriptors == MatchResult::NotEnoughDescriptorsForSecondImage) {
-            std::cout << "Matcher thread: Not enough descriptors detected. Retrying on third image." << std::endl;
+        if (enoughDescriptors == MatchResult::NotEnoughMatchesForSecondImage) {
+            std::cout << "Matcher thread: Not enough descriptors for second image detected. Retrying on third image." << std::endl;
             
             // Usually, SIFT threads can predict this by too low numbers of keypoints. 50 keypoints minimum, raises parameters over time beforehand.
             // Retry matching with the next image that comes in. If this fails, discard the last two images and continue.
             ProcessedImage<SIFT_T> img3;
+            
             std::cout << "Matcher thread: Locking for peek third image" << std::endl;
             pthread_mutex_lock( &processedImageQueue.mutex );
-            while( processedImageQueue.count <= 2 ) // Wait until more than 2 images in queue.
-            {
-                pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-                std::cout << "Matcher thread: Unlocking for peek third image" << std::endl;
-                pthread_mutex_unlock( &processedImageQueue.mutex );
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                std::cout << "Matcher thread: Locking for peek third image 2" << std::endl;
-                pthread_mutex_lock( &processedImageQueue.mutex );
-            }
-            processedImageQueue.peekThirdImageNoLock(&img3);
+            matcherWaitForNonPlaceholderImageNoLock(true, currentIndex); // Peek a bunch of null images
             pthread_mutex_unlock( &processedImageQueue.mutex );
-            
-            bool enoughDescriptors2 = sift.findHomography(img1, img3, *s // Writes to img3.transformation
+            std::cout << "Matcher thread: Unlocking for peek third image" << std::endl;
+
+            t.reset();
+            MatchResult enoughDescriptors2 = sift.findHomography(img1, img3, *s // Writes to img3.transformation
             #ifdef USE_COMMAND_LINE_ARGS
                                         , g_src, cfg
             #endif
                                 );
+            t.logElapsed("find homography for third image");
             
-            if (!enoughDescriptors2) {
+            if (enoughDescriptors2 != MatchResult::Success) {
                 std::cout << "Not enough descriptors the second time around" << std::endl;
             }
-            else {
+            else if (enoughDescriptors2 != MatchResult::NotEnoughKeypoints) {
                 std::cout << "Got enough descriptors the second time around" << std::endl;
             }
 
-            onMatcherFinishedMatching(img1, img2, enoughDescriptors2);
+            onMatcherFinishedMatching(img3, false, enoughDescriptors2 != MatchResult::Success);
+            
+            // Free memory and mark this as an unused ProcessedImage (optional):
+            img1.resetMatching();
+            img2.resetMatching();
+            img3.resetMatching();
+            
             // Regardless of enoughDescriptors2, we still continue with next iteration.
         }
-        else if (enoughDescriptors == MatchResult::NotEnoughDescriptorsForFirstImage) {
+        else if (enoughDescriptors == MatchResult::NotEnoughMatchesForFirstImage) {
             // Nothing we can do with the third image since this first image is the problem, so we skip this image
             // (Use identity matrix for this transformation)
-            onMatcherFinishedMatching(img1, img2, false, true);
+            onMatcherFinishedMatching(img2, true, true);
+
+            // Free memory and mark this as an unused ProcessedImage (optional):
+            img1.resetMatching();
+            img2.resetMatching();
         }
         else {
-            onMatcherFinishedMatching(img1, img2, false /* <--dequeueTwice parameter */);
+            // Save this good match
+            onMatcherFinishedMatching(img2, true, false);
+            
+            // Free memory and mark this as an unused ProcessedImage (optional):
+            img1.resetMatching();
+            img2.resetMatching();
         }
     } while (!stoppedMain());
     return (void*)0;
@@ -863,6 +867,7 @@ int mainMission(DataSourceT* src,
         
         // Apply filters to possibly discard the image //
         // Blur detection
+        t.reset();
         cv::Mat laplacianImage;
         // https://stackoverflow.com/questions/24080123/opencv-with-laplacian-formula-to-detect-image-is-blur-or-not-in-ios/44579247#44579247 , https://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/ , https://github.com/WillBrennan/BlurDetection2/blob/master/blur_detection/detection.py
         auto type = CV_32F;
@@ -881,6 +886,7 @@ int mainMission(DataSourceT* src,
             // Not blurry
             puts("not blurry");
         }
+        t.logElapsed("blur detection");
         // //
         
         std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
@@ -927,33 +933,13 @@ int mainMission(DataSourceT* src,
             }
             if (n < 4) {
                 // Not enough keypoints, ignore it
-                printf("Not enough keypoints generated by SIFT. Skipping this image.\n");
+                printf("Not enough keypoints generated by SIFT. This image will be considered \"null\" by the matcher.\n");
                 // Option 1: Now we can retry at most once or so, then skip this image.
                 // Option 2: Just skip this image. We will do this, since the parameters will be adjusted already from the above if statements like C_edge.
                 // DONETODO: don't ignore it, but retry match with previous image? You can store the previous image as a cv::Mat ref inside the current one to allow for this if you want..
-                // This return skips the image since we don't enqueue it:
-                //need to change i
-                // So we enqueue a dummy and let the matcher skip it
-                #ifdef SIFTAnatomy_
-                pair.second.second = 0; // Indicate no keypoints
-                //if (!CMD_CONFIG(showPreviewWindow())) { // Speed up by putting this in anyway without waiting for proper `i` ordering in the ProcessedImages. This can't be done with a preview window since the matcher thread also renders them and that should ideally be done in order.
-                    // We don't wait until `processedImageQueue.readPtr == i - 1` as an optimization, since the matcher thread will discard this image anyway:
-                // TODO: NOTE: visual glitch if the CMD_CONFIG isn't checked above, can continue without return; below if preview window is enabled
-                    processedImageQueue.enqueueNoLock(greyscale,
-                                            shared_keypoints_ptr(nullptr),
-                                            std::shared_ptr<struct sift_keypoint_std>(nullptr),
-                                            pair.second.second,
-                                            shared_keypoints_ptr(nullptr),
-                                            shared_keypoints_ptr(nullptr),
-                                            shared_keypoints_ptr(nullptr),
-                                            cv::Mat(),
-                                            p,
-                                            i);
-                //}
-                #else
-                #error "Not yet implemented for other SIFT impls, todo"
-                #endif
-                return; //goto end;
+                //[done]need to change i
+                // So we enqueue a placeholder and let the matcher skip it
+                // Nothing to do here, the rest works
             }
             struct sift_keypoints* keypoints = pair.first;
             struct sift_keypoint_std *k = pair.second.first;
@@ -984,7 +970,7 @@ int mainMission(DataSourceT* src,
                     std::cout << "Thread " << id << ": Locked" << std::endl;
                 }
                 if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
-                    || (processedImageQueue.readPtr == i - 1) // If we're writing right after the last element, can enqueue our sequentially ordered image
+                    || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
                     ) {
                     std::cout << "Thread " << id << ": enqueue" << std::endl;
                     #ifdef SIFTAnatomy_
@@ -1060,7 +1046,7 @@ int mainMission(DataSourceT* src,
         if (!canvasesReadyQueue.empty() && CMD_CONFIG(showPreviewWindow())) {
             ProcessedImage<SIFT_T> img;
             canvasesReadyQueue.dequeue(&img);
-            imshow("", img.canvas);
+            imshow("", img.canvas.empty() ? img.image : img.canvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 o2.showCanvas("", img.canvas, false);

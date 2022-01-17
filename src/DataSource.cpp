@@ -377,13 +377,22 @@ VideoFileDataSource::VideoFileDataSource() {
 VideoFileDataSource::VideoFileDataSource(int argc, char** argv) {
     // Parse arguments
     std::string filePath = default_filePath;
+    bool ensureReadBackwards = false;
     for (int i = 1; i < argc; i++) {
             if (i+1 < argc) {
                 if (strcmp(argv[i], "--video-file-data-source-path") == 0) {
                     filePath = argv[i+1];
                     i++;
+                    readBackwards = false;
+#define allowSeek readBackwards // Some weird thing happens on some videos it seems, where even seeking to the end of the video to get the length and then back to the start (in order to obey readBackwards == false) causes cap.read() to fail. This is a workaround.. to disable the workaround, define allowSeek as true.
+                }
+                else if (strcmp(argv[i], "--read-backwards") == 0) {
+                    ensureReadBackwards = true;
                 }
         }
+    }
+    if (ensureReadBackwards) {
+        readBackwards = true;
     }
     
     init(filePath);
@@ -399,39 +408,47 @@ void VideoFileDataSource::init(std::string filePath) {
       std::cout << "Unable to open capture on given file: " << filePath << std::endl;
       throw 0;
     }
-    
+
+    double frame_count = cap.get(cv::CAP_PROP_FRAME_COUNT);
     frame_rate = cap.get(cv::CAP_PROP_FPS);
     
     if (frame_rate != default_fps) {
         wantedFPS = default_fps;
     }
-
+    
     // Calculate number of msec per frame.
     // (msec/sec / frames/sec = msec/frame)
     frame_msec = 1000 / frame_rate;
     
-    double frame_count = cap.get(cv::CAP_PROP_FRAME_COUNT);
+    if (allowSeek) {
+        // Seek to the end of the video.
+        cap.set(cv::CAP_PROP_POS_AVI_RATIO, 1);
+        
+        // Get video length
+        cap.set(cv::CAP_PROP_POS_MSEC, frame_msec * frame_count);
+        video_time = cap.get(cv::CAP_PROP_POS_MSEC);
+        
+        if (!readBackwards) {
+            cap.set(cv::CAP_PROP_POS_AVI_RATIO, 0);
+            cap.set(cv::CAP_PROP_POS_MSEC, 0);
+        }
+    }
     
-    // Seek to the end of the video.
-    cap.set(cv::CAP_PROP_POS_AVI_RATIO, 1);
-    
-    // Get video length
-    cap.set(cv::CAP_PROP_POS_MSEC, frame_msec * frame_count);
-    video_time = cap.get(cv::CAP_PROP_POS_MSEC);
-    
-    std::cout << "Video duration: " << video_time << " milliseconds; frame count: " << frame_count << std::endl;
+    std::cout << "Video duration: " << (allowSeek ? video_time : (frame_msec*frame_count)) << " milliseconds; frame count: " << frame_count << std::endl;
 }
 
 cv::Mat VideoFileDataSource::get(size_t index) {
-    // Decrease video time by number of msec in one frame
-    double video_time_ = video_time - frame_msec * index;
-    
-    if (!(video_time_ > 0)) {
-        return cv::Mat();
+    if (readBackwards) {
+        // Decrease video time by number of msec in one frame
+        double video_time_ = video_time - frame_msec * index;
+        
+        if (!(video_time_ > 0)) {
+            return cv::Mat();
+        }
+        
+        // and seek to the new time.
+        cap.set(cv::CAP_PROP_POS_MSEC, video_time_);
     }
-    
-    // and seek to the new time.
-    cap.set(cv::CAP_PROP_POS_MSEC, video_time_);
     
     return OpenCVVideoCaptureDataSource::get(index);
 }

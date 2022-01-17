@@ -121,6 +121,7 @@ private:
     double frame_msec;
     double video_time;
 protected:
+    bool readBackwards = true;
     static const std::string default_filePath;
     void init(std::string filePath);
 };
