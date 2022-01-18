@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "py.h"
+#include "pyMainThreadInterface.hpp"
 
 using namespace std;
 
@@ -39,7 +39,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
-  return S_RunFile("radio.py", 0, nullptr);
+  return pyRunFile("radio.py", 0, nullptr);
 }
 
 enum State {
@@ -51,7 +51,7 @@ State g_state = State_WaitingForTakeoff;
 //const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeAfterMainDeployment), (const char *)0 };
 //const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeAfterMainDeployment), (const char *)0 };
 bool startDelayedSIFT() {
-  //bool ret = S_RunFile("sift.py",0,nullptr);
+  //bool ret = pyRunFile("sift.py",0,nullptr);
 
   // https://unix.stackexchange.com/questions/118811/why-cant-i-run-gui-apps-from-root-no-protocol-specified
   // https://askubuntu.com/questions/294736/run-a-shell-script-as-another-user-that-has-no-password
@@ -123,7 +123,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
 
 		// Take the ascent picture 
 		if (videoCapture) {
-			S_RunFile("./subscale_driver/videoCapture.py", 0, nullptr);
+			pyRunFile("./subscale_driver/videoCapture.py", 0, nullptr);
 		}
     }
   }
@@ -224,7 +224,7 @@ VADL2022::VADL2022(int argc, char** argv)
 		}
 	}
 
-	if (timeAfterMainDeployment == nullptr) {
+	if (timeAfterMainDeployment == nullptr && !videoCapture) {
 		puts("Need to provide --sift-start-time");
 		exit(1);
 	}
@@ -316,10 +316,14 @@ void VADL2022::connect_Python()
 	cout << "Python: Connecting" << endl;
 
 	Py_Initialize();
-	PyRun_SimpleString("import sys; #print(sys.path); \n\
+	int ret = PyRun_SimpleString("import sys; #print(sys.path); \n\
 for p in ['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/k9y7xyi8h0fpvsglq04hkggn5pzanb72-python3-3.7.11-env/lib/python3.7/site-packages']: \n\
     sys.path.append(p); \n\
 #print(sys.path)");
+	if (ret == -1) {
+		cout << "Failed to setup Python path" << endl;
+		exit(1);
+	}
 
 	cout << "Python: Connected" << endl;
 }
