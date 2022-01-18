@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "py.h"
+#include "pyMainThreadInterface.hpp"
 
 using namespace std;
 
@@ -39,7 +39,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
-  return S_RunFile("radio.py", 0, nullptr);
+  return pyRunFile("radio.py", 0, nullptr);
 }
 
 enum State {
@@ -51,7 +51,7 @@ State g_state = State_WaitingForTakeoff;
 //const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeAfterMainDeployment), (const char *)0 };
 //const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeAfterMainDeployment), (const char *)0 };
 bool startDelayedSIFT() {
-  //bool ret = S_RunFile("sift.py",0,nullptr);
+  //bool ret = pyRunFile("sift.py",0,nullptr);
 
   // https://unix.stackexchange.com/questions/118811/why-cant-i-run-gui-apps-from-root-no-protocol-specified
   // https://askubuntu.com/questions/294736/run-a-shell-script-as-another-user-that-has-no-password
@@ -123,7 +123,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
 
 		// Take the ascent picture 
 		if (videoCapture) {
-			S_RunFile("./subscale_driver/videoCapture.py", 0, nullptr);
+			pyRunFile("./subscale_driver/videoCapture.py", 0, nullptr);
 		}
     }
   }
