@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
   QueuedFunction f;
   while (true) {
     mainDispatchQueue.dequeue(&f);
-    f();
+    //f();
   }
 
   //PyRun_SimpleString("input('Done')");
