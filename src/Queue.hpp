@@ -9,6 +9,7 @@
 #ifndef threadsafe_circular_buffer_h
 #define threadsafe_circular_buffer_h
 
+#include <assert.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
