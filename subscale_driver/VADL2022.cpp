@@ -39,7 +39,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
-  return pyRunFile("radio.py", 0, nullptr);
+  return pyRunFile("subscale_driver/radio.py", 0, nullptr);
 }
 
 enum State {

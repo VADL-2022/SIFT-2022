@@ -70,15 +70,12 @@ struct Queue {
     }
 
     // Adds to the buffer.
-    void enqueue() {
-      asm volatile ("brk #0");
-      //printf("%x\n", &mutex);
-      //pthread_mutex_trylock(&mutex);
-      //pthread_mutex_lock( &mutex );
-        //enqueueNoLock(std::forward<Args>(args)...);
+    template< class... Args >
+    void enqueue(Args&&... args) {
+        pthread_mutex_lock( &mutex );
+        enqueueNoLock(std::forward<Args>(args)...);
         // Unlock the mutex:
-        //pthread_mutex_unlock( &mutex );
-	//puts("test");
+        pthread_mutex_unlock( &mutex );
     }
     
     // Gets the next element that should be read from (consumed). To consume + release it, call `dequeue()` after this.

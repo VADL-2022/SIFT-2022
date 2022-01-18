@@ -11,9 +11,10 @@ int main(int argc, char **argv) {
   QueuedFunction f;
   while (true) {
     mainDispatchQueue.dequeue(&f);
-    //f();
+    std::cout << "Main dispatch queue executing function with description: " << f.second << std::endl;
+    f.first();
   }
 
-  //PyRun_SimpleString("input('Done')");
+  PyRun_SimpleString("input('Done')");
   return 0;
 }

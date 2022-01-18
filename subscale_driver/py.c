@@ -478,10 +478,20 @@ bool S_RunFile(const char *path, int argc, char **argv)
         Py_DECREF(f);
     }
 
-    PySys_SetArgvEx(argc + 1, cargv, 0);
+    // https://stackoverflow.com/questions/4987579/how-do-i-get-the-current-pyinterpreterstate
+    //in main thread
+    PyThreadState * mainThreadState = NULL;
+    mainThreadState = PyThreadState_Get();
+    PyInterpreterState * mainInterpreterState = mainThreadState->interp;
+    wchar_t **argv_w;
+    for (size_t i = 0; i < argc; i++) {
+      PyConfig_SetBytesString(mainInterpreterState->config, &argv_w[i], cargv[i]);
+    }
+    PySys_SetArgvEx(argc + 1, argv_w, 1);
     PyObject *result = PyRun_File(script, path, Py_file_input, global_dict, global_dict);
     ret = (result != NULL);
     Py_XDECREF(result);
+    PyEval_ReleaseThread(mainThreadState);
 
     if(PyErr_Occurred()) {
         S_ShowLastError();

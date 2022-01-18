@@ -2,11 +2,9 @@
 #include "subscaleMain.hpp"
 
 inline bool pyRunFile(const char *path, int argc, char **argv) {
-    // mainDispatchQueue.enqueue([=](){
-    //     S_RunFile(path, argc, argv);
-    // });
+  mainDispatchQueue.enqueue([=](){
+        S_RunFile(path, argc, argv);
+			     },path);
 
-  mainDispatchQueue.enqueue();
-  puts("a");
   return true;
 }
