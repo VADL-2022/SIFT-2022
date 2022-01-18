@@ -39,10 +39,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
-  //return S_RunFile("radio.py", 0, nullptr);
-
-  S_RunFile("videoCapture.py", 0, nullptr);
-  return true;
+  return pyRunFile("radio.py", 0, nullptr);
 }
 
 enum State {
@@ -126,7 +123,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
 
 		// Take the ascent picture 
 		if (videoCapture) {
-			pyRunFile("./subscale_driver/videoCapture.py", 0, nullptr);
+			pyRunFile("videoCapture.py", 0, nullptr);
 		}
     }
   }
