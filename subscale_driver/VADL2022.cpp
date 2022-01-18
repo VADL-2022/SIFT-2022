@@ -39,7 +39,10 @@ void checkMainDeploymentCallback(LOG *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
-  return pyRunFile("radio.py", 0, nullptr);
+  //return S_RunFile("radio.py", 0, nullptr);
+
+  S_RunFile("videoCapture.py", 0, nullptr);
+  return true;
 }
 
 enum State {
