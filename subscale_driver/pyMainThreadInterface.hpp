@@ -6,5 +6,7 @@ inline bool pyRunFile(const char *path, int argc, char **argv) {
     //     S_RunFile(path, argc, argv);
     // });
 
-  mainDispatchQueue.enqueue((void*)1);
+  mainDispatchQueue.enqueue();
+  puts("a");
+  return true;
 }
