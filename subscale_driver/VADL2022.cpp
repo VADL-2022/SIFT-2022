@@ -16,6 +16,7 @@
 #include <stdlib.h>
 
 #include "pyMainThreadInterface.hpp"
+#include "../src/fdstream.hpp"
 
 using namespace std;
 
@@ -36,6 +37,8 @@ const char* siftParams = nullptr;
 
 // Forward declare main deployment callback
 void checkMainDeploymentCallback(LOG *log, float fseconds);
+// Other forward declarations
+void passIMUDataToSIFTCallback(LOG *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
@@ -87,10 +90,21 @@ bool startDelayedSIFT() {
     };
   return startDelayedSIFT_fork(sift_args);
 }
+int fd[2]; // write() to fd[1] to send IMU data to sift after running startDelayedSIFT_fork()
+ofdstream toSIFT;
 bool startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xauthority for root above
+  if (pipe(fd)) {
+    printf("Error with pipe!\n");
+    return false;
+  }
+  
   puts("Forking");
   pid_t pid = fork(); // create a new child process
-  if (pid > 0) {
+  if (pid > 0) { // Parent process
+    close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
+    
+    toSIFT.open(fd[1]);
+    
     int status = 0;
     if (wait(&status) != -1) {
       if (WIFEXITED(status)) {
@@ -108,14 +122,18 @@ bool startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xau
       }
     } else {
       printf("Error waiting!\n");
+      return false;
     }
-  } else if (pid == 0) {
+  } else if (pid == 0) { // Child process
+    close(fd[1]); // Close write end of the pipe since we'll be receiving IMU data from the parent process on this pipe, not writing to it from the child process.
+    
     const char** args = sift_args;
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
-    return false; //exit(1); // DONETODO: saves IMU data? If not, set atexit or std terminate handler
+    return false; //exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
   } else {
     perror("Error with fork");
+    return false;
   }
   return true;
 }
@@ -181,7 +199,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 			#if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
 				#error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
 			#else
-				v->mLog->userCallback = nullptr;
+				v->mLog->userCallback = passIMUDataToSIFTCallback;
 			#endif
 
 			puts("Target time reached, main parachute has deployed");
@@ -203,6 +221,26 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 			v->startTime = -1;
 		}
 	}
+}
+
+void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
+  // Give this data to SIFT
+            toSIFT << std::endl
+                   << fseconds << ","
+                   << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
+                   << log->mImu->qtn[0] << "," << log->mImu->qtn[1] << "," << log->mImu->qtn[2] << "," << log->mImu->qtn[3] << ","
+                   << log->mImu->rate[0] << "," << log->mImu->rate[1] << "," << log->mImu->rate[2] << ","
+                   << log->mImu->accel[0] << "," << log->mImu->accel[1] << "," << log->mImu->accel[2] << ","
+                   << log->mImu->mag[0] << "," << log->mImu->mag[1] << "," << log->mImu->mag[2] << ","
+                   << log->mImu->temp << "," << log->mImu->pres << "," << log->mImu->dTime << ","
+                   << log->mImu->dTheta[0] << "," << log->mImu->dTheta[1] << "," << log->mImu->dTheta[2] << ","
+                   << log->mImu->dVel[0] << "," << log->mImu->dVel[1] << "," << log->mImu->dVel[2] << ","
+                   << log->mImu->magNed[0] << "," << log->mImu->magNed[1] << "," << log->mImu->magNed[2] << ","
+                   << log->mImu->accelNed[0] << "," << log->mImu->accelNed[1] << "," << log->mImu->accelNed[2] << ","
+                   << log->mImu->linearAccelBody[0] << "," << log->mImu->linearAccelBody[1] << "," << log->mImu->linearAccelBody[2] << ","
+                   << log->mImu->linearAccelNed[0] << "," << log->mImu->linearAccelNed[1] << "," << log->mImu->linearAccelNed[2] << ",";
+  
+  toSIFT.flush();
 }
 
 // bool RunFile(const std::string& path)
