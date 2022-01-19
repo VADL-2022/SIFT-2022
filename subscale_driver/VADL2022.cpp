@@ -62,9 +62,12 @@ State g_state = State_WaitingForTakeoff;
 //   return ret == 0;// "If command is NULL, then a nonzero value if a shell is
 //   // available, or 0 if no shell is available." ( https://man7.org/linux/man-pages/man3/system.3.html )
 // }
-void startDelayedSIFT_fork(const char *sift_args[]);
-void startDelayedSIFT() {
-  std::string s = (siftParams != nullptr
+bool startDelayedSIFT_fork(const char *sift_args[]);
+bool startDelayedSIFT() {
+  std::string s =
+        "\"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
+        "--main-mission " +
+    (siftParams != nullptr
                  ? ("--sift-params " + std::string(siftParams))
                  : std::string("")) +
             std::string(" --sleep-before-running ") +
@@ -79,13 +82,11 @@ void startDelayedSIFT() {
         "pi",
         "bash",
         "-c",
-        "\"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
-        "--main-mission " +
-	s.c_str();
+	s.c_str()
     };
-  startDelayedSIFT_fork(sift_args);
+  return startDelayedSIFT_fork(sift_args);
 }
-void startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xauthority for root above
+bool startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xauthority for root above
   puts("Forking");
   pid_t pid = fork(); // create a new child process
   if (pid > 0) {
@@ -108,13 +109,14 @@ void startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xau
       printf("Error waiting!\n");
     }
   } else if (pid == 0) {
-    const char* args = sift_args;
+    const char* args[] = sift_args;
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
-    exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
+    return false; //exit(1); // DONETODO: saves IMU data? If not, set atexit or std terminate handler
   } else {
     perror("Error with fork");
   }
+  return true;
 }
 
 // Will: this is called on a non-main thread (on a thread for the IMU)
@@ -185,7 +187,10 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 			// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
 			if (!videoCapture) {
 				bool ok = startDelayedSIFT();
-			}
+                                if (!ok) {
+				  // Continue with this error, we might as well try recording IMU data at least..
+                                }
+                        }
 			g_state = State_WaitingForMainStabilizationTime;
 		}
 	}
@@ -271,8 +276,11 @@ VADL2022::VADL2022(int argc, char** argv)
 		return;
 	}
 	else if (siftOnly) {
-		startDelayedSIFT();
-		return;
+		bool ok = startDelayedSIFT();
+                if (!ok) {
+                  exit(1);
+                }
+                return;
 	}
 	bool vn = true;
 	try {
