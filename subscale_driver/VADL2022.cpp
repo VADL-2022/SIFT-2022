@@ -82,7 +82,8 @@ bool startDelayedSIFT() {
         "pi",
         "bash",
         "-c",
-	s.c_str()
+	s.c_str(),
+	NULL // Need NULL at the end of exec args ( https://stackoverflow.com/questions/20449182/execvp-bad-address-error/20451532 )
     };
   return startDelayedSIFT_fork(sift_args);
 }
