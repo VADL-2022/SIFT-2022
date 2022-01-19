@@ -109,7 +109,7 @@ bool startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xau
       printf("Error waiting!\n");
     }
   } else if (pid == 0) {
-    const char* args[] = sift_args;
+    const char** args = sift_args;
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
     return false; //exit(1); // DONETODO: saves IMU data? If not, set atexit or std terminate handler
