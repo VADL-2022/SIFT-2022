@@ -50,49 +50,72 @@ enum State {
 State g_state = State_WaitingForTakeoff;
 //const char *sift_args[] = { "/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/bin/lldb","--","./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeAfterMainDeployment), (const char *)0 };
 //const char *sift_args[] = { "./sift_exe_release_commandLine","--main-mission", "--sift-params","-C_edge","2", "--sleep-before-running",(timeAfterMainDeployment), (const char *)0 };
-bool startDelayedSIFT() {
-  //bool ret = pyRunFile("sift.py",0,nullptr);
+// bool startDelayedSIFT() {
+//   //bool ret = pyRunFile("sift.py",0,nullptr);
 
-  // https://unix.stackexchange.com/questions/118811/why-cant-i-run-gui-apps-from-root-no-protocol-specified
-  // https://askubuntu.com/questions/294736/run-a-shell-script-as-another-user-that-has-no-password
-  std::string s = "sudo -H -u pi bash -c \"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission " + (siftParams != nullptr ? ("--sift-params " + std::string(siftParams)) : std::string("")) + std::string(" --sleep-before-running ") + std::string(timeAfterMainDeployment) + std::string(" --no-preview-window \""); // --video-file-data-source
-  int ret = system(s.c_str());
-  printf("system returned %d\n", ret);
+//   // https://unix.stackexchange.com/questions/118811/why-cant-i-run-gui-apps-from-root-no-protocol-specified
+//   // https://askubuntu.com/questions/294736/run-a-shell-script-as-another-user-that-has-no-password
+//   std::string s = "sudo -H -u pi bash -c \"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission " + (siftParams != nullptr ? ("--sift-params " + std::string(siftParams)) : std::string("")) + std::string(" --sleep-before-running ") + std::string(timeAfterMainDeployment) + std::string(" --no-preview-window \""); // --video-file-data-source
+//   int ret = system(s.c_str());
+//   printf("system returned %d\n", ret);
   
-  return ret == 0;// "If command is NULL, then a nonzero value if a shell is
-  // available, or 0 if no shell is available." ( https://man7.org/linux/man-pages/man3/system.3.html )
-}
-// void startDelayedSIFT_fork_notWorking() { //Actually works, need xauthority for root above
-//   puts("Forking");
-//   pid_t pid = fork(); // create a new child process
-//   if (pid > 0) {
-//     int status = 0;
-//     if (wait(&status) != -1) {
-//       if (WIFEXITED(status)) {
-// 	// now check to see what its exit status was
-// 	printf("The exit status was: %d\n", WEXITSTATUS(status));
-
-// 	// Check for saved image
-// 	// TODO: ^
-
-// 	// Send the image over the radio
-// 	sendOnRadio();
-//       } else if (WIFSIGNALED(status)) {
-// 	// it was killed by a signal
-// 	printf("The signal that killed me was %d\n", WTERMSIG(status));
-//       }
-//     } else {
-//       printf("Error waiting!\n");
-//     }
-//   } else if (pid == 0) {
-//     const char* args = sift_args;
-//     execvp((char*)args[0], (char**)args); // one variant of exec
-//     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
-//     exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
-//   } else {
-//     perror("Error with fork");
-//   }
+//   return ret == 0;// "If command is NULL, then a nonzero value if a shell is
+//   // available, or 0 if no shell is available." ( https://man7.org/linux/man-pages/man3/system.3.html )
 // }
+void startDelayedSIFT_fork(const char *sift_args[]);
+void startDelayedSIFT() {
+  std::string s = (siftParams != nullptr
+                 ? ("--sift-params " + std::string(siftParams))
+                 : std::string("")) +
+            std::string(" --sleep-before-running ") +
+            std::string(timeAfterMainDeployment) +
+            std::string(" --no-preview-window \"") // --video-file-data-source
+    ;
+  const char *sift_args[] =
+    {
+        "sudo",
+        "-H",
+        "-u",
+        "pi",
+        "bash",
+        "-c",
+        "\"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
+        "--main-mission " +
+	s.c_str();
+    };
+  startDelayedSIFT_fork(sift_args);
+}
+void startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xauthority for root above
+  puts("Forking");
+  pid_t pid = fork(); // create a new child process
+  if (pid > 0) {
+    int status = 0;
+    if (wait(&status) != -1) {
+      if (WIFEXITED(status)) {
+	// now check to see what its exit status was
+	printf("The exit status was: %d\n", WEXITSTATUS(status));
+
+	// Check for saved image
+	// TODO: ^
+
+	// Send the image over the radio
+	sendOnRadio();
+      } else if (WIFSIGNALED(status)) {
+	// it was killed by a signal
+	printf("The signal that killed me was %d\n", WTERMSIG(status));
+      }
+    } else {
+      printf("Error waiting!\n");
+    }
+  } else if (pid == 0) {
+    const char* args = sift_args;
+    execvp((char*)args[0], (char**)args); // one variant of exec
+    perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
+    exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
+  } else {
+    perror("Error with fork");
+  }
+}
 
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on takeoff
