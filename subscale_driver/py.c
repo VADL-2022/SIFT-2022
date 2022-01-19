@@ -456,6 +456,8 @@ bool S_RunFile(const char *path, int argc, char **argv)
         memcpy(cargv + 1, argv, sizeof(*argv) * argc);
     }
 
+    wchar_t *argv_w[argc + 1];
+
     /* The directory of the script file won't be automatically added by 'PyRun_SimpleFile'.
      * We add it manually to sys.path ourselves. */
     if(!s_sys_path_add_dir(path))
@@ -478,20 +480,18 @@ bool S_RunFile(const char *path, int argc, char **argv)
         Py_DECREF(f);
     }
 
-    // https://stackoverflow.com/questions/4987579/how-do-i-get-the-current-pyinterpreterstate
-    //in main thread
-    PyThreadState * mainThreadState = NULL;
-    mainThreadState = PyThreadState_Get();
-    PyInterpreterState * mainInterpreterState = mainThreadState->interp;
-    wchar_t **argv_w;
-    for (size_t i = 0; i < argc; i++) {
-      PyConfig_SetBytesString(mainInterpreterState->config, &argv_w[i], cargv[i]);
+    // https://docs.python.org/3.7/c-api/sys.html#c.Py_DecodeLocale
+    for (size_t i = 0; i < argc + 1; i++) {
+      argv_w[i] = Py_DecodeLocale(cargv[i], NULL);
     }
     PySys_SetArgvEx(argc + 1, argv_w, 1);
     PyObject *result = PyRun_File(script, path, Py_file_input, global_dict, global_dict);
     ret = (result != NULL);
     Py_XDECREF(result);
-    PyEval_ReleaseThread(mainThreadState);
+    
+    for (size_t i = 0; i < argc; i++) {
+      PyMem_RawFree(argv_w[i]);
+    }
 
     if(PyErr_Occurred()) {
         S_ShowLastError();
