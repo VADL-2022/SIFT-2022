@@ -123,7 +123,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
 
 		// Take the ascent picture 
 		if (videoCapture) {
-			pyRunFile("videoCapture.py", 0, nullptr);
+			pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
 		}
     }
   }
@@ -209,6 +209,7 @@ VADL2022::VADL2022(int argc, char** argv)
 				puts("Expected start time");
 				exit(1);
 			}
+			i++;
 		}
 		else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
 			sendOnRadio_ = true;
@@ -221,6 +222,16 @@ VADL2022::VADL2022(int argc, char** argv)
 		}
 		else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
 			siftParams = argv[i+1];
+		}
+		else {
+		  printf("Unrecognized command-line argument given: %s", argv[i]);
+		  printf(" (command line was:\n");
+		  for (int i = 0; i < argc; i++) {
+		    printf("\t%s\n", argv[i]);
+		  }
+		  printf(")\n");
+		  puts("Exiting.");
+		  exit(1);
 		}
 	}
 
