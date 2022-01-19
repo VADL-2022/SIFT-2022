@@ -145,6 +145,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
     // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
     //   bool ok = startDelayedSIFT();
     //   g_state = State_WaitingForMainStabilizationTime;
+      g_state = STATE_WaitingForMainParachuteDeployment; // TODO: correct to do this?
 
 		// Take the ascent picture 
 		if (videoCapture) {
