@@ -65,14 +65,14 @@ State g_state = State_WaitingForTakeoff;
 bool startDelayedSIFT_fork(const char *sift_args[]);
 bool startDelayedSIFT() {
   std::string s =
-        "\"XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
+        "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
         "--main-mission " +
     (siftParams != nullptr
                  ? ("--sift-params " + std::string(siftParams))
                  : std::string("")) +
             std::string(" --sleep-before-running ") +
             std::string(timeAfterMainDeployment) +
-            std::string(" --no-preview-window \"") // --video-file-data-source
+            std::string(" --no-preview-window") // --video-file-data-source
     ;
   const char *sift_args[] =
     {
