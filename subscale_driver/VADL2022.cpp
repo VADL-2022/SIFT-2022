@@ -118,7 +118,6 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
     close(fd[1]); // Close write end of the pipe since we'll be receiving IMU data from the parent process on this pipe, not writing to it from the child process.
     
     // Fill in the sift_args
-    char buffer[sizeof(int)*8+1]; // https://www.cplusplus.com/reference/cstdlib/itoa/
     std::string s =
         "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
         "--main-mission " +
@@ -128,7 +127,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
             std::string(" --sleep-before-running ") +
             std::string(timeAfterMainDeployment) +
             std::string(" --no-preview-window") // --video-file-data-source
-      + (std::string(" --subscale-driver-fd ") + std::itoa(fd[1],buffer,10))
+      + (std::string(" --subscale-driver-fd ") + std::to_string(fd[1]))
     ;
 
     sift_args[sift_args_size-2] = s.c_str();
