@@ -138,11 +138,23 @@ public:
   }
 
 
-  ofdstream& operator<< (const std::string& str)
+  // ofdstream& operator<< (const std::string& str)
+  // {
+  //   if (_stream->good())
+  //   {
+  //     (*_stream) << str;
+  //   }
+
+  //   //_stream->flush();
+  //   return *this;
+  // }
+
+  template<typename T>
+  ofdstream& operator<< (const T& o)
   {
     if (_stream->good())
     {
-      (*_stream) << str;
+      (*_stream) << o;
     }
 
     //_stream->flush();
