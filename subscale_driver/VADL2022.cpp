@@ -65,18 +65,8 @@ State g_state = State_WaitingForTakeoff;
 //   return ret == 0;// "If command is NULL, then a nonzero value if a shell is
 //   // available, or 0 if no shell is available." ( https://man7.org/linux/man-pages/man3/system.3.html )
 // }
-bool startDelayedSIFT_fork(const char *sift_args[]);
+bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size);
 bool startDelayedSIFT() {
-  std::string s =
-        "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
-        "--main-mission " +
-    (siftParams != nullptr
-                 ? ("--sift-params " + std::string(siftParams))
-                 : std::string("")) +
-            std::string(" --sleep-before-running ") +
-            std::string(timeAfterMainDeployment) +
-            std::string(" --no-preview-window") // --video-file-data-source
-    ;
   const char *sift_args[] =
     {
         "sudo",
@@ -85,14 +75,14 @@ bool startDelayedSIFT() {
         "pi",
         "bash",
         "-c",
-	s.c_str(),
+	NULL, // Placeholder for actual SIFT command
 	NULL // Need NULL at the end of exec args ( https://stackoverflow.com/questions/20449182/execvp-bad-address-error/20451532 )
     };
-  return startDelayedSIFT_fork(sift_args);
+  return startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]));
 }
 int fd[2]; // write() to fd[1] to send IMU data to sift after running startDelayedSIFT_fork()
 ofdstream toSIFT;
-bool startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xauthority for root above
+bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //Actually works, need xauthority for root above
   if (pipe(fd)) {
     printf("Error with pipe!\n");
     return false;
@@ -127,6 +117,22 @@ bool startDelayedSIFT_fork(const char *sift_args[]) { //Actually works, need xau
   } else if (pid == 0) { // Child process
     close(fd[1]); // Close write end of the pipe since we'll be receiving IMU data from the parent process on this pipe, not writing to it from the child process.
     
+    // Fill in the sift_args
+    char buffer[sizeof(int)*8+1]; // https://www.cplusplus.com/reference/cstdlib/itoa/
+    std::string s =
+        "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
+        "--main-mission " +
+    (siftParams != nullptr
+                 ? ("--sift-params " + std::string(siftParams))
+                 : std::string("")) +
+            std::string(" --sleep-before-running ") +
+            std::string(timeAfterMainDeployment) +
+            std::string(" --no-preview-window") // --video-file-data-source
+      + (std::string(" --subscale-driver-fd ") + itoa(fd[1],buffer,10))
+    ;
+
+    sift_args[sift_args_size-2] = s.c_str();
+  
     const char** args = sift_args;
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
@@ -225,7 +231,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 
 void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // Give this data to SIFT
-            toSIFT << std::endl
+            toSIFT << '\n'
                    << fseconds << ","
                    << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
                    << log->mImu->qtn[0] << "," << log->mImu->qtn[1] << "," << log->mImu->qtn[2] << "," << log->mImu->qtn[3] << ","
