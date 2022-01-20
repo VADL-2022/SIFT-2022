@@ -128,7 +128,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
             std::string(" --sleep-before-running ") +
             std::string(timeAfterMainDeployment) +
             std::string(" --no-preview-window") // --video-file-data-source
-      + (std::string(" --subscale-driver-fd ") + itoa(fd[1],buffer,10))
+      + (std::string(" --subscale-driver-fd ") + std::itoa(fd[1],buffer,10))
     ;
 
     sift_args[sift_args_size-2] = s.c_str();
@@ -231,7 +231,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 
 void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // Give this data to SIFT
-            toSIFT << '\n'
+            toSIFT << "\n"
                    << fseconds << ","
                    << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
                    << log->mImu->qtn[0] << "," << log->mImu->qtn[1] << "," << log->mImu->qtn[2] << "," << log->mImu->qtn[3] << ","
