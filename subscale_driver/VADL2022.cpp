@@ -204,7 +204,12 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 			#if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
 				#error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
 			#else
+			  if (!videoCapture) {
 				v->mLog->userCallback = passIMUDataToSIFTCallback;
+			  }
+			  else {
+			    v->mLog->userCallback = nullptr;			    
+			  }
 			#endif
 
 			puts("Target time reached, main parachute has deployed");
@@ -409,6 +414,7 @@ void VADL2022::connect_Python()
 
 	Py_Initialize();
 	int ret = PyRun_SimpleString("import sys; #print(sys.path); \n\
+print('Python version:', sys.version, 'with executable at', sys.executable) \n\
 for p in ['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python39.zip', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/lib-dynload', '/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib']: \n\
     sys.path.append(p); \n\
 #print(sys.path)");
