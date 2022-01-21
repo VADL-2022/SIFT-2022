@@ -169,7 +169,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
     // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
     //   bool ok = startDelayedSIFT();
     //   g_state = State_WaitingForMainStabilizationTime;
-      g_state = STATE_WaitingForMainParachuteDeployment; // TODO: correct to do this?
+      g_state = STATE_WaitingForMainParachuteDeployment; // Now wait till main has deployed
 
 		// Take the ascent picture 
 		if (videoCapture) {
@@ -216,7 +216,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 				  // Continue with this error, we might as well try recording IMU data at least..
                                 }
                         }
-			g_state = State_WaitingForMainStabilizationTime;
+			g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
 		}
 	}
 	else {
