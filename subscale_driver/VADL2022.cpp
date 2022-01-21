@@ -200,6 +200,13 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 		float duration = fseconds - v->startTime;
 		printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
 		if (duration >= IMU_ACCEL_DURATION) {
+			// Stop these checkMainDeploymentCallback callbacks
+			#if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
+				#error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
+			#else
+				v->mLog->userCallback = passIMUDataToSIFTCallback;
+			#endif
+
 			puts("Target time reached, main parachute has deployed");
 
 			// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
@@ -208,15 +215,8 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
                                 if (!ok) {
 				  // Continue with this error, we might as well try recording IMU data at least..
                                 }
+				g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
                         }
-			g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
-			
-			// Stop these checkMainDeploymentCallback callbacks (this is done *after* the call to startDelayedSIFT() because we only want to have passIMUDataToSIFTCallback get called after making the new pipe's file descriptor and forking in startDelayedSIFT().
-			#if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
-				#error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
-			#else
-				v->mLog->userCallback = passIMUDataToSIFTCallback;
-			#endif
 		}
 	}
 	else {
@@ -230,6 +230,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 
 void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // Give this data to SIFT
+  if (toSIFT.isOpen()) {
             toSIFT << "\n"
                    << fseconds << ","
                    << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
@@ -245,7 +246,11 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
                    << log->mImu->linearAccelBody[0] << "," << log->mImu->linearAccelBody[1] << "," << log->mImu->linearAccelBody[2] << ","
                    << log->mImu->linearAccelNed[0] << "," << log->mImu->linearAccelNed[1] << "," << log->mImu->linearAccelNed[2] << ",";
   
-  toSIFT.flush();
+    toSIFT.flush();
+  }
+  else {
+    std::cout << "passIMUDataToSIFTCallback: toSIFT is not open, not doing anything" << std::endl;
+  }
 }
 
 // bool RunFile(const std::string& path)
@@ -404,7 +409,7 @@ void VADL2022::connect_Python()
 
 	Py_Initialize();
 	int ret = PyRun_SimpleString("import sys; #print(sys.path); \n\
-for p in ['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib/', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/k9y7xyi8h0fpvsglq04hkggn5pzanb72-python3-3.7.11-env/lib/python3.7/site-packages']: \n\
+for p in ['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python39.zip', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/lib-dynload', '/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib']: \n\
     sys.path.append(p); \n\
 #print(sys.path)");
 	if (ret == -1) {
