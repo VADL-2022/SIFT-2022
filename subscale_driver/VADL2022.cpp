@@ -200,13 +200,6 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 		float duration = fseconds - v->startTime;
 		printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
 		if (duration >= IMU_ACCEL_DURATION) {
-			// Stop these checkMainDeploymentCallback callbacks
-			#if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
-				#error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
-			#else
-				v->mLog->userCallback = passIMUDataToSIFTCallback;
-			#endif
-
 			puts("Target time reached, main parachute has deployed");
 
 			// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
@@ -217,6 +210,13 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
                                 }
                         }
 			g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
+			
+			// Stop these checkMainDeploymentCallback callbacks (this is done *after* the call to startDelayedSIFT() because we only want to have passIMUDataToSIFTCallback get called after making the new pipe's file descriptor and forking in startDelayedSIFT().
+			#if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
+				#error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
+			#else
+				v->mLog->userCallback = passIMUDataToSIFTCallback;
+			#endif
 		}
 	}
 	else {
