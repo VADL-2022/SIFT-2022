@@ -14,12 +14,12 @@ with pkgs;
 
 let
   opencvGtk = opencv4.override (old : { enableGtk2 = true; }); # https://stackoverflow.com/questions/40667313/how-to-get-opencv-to-work-in-nix , https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/libraries/opencv/default.nix
-  my-python-packages = python39.withPackages(ps: with ps; [
-    (lib.optional stdenv.hostPlatform.isMacOS opencv4)
-    (lib.optional useGtk (toPythonModule (pkgs.opencv4.override { enableGTK2 = true; enablePython = true; pythonPackages = python39Packages; }))) # Temp hack
-    numpy
-    matplotlib
-  ]);
+  # my-python-packages = python39.withPackages(ps: with ps; [
+  #   (lib.optional stdenv.hostPlatform.isMacOS opencv4)
+  #   (lib.optional useGtk (toPythonModule (pkgs.opencv4.override { enableGTK2 = true; enablePython = true; pythonPackages = python39Packages; }))) # Temp hack
+  #   numpy
+  #   matplotlib
+  # ]);
 
   # Actual package is https://github.com/NixOS/nixpkgs/blob/nixos-21.05/pkgs/development/compilers/llvm/7/libunwind/default.nix#L45
   libunwind_modded = llvmPackages.libunwind.overrideAttrs (oldAttrs: rec {
@@ -35,9 +35,9 @@ let
   # #
 in
 mkShell {
-  buildInputs = [ my-python-packages
+  buildInputs = [ #my-python-packages
                 ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
-  ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python39Packages.opencv4.override { enableGtk2 = true; })
+  ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python37Packages.opencv4.override { enableGtk2 = true; })
                                                                  opencvGtk
                                                                ]) ++ [
     clang_12 # Need >= clang 10 to fix fast-math bug (when using -Ofast) ( https://bugzilla.redhat.com/show_bug.cgi?id=1803203 )
@@ -58,6 +58,15 @@ mkShell {
       (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
       #opencv4
       #numpy
+      
+      # For Python interop #
+      pybind11
+      # #
+      
+      (lib.optional stdenv.hostPlatform.isMacOS opencv4)
+      (lib.optional useGtk (toPythonModule (pkgs.opencv4.override { enableGTK2 = true; enablePython = true; pythonPackages = python37Packages; }))) # Temp hack
+      numpy
+      #matplotlib
     ]))
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {}) ]) ++ [
     libusb1
