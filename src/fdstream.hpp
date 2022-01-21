@@ -130,6 +130,8 @@ public:
     _stream = new std::ostream (_filebuf);
   }
 
+  bool isOpen() const { return (bool)_stream; }
+  
   void open(int file_descriptor)
   {
     if (!_stream)
