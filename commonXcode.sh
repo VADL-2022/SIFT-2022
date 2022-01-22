@@ -16,7 +16,7 @@ XCCONFIG="Config.xcconfig"
 #truncate –s 0 "$XCCONFIG"
 echo `which pkg-config`
 echo "$OPENCV_CFLAGS"
-IFLAGS="$(pkg-config --cflags-only-I opencv4 libpng jemalloc gl glew IL) -I"'$(SRCROOT)/../'"$SIFT_SRC -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -I/nix/store/i0rmp3app7yqd37ihgxlx9c3lwsj16kq-opencl-headers-2020.06.16/include"
+IFLAGS="$(pkg-config --cflags-only-I opencv4 libpng jemalloc gl glew IL) -I"'$(SRCROOT)/../'"$SIFT_SRC -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -I/nix/store/i0rmp3app7yqd37ihgxlx9c3lwsj16kq-opencl-headers-2020.06.16/include -I"'$(SRCROOT)/../VectorNav/include'""
 echo "$IFLAGS"
 
 # Use a heredoc:

@@ -934,7 +934,21 @@ int mainMission(DataSourceT* src,
                    ",%f,%f,%f" // linearAccelBody
                    ",%f,%f,%f" // linearAccelNed
                    "," // Nothing after this comma on purpose.
-                   , );
+                   , &imu.fseconds,
+                   &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
+                   &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
+                   &imu.rate.x, &imu.rate.y, &imu.rate.z,
+                   &imu.accel.x, &imu.accel.y, &imu.accel.z,
+                   &imu.mag.x, &imu.mag.y, &imu.mag.z,
+                   &imu.temp, &imu.pres, &imu.dTime,
+                   &imu.dTheta.x, &imu.dTheta.y, &imu.dTheta.z,
+                   &imu.dVel.x, &imu.dVel.y, &imu.dVel.z,
+                   &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
+                   &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
+                   &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
+                   &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
+                   );
+            std::cout << "Linear accel NED: " << imu.linearAccelNed << std::endl;
         }
         // //
         

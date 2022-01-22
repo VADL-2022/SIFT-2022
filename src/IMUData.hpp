@@ -18,8 +18,9 @@ using namespace vn::protocol::uart;
 class IMUData
 {
 public:
-    VnSensor mImu;
-    uint64_t timestamp = 0; // Nanoseconds
+    //VnSensor mImu;
+    //uint64_t timestamp = 0; // Nanoseconds
+    float fseconds;
     vec3f yprNed;            // Degrees
     vec4f qtn;                // Quaternion
     vec3f rate;                // Rad per Second

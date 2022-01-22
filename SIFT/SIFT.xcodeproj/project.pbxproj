@@ -134,6 +134,7 @@
 		308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = jemalloc_wrapper.c; sourceTree = "<group>"; };
 		308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = malloc_with_free_all.cpp; sourceTree = "<group>"; };
 		308B70A0275BC77B00FE86A9 /* malloc_with_free_all.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = malloc_with_free_all.h; sourceTree = "<group>"; };
+		309ACB4A279A1D03003504BA /* IMUData.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IMUData.hpp; sourceTree = "<group>"; };
 		30CBDBBE2731A01600473B25 /* DataSource.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataSource.cpp; sourceTree = "<group>"; };
 		30CBDBBF2731A01600473B25 /* DataSource.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataSource.hpp; sourceTree = "<group>"; };
 		30CBDBC72732EBF200473B25 /* DataOutput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataOutput.cpp; sourceTree = "<group>"; };
@@ -308,6 +309,7 @@
 			isa = PBXGroup;
 			children = (
 				308B709A275ADF1A00FE86A9 /* timers.hpp */,
+				309956C52797A3FD00F090EC /* python */,
 				308B6C04275AA95400FE86A9 /* tools */,
 				300EE48427209F9400969C5F /* Semaphore.h */,
 				30CE61E727234CD2001C987F /* SIFT.hpp */,
@@ -338,6 +340,7 @@
 				30CBDBC82732EBF200473B25 /* DataOutput.hpp */,
 				30F99A64278FA1AF00DBD9C8 /* Queue.hpp */,
 				30E6A5A52790C80400882438 /* Config.hpp */,
+				309ACB4A279A1D03003504BA /* IMUData.hpp */,
 			);
 			name = src;
 			path = ../../src;
@@ -362,6 +365,13 @@
 				303CB67927631A4800ABDBF1 /* file_descriptors.h */,
 			);
 			path = tools;
+			sourceTree = "<group>";
+		};
+		309956C52797A3FD00F090EC /* python */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = python;
 			sourceTree = "<group>";
 		};
 		30F99A21278CF13F00DBD9C8 /* SiftGPU */ = {
