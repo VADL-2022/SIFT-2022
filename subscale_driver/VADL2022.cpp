@@ -71,10 +71,10 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size);
 bool startDelayedSIFT() {
   const char *sift_args[] =
     {
-        "sudo",
-        "-H",
-        "-u",
-        "pi",
+        // "sudo",
+        // "-H",
+        // "-u",
+        // "pi",
         "bash",
         "-c",
 	NULL, // Placeholder for actual SIFT command

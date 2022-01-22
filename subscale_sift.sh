@@ -1,7 +1,11 @@
 # Start with `bash ./subscale_sift.sh`
 
-if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 
+# if [[ $EUID -ne 0 ]]; then
+#    echo "This script must be run as root" 
+#    exit 1
+# fi
+if [[ $(whoami) -ne pi ]]; then
+   echo "This script must be run as the pi user" 
    exit 1
 fi
 
@@ -51,7 +55,7 @@ sleep_ () {
 git checkout subscale
 # Checkout submodules from the above commit as well:
 git submodule update --init --recursive 
-sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run "make -j4 sift_exe_release_commandLine; make -j4 subscale_exe_release"
+/home/pi/.nix-profile/bin/nix-shell --run "make -j4 sift_exe_release_commandLine; make -j4 subscale_exe_release"
 # TODO: sha512 Checksum
 if [ "$dontsleep" != "1" ]; then
     echo "@@@@ Sleeping before takeoff"
@@ -67,7 +71,7 @@ else
     siftStart=0
 fi
 # sudo ./subscale_exe_release --sift-params '-C_edge 2' --sift-start-time "$siftStart" --sift-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").log.txt" &
-sudo ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --sift-start-time "$siftStart" 
+./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --sift-start-time "$siftStart" 
 # Record temperature data
 set +o errexit +o errtrace
 bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &

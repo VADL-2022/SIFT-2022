@@ -1,7 +1,11 @@
 # Start with `bash ./subscale.sh`
 
-if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 
+# if [[ $EUID -ne 0 ]]; then
+#    echo "This script must be run as root" 
+#    exit 1
+# fi
+if [[ $(whoami) -ne pi ]]; then
+   echo "This script must be run as the pi user" 
    exit 1
 fi
 
@@ -25,7 +29,7 @@ git checkout subscale
 # Checkout submodules from the above commit as well:
 git submodule update --init --recursive 
 # sha512 Checksum
-sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run "make -j4 subscale_exe_release"
+/home/pi/.nix-profile/bin/nix-shell --run "make -j4 subscale_exe_release"
 if [ "$dontsleep" != "1" ]; then
     echo "@@@@ Sleeping before takeoff"
     
@@ -34,7 +38,7 @@ if [ "$dontsleep" != "1" ]; then
 fi
 echo "@@@@ Starting driver"
 # SIFT start time in milliseconds:
-sudo ./subscale_exe_release --sift-start-time 26000 --imu-record-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").video_cap.log.txt" &
+./subscale_exe_release --sift-start-time 26000 --imu-record-only 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").video_cap.log.txt" &
 # Stop SIFT after x seconds:
 /home/pi/.nix-profile/bin/nix-shell --run "echo sudo -H -u pi /home/pi/.nix-profile/bin/nix-shell --run \"/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/bin/python3 ./subscale_driver/videoCapture.py\""
 #if [ "$dontsleep" != "1" ]; then

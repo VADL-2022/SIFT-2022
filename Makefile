@@ -23,15 +23,20 @@ CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 #-include $(SRC:%.cpp=%.d)
 endef
 
-# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFile_folderPathHere,flagsHere,additionalDepsHere))`
+# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFile_folderPathHere,flagsHere,additionalDepsHere,extraCommandsToRunAfterCompilation))`
 # Main file should be named `targetNameHere` followed by `Main` and `.cpp` or `.c`.
 define OBJECTS_LINKING_template =
 OBJECTS_$(1)_$(2) = $(3)
 OBJECTS_$(1)_$(2) := $$(addsuffix _$(2).o, $$(patsubst %.o,%, $$(OBJECTS_$(1)_$(2)))) $(4)/$(1)Main_$(2).o
 ALL_OBJECTS_FROM_TARGETS += $$(OBJECTS_$(1)_$(2))
+ifeq ($(7),)
+EXTRA_COMMANDS_$(1)_$(2) = && $(7)
+else
+EXTRA_COMMANDS_$(1)_$(2) =
+endif
 #$$(info $$(OBJECTS_$(1)_$(2)))
 $(1)_exe_$(2): $$(OBJECTS_$(1)_$(2)) $(6)
-	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(5) $(6)
+	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(5) $(6) $$(EXTRA_COMMANDS_$(1)_$(2))
 endef
 
 # END LIBRARY FUNCTIONS #
@@ -216,7 +221,7 @@ SUBSCALE_SOURCES := $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(S
 SUBSCALE_SOURCES_C := $(wildcard $(SUBSCALE_SRC)/*.c) $(wildcard $(SUBSCALE_SRC)/lib/*.c)
 SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o) $(SUBSCALE_SOURCES_C:%.c=%.o)
 $(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a))
-$(eval $(call OBJECTS_LINKING_template,subscale,debug,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_DEBUG) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a))
+$(eval $(call OBJECTS_LINKING_template,subscale,debug,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_DEBUG) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo setcap cap_sys_rawio+ep head)) # `sudo setcap cap_sys_rawio+ep head` is from https://unix.stackexchange.com/questions/475800/non-root-read-access-to-dev-mem-by-kmem-group-members-fails ; also run the other stuff from 
 
 ############################# VectorNav targets #############################
 
