@@ -81,7 +81,7 @@ mkShell {
     #opencl-clhpp
     # #
 
-    ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ sudo ]) ++ [
+    #] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ sudo ]) ++ [
 
     llvmPackages.libstdcxxClang
     #ginac # https://www.ginac.de/tutorial/#A-comparison-with-other-CAS
