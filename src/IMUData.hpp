@@ -15,7 +15,7 @@ using namespace vn::math;
 using namespace vn::sensors;
 using namespace vn::protocol::uart;
 
-class IMU
+class IMUData
 {
 public:
     VnSensor mImu;
