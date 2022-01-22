@@ -280,13 +280,24 @@ VADL2022::VADL2022(int argc, char** argv)
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
 	// bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
+	long long backupSIFTStartTime = -1;
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 			callback = nullptr;
 		}
-		else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds
+		else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
 			if (i+1 < argc) {
 				timeAfterMainDeployment = argv[i+1]; // Must be long long
+			}
+			else {
+				puts("Expected start time");
+				exit(1);
+			}
+			i++;
+		}
+		else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to start SIFT, *only* used if the IMU fails
+			if (i+1 < argc) {
+			  backupSIFTStartTime = std::stroll(argv[i+1]); // Must be long long
 			}
 			else {
 				puts("Expected start time");
@@ -318,9 +329,13 @@ VADL2022::VADL2022(int argc, char** argv)
 		}
 	}
 
-	if (timeAfterMainDeployment == nullptr && !videoCapture) {
-		puts("Need to provide --sift-start-time");
-		exit(1);
+        if (timeAfterMainDeployment == nullptr && !videoCapture) {
+          puts("Need to provide --sift-start-time");
+          exit(1);
+        }
+        if (backupSIFTStartTime == -1 && !videoCapure) {
+	  puts("Need to provide --backup-sift-start-time");
+          exit(1);
 	}
 
     connect_GPIO();
@@ -348,6 +363,8 @@ VADL2022::VADL2022(int argc, char** argv)
 	catch (const char* e) {
 		std::cout << "VectorNav not connected; continuing without it." << std::endl;
 		vn = false;
+		std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
 	}
 	// mLidar = new LIDAR();
 	// mLds = new LDS();
@@ -360,9 +377,19 @@ VADL2022::VADL2022(int argc, char** argv)
 	else {
 		mLog = nullptr;
 		mImu = nullptr;
-	}
+		
+		// Take the ascent picture 
+		if (videoCapture) {
+		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+                } else {
+		  bool ok = startDelayedSIFT();
+		  if (!ok) {
+		    std::cout << "Failed starting SIFT" << std::endl;
+		  }
+                }
+        }
 
-	cout << "Main: Initiated" << endl;
+        cout << "Main: Initiated" << endl;
 
 	// Start video capture if doing so
         // if (videoCapture) {
@@ -415,7 +442,9 @@ void VADL2022::connect_Python()
 	Py_Initialize();
 	int ret = PyRun_SimpleString("import sys; #print(sys.path); \n\
 print('Python version:', sys.version, 'with executable at', sys.executable) \n\
-for p in ['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python39.zip', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/lib-dynload', '/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib']: \n\
+for p in ['', '/nix/store/ga036m4z5f5g459f334ma90sp83rk7wv-python3-3.9.6-env/lib/python3.9/site-packages', '/nix/store/9gk5f9hwib0xrqyh17sgwfw3z1vk9ach-opencv-4.5.2/lib/python3.9/site-packages', '/nix/store/kn746xv48sp9ix26ja06wx2xv0m1g1jj-python3.9-numpy-1.20.3/lib/python3.9/site-packages', '/nix/store/mj50n3hsqrgfxjmywsz4ymhayjfpqlhf-python3-3.9.6/lib/python3.9/site-packages', '/nix/store/c8jrsv8sqzx3a23mfjhg23lccwsnaipa-lldb-12.0.1/lib/python3.9/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/k9y7xyi8h0fpvsglq04hkggn5pzanb72-python3-3.7.11-env/lib/python3.7/site-packages',
+
+ '/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib']: \n\
     sys.path.append(p); \n\
 #print(sys.path)");
 	if (ret == -1) {
