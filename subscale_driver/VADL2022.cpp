@@ -422,7 +422,7 @@ void VADL2022::connect_GPIO()
 	if (gpioInitialise() < 0)
 	{
 		cout << "GPIO: Failed to Connect" << endl;
-		exit(1);
+		//exit(1);
 	}
 
 	cout << "GPIO: Connected" << endl;
