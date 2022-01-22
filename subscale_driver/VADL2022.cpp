@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <thread>
+#include <chrono>
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
