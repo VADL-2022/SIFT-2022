@@ -35,6 +35,7 @@ namespace backward {
 #include "timers.hpp"
 
 #include "tools/printf.h"
+#include "IMUData.hpp"
 
 #include "Queue.hpp"
 thread_local SIFT_T sift;
@@ -45,6 +46,8 @@ std::mutex lastImageToFirstImageTransformationMutex;
 #ifdef USE_COMMAND_LINE_ARGS
 Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
 #endif
+int driverInput_fd = -1; // File descriptor for reading from the driver program, if any (else it is -1)
+FILE* driverInput_file = NULL;
 
 //// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
 //const int alpha_slider_max = 2;
@@ -277,6 +280,10 @@ int main(int argc, char **argv)
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(time));
             i++;
+        }
+        else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd")) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
+            driverInput_fd = std::stoi(argv[i+1]);
+            driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
         }
 #ifdef SIFTAnatomy_
         else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
@@ -909,6 +916,26 @@ int mainMission(DataSourceT* src,
             puts("not blurry");
         }
         t.logElapsed("blur detection");
+        
+        // IMU
+        if (driverInput_file) {
+            IMUData imu;
+            fscanf(driverInput_file, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+                   ",%f,%f,%f" // yprNed
+                   ",%f,%f,%f,%f" // qtn
+                   ",%f,%f,%f" // rate
+                   ",%f,%f,%f" // accel
+                   ",%f,%f,%f" // mag
+                   ",%f,%f,%f" // temp,pres,dTime
+                   ",%f,%f,%f" // dTheta
+                   ",%f,%f,%f" // dVel
+                   ",%f,%f,%f" // magNed
+                   ",%f,%f,%f" // accelNed
+                   ",%f,%f,%f" // linearAccelBody
+                   ",%f,%f,%f" // linearAccelNed
+                   "," // Nothing after this comma on purpose.
+                   , );
+        }
         // //
         
         std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
