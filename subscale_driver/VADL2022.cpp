@@ -299,7 +299,7 @@ VADL2022::VADL2022(int argc, char** argv)
 		}
 		else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to start SIFT, *only* used if the IMU fails
 			if (i+1 < argc) {
-			  backupSIFTStartTime = std::stroll(argv[i+1]); // Must be long long
+			  backupSIFTStartTime = std::stoll(argv[i+1]); // Must be long long
 			}
 			else {
 				puts("Expected start time");
@@ -335,7 +335,7 @@ VADL2022::VADL2022(int argc, char** argv)
           puts("Need to provide --sift-start-time");
           exit(1);
         }
-        if (backupSIFTStartTime == -1 && !videoCapure) {
+        if (backupSIFTStartTime == -1 && !videoCapture) {
 	  puts("Need to provide --backup-sift-start-time");
           exit(1);
 	}
