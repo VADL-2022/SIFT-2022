@@ -448,7 +448,7 @@ for p in ['', '/nix/store/yc5ilbccacp9npyjr6dayq904w9p49mc-opencv-4.5.2/lib/pyth
 \n\
 ]: \n\
     sys.path.append(p); \n\
-#print(sys.path)");
+print(sys.path)");
 	if (ret == -1) {
 		cout << "Failed to setup Python path" << endl;
 		exit(1);
