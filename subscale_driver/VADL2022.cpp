@@ -446,7 +446,7 @@ void VADL2022::connect_Python()
 print('Python version:', sys.version, 'with executable at', sys.executable) \n\
 for p in ['', '/nix/store/yc5ilbccacp9npyjr6dayq904w9p49mc-opencv-4.5.2/lib/python3.7/site-packages', '/nix/store/2ylqgllg47w0hjylln7gh8xw1d1lx77c-python3.7-numpy-1.20.3/lib/python3.7/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/yr3gsrcqziplz4c0kgp27r08pc9c7iq8-python3-3.7.11-env/lib/python3.7/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', \n\
 \n\
-'/nix/store/yc5ilbccacp9npyjr6dayq904w9p49mc-opencv-4.5.2/lib']: \n\
+]: \n\
     sys.path.append(p); \n\
 #print(sys.path)");
 	if (ret == -1) {
