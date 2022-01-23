@@ -4,11 +4,16 @@
 #include <unistd.h>
 #include "../src/tools/printf.h"
 #include <python3.7m/Python.h>
+#include <pigpio.h>
 
 void stopMain() {
   // Tell python to sigint
   printf_("Telling Python to SIGINT");
   PyErr_SetInterrupt(); //PyErr_SetInterruptEx(SIGINT);
+  
+  printf_("Shutting down pigpio"); // We do what https://github.com/joan2937/pigpio/blob/master/pigpio.c#L5628 does, i.e. the famous `sigHandler: Unhandled signal 2, terminating` message
+  gpioTerminate();
+  printf_("Finished shutting down pigpio");
 }
 
 void ctrlC(int s, siginfo_t *si, void *arg){
