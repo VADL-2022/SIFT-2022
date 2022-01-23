@@ -344,11 +344,13 @@ VADL2022::VADL2022(int argc, char** argv)
           exit(1);
 	}
 
-	// Ensure Python gets sigints and other signals
-	installSignalHandlers();
-
 	connect_GPIO();
 	connect_Python();
+	
+	// Ensure Python gets sigints and other signals
+	// We do this after connect_GPIO() because "For those of us who ended up here wanting to implement their own signal handler, make sure you do your signal() call AFTER you call gpioInitialise(). This will override the pigpio handler." ( https://github.com/fivdi/pigpio/issues/127 )
+	installSignalHandlers();
+	
 	if (sendOnRadio_) {
 		auto ret = sendOnRadio();
 		std::cout << "sendOnRadio returned: " << ret << std::endl;
