@@ -8,16 +8,18 @@
 
 void stopMain() {
   // Tell python to sigint
-  printf_("Telling Python to SIGINT");
+  printf_("Telling Python to SIGINT\n");
   PyErr_SetInterrupt(); //PyErr_SetInterruptEx(SIGINT);
   
-  printf_("Shutting down pigpio"); // We do what https://github.com/joan2937/pigpio/blob/master/pigpio.c#L5628 does, i.e. the famous `sigHandler: Unhandled signal 2, terminating` message
-  gpioTerminate();
-  printf_("Finished shutting down pigpio");
-
   if (!isRunningPython) {
     // Exit since we got a signal while main thread wasn't running python. Note that this means you should only really run python from the main dispatch queue, unless the implementation is improved..
-    printf_("isRunningPython is false, exiting");
+    printf_("isRunningPython is false, cleaning up and exiting\n");
+    
+    printf_("Shutting down pigpio\n"); // We do what https://github.com/joan2937/pigpio/blob/master/pigpio.c#L5628 does, i.e. the famous `sigHandler: Unhandled signal 2, terminating` message
+    gpioTerminate();
+    printf_("Finished shutting down pigpio\n");
+  
+    printf_("Exiting\n");
     exit(1);
   }
 }
