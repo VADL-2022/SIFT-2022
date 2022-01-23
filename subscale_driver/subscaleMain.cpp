@@ -4,7 +4,7 @@
 #include "VADL2022.hpp"
 
 Queue<QueuedFunction, 8> mainDispatchQueue;
-std::atomic<bool> isRunningPython;
+std::atomic<bool> isRunningPython = false;
 
 int main(int argc, char **argv) {
   VADL2022 vadl(argc, argv);
