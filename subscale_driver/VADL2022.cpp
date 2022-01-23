@@ -129,7 +129,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
             std::string(" --sleep-before-running ") +
             std::string(timeAfterMainDeployment) +
             std::string(" --no-preview-window") // --video-file-data-source
-      + (std::string(" --subscale-driver-fd ") + std::to_string(fd[1]))
+      + (std::string(" --subscale-driver-fd ") + std::to_string(fd[0]))
     ;
 
     sift_args[sift_args_size-2] = s.c_str();
