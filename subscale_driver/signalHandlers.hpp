@@ -14,6 +14,12 @@ void stopMain() {
   printf_("Shutting down pigpio"); // We do what https://github.com/joan2937/pigpio/blob/master/pigpio.c#L5628 does, i.e. the famous `sigHandler: Unhandled signal 2, terminating` message
   gpioTerminate();
   printf_("Finished shutting down pigpio");
+
+  if (!isRunningPython) {
+    // Exit since we got a signal while main thread wasn't running python. Note that this means you should only really run python from the main dispatch queue, unless the implementation is improved..
+    printf_("isRunningPython is false, exiting");
+    exit(1);
+  }
 }
 
 void ctrlC(int s, siginfo_t *si, void *arg){
