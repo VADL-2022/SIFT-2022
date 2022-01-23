@@ -281,7 +281,7 @@ int main(int argc, char **argv)
             std::this_thread::sleep_for(std::chrono::milliseconds(time));
             i++;
         }
-        else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd")) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
+        else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
             driverInput_fd = std::stoi(argv[i+1]);
             driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
             i++;
