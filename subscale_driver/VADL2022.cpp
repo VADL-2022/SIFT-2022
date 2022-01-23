@@ -20,7 +20,7 @@
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
 
-using namespace std;
+#include "signalHandlers.hpp"
 
 // G Forces
 const float TAKEOFF_G_FORCE = 1; // Takeoff is 5-7 g's or etc.
@@ -340,7 +340,10 @@ VADL2022::VADL2022(int argc, char** argv)
           exit(1);
 	}
 
-    connect_GPIO();
+	// Ensure Python gets sigints and other signals
+	installSignalHandlers();
+
+	connect_GPIO();
 	connect_Python();
 	if (sendOnRadio_) {
 		auto ret = sendOnRadio();
