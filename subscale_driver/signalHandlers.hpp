@@ -8,7 +8,7 @@
 void stopMain() {
   // Tell python to sigint
   printf_("Telling Python to SIGINT");
-  PyErr_SetInterruptEx(SIGINT);
+  PyErr_SetInterrupt(); //PyErr_SetInterruptEx(SIGINT);
 }
 
 void ctrlC(int s, siginfo_t *si, void *arg){
