@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   while (true) {
     std::cout << "Main dispatch queue waiting for next function..." << std::endl;
     mainDispatchQueue.dequeue(&f);
-    std::cout << "Main dispatch queue executing function with description: " << f.second << std::endl;
+    std::cout << "Main dispatch queue executing function with description: " << f.description << std::endl;
     if (f.type == QueuedFunctionType::Python) {
       isRunningPython = true;
     }
