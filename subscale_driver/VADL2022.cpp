@@ -283,6 +283,7 @@ VADL2022::VADL2022(int argc, char** argv)
 	LOG::UserCallback callback = checkTakeoffCallback;
 	// bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
 	long long backupSIFTStartTime = -1;
+	bool forceNoIMU = false;
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 			callback = nullptr;
@@ -306,6 +307,9 @@ VADL2022::VADL2022(int argc, char** argv)
 				exit(1);
 			}
 			i++;
+		}
+		else if (strcmp(argv[i], "--force-no-imu") == 0) { // Mostly for debugging purposes. This forces the driver to consider the IMU as non-existent even though it might be connected.
+		  forceNoIMU = true;
 		}
 		else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
 			sendOnRadio_ = true;
@@ -357,7 +361,7 @@ VADL2022::VADL2022(int argc, char** argv)
                 }
                 return;
 	}
-	bool vn = true;
+	bool vn = forceNoIMU ? false : true;
 	try {
 		mImu = new IMU();
 	}
@@ -380,6 +384,7 @@ VADL2022::VADL2022(int argc, char** argv)
 		mLog->receive();
 	}
 	else {
+	  if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
 		mLog = nullptr;
 		mImu = nullptr;
 		
