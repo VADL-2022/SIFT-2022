@@ -284,6 +284,7 @@ int main(int argc, char **argv)
         else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
             driverInput_fd = std::stoi(argv[i+1]);
             driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
+            std::cout << "Opened fd " << driverInput_file << " for reading" << std::endl;
             i++;
         }
 #ifdef SIFTAnatomy_
