@@ -365,7 +365,8 @@ VADL2022::VADL2022(int argc, char** argv)
 	}
 	bool vn = forceNoIMU ? false : true;
 	try {
-		mImu = new IMU();
+	  if (vn)
+	    mImu = new IMU();
 	}
 	catch (const vn::not_found &e) {
 		std::cout << "VectorNav not found: vn::not_found: " << e.what() << " ; continuing without it." << std::endl;
