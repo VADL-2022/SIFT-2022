@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "../src/tools/printf.h"
+#include <python3.7m/Python.h>
 
 void stopMain() {
   // Tell python to sigint
@@ -42,7 +43,7 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
     printf_("Caught segfault (%s) at address %p. Running terminate_handler().\n", strsignal(signal), si->si_addr);
     
-    terminate_handler(false);
+    ::terminate_handler(false);
     
     // Print stack trace
     //backward::sh->handleSignal(signal, si, arg);
@@ -56,7 +57,7 @@ void installSignalHandlers() {
     // https://en.cppreference.com/w/cpp/error/set_terminate
     std::set_terminate([](){
         std::cout << "Unhandled exception detected by subscale driver. Running terminate_handler()." << std::endl;
-        terminate_handler(true);
+        ::terminate_handler(true);
         std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
     });
     
