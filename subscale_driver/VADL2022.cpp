@@ -335,13 +335,13 @@ VADL2022::VADL2022(int argc, char** argv)
 		}
 	}
 
-        if (timeAfterMainDeployment == nullptr && !videoCapture) {
-          puts("Need to provide --sift-start-time");
-          exit(1);
-        }
-        if (backupSIFTStartTime == -1 && !videoCapture) {
-	  puts("Need to provide --backup-sift-start-time");
-          exit(1);
+	if (timeAfterMainDeployment == nullptr && !videoCapture && callback != nullptr) {
+		puts("Need to provide --sift-start-time");
+		exit(1);
+	}
+	if (backupSIFTStartTime == -1 && !videoCapture && callback != nullptr) {
+		puts("Need to provide --backup-sift-start-time");
+		exit(1);
 	}
 
 	connect_GPIO();
