@@ -400,21 +400,19 @@ VideoFileDataSource::VideoFileDataSource(int argc, char** argv) {
     std::string filePath = default_filePath;
     bool ensureReadBackwards = false;
     for (int i = 1; i < argc; i++) {
-            if (i+1 < argc) {
-                if (strcmp(argv[i], "--video-file-data-source-path") == 0) {
-                    filePath = argv[i+1];
-                    i++;
-                    readBackwards = false;
+        if (i+1 < argc && strcmp(argv[i], "--video-file-data-source-path") == 0) {
+            filePath = argv[i+1];
+            i++;
+            readBackwards = false;
 #define allowSeek readBackwards // Some weird thing happens on some videos it seems, where even seeking to the end of the video to get the length and then back to the start (in order to obey readBackwards == false) causes cap.read() to fail. This is a workaround.. to disable the workaround, define allowSeek as true.
-                }
-                else if (strcmp(argv[i], "--read-backwards") == 0) {
-                    ensureReadBackwards = true;
-                }
-                else if (i+1 < argc && strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
-                    std::cout << "Using crop for fisheye camera." << '\n';
-                    _crop = true;
-                    i++;
-                }
+        }
+        else if (strcmp(argv[i], "--read-backwards") == 0) {
+            ensureReadBackwards = true;
+        }
+        else if (i+1 < argc && strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
+            std::cout << "Using crop for fisheye camera." << '\n';
+            _crop = true;
+            i++;
         }
     }
     if (ensureReadBackwards) {

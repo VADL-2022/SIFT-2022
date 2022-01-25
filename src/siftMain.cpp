@@ -914,7 +914,9 @@ int mainMission(DataSourceT* src,
         cv::Scalar mean, stddev; // 0:1st channel, 1:2nd channel and 2:3rd channel
         cv::meanStdDev(laplacianImage, mean, stddev, cv::Mat());
         double variance = stddev.val[0] * stddev.val[0];
-        double threshold = 2900; // TODO: dynamically adjust threshold
+        // As variance goes up, image is "less blurry"
+        const double nearBlackImageVariance = 0.0007;
+        double threshold = nearBlackImageVariance; //2900; // TODO: dynamically adjust threshold
 
         printf("Image %zu: Blur detection: variance %f; ", i, variance);
         if (variance <= threshold) {
