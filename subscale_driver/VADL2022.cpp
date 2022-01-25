@@ -471,7 +471,12 @@ void VADL2022::connect_GPIO()
 	cout << "GPIO: Connecting" << endl;
 
 	// Prepare for gpioInitialise() by setting perms, etc.
-	const char* args[] = {"bash", "-c", gpioUserPermissionFixingCommands.c_str(), gpioUserPermissionFixingCommands_arg.c_str(), NULL};
+	const char* args[] = {"bash", "-c", gpioUserPermissionFixingCommands.c_str(), "bash", // {"
+	  // If the -c option is present, then commands are read from string.
+	  // If there are arguments after the string, they are assigned to the positional
+	  // parameters, starting with $0.
+	  // "} -- https://linux.die.net/man/1/bash
+	  gpioUserPermissionFixingCommands_arg.c_str(), NULL};
 	if (!runCommandWithFork(args)) {
 	  std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl;
 	  exit(1);
