@@ -224,7 +224,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 
 			// Let video capture python script know that the main parachute has deployed in order to swap cameras
 			if (videoCapture) {
-				cToPythonLogFile.open("dataOutput/cToPythonLogFile.txt", ios::out | ios::trunc)
+				cToPythonLogFile.open("dataOutput/cToPythonLogFile.txt", ios::out | ios::trunc);
 				if (cToPythonLogFile.is_open()) {
 					cToPythonLogFile << "Deployment\n";
 					cToPythonLogFile.close();
@@ -419,7 +419,7 @@ VADL2022::VADL2022(int argc, char** argv)
 		
 		// Take the ascent video
 		if (videoCapture) {
-			cToPythonLogFile.open ("dataOutput/cToPythonLogFile.txt", ios::out | ios::trunc)
+			cToPythonLogFile.open ("dataOutput/cToPythonLogFile.txt", ios::out | ios::trunc);
 			if (cToPythonLogFile.is_open()) {
 					cToPythonLogFile << "";
 					cToPythonLogFile.close();
