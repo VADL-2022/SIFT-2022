@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <thread>
 #include <chrono>
+#include <pigpio.h>
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
@@ -224,13 +225,13 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 
 			// Let video capture python script know that the main parachute has deployed in order to swap cameras
 			if (videoCapture) {
-				cToPythonLogFile.open("dataOutput/cToPythonLogFile.txt", ios::out | ios::trunc);
-				if (cToPythonLogFile.is_open()) {
-					cToPythonLogFile << "Deployment\n";
-					cToPythonLogFile.close();
-				} else {
-					std::cout << "Unable to open C to Python log file.";
-				}
+				// Stop the python videocapture script
+				raise(SIGINT);
+
+				gpioSetMode(26, PI_OUTPUT); // Set GPIO18 as output.
+
+				// Run the python videocapture script again on the second camera
+				pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
 			} else {
 				// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
 				bool ok = startDelayedSIFT();
@@ -367,6 +368,15 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	connect_GPIO();
 	connect_Python();
+
+	if (gpioInitialise() < 0) {
+		// pigpio initialisation failed.
+		std::cout << "Failed to initialize pigpio" << std::endl;
+	} else {
+		// pigpio initialization succeeded
+		std::cout << "PiGPIO initialized" << std::endl;
+		gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down.
+	}
 	
 	// Ensure Python gets sigints and other signals
 	// We do this after connect_GPIO() because "For those of us who ended up here wanting to implement their own signal handler, make sure you do your signal() call AFTER you call gpioInitialise(). This will override the pigpio handler." ( https://github.com/fivdi/pigpio/issues/127 )
@@ -419,13 +429,6 @@ VADL2022::VADL2022(int argc, char** argv)
 		
 		// Take the ascent video
 		if (videoCapture) {
-			cToPythonLogFile.open ("dataOutput/cToPythonLogFile.txt", ios::out | ios::trunc);
-			if (cToPythonLogFile.is_open()) {
-					cToPythonLogFile << "";
-					cToPythonLogFile.close();
-				} else {
-					std::cout << "Unable to initialize C to Python log file.";
-				}
 		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
         } else {
 		  bool ok = startDelayedSIFT();
