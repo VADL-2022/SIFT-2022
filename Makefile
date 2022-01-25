@@ -220,8 +220,8 @@ SUBSCALE_SRC := ./subscale_driver/
 SUBSCALE_SOURCES := $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp)) $(wildcard src/tools/backtrace/*.cpp)
 SUBSCALE_SOURCES_C := $(wildcard $(SUBSCALE_SRC)/*.c) $(wildcard $(SUBSCALE_SRC)/lib/*.c) src/tools/printf.c src/tools/_putchar.c
 SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o) $(SUBSCALE_SOURCES_C:%.c=%.o)
-$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,$(SUBSCALE_COMMON_COMMANDS)))
-$(eval $(call OBJECTS_LINKING_template,subscale,debug,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_DEBUG) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,$(SUBSCALE_COMMON_COMMANDS))) # `sudo setcap cap_sys_rawio+ep head` is from https://unix.stackexchange.com/questions/475800/non-root-read-access-to-dev-mem-by-kmem-group-members-fails ; also made it run the other stuff from https://raspberrypi.stackexchange.com/questions/40105/access-gpio-pins-without-root-no-access-to-dev-mem-try-running-as-root
+$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@))
+$(eval $(call OBJECTS_LINKING_template,subscale,debug,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_DEBUG) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@)) # `sudo setcap cap_sys_rawio+ep head` is from https://unix.stackexchange.com/questions/475800/non-root-read-access-to-dev-mem-by-kmem-group-members-fails ; also made it run the other stuff from https://raspberrypi.stackexchange.com/questions/40105/access-gpio-pins-without-root-no-access-to-dev-mem-try-running-as-root
 
 ############################# VectorNav targets #############################
 
