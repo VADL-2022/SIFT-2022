@@ -36,10 +36,11 @@ struct DataSourceBase {
     MaybeVirtual double fps() const MaybePureVirtual;
     MaybeVirtual double timeMilliseconds() const MaybePureVirtual;
     
-    MaybeVirtual bool shouldCrop() const MaybePureVirtual;
-    MaybeVirtual cv::Rect crop() const MaybePureVirtual;
+    MaybeVirtual bool shouldCrop() const;
+    MaybeVirtual cv::Rect crop() const;
     
     size_t currentIndex; // Index to save into next
+    bool _crop = true;
 };
 
 struct FolderDataSource : public DataSourceBase

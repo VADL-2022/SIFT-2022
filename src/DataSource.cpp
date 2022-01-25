@@ -78,6 +78,11 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
                 std::cout << "Using size " << sizeFrame << '\n';
                 i += 2;
             }
+            else if (i+1 < argc && strcmp(argv[i], "--no-crop-for-fisheye-camera") == 0) {
+                std::cout << "Not using crop for fisheye camera." << '\n';
+                _crop = false;
+                i++;
+            }
 //            else {
 //                goto else_;
 //            }
@@ -231,19 +236,14 @@ OpenCVVideoCaptureDataSource::OpenCVVideoCaptureDataSource() {
     currentIndex = 0;
 }
 
-bool OpenCVVideoCaptureDataSource::shouldCrop() const {
-    #ifdef CROP_FOR_FISHEYE_CAMERA
-    return true;
-    #else
-    return false;
-    #endif
+bool DataSourceBase::shouldCrop() const {
+    return _crop;
 }
-cv::Rect OpenCVVideoCaptureDataSource::crop() const {
-    #ifdef CROP_FOR_FISHEYE_CAMERA
-    return cv::Rect(cv::Point(137,62), cv::Point(490,401));
-    #else
+cv::Rect DataSourceBase::crop() const {
+    if (shouldCrop()) {
+        return cv::Rect(cv::Point(137,62), cv::Point(490,401));
+    }
     return cv::Rect();
-    #endif
 }
 
 const double OpenCVVideoCaptureDataSource::default_fps =
@@ -276,6 +276,11 @@ CameraDataSource::CameraDataSource(int argc, char** argv) {
                 sizeFrame = getSizeFrame(argv[i+1], argv[i+2]);
                 std::cout << "Using size " << sizeFrame << '\n';
                 i += 2;
+            }
+            else if (i+1 < argc && strcmp(argv[i], "--no-crop-for-fisheye-camera") == 0) {
+                std::cout << "Not using crop for fisheye camera." << '\n';
+                _crop = false;
+                i++;
             }
 //            else {
 //                goto else_;
@@ -404,6 +409,11 @@ VideoFileDataSource::VideoFileDataSource(int argc, char** argv) {
                 }
                 else if (strcmp(argv[i], "--read-backwards") == 0) {
                     ensureReadBackwards = true;
+                }
+                else if (i+1 < argc && strcmp(argv[i], "--no-crop-for-fisheye-camera") == 0) {
+                    std::cout << "Not using crop for fisheye camera." << '\n';
+                    _crop = false;
+                    i++;
                 }
         }
     }
