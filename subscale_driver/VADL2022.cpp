@@ -96,30 +96,30 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
     return false;
   }
   
+  // Fill in the sift_args (do this here instead of in the child process because {"
+  // After a fork() in a multithreaded program, the child can
+  // safely call only async-signal-safe functions (see
+  // signal-safety(7)) until such time as it calls execve(2).
+  // "} ( https://man7.org/linux/man-pages/man2/fork.2.html )
+  // and I don't think std::string is async-signal-safe because it could call malloc
+  std::string s =
+      "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
+      "--main-mission " +
+  (siftParams != nullptr
+	       ? ("--sift-params " + std::string(siftParams))
+	       : std::string("")) +
+	  std::string(" --sleep-before-running ") +
+	  std::string(timeAfterMainDeployment) +
+	  std::string(" --no-preview-window") // --video-file-data-source
+    + (std::string(" --subscale-driver-fd ") + std::to_string(fd[0]))
+  ;
+  
   puts("Forking");
   pid_t pid = fork(); // create a new child process
   if (pid > 0) { // Parent process
     close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
     
     toSIFT.open(fd[1]);
-    
-    // Fill in the sift_args (do this here instead of in the child process because {"
-    // After a fork() in a multithreaded program, the child can
-    // safely call only async-signal-safe functions (see
-    // signal-safety(7)) until such time as it calls execve(2).
-    // "} ( https://man7.org/linux/man-pages/man2/fork.2.html )
-    // and I don't think std::string is async-signal-safe because it could call malloc
-    std::string s =
-        "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
-        "--main-mission " +
-    (siftParams != nullptr
-                 ? ("--sift-params " + std::string(siftParams))
-                 : std::string("")) +
-            std::string(" --sleep-before-running ") +
-            std::string(timeAfterMainDeployment) +
-            std::string(" --no-preview-window") // --video-file-data-source
-      + (std::string(" --subscale-driver-fd ") + std::to_string(fd[0]))
-    ;
     
     int status = 0;
     if (wait(&status) != -1) {
