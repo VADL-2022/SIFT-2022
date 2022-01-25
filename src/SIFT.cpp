@@ -118,6 +118,10 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
     }
     
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+    if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
+        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated." << std::endl;
+        return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
+    }
 
     if (CMD_CONFIG(mainMission)) {
 #ifdef USE_COMMAND_LINE_ARGS
@@ -234,6 +238,10 @@ void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage
     
     // Better:
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+    if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
+        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated." << std::endl;
+        return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
+    }
     
     if (CMD_CONFIG(mainMission)) {
 #ifdef USE_COMMAND_LINE_ARGS
@@ -409,6 +417,10 @@ void SIFTGPU::findHomography(ProcessedImage<SIFTGPU>& img1, ProcessedImage<SIFTG
     }
     
     img2.transformation = cv::findHomography(obj, scene, cv::LMEDS /*cv::RANSAC*/ );
+    if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
+        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated." << std::endl;
+        return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
+    }
 
     if (CMD_CONFIG(mainMission)) {
 #ifdef USE_COMMAND_LINE_ARGS
