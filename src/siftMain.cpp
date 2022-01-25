@@ -903,6 +903,7 @@ int mainMission(DataSourceT* src,
         //auto path = src->nameForIndex(i);
         
         // Apply filters to possibly discard the image //
+        bool discardImage = false;
         // Blur detection
         t.reset();
         cv::Mat laplacianImage;
@@ -919,6 +920,7 @@ int mainMission(DataSourceT* src,
         if (variance <= threshold) {
             // Blurry
             puts("blurry");
+            discardImage = true;
         } else {
             // Not blurry
             puts("not blurry");
@@ -965,6 +967,22 @@ int mainMission(DataSourceT* src,
         }
         // //
         
+        if (discardImage) {
+            // Enqueue null image
+            processedImageQueue.enqueue(greyscale,
+                                    shared_keypoints_ptr(),
+                                    std::shared_ptr<struct sift_keypoint_std>(),
+                                    0,
+                                    shared_keypoints_ptr(),
+                                    shared_keypoints_ptr(),
+                                    shared_keypoints_ptr(),
+                                    cv::Mat(),
+                                    p,
+                                    i);
+            
+            // Don't push a function for this image or save it as a possible firstImage
+            goto skipImage;
+        }
         std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
         tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
 //            OPTICK_EVENT();
@@ -1117,6 +1135,7 @@ int mainMission(DataSourceT* src,
             firstImage = mat;
         }
         
+        skipImage:
 #ifdef USE_COMMAND_LINE_ARGS
         // Show images if we have them and if we are showing a preview window
         if (!canvasesReadyQueue.empty() && CMD_CONFIG(showPreviewWindow())) {
