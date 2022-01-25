@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <thread>
 #include <chrono>
-#include <pigpio.h>
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
@@ -228,7 +227,8 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 				// Stop the python videocapture script
 				raise(SIGINT);
 
-				gpioSetMode(26, PI_OUTPUT); // Set GPIO18 as output.
+				gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
+				gpioWrite(26, 1); // Set GPIO26 high.
 
 				// Run the python videocapture script again on the second camera
 				pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
@@ -368,15 +368,6 @@ VADL2022::VADL2022(int argc, char** argv)
 
 	connect_GPIO();
 	connect_Python();
-
-	if (gpioInitialise() < 0) {
-		// pigpio initialisation failed.
-		std::cout << "Failed to initialize pigpio" << std::endl;
-	} else {
-		// pigpio initialization succeeded
-		std::cout << "PiGPIO initialized" << std::endl;
-		gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down.
-	}
 	
 	// Ensure Python gets sigints and other signals
 	// We do this after connect_GPIO() because "For those of us who ended up here wanting to implement their own signal handler, make sure you do your signal() call AFTER you call gpioInitialise(). This will override the pigpio handler." ( https://github.com/fivdi/pigpio/issues/127 )
@@ -511,6 +502,8 @@ void VADL2022::connect_GPIO()
 		cout << "GPIO: Failed to Connect" << endl;
 		//exit(1);
 	}
+
+	gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down on pin 26
 
 	cout << "GPIO: Connected" << endl;
 }
