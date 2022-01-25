@@ -281,7 +281,7 @@ VADL2022::VADL2022(int argc, char** argv)
 {
 	cout << "Main: Initiating" << endl;
 
-	gpioUserPermissionFixingCommands = std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev && sudo setcap cap_sys_rawio+ep \"$1\"") // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
+	gpioUserPermissionFixingCommands = std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev && sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
 	  
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
@@ -456,10 +456,10 @@ bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the 
     }
   } else if (pid == 0) { // Child process
     execvp((char*)command, (char**)commandWithArgs); // one variant of exec
-    perror("Failed to run execvp to run command \"%s\"", command); // Will only print if error with execvp.
+    printf("Failed to run execvp to run command \"%s\": %s\n", command, strerror(errno)); // Will only print if error with execvp.
     return false;
   } else {
-    perror("Error with fork");
+    printf("Error with fork for command \"%s\": %s\n", strerror(errno));
     return false;
   }
   return true;
