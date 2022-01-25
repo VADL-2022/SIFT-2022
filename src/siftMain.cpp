@@ -286,10 +286,10 @@ int main(int argc, char **argv)
             driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
             if (driverInput_file == nullptr) {
                 perror("fdopen failed");
-                std::cout << "Continuing despite failure to open IMU fd (" << driverInput_fd << ")" << std::endl;
+                std::cout << "Continuing despite failure to open subscale driver fd (" << driverInput_fd << ")" << std::endl;
             }
             else {
-                std::cout << "Opened fd " << driverInput_fd << " for reading" << std::endl;
+                std::cout << "Opened subscale driver fd " << driverInput_fd << " for reading" << std::endl;
             }
             i++;
         }
@@ -928,6 +928,10 @@ int mainMission(DataSourceT* src,
         // IMU
         if (driverInput_file) {
             IMUData imu;
+            // TODO: try using %a to read (and to write in the subscale driver) hex floats instead of a human-readable string (%f), to prevent slight loss of precision?
+            // NOTE: this blocks until the fd gets data. Probably not an issue..
+            t.reset();
+            std::cout << "Grabbing from subscale driver fd..." << std::endl;
             fscanf(driverInput_file, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
                    ",%f,%f,%f" // yprNed
                    ",%f,%f,%f,%f" // qtn
@@ -957,6 +961,7 @@ int mainMission(DataSourceT* src,
                    &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
                    );
             std::cout << "Linear accel NED: " << imu.linearAccelNed << std::endl;
+            t.logElapsed("grabbing from subscale driver fd");
         }
         // //
         

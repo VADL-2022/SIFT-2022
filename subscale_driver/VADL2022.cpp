@@ -37,6 +37,8 @@ bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = fal
 // Sift params initialization
 const char* siftParams = nullptr;
 
+std::string gpioUserPermissionFixingCommands;
+
 // Forward declare main deployment callback
 void checkMainDeploymentCallback(LOG *log, float fseconds);
 // Other forward declarations
@@ -137,7 +139,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
     const char** args = sift_args;
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
-    return false; //exit(1); // TODO: saves IMU data? If not, set atexit or std terminate handler
+    return false; //exit(1); // [DONETODO: answer is yes, because of flushing with endl] saves IMU data? If not, set atexit or std terminate handler
   } else {
     perror("Error with fork");
     return false;
@@ -279,6 +281,8 @@ VADL2022::VADL2022(int argc, char** argv)
 {
 	cout << "Main: Initiating" << endl;
 
+	gpioUserPermissionFixingCommands = std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev && sudo setcap cap_sys_rawio+ep \"$1\"") // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
+	  
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
 	// bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
@@ -432,9 +436,43 @@ VADL2022::~VADL2022()
 	cout << "Main: Destoryed" << endl;
 }
 
+bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the last element */) {
+  const char* command = commandWithArgs[0];
+  printf("Forking to run command \"%s\"\n", command);
+  pid_t pid = fork(); // create a new child process
+  if (pid > 0) { // Parent process
+    int status = 0;
+    if (wait(&status) != -1) {
+      if (WIFEXITED(status)) {
+	// now check to see what its exit status was
+	printf("The exit status for command \"%s\" was: %d\n", command, WEXITSTATUS(status));
+      } else if (WIFSIGNALED(status)) {
+	// it was killed by a signal
+	printf("The signal that killed command \"%s\" was %d\n", command, WTERMSIG(status));
+      }
+    } else {
+      printf("Error waiting for command \"%s\"!\n", command);
+      return false;
+    }
+  } else if (pid == 0) { // Child process
+    execvp((char*)command, (char**)commandWithArgs); // one variant of exec
+    perror("Failed to run execvp to run command \"%s\"", command); // Will only print if error with execvp.
+    return false;
+  } else {
+    perror("Error with fork");
+    return false;
+  }
+  return true;
+}
 void VADL2022::connect_GPIO()
 {
 	cout << "GPIO: Connecting" << endl;
+
+	// Prepare for gpioInitialise() by setting perms, etc.
+	if (!runCommandWithFork({"bash", gpioUserPermissionFixingCommands.c_str(), "", NULL})) {
+	  std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl;
+	  exit(1);
+	} 
 
 	if (gpioInitialise() < 0)
 	{
