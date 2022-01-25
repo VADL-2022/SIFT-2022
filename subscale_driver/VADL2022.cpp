@@ -471,7 +471,8 @@ void VADL2022::connect_GPIO()
 	cout << "GPIO: Connecting" << endl;
 
 	// Prepare for gpioInitialise() by setting perms, etc.
-	if (!runCommandWithFork({"bash", gpioUserPermissionFixingCommands.c_str(), gpioUserPermissionFixingCommands_arg.c_str(), NULL})) {
+	const char* args[] = {"bash", gpioUserPermissionFixingCommands.c_str(), gpioUserPermissionFixingCommands_arg.c_str(), NULL};
+	if (!runCommandWithFork(args)) {
 	  std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl;
 	  exit(1);
 	} 
