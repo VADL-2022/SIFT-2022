@@ -33,7 +33,7 @@ const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Mi
 const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81; // Meters per second squared
 const float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 ; // Meters per second squared
 // Command Line Args
-bool sendOnRadio_ = false, siftOnly = false, videoCapture = false; imuOnly = false;
+bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false;
 // Sift params initialization
 const char* siftParams = nullptr;
 
