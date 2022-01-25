@@ -33,7 +33,7 @@ const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Mi
 const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81; // Meters per second squared
 const float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 ; // Meters per second squared
 // Command Line Args
-bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
+bool sendOnRadio_ = false, siftOnly = false, videoCapture = false; imuOnly = false;
 // Sift params initialization
 const char* siftParams = nullptr;
 
@@ -287,6 +287,7 @@ VADL2022::VADL2022(int argc, char** argv)
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
 			callback = nullptr;
+			imuOnly = true;
 		}
 		else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
 			if (i+1 < argc) {
@@ -335,11 +336,11 @@ VADL2022::VADL2022(int argc, char** argv)
 		}
 	}
 
-	if (timeAfterMainDeployment == nullptr && !videoCapture && callback != nullptr) {
+	if (timeAfterMainDeployment == nullptr && !videoCapture && !imuOnly) {
 		puts("Need to provide --sift-start-time");
 		exit(1);
 	}
-	if (backupSIFTStartTime == -1 && !videoCapture && callback != nullptr) {
+	if (backupSIFTStartTime == -1 && !videoCapture && !imuOnly) {
 		puts("Need to provide --backup-sift-start-time");
 		exit(1);
 	}
@@ -369,7 +370,12 @@ VADL2022::VADL2022(int argc, char** argv)
 	    mImu = new IMU();
 	}
 	catch (const vn::not_found &e) {
-		std::cout << "VectorNav not found: vn::not_found: " << e.what() << " ; continuing without it." << std::endl;
+		std::cout << "VectorNav not found: vn::not_found: " << e.what() << std::end;
+		if (imuOnly) {
+			exit(1);
+		} else {
+			std::cout << " ; continuing without it." << std::endl;
+		}
 		vn=false;
 	}
 	catch (const char* e) {
@@ -394,13 +400,13 @@ VADL2022::VADL2022(int argc, char** argv)
 		// Take the ascent picture 
 		if (videoCapture) {
 		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
-                } else {
+        } else {
 		  bool ok = startDelayedSIFT();
 		  if (!ok) {
 		    std::cout << "Failed starting SIFT" << std::endl;
 		  }
-                }
         }
+    }
 
         cout << "Main: Initiated" << endl;
 
