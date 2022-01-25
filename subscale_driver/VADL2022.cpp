@@ -40,6 +40,9 @@ const char* siftParams = nullptr;
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
 
+// Python log file
+ofstream cToPythonLogFile;
+
 // Forward declare main deployment callback
 void checkMainDeploymentCallback(LOG *log, float fseconds);
 // Other forward declarations
@@ -226,14 +229,24 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 			puts("Target time reached, main parachute has deployed");
 			v->startTime = -1; // Reset timer
 
-			// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-			if (!videoCapture) {
+			// Let video capture python script know that the main parachute has deployed in order to swap cameras
+			if (videoCapture) {
+				// Stop the python videocapture script
+				raise(SIGINT);
+
+				gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
+				gpioWrite(26, 1); // Set GPIO26 high.
+
+				// Run the python videocapture script again on the second camera
+				pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+			} else {
+				// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
 				bool ok = startDelayedSIFT();
-                                if (!ok) {
+				if (!ok) {
 				  // Continue with this error, we might as well try recording IMU data at least..
-                                }
+				}
 				g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
-                        }
+			}
 		}
 	}
 	else {
@@ -409,19 +422,17 @@ VADL2022::VADL2022(int argc, char** argv)
 	}
 	else {
 	  if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
-          mLog = nullptr;
-          mImu = nullptr;
-
-          // Take the ascent picture
-          if (videoCapture) {
-            pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
-          }
-	  else {
-            bool ok = startDelayedSIFT();
-            if (!ok) {
-              std::cout << "Failed starting SIFT" << std::endl;
-            }
-          }
+		mLog = nullptr;
+		mImu = nullptr;
+		
+		// Take the ascent video
+		if (videoCapture) {
+		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+        } else {
+		  bool ok = startDelayedSIFT();
+		  if (!ok) {
+		    std::cout << "Failed starting SIFT" << std::endl;
+		  }
         }
     }
 
@@ -498,6 +509,8 @@ void VADL2022::connect_GPIO()
 		cout << "GPIO: Failed to Connect" << endl;
 		//exit(1);
 	}
+
+	gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down on pin 26
 
 	cout << "GPIO: Connected" << endl;
 }
