@@ -293,6 +293,9 @@ int main(int argc, char **argv)
             }
             i++;
         }
+        else if (strcmp(argv[i], "--debug-no-std-terminate") == 0) { // Disables the SIFT unhandled exception handler for C++ exceptions. Use for lldb purposes.
+            cfg.useSetTerminate = false;
+        }
 #ifdef SIFTAnatomy_
         else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
             for (int j = i+1; j < argc; j++) {
@@ -521,12 +524,14 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 }
 // Installs signal handlers for the current thread.
 void installSignalHandlers() {
-    // https://en.cppreference.com/w/cpp/error/set_terminate
-    std::set_terminate([](){
-        std::cout << "Unhandled exception detected by SIFT. Running terminate_handler()." << std::endl;
-        terminate_handler(true);
-        std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
-    });
+    if (CMD_CONFIG(useSetTerminate)) {
+        // https://en.cppreference.com/w/cpp/error/set_terminate
+        std::set_terminate([](){
+            std::cout << "Unhandled exception detected by SIFT. Running terminate_handler()." << std::endl;
+            terminate_handler(true);
+            std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
+        });
+    }
     
     // Install ctrl-c handler
     // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
