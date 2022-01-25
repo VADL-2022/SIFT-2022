@@ -228,7 +228,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 					cToPythonLogFile << "Deployment\n";
 					cToPythonLogFile.close();
 				} else {
-					std::cout << "Unable to open C to Python log file."
+					std::cout << "Unable to open C to Python log file.";
 				}
 			} else {
 				// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
@@ -422,7 +422,7 @@ VADL2022::VADL2022(int argc, char** argv)
 					cToPythonLogFile << "";
 					cToPythonLogFile.close();
 				} else {
-					std::cout << "Unable to initialize C to Python log file."
+					std::cout << "Unable to initialize C to Python log file.";
 				}
 		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
         } else {
