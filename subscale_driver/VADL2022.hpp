@@ -9,8 +9,8 @@ using namespace std;
 class VADL2022
 {
 public:
-    LOG *mLog;     // LOG
-    IMU *mImu;     // IMU
+    LOG *mLog = nullptr;     // LOG
+    IMU *mImu = nullptr;     // IMU
     // LIDAR *mLidar; // LIDAR
     // LDS *mLds;     // LDS
     // MOTOR *mMotor; // ODRIVE

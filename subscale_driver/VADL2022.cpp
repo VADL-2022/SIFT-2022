@@ -100,6 +100,24 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
     
     toSIFT.open(fd[1]);
     
+    // Fill in the sift_args (do this here instead of in the child process because {"
+    // After a fork() in a multithreaded program, the child can
+    // safely call only async-signal-safe functions (see
+    // signal-safety(7)) until such time as it calls execve(2).
+    // "} ( https://man7.org/linux/man-pages/man2/fork.2.html )
+    // and I don't think std::string is async-signal-safe because it could call malloc
+    std::string s =
+        "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
+        "--main-mission " +
+    (siftParams != nullptr
+                 ? ("--sift-params " + std::string(siftParams))
+                 : std::string("")) +
+            std::string(" --sleep-before-running ") +
+            std::string(timeAfterMainDeployment) +
+            std::string(" --no-preview-window") // --video-file-data-source
+      + (std::string(" --subscale-driver-fd ") + std::to_string(fd[0]))
+    ;
+    
     int status = 0;
     if (wait(&status) != -1) {
       if (WIFEXITED(status)) {
@@ -122,19 +140,6 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
   } else if (pid == 0) { // Child process
     close(fd[1]); // Close write end of the pipe since we'll be receiving IMU data from the parent process on this pipe, not writing to it from the child process.
     
-    // Fill in the sift_args
-    std::string s =
-        "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
-        "--main-mission " +
-    (siftParams != nullptr
-                 ? ("--sift-params " + std::string(siftParams))
-                 : std::string("")) +
-            std::string(" --sleep-before-running ") +
-            std::string(timeAfterMainDeployment) +
-            std::string(" --no-preview-window") // --video-file-data-source
-      + (std::string(" --subscale-driver-fd ") + std::to_string(fd[0]))
-    ;
-
     sift_args[sift_args_size-2] = s.c_str();
   
     const char** args = sift_args;
@@ -170,6 +175,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       #endif
       
       puts("Target time reached, the rocket has launched");
+      v->startTime = -1; // Reset timer so we don't detect a main parachute deployment afterwards (although IMU would have to report higher g's to do that which is unlikely)
       
     // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
     //   bool ok = startDelayedSIFT();
@@ -218,6 +224,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 			#endif
 
 			puts("Target time reached, main parachute has deployed");
+			v->startTime = -1; // Reset timer
 
 			// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
 			if (!videoCapture) {
@@ -402,17 +409,19 @@ VADL2022::VADL2022(int argc, char** argv)
 	}
 	else {
 	  if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
-		mLog = nullptr;
-		mImu = nullptr;
-		
-		// Take the ascent picture 
-		if (videoCapture) {
-		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
-        } else {
-		  bool ok = startDelayedSIFT();
-		  if (!ok) {
-		    std::cout << "Failed starting SIFT" << std::endl;
-		  }
+          mLog = nullptr;
+          mImu = nullptr;
+
+          // Take the ascent picture
+          if (videoCapture) {
+            pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+          }
+	  else {
+            bool ok = startDelayedSIFT();
+            if (!ok) {
+              std::cout << "Failed starting SIFT" << std::endl;
+            }
+          }
         }
     }
 
