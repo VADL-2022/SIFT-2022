@@ -38,6 +38,7 @@ bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = fal
 const char* siftParams = nullptr;
 
 std::string gpioUserPermissionFixingCommands;
+std::string gpioUserPermissionFixingCommands_arg;
 
 // Forward declare main deployment callback
 void checkMainDeploymentCallback(LOG *log, float fseconds);
@@ -282,6 +283,7 @@ VADL2022::VADL2022(int argc, char** argv)
 	cout << "Main: Initiating" << endl;
 
 	gpioUserPermissionFixingCommands = std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev && sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
+	gpioUserPermissionFixingCommands_arg = argv[0];
 	  
 	// Parse command-line args
 	LOG::UserCallback callback = checkTakeoffCallback;
@@ -469,7 +471,7 @@ void VADL2022::connect_GPIO()
 	cout << "GPIO: Connecting" << endl;
 
 	// Prepare for gpioInitialise() by setting perms, etc.
-	if (!runCommandWithFork({"bash", gpioUserPermissionFixingCommands.c_str(), "", NULL})) {
+	if (!runCommandWithFork({"bash", gpioUserPermissionFixingCommands.c_str(), gpioUserPermissionFixingCommands_arg.c_str(), NULL})) {
 	  std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl;
 	  exit(1);
 	} 
