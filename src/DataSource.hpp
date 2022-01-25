@@ -40,7 +40,7 @@ struct DataSourceBase {
     MaybeVirtual cv::Rect crop() const;
     
     size_t currentIndex; // Index to save into next
-    bool _crop = true;
+    bool _crop = false;
 };
 
 struct FolderDataSource : public DataSourceBase
@@ -63,8 +63,8 @@ struct FolderDataSource : public DataSourceBase
     double fps() const { return DBL_MAX; }
     double timeMilliseconds() const { return 0; }
     
-    bool shouldCrop() const { return false; }
-    cv::Rect crop() const { return cv::Rect(); }
+//    bool shouldCrop() const { return false; }
+//    cv::Rect crop() const { return cv::Rect(); }
     
     size_t currentIndex; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
@@ -94,8 +94,8 @@ struct OpenCVVideoCaptureDataSource : public DataSourceBase
     double fps() const { return wantsCustomFPS() ? wantedFPS.value() : cap.get(cv::CAP_PROP_FPS); }
     double timeMilliseconds() const { return cap.get(cv::CAP_PROP_POS_MSEC); }
     
-    bool shouldCrop() const;
-    cv::Rect crop() const;
+//    bool shouldCrop() const;
+//    cv::Rect crop() const;
     
 protected:
     std::optional<double> wantedFPS;
