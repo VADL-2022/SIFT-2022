@@ -370,7 +370,7 @@ VADL2022::VADL2022(int argc, char** argv)
 	    mImu = new IMU();
 	}
 	catch (const vn::not_found &e) {
-		std::cout << "VectorNav not found: vn::not_found: " << e.what() << std::end;
+		std::cout << "VectorNav not found: vn::not_found: " << e.what();
 		if (imuOnly) {
 			exit(1);
 		} else {
