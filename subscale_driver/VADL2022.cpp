@@ -40,6 +40,9 @@ const char* siftParams = nullptr;
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
 
+// Python log file
+ofstream cToPythonLogFile;
+
 // Forward declare main deployment callback
 void checkMainDeploymentCallback(LOG *log, float fseconds);
 // Other forward declarations
@@ -219,14 +222,19 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 
 			puts("Target time reached, main parachute has deployed");
 
-			// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-			if (!videoCapture) {
+			// Let video capture python script know that the main parachute has deployed in order to swap cameras
+			if (videoCapture) {
+				cToPythonLogFile.open ("dataOutput/cToPythonLogFile.txt", ios::out | ios::trunc);
+				cToPythonLogFile << "Deployment\n";
+				cToPythonLogFile.close();
+			} else {
+				// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
 				bool ok = startDelayedSIFT();
-                                if (!ok) {
+				if (!ok) {
 				  // Continue with this error, we might as well try recording IMU data at least..
-                                }
+				}
 				g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
-                        }
+			}
 		}
 	}
 	else {
@@ -405,8 +413,11 @@ VADL2022::VADL2022(int argc, char** argv)
 		mLog = nullptr;
 		mImu = nullptr;
 		
-		// Take the ascent picture 
+		// Take the ascent video
 		if (videoCapture) {
+			cToPythonLogFile.open ("dataOutput/cToPythonLogFile.txt", ios::out | ios::trunc);
+			cToPythonLogFile << "";
+			cToPythonLogFile.close();
 		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
         } else {
 		  bool ok = startDelayedSIFT();
