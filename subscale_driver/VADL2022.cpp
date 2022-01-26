@@ -39,7 +39,6 @@ const char* siftParams = nullptr;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
-std::mutex siftCommandLineMutex;
 std::string siftCommandLine;
   const char *sift_args[] =
     {
