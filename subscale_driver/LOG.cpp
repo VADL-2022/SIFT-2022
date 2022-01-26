@@ -29,7 +29,7 @@ void LOG::callback(void *userData)
       if (data->flushToLogEveryNMilliseconds == 0) {
 	flush = true;
       }
-      else if (data->fseconds_lastFlush == -1 || flushToLogEveryNSeconds > fseconds - data->fseconds_lastFlush) {
+      else if (data->fseconds_lastFlush == -1 || fseconds - data->fseconds_lastFlush > flushToLogEveryNSeconds) {
 	flush = true;
 	data->fseconds_lastFlush = fseconds;
       }
