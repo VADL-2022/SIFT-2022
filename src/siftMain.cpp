@@ -205,7 +205,7 @@ int main(int argc, char **argv)
     
 //#define SEGFAULT_TEST
 //#define SEGFAULT_TEST2
-#define PYTHON_TEST
+//#define PYTHON_TEST
 #ifdef SEGFAULT_TEST
     char* a = nullptr;
     *a = 0;
