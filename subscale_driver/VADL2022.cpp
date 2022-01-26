@@ -256,6 +256,8 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
   float timeSeconds = log->mImu->timestamp / 1.0e9;
+  fseconds -= fsecondsOffset;
+  timeSeconds -= timeSecondsOffset;
   printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
@@ -330,6 +332,8 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   if (toSIFT.isOpen()) {
   // Check for IMU failure first
   float timeSeconds = log->mImu->timestamp / 1.0e9;
+  fseconds -= fsecondsOffset;
+  timeSeconds -= timeSecondsOffset;
   printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
