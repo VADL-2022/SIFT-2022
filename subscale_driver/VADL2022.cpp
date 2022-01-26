@@ -181,12 +181,22 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
   return std::chrono::duration_cast<result_t>(clock_t::now() - start);
 }
 
+float fsecondsOffset = FLT_MIN;
+float timeSecondsOffset = 0;
+
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on takeoff
 void checkTakeoffCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
   float timeSeconds = log->mImu->timestamp / 1.0e9;
+  // First run: set fsecondsOffset
+  if (fsecondsOffset == FLT_MIN) {
+    fsecondsOffset = fseconds;
+    timeSecondsOffset = timeSeconds;
+  }
+  fseconds -= fsecondsOffset;
+  timeSeconds -= timeSecondsOffset;
   printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
