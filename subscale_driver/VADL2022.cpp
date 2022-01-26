@@ -74,7 +74,7 @@ State g_state = State_WaitingForTakeoff;
 //   // available, or 0 if no shell is available." ( https://man7.org/linux/man-pages/man3/system.3.html )
 // }
 bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size);
-bool startDelayedSIFT() {
+void startDelayedSIFT() {
   const char *sift_args[] =
     {
         // "sudo",
@@ -86,7 +86,15 @@ bool startDelayedSIFT() {
 	NULL, // Placeholder for actual SIFT command
 	NULL // Need NULL at the end of exec args ( https://stackoverflow.com/questions/20449182/execvp-bad-address-error/20451532 )
     };
-  return startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]));
+  mainDispatchQueue.enqueue([]() {
+    bool ok = startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]));
+    if (!ok) {
+      std::cout << "startDelayedSIFT_fork failed" << std::endl;
+    }
+    else {
+      std::cout << "Started SIFT " << std::endl;
+    }
+  });
 }
 int fd[2]; // write() to fd[1] to send IMU data to sift after running startDelayedSIFT_fork()
 ofdstream toSIFT;
@@ -241,10 +249,8 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 				pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
 			} else {
 				// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-				bool ok = startDelayedSIFT();
-				if (!ok) {
-				  // Continue with this error, we might as well try recording IMU data at least..
-				}
+				startDelayedSIFT();
+				// ^if an error happens, continue with this error, we might as well try recording IMU data at least.
 				g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
 			}
 		}
@@ -386,10 +392,7 @@ VADL2022::VADL2022(int argc, char** argv)
 		return;
 	}
 	else if (siftOnly) {
-		bool ok = startDelayedSIFT();
-                if (!ok) {
-                  exit(1);
-                }
+		startDelayedSIFT();
                 return;
 	}
 	bool vn = forceNoIMU ? false : true;
@@ -429,10 +432,7 @@ VADL2022::VADL2022(int argc, char** argv)
 		if (videoCapture) {
 		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
         } else {
-		  bool ok = startDelayedSIFT();
-		  if (!ok) {
-		    std::cout << "Failed starting SIFT" << std::endl;
-		  }
+		  startDelayedSIFT();
         }
     }
 
