@@ -170,7 +170,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
 void checkTakeoffCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
-  printf("Accel mag: %f\n", magnitude);
+  printf("fseconds %f, imu timestamp %ju, accel mag: %f\n", fseconds, (uintmax_t)log->mImu->timestamp, magnitude);
   if (g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
@@ -403,7 +403,7 @@ VADL2022::VADL2022(int argc, char** argv)
       mImu = new IMU();
   }
   catch (const vn::not_found &e) {
-    std::cout << "VectorNav not found: vn::not_found: " << e.what();
+    std::cout << "VectorNav not found: vn::not_found: " << e.what() << std::endl;
     if (imuOnly) {
       exit(1);
     }
