@@ -85,10 +85,10 @@ State g_state = State_WaitingForTakeoff;
 //   return ret == 0;// "If command is NULL, then a nonzero value if a shell is
 //   // available, or 0 if no shell is available." ( https://man7.org/linux/man-pages/man3/system.3.html )
 // }
-bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size);
-void startDelayedSIFT() {
-  mainDispatchQueue.enqueue([]() {
-    bool ok = startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]));
+bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool useIMU);
+void startDelayedSIFT(bool useIMU) {
+  mainDispatchQueue.enqueue([useIMU]() {
+    bool ok = startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]), useIMU);
     if (!ok) {
       std::cout << "startDelayedSIFT_fork failed" << std::endl;
     }
@@ -99,7 +99,7 @@ void startDelayedSIFT() {
 }
 int fd[2]; // write() to fd[1] to send IMU data to sift after running startDelayedSIFT_fork()
 ofdstream toSIFT;
-bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //Actually works, need xauthority for root above
+bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool useIMU) { //Actually works, need xauthority for root above
   if (pipe(fd)) {
     printf("Error with pipe!\n");
     return false;
@@ -120,7 +120,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
 	  std::string(" --sleep-before-running ") +
 	  std::string(timeAfterMainDeployment) +
 	  std::string(" --no-preview-window") // --video-file-data-source
-    + (std::string(" --subscale-driver-fd ") + std::to_string(fd[0]))
+    + (useIMU ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
   ;
   
   puts("Forking");
@@ -251,7 +251,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
       }
       else {
 	// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-	startDelayedSIFT();
+	startDelayedSIFT(true /* <--boolean: when true, use the IMU in SIFT*/);
 	// ^if an error happens, continue with this error, we might as well try recording IMU data at least.
 	g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
       }
@@ -335,7 +335,7 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to start SIFT, *only* used if the IMU fails
+    else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to countdown from --sift-start-time and then start SIFT, *only* used if the IMU fails
       if (i+1 < argc) {
 	backupSIFTStartTime = std::stoll(argv[i+1]); // Must be long long
       }
@@ -394,8 +394,7 @@ VADL2022::VADL2022(int argc, char** argv)
     return;
   }
   else if (siftOnly) {
-    v->mLog->userCallback = passIMUDataToSIFTCallback;
-    startDelayedSIFT();
+    startDelayedSIFT(false /* <--boolean: when true, use the IMU in SIFT*/);
     return;
   }
   bool vn = forceNoIMU ? false : true;
@@ -416,8 +415,6 @@ VADL2022::VADL2022(int argc, char** argv)
   catch (const char* e) {
     std::cout << "VectorNav not connected; continuing without it." << std::endl;
     vn = false;
-    std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
   }
   // mLidar = new LIDAR();
   // mLds = new LDS();
@@ -429,6 +426,10 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   else {
     if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
+
+    std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
+    
     mLog = nullptr;
     mImu = nullptr;
     
@@ -437,7 +438,7 @@ VADL2022::VADL2022(int argc, char** argv)
       pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
     }
     else {
-      startDelayedSIFT();
+      startDelayedSIFT(false /* <--boolean: when true, use the IMU in SIFT*/);
     }
   }
   
