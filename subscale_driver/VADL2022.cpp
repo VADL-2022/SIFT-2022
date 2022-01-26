@@ -23,8 +23,8 @@
 #include "signalHandlers.hpp"
 
 // G Forces
-const float TAKEOFF_G_FORCE = 1; // Takeoff is 5-7 g's or etc.
-const float MAIN_DEPLOYMENT_G_FORCE = 1; //Main parachute deployment is 10-15 g's
+const float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
+const float MAIN_DEPLOYMENT_G_FORCE = 0.5; //Main parachute deployment is 10-15 g's
 // Timings
 const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
