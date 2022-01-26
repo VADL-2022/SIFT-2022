@@ -20,6 +20,7 @@
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
+#include "../common.hpp"
 
 #include "signalHandlers.hpp"
 
