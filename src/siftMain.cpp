@@ -943,6 +943,7 @@ int mainMission(DataSourceT* src,
             std::cout << "Grabbing from subscale driver fd..." << std::endl;
             fscanf(driverInput_file, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
                    , &imu.fseconds);
+            std::cout << "fseconds: " << imu.fseconds << std::endl;
             if (imu.fseconds == FLT_MAX) {
                 // IMU failed, ignore its data
                 std::cout << "SIFT considering IMU as failed." << std::endl;

@@ -41,6 +41,7 @@ const char* siftParams = nullptr;
 auto startedDriverTime = std::chrono::steady_clock::now();
 auto takeoffTime = std::chrono::steady_clock::now();
 long long backupSIFTStartTime = -1; // Also used as the projected SIFT start time if IMU fails
+long long backupTakeoffTime = -1;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -191,7 +192,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   float magnitude = log->mImu->linearAccelNed.mag();
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   // First run: set fsecondsOffset
-  if (fsecondsOffset == FLT_MIN || fsecondsOffset == 0 || timeSecondsOffset == 0) {
+  if (fsecondsOffset == FLT_MIN || fsecondsOffset == 0 || timeSecondsOffset == 0) { // Feel free to change this, may be a hack
     fsecondsOffset = fseconds;
     timeSecondsOffset = timeSeconds;
   }
@@ -202,7 +203,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
-    long long milliSeconds = 60 * 1000;
+    long long milliSeconds = backupTakeoffTime;
     std::cout << "IMU considered not responding. Waiting until projected launch time guesttimate which is " << milliSeconds/1000.0 << " seconds away from now..." << std::endl;
     // Wait for SIFT backup time
     std::this_thread::sleep_for(std::chrono::milliseconds(milliSeconds));
@@ -406,10 +407,20 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
       if (i+1 < argc) {
-	timeAfterMainDeployment = argv[i+1]; // Must be long long
+	timeAfterMainDeployment = argv[i+1];
       }
       else {
 	puts("Expected start time");
+	exit(1);
+      }
+      i++;
+    }
+    else if (strcmp(argv[i], "--backup-takeoff-time") == 0) { // Time in milliseconds until takeoff approximately in case IMU fails
+      if (i+1 < argc) {
+	backupTakeoffTime = std::stoll(argv[i+1]); // Must be long long
+      }
+      else {
+	puts("Expected backup takeoff time");
 	exit(1);
       }
       i++;
@@ -459,7 +470,11 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --backup-sift-start-time");
     exit(1);
   }
-  
+  if (backupTakeoffTime == -1 && !imuOnly) {
+    puts("Need to provide --backup-takeoff-time, using 60000 milliseconds (60 seconds) is recommended");
+    exit(1);
+  }
+
   connect_GPIO();
   connect_Python();
 	
