@@ -324,6 +324,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
     toSIFT << "\n" << FLT_MAX;
     toSIFT.flush();
     
+    VADL2022* v = (VADL2022*)log->callbackUserData;
     v->mLog->userCallback = nullptr;
     return;
   }
