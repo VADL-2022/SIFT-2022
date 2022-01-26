@@ -39,6 +39,19 @@ const char* siftParams = nullptr;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
+std::mutex siftCommandLineMutex;
+std::string siftCommandLine;
+  const char *sift_args[] =
+    {
+        // "sudo",
+        // "-H",
+        // "-u",
+        // "pi",
+        "bash",
+        "-c",
+	NULL, // Placeholder for actual SIFT command line (`siftCommandLine` variable)
+	NULL // Need NULL at the end of exec args ( https://stackoverflow.com/questions/20449182/execvp-bad-address-error/20451532 )
+    };
 
 // Python log file
 ofstream cToPythonLogFile;
@@ -75,17 +88,6 @@ State g_state = State_WaitingForTakeoff;
 // }
 bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size);
 void startDelayedSIFT() {
-  const char *sift_args[] =
-    {
-        // "sudo",
-        // "-H",
-        // "-u",
-        // "pi",
-        "bash",
-        "-c",
-	NULL, // Placeholder for actual SIFT command
-	NULL // Need NULL at the end of exec args ( https://stackoverflow.com/questions/20449182/execvp-bad-address-error/20451532 )
-    };
   mainDispatchQueue.enqueue([]() {
     bool ok = startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]));
     if (!ok) {
@@ -110,7 +112,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
   // signal-safety(7)) until such time as it calls execve(2).
   // "} ( https://man7.org/linux/man-pages/man2/fork.2.html )
   // and I don't think std::string is async-signal-safe because it could call malloc
-  std::string s =
+  siftCommandLine =
       "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
       "--main-mission " +
   (siftParams != nullptr
@@ -151,7 +153,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size) { //A
   } else if (pid == 0) { // Child process
     close(fd[1]); // Close write end of the pipe since we'll be receiving IMU data from the parent process on this pipe, not writing to it from the child process.
     
-    sift_args[sift_args_size-2] = s.c_str();
+    sift_args[sift_args_size-2] = siftCommandLine.c_str();
   
     const char** args = sift_args;
     execvp((char*)args[0], (char**)args); // one variant of exec
@@ -483,7 +485,7 @@ bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the 
     printf("Failed to run execvp to run command \"%s\": %s\n", command, strerror(errno)); // Will only print if error with execvp.
     return false;
   } else {
-    printf("Error with fork for command \"%s\": %s\n", strerror(errno));
+    printf("Error with fork for command \"%s\": %s\n", command, strerror(errno));
     return false;
   }
   return true;
