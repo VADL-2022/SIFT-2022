@@ -191,7 +191,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   float magnitude = log->mImu->linearAccelNed.mag();
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   // First run: set fsecondsOffset
-  if (fsecondsOffset == FLT_MIN) {
+  if (fsecondsOffset == FLT_MIN || fsecondsOffset == 0) {
     fsecondsOffset = fseconds;
     timeSecondsOffset = timeSeconds;
   }
