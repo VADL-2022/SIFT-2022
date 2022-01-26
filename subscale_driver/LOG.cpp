@@ -38,6 +38,7 @@ void LOG::callback(void *userData)
       }
 
       if (flush) {
+	std::cout << "Flushing IMU data to log" << std::endl;
         data->mLog << endl;
       }
       else {
