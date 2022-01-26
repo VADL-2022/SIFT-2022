@@ -450,6 +450,9 @@ VADL2022::~VADL2022()
 	// delete (mLidar);
 	delete (mImu);
 
+	disconnect_GPIO();
+	disconnect_Python();
+
 	cout << "Main: Destoryed" << endl;
 }
 
