@@ -191,7 +191,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
-  if (fseconds - timeSeconds > EPSILON) {
+  if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
     long long milliSeconds = 60 * 1000;
     std::cout << "IMU considered not responding. Waiting until projected launch time guesttimate which is " << milliSeconds/1000.0 << " seconds away from now..." << std::endl;
     // Wait for SIFT backup time
@@ -250,7 +250,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
-  if (fseconds - timeSeconds > EPSILON) {
+  if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
     // Wait for SIFT backup time
     auto millisSinceTakeoff = since(takeoffTime).count();
     if (backupSIFTStartTime > millisSinceTakeoff) {
@@ -323,7 +323,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
-  if (fseconds - timeSeconds > EPSILON) {
+  if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
     std::cout << "IMU considered not responding. Telling SIFT we're not using it" << std::endl;
     // Notify SIFT that IMU failed
     toSIFT << "\n" << FLT_MAX;
