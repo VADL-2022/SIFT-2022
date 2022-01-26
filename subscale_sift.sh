@@ -22,7 +22,8 @@ cleanup() {
     echo "@@@@ Stopping SIFT"
     pkill -SIGINT sift
     # Stop temperature data
-    pkill -f vcgencmd
+    #pkill -f vcgencmd
+    pkill -f 'python3 WindTunnel'
     # sha512 Checksum
 
     exit
@@ -74,7 +75,8 @@ fi
 ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --sift-start-time "$siftStart" 
 # Record temperature data
 set +o errexit +o errtrace
-bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
+#bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
+python3 WindTunnel/run.py &
 # Stop SIFT after x seconds:
 if [ "$dontsleep3" != "1" ]; then
     echo "@@@@ Waiting to stop SIFT"

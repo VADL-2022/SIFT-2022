@@ -24,6 +24,9 @@
 #include <unistd.h>
 
 #include <fstream>
+#include <python3.7m/Python.h>
+#include "../common.hpp"
+#include "../subscale_driver/pyMainThreadInterface.hpp"
 
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp
@@ -202,12 +205,19 @@ int main(int argc, char **argv)
     
 //#define SEGFAULT_TEST
 //#define SEGFAULT_TEST2
+#define PYTHON_TEST
 #ifdef SEGFAULT_TEST
     char* a = nullptr;
     *a = 0;
 #endif
 #ifdef SIFTGPU_TEST
     return SIFTGPU::test(argc, argv);
+#endif
+#ifdef PYTHON_TEST
+    common::connect_Python();
+    S_RunFile("src/python/Precession.py", 0, nullptr);
+    S_RunString("print(judge_image([1,2,3], [1.1,2,3]))");
+    return 0;
 #endif
     
     // Warm up (in case mkdir fails)
@@ -815,6 +825,8 @@ int mainMission(DataSourceT* src,
         #endif
     }
     
+    common::connect_Python();
+    
     // SIFT
     cv::Mat firstImage;
     cv::Mat prevImage;
@@ -981,8 +993,11 @@ int mainMission(DataSourceT* src,
                        &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
                        );
                 std::cout << "Linear accel NED: " << imu.linearAccelNed << std::endl;
-                t.logElapsed("grabbing from subscale driver fd");
+                
+                // Use the IMU data:
+                pyRunFile("src/python/Precession.py", 0, nullptr);
             }
+            t.logElapsed("grabbing from subscale driver fd");
         }
         // //
         

@@ -36,6 +36,9 @@
 		30CE61F227237F18001C987F /* KeypointsAndMatching.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61F027237F17001C987F /* KeypointsAndMatching.cpp */; };
 		30CE61F527238409001C987F /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CE61F327238409001C987F /* common.cpp */; };
 		30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 300EE49227209F9400969C5F /* strnatcmp.cpp */; };
+		30ED93AE27A11126001D8655 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30ED93AD27A11125001D8655 /* common.cpp */; };
+		30ED93B427A1B2F0001D8655 /* py.c in Sources */ = {isa = PBXBuildFile; fileRef = 30ED93B227A1B2F0001D8655 /* py.c */; };
+		30ED93B527A1B2F0001D8655 /* pf_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 30ED93B327A1B2F0001D8655 /* pf_string.c */; };
 		30EF9790273C588B00E3D538 /* Info.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 30EF978F273C582100E3D538 /* Info.plist */; };
 		30F00229275D89EF000A3D25 /* myMalloc_.c in Sources */ = {isa = PBXBuildFile; fileRef = 30F00227275D89EF000A3D25 /* myMalloc_.c */; };
 		30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30F0022A275D93F7000A3D25 /* malloc_override_osx.cpp */; };
@@ -152,6 +155,11 @@
 		30CE61F427238409001C987F /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
 		30CE61F727238787001C987F /* strnatcmp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = strnatcmp.hpp; sourceTree = "<group>"; };
 		30E6A5A52790C80400882438 /* Config.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Config.hpp; sourceTree = "<group>"; };
+		30ED93AC27A11125001D8655 /* common.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = common.hpp; path = ../../common.hpp; sourceTree = "<group>"; };
+		30ED93AD27A11125001D8655 /* common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = common.cpp; path = ../../common.cpp; sourceTree = "<group>"; };
+		30ED93B227A1B2F0001D8655 /* py.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = py.c; path = ../../subscale_driver/py.c; sourceTree = "<group>"; };
+		30ED93B327A1B2F0001D8655 /* pf_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pf_string.c; path = ../../subscale_driver/lib/pf_string.c; sourceTree = "<group>"; };
+		30ED93B627A1F369001D8655 /* pyMainThreadInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = pyMainThreadInterface.hpp; path = ../../subscale_driver/pyMainThreadInterface.hpp; sourceTree = "<group>"; };
 		30EF978F273C582100E3D538 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		30F00227275D89EF000A3D25 /* myMalloc_.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = myMalloc_.c; sourceTree = "<group>"; };
 		30F00228275D89EF000A3D25 /* myMalloc_.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = myMalloc_.h; sourceTree = "<group>"; };
@@ -241,6 +249,9 @@
 			children = (
 				300EE45527209F9400969C5F /* sift_anatomy_20141201 */,
 				30F99A21278CF13F00DBD9C8 /* SiftGPU */,
+				30ED93AD27A11125001D8655 /* common.cpp */,
+				30ED93AC27A11125001D8655 /* common.hpp */,
+				30ED93B127A1B2DB001D8655 /* subscale_driver */,
 				300EE48327209F9400969C5F /* src */,
 				300EE4B827209FF000969C5F /* Config.xcconfig */,
 				30EF978F273C582100E3D538 /* Info.plist */,
@@ -372,6 +383,16 @@
 			children = (
 			);
 			path = python;
+			sourceTree = "<group>";
+		};
+		30ED93B127A1B2DB001D8655 /* subscale_driver */ = {
+			isa = PBXGroup;
+			children = (
+				30ED93B627A1F369001D8655 /* pyMainThreadInterface.hpp */,
+				30ED93B327A1B2F0001D8655 /* pf_string.c */,
+				30ED93B227A1B2F0001D8655 /* py.c */,
+			);
+			name = subscale_driver;
 			sourceTree = "<group>";
 		};
 		30F99A21278CF13F00DBD9C8 /* SiftGPU */ = {
@@ -527,6 +548,7 @@
 				300EE4B027209F9400969C5F /* utils.cpp in Sources */,
 				300EE4A227209F9400969C5F /* lib_io_scalespace.c in Sources */,
 				30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */,
+				30ED93AE27A11126001D8655 /* common.cpp in Sources */,
 				30F99A49278CF14000DBD9C8 /* SiftMatchCU.cpp in Sources */,
 				303CB676276319A700ABDBF1 /* printf.c in Sources */,
 				30F99A52278CF14000DBD9C8 /* CuTexImage.cpp in Sources */,
@@ -557,6 +579,7 @@
 				300EE4A427209F9400969C5F /* lib_description.c in Sources */,
 				30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */,
 				30F99A60278E825700DBD9C8 /* demangle.cpp in Sources */,
+				30ED93B527A1B2F0001D8655 /* pf_string.c in Sources */,
 				30F99A57278CF14000DBD9C8 /* ShaderMan.cpp in Sources */,
 				300EE4AA27209F9400969C5F /* lib_sift_anatomy.c in Sources */,
 				30F99A48278CF14000DBD9C8 /* GlobalUtil.cpp in Sources */,
@@ -571,6 +594,7 @@
 				30F99A55278CF14000DBD9C8 /* ProgramCG.cpp in Sources */,
 				30CE61EB27235141001C987F /* Timer.cpp in Sources */,
 				300EE4A727209F9400969C5F /* lib_util.c in Sources */,
+				30ED93B427A1B2F0001D8655 /* py.c in Sources */,
 				30CE61E827234CD2001C987F /* SIFT.hpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

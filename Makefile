@@ -160,8 +160,8 @@ SOURCES_C += $(SIFT_ANATOMY_SRC)/io_png.c $(SIFT_ANATOMY_SRC)/lib_util.c
 endif
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
-SOURCES := $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/tools/*.cpp) $(wildcard $(SRC)/tools/backtrace/*.cpp) #$(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
-SOURCES_C := $(SOURCES_C) $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c)
+SOURCES := common.cpp $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/tools/*.cpp) $(wildcard $(SRC)/tools/backtrace/*.cpp) #$(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
+SOURCES_C := subscale_driver/py.c subscale_driver/lib/pf_string.c $(SOURCES_C) $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c)
 ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
 $(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile
@@ -217,7 +217,7 @@ $(eval $(call OBJECTS_LINKING_template,sift,debug_commandLine,$(OBJECTS) $(SIFT_
 
 #$(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
 SUBSCALE_SRC := ./subscale_driver/
-SUBSCALE_SOURCES := $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp)) $(wildcard src/tools/backtrace/*.cpp)
+SUBSCALE_SOURCES := common.cpp $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp)) $(wildcard src/tools/backtrace/*.cpp)
 SUBSCALE_SOURCES_C := $(wildcard $(SUBSCALE_SRC)/*.c) $(wildcard $(SUBSCALE_SRC)/lib/*.c) src/tools/printf.c src/tools/_putchar.c
 SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o) $(SUBSCALE_SOURCES_C:%.c=%.o)
 $(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@))
