@@ -942,35 +942,45 @@ int mainMission(DataSourceT* src,
             t.reset();
             std::cout << "Grabbing from subscale driver fd..." << std::endl;
             fscanf(driverInput_file, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                   ",%f,%f,%f" // yprNed
-                   ",%f,%f,%f,%f" // qtn
-                   ",%f,%f,%f" // rate
-                   ",%f,%f,%f" // accel
-                   ",%f,%f,%f" // mag
-                   ",%f,%f,%f" // temp,pres,dTime
-                   ",%f,%f,%f" // dTheta
-                   ",%f,%f,%f" // dVel
-                   ",%f,%f,%f" // magNed
-                   ",%f,%f,%f" // accelNed
-                   ",%f,%f,%f" // linearAccelBody
-                   ",%f,%f,%f" // linearAccelNed
-                   "," // Nothing after this comma on purpose.
-                   , &imu.fseconds,
-                   &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
-                   &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
-                   &imu.rate.x, &imu.rate.y, &imu.rate.z,
-                   &imu.accel.x, &imu.accel.y, &imu.accel.z,
-                   &imu.mag.x, &imu.mag.y, &imu.mag.z,
-                   &imu.temp, &imu.pres, &imu.dTime,
-                   &imu.dTheta.x, &imu.dTheta.y, &imu.dTheta.z,
-                   &imu.dVel.x, &imu.dVel.y, &imu.dVel.z,
-                   &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
-                   &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
-                   &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
-                   &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
-                   );
-            std::cout << "Linear accel NED: " << imu.linearAccelNed << std::endl;
-            t.logElapsed("grabbing from subscale driver fd");
+                   , &imu.fseconds);
+            if (imu.fseconds == FLT_MAX) {
+                // IMU failed, ignore its data
+                std::cout << "SIFT considering IMU as failed." << std::endl;
+                fclose(driverInput_file);
+                driverInput_file = nullptr;
+            }
+            else {
+                fscanf(driverInput_file,
+                       ",%f,%f,%f" // yprNed
+                       ",%f,%f,%f,%f" // qtn
+                       ",%f,%f,%f" // rate
+                       ",%f,%f,%f" // accel
+                       ",%f,%f,%f" // mag
+                       ",%f,%f,%f" // temp,pres,dTime
+                       ",%f,%f,%f" // dTheta
+                       ",%f,%f,%f" // dVel
+                       ",%f,%f,%f" // magNed
+                       ",%f,%f,%f" // accelNed
+                       ",%f,%f,%f" // linearAccelBody
+                       ",%f,%f,%f" // linearAccelNed
+                       "," // Nothing after this comma on purpose.
+                       ,
+                       &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
+                       &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
+                       &imu.rate.x, &imu.rate.y, &imu.rate.z,
+                       &imu.accel.x, &imu.accel.y, &imu.accel.z,
+                       &imu.mag.x, &imu.mag.y, &imu.mag.z,
+                       &imu.temp, &imu.pres, &imu.dTime,
+                       &imu.dTheta.x, &imu.dTheta.y, &imu.dTheta.z,
+                       &imu.dVel.x, &imu.dVel.y, &imu.dVel.z,
+                       &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
+                       &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
+                       &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
+                       &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
+                       );
+                std::cout << "Linear accel NED: " << imu.linearAccelNed << std::endl;
+                t.logElapsed("grabbing from subscale driver fd");
+            }
         }
         // //
         

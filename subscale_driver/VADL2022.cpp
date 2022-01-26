@@ -37,6 +37,10 @@ bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = fal
 // Sift params initialization
 const char* siftParams = nullptr;
 
+auto startedDriverTime = std::chrono::steady_clock::now();
+auto takeoffTime = std::chrono::steady_clock::now();
+long long backupSIFTStartTime = -1; // Also used as the projected SIFT start time if IMU fails
+
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
 std::string siftCommandLine;
@@ -165,12 +169,35 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   return true;
 }
 
+// https://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
+template <
+  class result_t   = std::chrono::milliseconds,
+  class clock_t    = std::chrono::steady_clock,
+  class duration_t = std::chrono::milliseconds
+>
+auto since(std::chrono::time_point<clock_t, duration_t> const& start)
+{
+  return std::chrono::duration_cast<result_t>(clock_t::now() - start);
+}
+
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on takeoff
 void checkTakeoffCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
-  printf("fseconds %f, imu timestamp %ju, accel mag: %f\n", fseconds, (uintmax_t)log->mImu->timestamp, magnitude);
+  float timeSeconds = log->mImu->timestamp / 1.0e9;
+  printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  // Check for IMU disconnect/failure to deliver packets
+  const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
+  bool force = false;
+  if (fseconds - timeSeconds > EPSILON) {
+    long long milliSeconds = 60 * 1000;
+    std::cout << "IMU considered not responding. Waiting until projected launch time guesttimate which is " << milliSeconds/1000.0 << " seconds away from now..." << std::endl;
+    // Wait for SIFT backup time
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliSeconds));
+    // Start SIFT or video capture
+    magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
+  }
   if (g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
@@ -178,7 +205,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
     }
     float duration = fseconds - v->startTime;
     printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
-    if (duration >= IMU_ACCEL_DURATION) {
+    if (duration >= IMU_ACCEL_DURATION || force) {
       // Stop these checkTakeoffCallback callbacks
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
@@ -188,6 +215,9 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       
       puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTarget time reached, the rocket has launched\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
       v->startTime = -1; // Reset timer so we don't detect a main parachute deployment afterwards (although IMU would have to report higher g's to do that which is unlikely)
+
+      // Record takeoff time
+      takeoffTime = std::chrono::steady_clock::now();
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
       //   bool ok = startDelayedSIFT();
@@ -214,7 +244,20 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
 void checkMainDeploymentCallback(LOG *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
-  printf("Accel mag: %f\n", magnitude);
+  float timeSeconds = log->mImu->timestamp / 1.0e9;
+  printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  // Check for IMU disconnect/failure to deliver packets
+  const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
+  bool force = false;
+  if (fseconds - timeSeconds > EPSILON) {
+    std::cout << "IMU considered not responding. Waiting until projected SIFT start time, which is " << " seconds away from now..." << std::endl;
+    // Wait for SIFT backup time
+    auto millisSinceTakeoff = since(takeoffTime).count();
+    auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
+    std::this_thread::sleep_for(std::chrono::milliseconds(diffMillis));
+    // Start SIFT or video capture
+    magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
+  }
   if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
@@ -222,7 +265,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
     }
     float duration = fseconds - v->startTime;
     printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
-    if (duration >= IMU_ACCEL_DURATION) {
+    if (duration >= IMU_ACCEL_DURATION || force) {
       // Stop these checkMainDeploymentCallback callbacks
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
@@ -269,6 +312,21 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // Give this data to SIFT
   if (toSIFT.isOpen()) {
+  // Check for IMU failure first
+  float timeSeconds = log->mImu->timestamp / 1.0e9;
+  printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  // Check for IMU disconnect/failure to deliver packets
+  const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
+  if (fseconds - timeSeconds > EPSILON) {
+    std::cout << "IMU considered not responding. Telling SIFT we're not using it" << std::endl;
+    // Notify SIFT that IMU failed
+    toSIFT << "\n" << FLT_MAX;
+    toSIFT.flush();
+    
+    v->mLog->userCallback = nullptr;
+    return;
+  }
+  
             toSIFT << "\n"
                    << fseconds << ","
                    << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
