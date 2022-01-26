@@ -513,15 +513,18 @@ VADL2022::VADL2022(int argc, char** argv)
 
 VADL2022::~VADL2022()
 {
-  cout << "Main: Destorying" << endl;
-  
-  delete (mLog);
-  // delete (mMotor);
-  // delete (mLds);
-  // delete (mLidar);
-  delete (mImu);
-  
-  cout << "Main: Destoryed" << endl;
+	cout << "Main: Destorying" << endl;
+
+	delete (mLog);
+	// delete (mMotor);
+	// delete (mLds);
+	// delete (mLidar);
+	delete (mImu);
+
+	disconnect_GPIO();
+	disconnect_Python();
+
+	cout << "Main: Destoryed" << endl;
 }
 
 bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the last element */) {
