@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <thread>
 #include <chrono>
+#include <float.h>
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
