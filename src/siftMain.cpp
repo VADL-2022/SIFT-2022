@@ -944,7 +944,8 @@ int mainMission(DataSourceT* src,
             fscanf(driverInput_file, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
                    , &imu.fseconds);
             std::cout << "fseconds: " << imu.fseconds << std::endl;
-            if (imu.fseconds == FLT_MAX) {
+            const double EPSILON = 0.001;
+            if (fabs(imu.fseconds- -1) < EPSILON) {
                 // IMU failed, ignore its data
                 std::cout << "SIFT considering IMU as failed." << std::endl;
                 fclose(driverInput_file);

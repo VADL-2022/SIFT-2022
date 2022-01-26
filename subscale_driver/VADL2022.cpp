@@ -184,6 +184,7 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 
 float fsecondsOffset = FLT_MIN;
 float timeSecondsOffset = 0;
+bool forceSkipNonSIFTCallbacks = false;
 
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on takeoff
@@ -210,7 +211,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
     // Start SIFT or video capture
     magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
   }
-  if (g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS) {
+  if ((g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS) || forceSkipNonSIFTCallbacks) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
       v->startTime = fseconds;
@@ -276,7 +277,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
     // Start SIFT or video capture
     magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
   }
-  if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) {
+  if ((g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) || forceSkipNonSIFTCallbacks) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
       v->startTime = fseconds;
@@ -341,7 +342,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
     std::cout << "IMU considered not responding. Telling SIFT we're not using it" << std::endl;
     // Notify SIFT that IMU failed
-    toSIFT << "\n" << FLT_MAX;
+    toSIFT << "\n" << -1.0f;
     toSIFT.flush();
     
     VADL2022* v = (VADL2022*)log->callbackUserData;
@@ -349,7 +350,8 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
     return;
   }
   
-            toSIFT << ","
+            toSIFT << "\n"
+                   << fseconds << ","
                    << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
                    << log->mImu->qtn[0] << "," << log->mImu->qtn[1] << "," << log->mImu->qtn[2] << "," << log->mImu->qtn[3] << ","
                    << log->mImu->rate[0] << "," << log->mImu->rate[1] << "," << log->mImu->rate[2] << ","
@@ -403,6 +405,9 @@ VADL2022::VADL2022(int argc, char** argv)
     if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
       callback = nullptr;
       imuOnly = true;
+    }
+    if (strcmp(argv[i], "--sift-and-imu-only") == 0) { // Don't run anything but SIFT with provided IMU data + the IMU data recording, starting SIFT without waiting for takeoff/parachute events.
+      forceSkipNonSIFTCallbacks = true;
     }
     else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
       if (i+1 < argc) {
