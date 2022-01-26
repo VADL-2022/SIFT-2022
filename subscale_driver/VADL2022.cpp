@@ -198,7 +198,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   }
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  printf("checkTakeoffCallback: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
@@ -259,7 +259,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  printf("checkMainDeploymentCallback: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
@@ -335,7 +335,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  printf("passIMUDataToSIFTCallback: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
