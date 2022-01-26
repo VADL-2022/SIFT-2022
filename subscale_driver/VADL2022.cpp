@@ -349,8 +349,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
     return;
   }
   
-            toSIFT << "\n"
-                   << fseconds << ","
+            toSIFT << ","
                    << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
                    << log->mImu->qtn[0] << "," << log->mImu->qtn[1] << "," << log->mImu->qtn[2] << "," << log->mImu->qtn[3] << ","
                    << log->mImu->rate[0] << "," << log->mImu->rate[1] << "," << log->mImu->rate[2] << ","
