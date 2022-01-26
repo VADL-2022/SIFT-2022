@@ -25,7 +25,7 @@ sleep_ () {
     sleep "$@"
 }
 
-git checkout subscale
+git checkout subscale2
 # Checkout submodules from the above commit as well:
 git submodule update --init --recursive 
 # sha512 Checksum
