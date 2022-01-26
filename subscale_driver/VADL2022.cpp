@@ -40,17 +40,17 @@ const char* siftParams = nullptr;
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
 std::string siftCommandLine;
-  const char *sift_args[] =
-    {
-        // "sudo",
-        // "-H",
-        // "-u",
-        // "pi",
-        "bash",
-        "-c",
-	NULL, // Placeholder for actual SIFT command line (`siftCommandLine` variable)
-	NULL // Need NULL at the end of exec args ( https://stackoverflow.com/questions/20449182/execvp-bad-address-error/20451532 )
-    };
+const char *sift_args[] =
+  {
+    // "sudo",
+    // "-H",
+    // "-u",
+    // "pi",
+    "bash",
+    "-c",
+    NULL, // Placeholder for actual SIFT command line (`siftCommandLine` variable)
+    NULL // Need NULL at the end of exec args ( https://stackoverflow.com/questions/20449182/execvp-bad-address-error/20451532 )
+  };
 
 // Python log file
 ofstream cToPythonLogFile;
@@ -189,15 +189,15 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       puts("Target time reached, the rocket has launched");
       v->startTime = -1; // Reset timer so we don't detect a main parachute deployment afterwards (although IMU would have to report higher g's to do that which is unlikely)
       
-    // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-    //   bool ok = startDelayedSIFT();
-    //   g_state = State_WaitingForMainStabilizationTime;
+      // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
+      //   bool ok = startDelayedSIFT();
+      //   g_state = State_WaitingForMainStabilizationTime;
       g_state = STATE_WaitingForMainParachuteDeployment; // Now wait till main has deployed
 
-		// Take the ascent picture 
-		if (videoCapture) {
-			pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
-		}
+      // Take the ascent picture 
+      if (videoCapture) {
+	pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+      }
     }
   }
   else {
@@ -212,57 +212,58 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on main parachute deployment
 void checkMainDeploymentCallback(LOG *log, float fseconds) {
-	VADL2022* v = (VADL2022*)log->callbackUserData;
-	float magnitude = log->mImu->linearAccelNed.mag();
-	printf("Accel mag: %f\n", magnitude);
-  	if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) {
-		// Record this, it must last for IMU_ACCEL_DURATION
-		if (v->startTime == -1) {
-			v->startTime = fseconds;
-		}
-		float duration = fseconds - v->startTime;
-		printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
-		if (duration >= IMU_ACCEL_DURATION) {
-			// Stop these checkMainDeploymentCallback callbacks
-			#if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
-				#error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
-			#else
-			  if (!videoCapture) {
-				v->mLog->userCallback = passIMUDataToSIFTCallback;
-			  }
-			  else {
-			    v->mLog->userCallback = nullptr;			    
-			  }
-			#endif
+  VADL2022* v = (VADL2022*)log->callbackUserData;
+  float magnitude = log->mImu->linearAccelNed.mag();
+  printf("Accel mag: %f\n", magnitude);
+  if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) {
+    // Record this, it must last for IMU_ACCEL_DURATION
+    if (v->startTime == -1) {
+      v->startTime = fseconds;
+    }
+    float duration = fseconds - v->startTime;
+    printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
+    if (duration >= IMU_ACCEL_DURATION) {
+      // Stop these checkMainDeploymentCallback callbacks
+      #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
+      #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
+      #else
+      if (!videoCapture) {
+	v->mLog->userCallback = passIMUDataToSIFTCallback;
+      }
+      else {
+	v->mLog->userCallback = nullptr;			    
+      }
+      #endif
+      
+      puts("Target time reached, main parachute has deployed");
+      v->startTime = -1; // Reset timer
+      
+      // Let video capture python script know that the main parachute has deployed in order to swap cameras
+      if (videoCapture) {
+	// Stop the python videocapture script
+	raise(SIGINT);
+	
+	gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
+	gpioWrite(26, 1); // Set GPIO26 high.
 
-			puts("Target time reached, main parachute has deployed");
-			v->startTime = -1; // Reset timer
-
-			// Let video capture python script know that the main parachute has deployed in order to swap cameras
-			if (videoCapture) {
-				// Stop the python videocapture script
-				raise(SIGINT);
-
-				gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
-				gpioWrite(26, 1); // Set GPIO26 high.
-
-				// Run the python videocapture script again on the second camera
-				pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
-			} else {
-				// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-				startDelayedSIFT();
-				// ^if an error happens, continue with this error, we might as well try recording IMU data at least.
-				g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
-			}
-		}
-	}
-	else {
-		// Reset timer
-		if (v->startTime != -1) {
-			puts("Not enough acceleration; resetting timer");
-			v->startTime = -1;
-		}
-	}
+	// Run the python videocapture script again on the second camera
+	pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+      }
+      else {
+	// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
+	startDelayedSIFT();
+	// ^if an error happens, continue with this error, we might as well try recording IMU data at least.
+	g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
+      }
+    }
+  }
+  else {
+    // Reset timer
+    if (v->startTime != -1) {
+      puts("Not enough acceleration; resetting timer");
+      v->startTime = -1;
+    }
+  }
 }
 
 void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
@@ -307,158 +308,161 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
 
 VADL2022::VADL2022(int argc, char** argv)
 {
-	cout << "Main: Initiating" << endl;
+  cout << "Main: Initiating" << endl;
 
-	gpioUserPermissionFixingCommands = std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
-						       // For good measure, even though the Makefile does it already (this won't take effect until another run of the executable, so that's why we do it in the Makefile) :
-						       "&& sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
-	gpioUserPermissionFixingCommands_arg = argv[0];
+  gpioUserPermissionFixingCommands = std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
+						 // For good measure, even though the Makefile does it already (this won't take effect until another run of the executable, so that's why we do it in the Makefile) :
+						 "&& sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
+  gpioUserPermissionFixingCommands_arg = argv[0];
 	  
-	// Parse command-line args
-	LOG::UserCallback callback = checkTakeoffCallback;
-	// bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
-	long long backupSIFTStartTime = -1;
-	bool forceNoIMU = false;
-	for (int i = 1; i < argc; i++) {
-		if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
-			callback = nullptr;
-			imuOnly = true;
-		}
-		else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
-			if (i+1 < argc) {
-				timeAfterMainDeployment = argv[i+1]; // Must be long long
-			}
-			else {
-				puts("Expected start time");
-				exit(1);
-			}
-			i++;
-		}
-		else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to start SIFT, *only* used if the IMU fails
-			if (i+1 < argc) {
-			  backupSIFTStartTime = std::stoll(argv[i+1]); // Must be long long
-			}
-			else {
-				puts("Expected start time");
-				exit(1);
-			}
-			i++;
-		}
-		else if (strcmp(argv[i], "--force-no-imu") == 0) { // Mostly for debugging purposes. This forces the driver to consider the IMU as non-existent even though it might be connected.
-		  forceNoIMU = true;
-		}
-		else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
-			sendOnRadio_ = true;
-		}
-		else if (strcmp(argv[i], "--sift-only") == 0) { // Don't run anything but SIFT
-			siftOnly = true;
-		}
-		else if (strcmp(argv[i], "--video-capture") == 0) { // Run video saving from camera only
-			videoCapture = true;
-		}
-		else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
-			siftParams = argv[i+1];
-		}
-		else {
-		  printf("Unrecognized command-line argument given: %s", argv[i]);
-		  printf(" (command line was:\n");
-		  for (int i = 0; i < argc; i++) {
-		    printf("\t%s\n", argv[i]);
-		  }
-		  printf(")\n");
-		  puts("Exiting.");
-		  exit(1);
-		}
-	}
-
-	if (timeAfterMainDeployment == nullptr && !videoCapture && !imuOnly) {
-		puts("Need to provide --sift-start-time");
-		exit(1);
-	}
-	if (backupSIFTStartTime == -1 && !videoCapture && !imuOnly) {
-		puts("Need to provide --backup-sift-start-time");
-		exit(1);
-	}
-
-	connect_GPIO();
-	connect_Python();
-	
-	// Ensure Python gets sigints and other signals
-	// We do this after connect_GPIO() because "For those of us who ended up here wanting to implement their own signal handler, make sure you do your signal() call AFTER you call gpioInitialise(). This will override the pigpio handler." ( https://github.com/fivdi/pigpio/issues/127 )
-	installSignalHandlers();
-	
-	if (sendOnRadio_) {
-		auto ret = sendOnRadio();
-		std::cout << "sendOnRadio returned: " << ret << std::endl;
-		return;
-	}
-	else if (siftOnly) {
-		startDelayedSIFT();
-                return;
-	}
-	bool vn = forceNoIMU ? false : true;
-	try {
-	  if (vn)
-	    mImu = new IMU();
-	}
-	catch (const vn::not_found &e) {
-		std::cout << "VectorNav not found: vn::not_found: " << e.what();
-		if (imuOnly) {
-			exit(1);
-		} else {
-			std::cout << " ; continuing without it." << std::endl;
-		}
-		vn=false;
-	}
-	catch (const char* e) {
-		std::cout << "VectorNav not connected; continuing without it." << std::endl;
-		vn = false;
-		std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
-	}
-	// mLidar = new LIDAR();
-	// mLds = new LDS();
-	// mMotor = new MOTOR();
-	if (vn) {
-		mLog = new LOG(callback, this, mImu); //, nullptr /*mLidar*/, nullptr /*mLds*/);
-		mImu->receive();
-		mLog->receive();
-	}
-	else {
-	  if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
-		mLog = nullptr;
-		mImu = nullptr;
-		
-		// Take the ascent video
-		if (videoCapture) {
-		  pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
-        } else {
-		  startDelayedSIFT();
-        }
+  // Parse command-line args
+  LOG::UserCallback callback = checkTakeoffCallback;
+  // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
+  long long backupSIFTStartTime = -1;
+  bool forceNoIMU = false;
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
+      callback = nullptr;
+      imuOnly = true;
     }
+    else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
+      if (i+1 < argc) {
+	timeAfterMainDeployment = argv[i+1]; // Must be long long
+      }
+      else {
+	puts("Expected start time");
+	exit(1);
+      }
+      i++;
+    }
+    else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to start SIFT, *only* used if the IMU fails
+      if (i+1 < argc) {
+	backupSIFTStartTime = std::stoll(argv[i+1]); // Must be long long
+      }
+      else {
+	puts("Expected start time");
+	exit(1);
+      }
+      i++;
+    }
+    else if (strcmp(argv[i], "--force-no-imu") == 0) { // Mostly for debugging purposes. This forces the driver to consider the IMU as non-existent even though it might be connected.
+      forceNoIMU = true;
+    }
+    else if (strcmp(argv[i], "--gpio-test-only") == 0) { // Don't run anything but GPIO radio upload
+      sendOnRadio_ = true;
+    }
+    else if (strcmp(argv[i], "--sift-only") == 0) { // Don't run anything but SIFT
+      siftOnly = true;
+    }
+    else if (strcmp(argv[i], "--video-capture") == 0) { // Run video saving from camera only
+      videoCapture = true;
+    }
+    else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
+      siftParams = argv[i+1];
+    }
+    else {
+      printf("Unrecognized command-line argument given: %s", argv[i]);
+      printf(" (command line was:\n");
+      for (int i = 0; i < argc; i++) {
+	printf("\t%s\n", argv[i]);
+      }
+      printf(")\n");
+      puts("Exiting.");
+      exit(1);
+    }
+  }
 
-        cout << "Main: Initiated" << endl;
+  if (timeAfterMainDeployment == nullptr && !videoCapture && !imuOnly) {
+    puts("Need to provide --sift-start-time");
+    exit(1);
+  }
+  if (backupSIFTStartTime == -1 && !videoCapture && !imuOnly) {
+    puts("Need to provide --backup-sift-start-time");
+    exit(1);
+  }
+  
+  connect_GPIO();
+  connect_Python();
+	
+  // Ensure Python gets sigints and other signals
+  // We do this after connect_GPIO() because "For those of us who ended up here wanting to implement their own signal handler, make sure you do your signal() call AFTER you call gpioInitialise(). This will override the pigpio handler." ( https://github.com/fivdi/pigpio/issues/127 )
+  installSignalHandlers();
+	
+  if (sendOnRadio_) {
+    auto ret = sendOnRadio();
+    std::cout << "sendOnRadio returned: " << ret << std::endl;
+    return;
+  }
+  else if (siftOnly) {
+    v->mLog->userCallback = passIMUDataToSIFTCallback;
+    startDelayedSIFT();
+    return;
+  }
+  bool vn = forceNoIMU ? false : true;
+  try {
+    if (vn)
+      mImu = new IMU();
+  }
+  catch (const vn::not_found &e) {
+    std::cout << "VectorNav not found: vn::not_found: " << e.what();
+    if (imuOnly) {
+      exit(1);
+    }
+    else {
+      std::cout << " ; continuing without it." << std::endl;
+    }
+    vn=false;
+  }
+  catch (const char* e) {
+    std::cout << "VectorNav not connected; continuing without it." << std::endl;
+    vn = false;
+    std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
+  }
+  // mLidar = new LIDAR();
+  // mLds = new LDS();
+  // mMotor = new MOTOR();
+  if (vn) {
+    mLog = new LOG(callback, this, mImu); //, nullptr /*mLidar*/, nullptr /*mLds*/);
+    mImu->receive();
+    mLog->receive();
+  }
+  else {
+    if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
+    mLog = nullptr;
+    mImu = nullptr;
+    
+    if (videoCapture) {
+      // Take the ascent video
+      pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+    }
+    else {
+      startDelayedSIFT();
+    }
+  }
+  
+  cout << "Main: Initiated" << endl;
 
-	// Start video capture if doing so
-        // if (videoCapture) {
-	//   std::cout << "python3" << std::endl;
-	//   system("sudo -H -u pi `which nix-shell` --run \"`which python3` ./subscale_driver/videoCapture.py\""); // Doesn't handle sigint
-	//   //RunFile("./subscale_driver/videoCapture.py");
-	//   std::cout << "end python3" << std::endl;
-        // }
+  // Start video capture if doing so
+  // if (videoCapture) {
+  //   std::cout << "python3" << std::endl;
+  //   system("sudo -H -u pi `which nix-shell` --run \"`which python3` ./subscale_driver/videoCapture.py\""); // Doesn't handle sigint
+  //   //RunFile("./subscale_driver/videoCapture.py");
+  //   std::cout << "end python3" << std::endl;
+  // }
 }
 
 VADL2022::~VADL2022()
 {
-	cout << "Main: Destorying" << endl;
-
-	delete (mLog);
-	// delete (mMotor);
-	// delete (mLds);
-	// delete (mLidar);
-	delete (mImu);
-
-	cout << "Main: Destoryed" << endl;
+  cout << "Main: Destorying" << endl;
+  
+  delete (mLog);
+  // delete (mMotor);
+  // delete (mLds);
+  // delete (mLidar);
+  delete (mImu);
+  
+  cout << "Main: Destoryed" << endl;
 }
 
 bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the last element */) {
@@ -491,65 +495,64 @@ bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the 
 }
 void VADL2022::connect_GPIO()
 {
-	cout << "GPIO: Connecting" << endl;
+  cout << "GPIO: Connecting" << endl;
 
-	// Prepare for gpioInitialise() by setting perms, etc.
-	const char* args[] = {"bash", "-c", gpioUserPermissionFixingCommands.c_str(), "bash", // {"
-	  // If the -c option is present, then commands are read from string.
-	  // If there are arguments after the string, they are assigned to the positional
-	  // parameters, starting with $0.
-	  // "} -- https://linux.die.net/man/1/bash
-	  gpioUserPermissionFixingCommands_arg.c_str(), NULL};
-	if (!runCommandWithFork(args)) {
-	  std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl;
-	  exit(1);
-	} 
+  // Prepare for gpioInitialise() by setting perms, etc.
+  const char* args[] = {"bash", "-c", gpioUserPermissionFixingCommands.c_str(), "bash", // {"
+    // If the -c option is present, then commands are read from string.
+    // If there are arguments after the string, they are assigned to the positional
+    // parameters, starting with $0.
+    // "} -- https://linux.die.net/man/1/bash
+    gpioUserPermissionFixingCommands_arg.c_str(), NULL};
+  if (!runCommandWithFork(args)) {
+    std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl;
+    exit(1);
+  } 
+  
+  if (gpioInitialise() < 0) {
+    cout << "GPIO: Failed to Connect" << endl;
+    //exit(1);
+  }
+  
+  gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down on pin 26
 
-	if (gpioInitialise() < 0)
-	{
-		cout << "GPIO: Failed to Connect" << endl;
-		//exit(1);
-	}
-
-	gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down on pin 26
-
-	cout << "GPIO: Connected" << endl;
+  cout << "GPIO: Connected" << endl;
 }
 
 void VADL2022::disconnect_GPIO()
 {
-	cout << "GPIO: Disconnecting" << endl;
-
-	gpioTerminate();
-
-	cout << "GPIO: Disconnected" << endl;
+  cout << "GPIO: Disconnecting" << endl;
+  
+  gpioTerminate();
+  
+  cout << "GPIO: Disconnected" << endl;
 }
 
 void VADL2022::connect_Python()
 {
-	cout << "Python: Connecting" << endl;
+  cout << "Python: Connecting" << endl;
 
-	Py_Initialize();
-	int ret = PyRun_SimpleString("import sys; #print(sys.path); \n\
+  Py_Initialize();
+  int ret = PyRun_SimpleString("import sys; #print(sys.path); \n\
 print('Python version:', sys.version, 'with executable at', sys.executable) \n\
 for p in ['', '/nix/store/yc5ilbccacp9npyjr6dayq904w9p49mc-opencv-4.5.2/lib/python3.7/site-packages', '/nix/store/2ylqgllg47w0hjylln7gh8xw1d1lx77c-python3.7-numpy-1.20.3/lib/python3.7/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/yr3gsrcqziplz4c0kgp27r08pc9c7iq8-python3-3.7.11-env/lib/python3.7/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', \n\
 \n\
 ]: \n\
     sys.path.append(p); \n\
 print(sys.path)");
-	if (ret == -1) {
-		cout << "Failed to setup Python path" << endl;
-		exit(1);
-	}
-
-	cout << "Python: Connected" << endl;
+  if (ret == -1) {
+    cout << "Failed to setup Python path" << endl;
+    exit(1);
+  }
+  
+  cout << "Python: Connected" << endl;
 }
 
 void VADL2022::disconnect_Python()
 {
-	cout << "Python: Disconnecting" << endl;
+  cout << "Python: Disconnecting" << endl;
 
-	Py_Finalize();
+  Py_Finalize();
 
-	cout << "Python: Disconnected" << endl;
+  cout << "Python: Disconnected" << endl;
 }
