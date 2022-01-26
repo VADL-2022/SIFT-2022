@@ -255,10 +255,10 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
     auto millisSinceTakeoff = since(takeoffTime).count();
     if (backupSIFTStartTime > millisSinceTakeoff) {
       auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
-      std::cout << "IMU considered not responding. Waiting until projected SIFT start time, which is " << (millisTillSIFT/1000.0) " seconds away from now..." << std::endl;
+      std::cout << "IMU considered not responding. Waiting until projected SIFT start time, which is " << (millisTillSIFT/1000.0) << " seconds away from now..." << std::endl;
       std::this_thread::sleep_for(std::chrono::milliseconds(millisTillSIFT));
     } else {
-      std::cout << "IMU considered not responding. No need to wait until projected SIFT start time, with " << (millisSinceTakeoff - backupSIFTStartTime )/1000.0<< " seconds to spare" << std::endl;
+      std::cout << "IMU considered not responding. No need to wait until projected SIFT start time, with " << (millisSinceTakeoff - backupSIFTStartTime )/1000.0 << " seconds to spare" << std::endl;
     }
     // Start SIFT or video capture
     magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
