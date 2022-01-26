@@ -995,7 +995,7 @@ int mainMission(DataSourceT* src,
                 std::cout << "Linear accel NED: " << imu.linearAccelNed << std::endl;
                 
                 // Use the IMU data:
-                pyRunFile("src/python/Precession.py", 0, nullptr);
+                S_RunFile("src/python/Precession.py", 0, nullptr);
             }
             t.logElapsed("grabbing from subscale driver fd");
         }
