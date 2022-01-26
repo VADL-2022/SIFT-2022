@@ -95,7 +95,7 @@ void startDelayedSIFT() {
     else {
       std::cout << "Started SIFT " << std::endl;
     }
-  });
+  }, "SIFT", QueuedFunctionType::Misc);
 }
 int fd[2]; // write() to fd[1] to send IMU data to sift after running startDelayedSIFT_fork()
 ofdstream toSIFT;
