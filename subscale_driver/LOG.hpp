@@ -14,7 +14,7 @@ public:
 
     typedef void (*UserCallback)(LOG* log, float fseconds);
     // Anything except IMU* may be nullptr:
-    LOG(UserCallback userCallback_, void* callbackUserData_, IMU *);
+    LOG(UserCallback userCallback_, void* callbackUserData_, IMU *, long long flushToLogEveryNMilliseconds_=0 /*0 to flush immediately*/);
     ~LOG();
     void receive();
     void halt();
@@ -23,6 +23,8 @@ public:
     UserCallback userCallback;
     void* callbackUserData;
     IMU *mImu;     // IMU
+    long long flushToLogEveryNMilliseconds;
+    float fseconds_lastFlush = -1;
     
 private:
     // LIDAR *mLidar; // LIDAR

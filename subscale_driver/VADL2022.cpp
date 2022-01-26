@@ -402,6 +402,7 @@ VADL2022::VADL2022(int argc, char** argv)
   // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
   long long backupSIFTStartTime = -1;
   bool forceNoIMU = false;
+  long long flushIMUDataEveryNMilliseconds = 0;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
       callback = nullptr;
@@ -436,6 +437,16 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       else {
 	puts("Expected start time");
+	exit(1);
+      }
+      i++;
+    }
+    else if (strcmp(argv[i], "--flush-imu-data-every-n-milliseconds") == 0) { // Time in milliseconds to delay flushing of data points from the IMU into the log file.
+      if (i+1 < argc) {
+	flushIMUDataEveryNMilliseconds = std::stoll(argv[i+1]); // Must be long long
+      }
+      else {
+	puts("Expected flush milliseconds");
 	exit(1);
       }
       i++;
@@ -520,7 +531,7 @@ VADL2022::VADL2022(int argc, char** argv)
   // mLds = new LDS();
   // mMotor = new MOTOR();
   if (vn) {
-    mLog = new LOG(callback, this, mImu); //, nullptr /*mLidar*/, nullptr /*mLds*/);
+    mLog = new LOG(callback, this, mImu, flushIMUDataEveryNMilliseconds); //, nullptr /*mLidar*/, nullptr /*mLds*/);
     mImu->receive();
     mLog->receive();
   }

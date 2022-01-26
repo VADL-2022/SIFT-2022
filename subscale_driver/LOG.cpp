@@ -24,8 +24,26 @@ void LOG::callback(void *userData)
 
     if (LOG_ACTIVE)
     {
-        data->mLog << endl
-                   << fseconds << ","
+      bool flush;
+      float flushToLogEveryNSeconds = data->flushToLogEveryNMilliseconds / 1000.0;
+      if (data->flushToLogEveryNMilliseconds == 0) {
+	flush = true;
+      }
+      else if (data->fseconds_lastFlush == -1 || flushToLogEveryNSeconds > fseconds - data->fseconds_lastFlush) {
+	flush = true;
+	data->fseconds_lastFlush = fseconds;
+      }
+      else {
+        flush = false;
+      }
+
+      if (flush) {
+        data->mLog << endl;
+      }
+      else {
+        data->mLog << '\n';
+      }
+        data->mLog << fseconds << ","
                    << data->mImu->yprNed[0] << "," << data->mImu->yprNed[1] << "," << data->mImu->yprNed[2] << ","
                    << data->mImu->qtn[0] << "," << data->mImu->qtn[1] << "," << data->mImu->qtn[2] << "," << data->mImu->qtn[3] << ","
                    << data->mImu->rate[0] << "," << data->mImu->rate[1] << "," << data->mImu->rate[2] << ","
@@ -50,7 +68,8 @@ void LOG::callback(void *userData)
     }
 }
 
-LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu) : userCallback(userCallback_), callbackUserData(callbackUserData_), mImu(imu)
+LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long long flushToLogEveryNMilliseconds_) : userCallback(userCallback_), callbackUserData(callbackUserData_), mImu(imu),
+														  flushToLogEveryNMilliseconds(flushToLogEveryNMilliseconds_)
 {
     if (LOG_ACTIVE || VERBOSE)
     {
