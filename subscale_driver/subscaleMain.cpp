@@ -6,7 +6,13 @@
 Queue<QueuedFunction, 8> mainDispatchQueue;
 std::atomic<bool> isRunningPython = false;
 
+// struct Clearer {
+//     Clearer() { std::cout.setstate(std::ios::failbit); }
+// } output_clearer;
+
 int main(int argc, char **argv) {
+  //fclose(stdout);
+  
   VADL2022 vadl(argc, argv);
 
   QueuedFunction f;

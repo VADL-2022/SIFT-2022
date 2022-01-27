@@ -330,6 +330,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 }
 
 void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
+  return;
   float magnitude = log->mImu->linearAccelNed.mag();
   // Give this data to SIFT
   if (toSIFT.isOpen()) {
