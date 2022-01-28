@@ -33,6 +33,11 @@ let
   #   #enableOptimizations = true; # If enabled: longer build time but 10% faster performance.. but the build is no longer reproducible 100% apparently (source: "15.21.2.2. Optimizations" of https://nixos.org/manual/nixpkgs/stable/ )
   # };
   # #
+
+  python38Hacked = (pkgs.python38.overrideAttrs (oldAttrs: rec {
+    patchPhase = '' #oldAttrs.patchPhase ++ '\'
+    substituteInPlace Modules/signalmodule.c --replace "func == NULL || func == Py_None || func == IgnoreHandler ||" "0 &&"
+  '';}));
 in
 mkShell {
   buildInputs = [ #my-python-packages
@@ -53,8 +58,9 @@ mkShell {
     ] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [
     # #
     
-    # VADL2022 "library" #
-    (python38.withPackages (p: with p; [
+      # VADL2022 "library" #
+      #python38Hacked
+    (python37.withPackages (p: with p; [
       (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
       #opencv4
       #numpy
