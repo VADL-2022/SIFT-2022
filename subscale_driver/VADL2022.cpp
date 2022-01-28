@@ -26,14 +26,14 @@
 
 // G Forces
 const float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
-const float MAIN_DEPLOYMENT_G_FORCE = 1; //Main parachute deployment is 10-15 g's
+float MAIN_DEPLOYMENT_G_FORCE = 1; //Main parachute deployment is 10-15 g's
 // Timings
 const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Milliseconds
 // Acceleration (Meters per second squared)
 const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81; // Meters per second squared
-const float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 ; // Meters per second squared
+float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 // Command Line Args
 bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false;
 // Sift params initialization
@@ -127,7 +127,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
 	  std::string(" --sleep-before-running ") +
 	  std::string(timeAfterMainDeployment) +
 	  std::string(" --no-preview-window") // --video-file-data-source
-    + (useIMU ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
+    + (false/*useIMU*/ ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
   ;
   
   puts("Forking");
@@ -330,6 +330,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 }
 
 void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
+  return;
   float magnitude = log->mImu->linearAccelNed.mag();
   // Give this data to SIFT
   if (toSIFT.isOpen()) {
@@ -417,6 +418,18 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       else {
 	puts("Expected start time");
+	exit(1);
+      }
+      i++;
+    }
+    else if (strcmp(argv[i], "--main-deployment-g-force") == 0) { // Override thing
+      if (i+1 < argc) {
+	MAIN_DEPLOYMENT_G_FORCE = stof(argv[i+1]);
+	IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 ; // Meters per second squared
+	std::cout << "Set main deployment g force to " << MAIN_DEPLOYMENT_G_FORCE << std::endl;
+      }
+      else {
+	puts("Expected g force");
 	exit(1);
       }
       i++;
