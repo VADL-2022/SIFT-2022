@@ -9,7 +9,13 @@
 void stopMain() {
   // Tell python to sigint
   printf_("Telling Python to SIGINT\n");
-  PyErr_SetInterrupt(); //PyErr_SetInterruptEx(SIGINT);
+  //PyErr_SetInterrupt(); //PyErr_SetInterruptEx(SIGINT);
+  lastPyPIDM.lock();
+  if (lastPyPIDValid) {
+    std::cout << "SIGINT for python" << std::endl;
+    kill(lastPyPID, SIGINT);
+  }
+  lastPyPIDM.unlock();
   
   if (!isRunningPython) {
     // Exit since we got a signal while main thread wasn't running python. Note that this means you should only really run python from the main dispatch queue, unless the implementation is improved..

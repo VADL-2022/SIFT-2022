@@ -2,9 +2,14 @@
 
 #include <python3.7m/Python.h>
 #include "VADL2022.hpp"
+#include <mutex>
 
 Queue<QueuedFunction, 8> mainDispatchQueue;
 std::atomic<bool> isRunningPython = false;
+
+pid_t lastPyPID;
+bool lastPyPIDValid=false;
+std::mutex lastPyPIDM;
 
 int main(int argc, char **argv) {
   VADL2022 vadl(argc, argv);

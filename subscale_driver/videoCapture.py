@@ -23,7 +23,11 @@ fps = 30
 print("Old width,height:",frame_width,frame_height)
 frame_width=640
 frame_height=480
-out = cv2.VideoWriter('./dataOutput/outpy' + date_time + '.mp4',cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
+fname = './dataOutput/outpy' + date_time + '.mp4'
+import os
+while os.path.exists(fname):
+  fname += '_1'
+out = cv2.VideoWriter(fname,cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
 
 try:
     while(True):
