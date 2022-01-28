@@ -1,4 +1,4 @@
-#include <python3.7m/Python.h>
+#include <python3.8/Python.h>
 #include <iostream>
 
 namespace common {
@@ -14,8 +14,8 @@ for p in "
 				 #ifdef __APPLE__
 				 "['', '/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/lib/python37.zip', '/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/lib/python3.7', '/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/lib/python3.7/lib-dynload', '/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/smc86ndziwyi2vzjzvhh9h2dyscvh2rx-python3-3.7.11-env/lib/python3.7/site-packages', \n"
 				 #else
-				 "['', '/nix/store/yc5ilbccacp9npyjr6dayq904w9p49mc-opencv-4.5.2/lib/python3.7/site-packages', '/nix/store/2ylqgllg47w0hjylln7gh8xw1d1lx77c-python3.7-numpy-1.20.3/lib/python3.7/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/yr3gsrcqziplz4c0kgp27r08pc9c7iq8-python3-3.7.11-env/lib/python3.7/site-packages', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python37.zip', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7', '/nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/lib/python3.7/lib-dynload', \n \
-"
+				 "['', '/nix/store/84vk7xmmayl3804w97cjsk9kkb3lz6px-python3-3.8.11/lib/python38.zip', '/nix/store/84vk7xmmayl3804w97cjsk9kkb3lz6px-python3-3.8.11/lib/python3.8', '/nix/store/84vk7xmmayl3804w97cjsk9kkb3lz6px-python3-3.8.11/lib/python3.8/lib-dynload', '/nix/store/84vk7xmmayl3804w97cjsk9kkb3lz6px-python3-3.8.11/lib/python3.8/site-packages', '/nix/store/qpxyykbyccdz5rr7vwibbjc6hh3lc27w-python3-3.8.11-env/lib/python3.8/site-packages', \n" \
+
 				 #endif
 				 "\n\
 ]: \n\

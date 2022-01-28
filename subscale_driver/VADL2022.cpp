@@ -1,4 +1,4 @@
-#include <python3.7m/Python.h>
+#include <python3.8/Python.h>
 #include <iostream>
 #include <pigpio.h>
 #include "IMU.hpp"

@@ -1,7 +1,7 @@
 #ifndef PY_H
 #define PY_H
 
-#include <python3.7m/Python.h> /* must be first */
+#include <python3.8/Python.h> /* must be first */
 
 #include <stdbool.h>
 

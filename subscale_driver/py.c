@@ -1,8 +1,8 @@
 #include "py.h"
 #include "lib/pf_string.h"
 
-#include <python3.7m/osdefs.h>
-#include <python3.7m/frameobject.h>
+#include <python3.8/osdefs.h>
+#include <python3.8/frameobject.h>
 #include <stdbool.h>
 
 #define PyString_FromString PyUnicode_FromString

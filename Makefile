@@ -84,7 +84,7 @@ ifeq ($(SIFT_IMPL),SIFTGPU)
 additionalPkgconfigPackages += gl glew glut IL
 additionalCFLAGS = -isystem /nix/store/0khrl4yrg1qyz93nk6kq1s79c4a0w8i0-libdevil-1.7.8-dev/include -isystem /nix/store/i0rmp3app7yqd37ihgxlx9c3lwsj16kq-opencl-headers-2020.06.16/include -isystem /nix/store/92h4zdgadxpf77iajcx7s60aanqmz9xy-opencl-headers-2020.06.16/include -I/nix/store/gilc17g399q13hghm8zzkdcn0mv1n7y7-libunwind-1.4.0-dev/include
 endif
-CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng python-3.7m ${additionalPkgconfigPackages}` -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1 -DSIFT_IMPL=$(SIFT_IMPL) -D$(SIFT_IMPL)_ $(CONFIG_TEST_DEFINES) -IVectorNav/include    $(additionalCFLAGS) #$(NIX_CFLAGS_COMPILE)  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng python-3.8-embed ${additionalPkgconfigPackages}` -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1 -DSIFT_IMPL=$(SIFT_IMPL) -D$(SIFT_IMPL)_ $(CONFIG_TEST_DEFINES) -IVectorNav/include    $(additionalCFLAGS) #$(NIX_CFLAGS_COMPILE)  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 $(info $(OS))
 ifeq ($(OS),Darwin)
@@ -117,7 +117,7 @@ LFLAGS += -lpng -lm -lpthread -ldl -lunwind #-ljpeg -lrt -lm
 # else
     LDFLAGS = ${NIX_LDFLAGS}
 # endif
-LDFLAGS += `pkg-config --libs opencv4 libpng python-3.7m ${additionalPkgconfigPackages}`
+LDFLAGS += `pkg-config --libs opencv4 libpng python-3.8-embed ${additionalPkgconfigPackages}`
 
 #CC := clang-12
 #CXX := clang-12 -x c++
@@ -196,7 +196,7 @@ ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE = $(ADDITIONAL_CFLAGS_RELEASE) $(ADDITIONA
 $(eval $(call C_AND_CXX_FLAGS_template,release_commandLine,$(ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE),))
 
 # debug target
-ADDITIONAL_CFLAGS_DEBUG = -Og -g3 -DDEBUG # -O0
+ADDITIONAL_CFLAGS_DEBUG = -Og -g3 -DDEBUG -fsanitize=address # -O0
 $(eval $(call C_AND_CXX_FLAGS_template,debug,$(ADDITIONAL_CFLAGS_DEBUG),))
 
 # debug_commandLine target
@@ -220,8 +220,8 @@ SUBSCALE_SRC := ./subscale_driver/
 SUBSCALE_SOURCES := common.cpp $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp)) $(wildcard src/tools/backtrace/*.cpp)
 SUBSCALE_SOURCES_C := $(wildcard $(SUBSCALE_SRC)/*.c) $(wildcard $(SUBSCALE_SRC)/lib/*.c) src/tools/printf.c src/tools/_putchar.c
 SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o) $(SUBSCALE_SOURCES_C:%.c=%.o)
-$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@))
-$(eval $(call OBJECTS_LINKING_template,subscale,debug,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_DEBUG) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@)) # `sudo setcap cap_sys_rawio+ep head` is from https://unix.stackexchange.com/questions/475800/non-root-read-access-to-dev-mem-by-kmem-group-members-fails ; also made it run the other stuff from https://raspberrypi.stackexchange.com/questions/40105/access-gpio-pins-without-root-no-access-to-dev-mem-try-running-as-root
+$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -lpigpio -lpython3.8,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@))
+$(eval $(call OBJECTS_LINKING_template,subscale,debug,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_DEBUG) -lpigpio -lpython3.8,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@)) # `sudo setcap cap_sys_rawio+ep head` is from https://unix.stackexchange.com/questions/475800/non-root-read-access-to-dev-mem-by-kmem-group-members-fails ; also made it run the other stuff from https://raspberrypi.stackexchange.com/questions/40105/access-gpio-pins-without-root-no-access-to-dev-mem-try-running-as-root
 
 ############################# VectorNav targets #############################
 

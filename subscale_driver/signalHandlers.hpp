@@ -3,10 +3,14 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "../src/tools/printf.h"
-#include <python3.7m/Python.h>
+#include <python3.8/Python.h>
 #include <pigpio.h>
+#include <thread>
 
 void stopMain() {
+    std::thread::id this_id = std::this_thread::get_id();
+    std::cout << "thread " << this_id << " running stopMain()" << std::endl;
+    
   // Tell python to sigint
   printf_("Telling Python to SIGINT\n");
   PyErr_SetInterrupt(); //PyErr_SetInterruptEx(SIGINT);

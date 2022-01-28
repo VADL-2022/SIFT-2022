@@ -27,19 +27,19 @@ let
   });
 
   # VADL2022 "library" #
-  python37m = (pkgs.python37.overrideAttrs (oldAttrs: rec {
-    configureFlags = oldAttrs.configureFlags ++ [ "--with-pymalloc" ]; # Enable Pymalloc
-  })).override {
-    #enableOptimizations = true; # If enabled: longer build time but 10% faster performance.. but the build is no longer reproducible 100% apparently (source: "15.21.2.2. Optimizations" of https://nixos.org/manual/nixpkgs/stable/ )
-  };
+  # python37m = (pkgs.python37.overrideAttrs (oldAttrs: rec {
+  #   configureFlags = oldAttrs.configureFlags ++ [ "--with-pymalloc" ]; # Enable Pymalloc
+  # })).override {
+  #   #enableOptimizations = true; # If enabled: longer build time but 10% faster performance.. but the build is no longer reproducible 100% apparently (source: "15.21.2.2. Optimizations" of https://nixos.org/manual/nixpkgs/stable/ )
+  # };
   # #
 in
 mkShell {
   buildInputs = [ #my-python-packages
-                ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
-  ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python37Packages.opencv4.override { enableGtk2 = true; })
-                                                                 opencvGtk
-                                                               ]) ++ [
+  #              ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
+  # ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python37Packages.opencv4.override { enableGtk2 = true; })
+  #                                                                opencvGtk
+  #                                                              ]) ++ [
     clang_12 # Need >= clang 10 to fix fast-math bug (when using -Ofast) ( https://bugzilla.redhat.com/show_bug.cgi?id=1803203 )
     pkgconfig libpng
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ lldb x11 ]) ++ [
@@ -54,7 +54,7 @@ mkShell {
     # #
     
     # VADL2022 "library" #
-    (python37m.withPackages (p: with p; [
+    (python38.withPackages (p: with p; [
       (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
       #opencv4
       #numpy
@@ -67,6 +67,7 @@ mkShell {
       (lib.optional useGtk (toPythonModule (pkgs.opencv4.override { enableGTK2 = true; enablePython = true; pythonPackages = python37Packages; }))) # Temp hack
       numpy
       #matplotlib
+      opencv4
     ]))
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {}) ]) ++ [
     libusb1

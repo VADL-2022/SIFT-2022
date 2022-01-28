@@ -43,9 +43,12 @@ try:
 
       # Break the loop
       else:
-        break  
+        break
+except OSError:
+  print("Handling OSError")
+  pass
 except KeyboardInterrupt:
-    print("Handing keyboardinterrupt")
+    print("Handling keyboardinterrupt")
     pass
 finally:    
     # When everything done, release the video capture and video write objects
