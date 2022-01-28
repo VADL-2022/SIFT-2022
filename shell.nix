@@ -59,8 +59,8 @@ mkShell {
     # #
     
       # VADL2022 "library" #
-      #python38Hacked
-    (python37.withPackages (p: with p; [
+      python38Hacked
+    (python38Hacked.withPackages (p: with p; [
       (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
       #opencv4
       #numpy
