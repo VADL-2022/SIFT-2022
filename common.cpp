@@ -14,7 +14,7 @@ for p in "
 				 #ifdef __APPLE__
 				 "['', '/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/lib/python37.zip', '/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/lib/python3.7', '/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/lib/python3.7/lib-dynload', '/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/lib/python3.7/site-packages', '/nix/store/smc86ndziwyi2vzjzvhh9h2dyscvh2rx-python3-3.7.11-env/lib/python3.7/site-packages', \n"
 				 #else
-				 "['', '/nix/store/84vk7xmmayl3804w97cjsk9kkb3lz6px-python3-3.8.11/lib/python38.zip', '/nix/store/84vk7xmmayl3804w97cjsk9kkb3lz6px-python3-3.8.11/lib/python3.8', '/nix/store/84vk7xmmayl3804w97cjsk9kkb3lz6px-python3-3.8.11/lib/python3.8/lib-dynload', '/nix/store/84vk7xmmayl3804w97cjsk9kkb3lz6px-python3-3.8.11/lib/python3.8/site-packages', '/nix/store/qpxyykbyccdz5rr7vwibbjc6hh3lc27w-python3-3.8.11-env/lib/python3.8/site-packages', \n" \
+				 "['', '/nix/store/aynlwrqdx1wxya1whshgz0spx75x1w30-python3-3.8.11/lib/python3.8/site-packages', '/nix/store/qpxyykbyccdz5rr7vwibbjc6hh3lc27w-python3-3.8.11-env/lib/python3.8/site-packages', '/nix/store/aynlwrqdx1wxya1whshgz0spx75x1w30-python3-3.8.11/lib/python38.zip', '/nix/store/aynlwrqdx1wxya1whshgz0spx75x1w30-python3-3.8.11/lib/python3.8', '/nix/store/aynlwrqdx1wxya1whshgz0spx75x1w30-python3-3.8.11/lib/python3.8/lib-dynload', \n" \
 
 				 #endif
 				 "\n\
