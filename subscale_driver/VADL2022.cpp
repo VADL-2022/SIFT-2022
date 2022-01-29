@@ -427,7 +427,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // Stop SIFT on timer time elapsed
   if (verbose)
     std::cout << "Time till SIFT stops: " << backupSIFTStopTime - since(mainDeploymentOrStartedSIFTTime).count() << " milliseconds" << std::endl;
-  if (since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime) {
+  if (since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime && !mainDispatchQueueDrainThenStop) {
     std::cout << "Stopping SIFT on backup time elapsed" << std::endl;
     raise(SIGINT);
     // Also close main dispatch queue so the subscale driver terminates
