@@ -124,7 +124,8 @@ void startDelayedSIFT(bool useIMU) {
   }, "SIFT", QueuedFunctionType::Misc);
 }
 int fd[2]; // write() to fd[1] to send IMU data to sift after running startDelayedSIFT_fork()
-ofdstream toSIFT;
+//ofdstream toSIFT;
+FILE* toSIFT;
 bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool useIMU) { //Actually works, need xauthority for root above
   if (pipe(fd)) {
     printf("Error with pipe!\n");
@@ -159,7 +160,8 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     
     close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
     
-    toSIFT.open(fd[1]);
+    //toSIFT.open(fd[1]);
+    toSIFT = fdopen(fd[1]);
     
     int status = 0;
     if (wait(&status) != -1) {
@@ -449,11 +451,15 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
 
 
   
-  return;
+  //return;
+
+
+
   
   float magnitude = log->mImu->linearAccelNed.mag();
   // Give this data to SIFT
-  if (toSIFT.isOpen()) {
+  //if (toSIFT.isOpen()) {
+  if (toSIFT != nullptr) {
   // Check for IMU failure first
   if (verbose) {
     printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
@@ -463,11 +469,14 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
     std::cout << "IMU considered not responding. Telling SIFT we're not using it" << std::endl;
     // Notify SIFT that IMU failed
-    toSIFT << "\n" << -1.0f;
-    toSIFT.flush();
+    // toSIFT << "\n" << -1.0f;
+    // toSIFT.flush();
+    fprintf(toSIFT, "\n%x", -1.0f);
+    fflush(toSIFT);
     
     VADL2022* v = (VADL2022*)log->callbackUserData;
     v->mLog->userCallback = nullptr;
+    reportStatus(Status::IMUNotRespondingInPassIMUDataToSIFTCallback);
     return;
   }
   
@@ -485,8 +494,38 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
                    << log->mImu->accelNed[0] << "," << log->mImu->accelNed[1] << "," << log->mImu->accelNed[2] << ","
                    << log->mImu->linearAccelBody[0] << "," << log->mImu->linearAccelBody[1] << "," << log->mImu->linearAccelBody[2] << ","
                    << log->mImu->linearAccelNed[0] << "," << log->mImu->linearAccelNed[1] << "," << log->mImu->linearAccelNed[2] << ",";
+
+            fprintf(toSIFT, "\n%x" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+                    ",$x,$x,$x" // yprNed
+                    ",$x,$x,$x,$x" // qtn
+                    ",$x,$x,$x" // rate
+                    ",$x,$x,$x" // accel
+                    ",$x,$x,$x" // mag
+                    ",$x,$x,$x" // temp,pres,dTime
+                    ",$x,$x,$x" // dTheta
+                    ",$x,$x,$x" // dVel
+                    ",$x,$x,$x" // magNed
+                    ",$x,$x,$x" // accelNed
+                    ",$x,$x,$x" // linearAccelBody
+                    ",$x,$x,$x" // linearAccelNed
+                    "," // Nothing after this comma on purpose.
+                    ,
+                    fseconds,
+                    imu.yprNed.x, imu.yprNed.y, imu.yprNed.z,
+                    imu.qtn.x, imu.qtn.y, imu.qtn.z, imu.qtn.w,
+                    imu.rate.x, imu.rate.y, imu.rate.z,
+                    imu.accel.x, imu.accel.y, imu.accel.z,
+                    imu.mag.x, imu.mag.y, imu.mag.z,
+                    imu.temp, imu.pres, imu.dTime,
+                    imu.dTheta.x, imu.dTheta.y, imu.dTheta.z,
+                    imu.dVel.x, imu.dVel.y, imu.dVel.z,
+                    imu.magNed.x, imu.magNed.y, imu.magNed.z,
+                    imu.accelNed.x, imu.accelNed.y, imu.accelNed.z,
+                    imu.linearAccelBody.x, imu.linearAccelBody.y, imu.linearAccelBody.z,
+                    imu.linearAccelNed.x, imu.linearAccelNed.y, imu.linearAccelNed.z);
+            fflush(toSIFT);
   
-    toSIFT.flush();
+    // toSIFT.flush();
   }
   else {
     std::cout << "passIMUDataToSIFTCallback: toSIFT is not open, not doing anything" << std::endl;

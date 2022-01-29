@@ -966,19 +966,23 @@ int mainMission(DataSourceT* src,
                 driverInput_file = nullptr;
             }
             else {
+                if (feof(driverInput_file)) {
+                    puts("eof");
+                }
+                // TODO: read all data
                 fscanf(driverInput_file,
-                       ",%f,%f,%f" // yprNed
-                       ",%f,%f,%f,%f" // qtn
-                       ",%f,%f,%f" // rate
-                       ",%f,%f,%f" // accel
-                       ",%f,%f,%f" // mag
-                       ",%f,%f,%f" // temp,pres,dTime
-                       ",%f,%f,%f" // dTheta
-                       ",%f,%f,%f" // dVel
-                       ",%f,%f,%f" // magNed
-                       ",%f,%f,%f" // accelNed
-                       ",%f,%f,%f" // linearAccelBody
-                       ",%f,%f,%f" // linearAccelNed
+                       ",$x,$x,$x" // yprNed
+                       ",$x,$x,$x,$x" // qtn
+                       ",$x,$x,$x" // rate
+                       ",$x,$x,$x" // accel
+                       ",$x,$x,$x" // mag
+                       ",$x,$x,$x" // temp,pres,dTime
+                       ",$x,$x,$x" // dTheta
+                       ",$x,$x,$x" // dVel
+                       ",$x,$x,$x" // magNed
+                       ",$x,$x,$x" // accelNed
+                       ",$x,$x,$x" // linearAccelBody
+                       ",$x,$x,$x" // linearAccelNed
                        "," // Nothing after this comma on purpose.
                        ,
                        &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
