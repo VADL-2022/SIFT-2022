@@ -293,10 +293,11 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       //   g_state = State_WaitingForMainStabilizationTime;
       g_state = STATE_WaitingForMainParachuteDeployment; // Now wait till main has deployed
 
+      // [nvm the below, already done on the pad in VADL2022::VADL2022():
       // Take the ascent picture 
-      if (videoCapture) {
-	pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
-      }
+      // if (videoCapture) {
+      //   pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+      // }
     }
   }
   else {
@@ -362,7 +363,8 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
       // Let video capture python script know that the main parachute has deployed in order to swap cameras
       if (videoCapture) {
 	// Stop the python videocapture script
-	raise(SIGINT);
+        if (isRunningPython)
+          raise(SIGINT);
 	
 	gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
 	gpioWrite(26, 1); // Set GPIO26 high.
@@ -371,6 +373,10 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 	pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
       }
       else {
+        // Stop the same videocapture script from on the pad in VADL2022::VADL2022():
+        if (isRunningPython)
+          raise(SIGINT);
+        
 	// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
 	startDelayedSIFT(true /* <--boolean: when true, use the IMU in SIFT*/);
 	// ^if an error happens, continue with this error, we might as well try recording IMU data at least.
@@ -654,6 +660,11 @@ VADL2022::VADL2022(int argc, char** argv)
     mLog = new LOG(callback, this, mImu, flushIMUDataEveryNMilliseconds); //, nullptr /*mLidar*/, nullptr /*mLds*/);
     mImu->receive();
     mLog->receive();
+
+    // Always start the video to ensure we get some data in case takeoff detection fails or SIFT doesn't start etc.
+    // Take an ascent video (on SIFT and video capture pi's)
+    std::cout << "Starting failsafe video" << std::endl;
+    pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
   }
   else {
     if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;

@@ -16,6 +16,7 @@ void stopMain() {
     if (lastForkedPIDValid) {
       printf_("isRunningPython is false and a last PID is set; killing last forked PID: %d\n", lastForkedPID); // TODO: assert type of lastForkedPID is int
       kill(lastForkedPID, SIGINT);
+      // (Reset valid status of lastForkedPIDValid is done in runCommandWithFork() and startDelayedSIFT_fork(), no need to do it here:) // lastForkedPIDValid = false;
     }
     lastForkedPIDM.unlock();
     if (lastForkedPIDValid) {
