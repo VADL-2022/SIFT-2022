@@ -56,12 +56,12 @@ int main(int argc, char **argv) {
 }
 
 void reportStatus(Status status) {
-  std::string status_str = std::to_string(status);
-  std::string cmd = "python3 subscale_driver/radio.py 0 " + status_str;
-  system(cmd.c_str());
+  // std::string status_str = std::to_string(status);
+  // std::string cmd = "python3 subscale_driver/radio.py 0 " + status_str;
+  // system(cmd.c_str());
 
   
-  std::cout << "Reporting status: " << status << std::endl;
+  // std::cout << "Reporting status: " << status << std::endl;
   return; // TODO: implement properly
   
   const char* path = "subscale_driver/radio.py";
