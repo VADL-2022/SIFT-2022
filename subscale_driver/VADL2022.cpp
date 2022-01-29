@@ -48,6 +48,8 @@ auto takeoffTime = std::chrono::steady_clock::now();
 long long backupSIFTStartTime = -1; // Also used as the projected SIFT start time if IMU fails
 long long backupTakeoffTime = -1;
 bool verbose = false;
+// This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
+auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not actually `now`
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -145,6 +147,11 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   puts("Forking");
   pid_t pid = fork(); // create a new child process
   if (pid > 0) { // Parent process
+    lastForkedPIDM.lock();
+    lastForkedPID=pid;
+    lastForkedPIDValid=true;
+    lastForkedPIDM.unlock();
+    
     close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
     
     toSIFT.open(fd[1]);
@@ -166,8 +173,14 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
       }
     } else {
       printf("Error waiting!\n");
+      lastForkedPIDM.lock();
+      lastForkedPIDValid=false;
+      lastForkedPIDM.unlock();
       return false;
     }
+    lastForkedPIDM.lock();
+    lastForkedPIDValid=false;
+    lastForkedPIDM.unlock();
   } else if (pid == 0) { // Child process
     close(fd[1]); // Close write end of the pipe since we'll be receiving IMU data from the parent process on this pipe, not writing to it from the child process.
     
@@ -334,6 +347,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
       #else
       if (!videoCapture) {
+        mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now();
 	v->mLog->userCallback = passIMUDataToSIFTCallback;
       }
       else {
@@ -373,6 +387,10 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 }
 
 void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
+  float timeSeconds = log->mImu->timestamp / 1.0e9;
+  fseconds -= fsecondsOffset;
+  timeSeconds -= timeSecondsOffset;
+  
   // Convert log->mImu->pres (pressure) to altitude using barometric formula (Cam) and use that to check for nearing the ground + stopping SIFT
   // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
   double kilopascals = log->mImu->pres;
@@ -382,19 +400,27 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
     std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " << relativeAltitude << " ft" << std::endl;
   }
   if (relativeAltitude < 50) {
-    // Stop SIFT
-    std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, stopping SIFT" << std::endl;
+    // Future: stop SIFT here but not sure if this would stop too early, so we just output what would happen:
+    std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, would normally try stopping SIFT" << std::endl;
+    //raise(SIGINT); // <-- to stop SIFT
+  }
+
+  // Stop SIFT on timer time elapsed
+  std::cout << "Time till SIFT stops: " << since(mainDeploymentOrStartedSIFTTime) - backupSIFTStopTime << " milliseconds" << std::endl;
+  if (since(mainDeploymentOrStartedSIFTTime) > backupSIFTStopTime) {
+    std::cout << "Stopping SIFT on backup time elapsed" << std::endl;
     raise(SIGINT);
   }
+
+
+
+  
   return;
   
   float magnitude = log->mImu->linearAccelNed.mag();
   // Give this data to SIFT
   if (toSIFT.isOpen()) {
   // Check for IMU failure first
-  float timeSeconds = log->mImu->timestamp / 1.0e9;
-  fseconds -= fsecondsOffset;
-  timeSeconds -= timeSecondsOffset;
   if (verbose) {
     printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   }
@@ -460,7 +486,7 @@ VADL2022::VADL2022(int argc, char** argv)
   // Parse command-line args
   LOG::UserCallback callback = checkTakeoffCallback;
   // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
-  long long backupSIFTStartTime = -1;
+  long long backupSIFTStartTime = -1, backupSIFTStopTime = -1;
   bool forceNoIMU = false;
   long long flushIMUDataEveryNMilliseconds = 0;
   for (int i = 1; i < argc; i++) {
@@ -516,6 +542,16 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
+    else if (strcmp(argv[i], "--backup-sift-stop-time") == 0) { // Time in milliseconds since main deployment at which to stop SIFT but as an upper bound (don't make it possibly too low, since time for descent varies a lot)
+      if (i+1 < argc) {
+	backupSIFTStopTime = std::stoll(argv[i+1]); // Must be long long
+      }
+      else {
+	puts("Expected stop time");
+	exit(1);
+      }
+      i++;
+    }
     else if (strcmp(argv[i], "--flush-imu-data-every-n-milliseconds") == 0) { // Time in milliseconds to delay flushing of data points from the IMU into the log file.
       if (i+1 < argc) {
         puts("--flush-imu-data-every-n-milliseconds currently not supported since it doesn't flush when signals happen or something like that, todo is implement it maybe with atexit or std::set_terminate");
@@ -561,6 +597,10 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   if (backupSIFTStartTime == -1 && !videoCapture && !imuOnly) {
     puts("Need to provide --backup-sift-start-time");
+    exit(1);
+  }
+  if (backupSIFTStopTime == -1 && !videoCapture && !imuOnly) {
+    puts("Need to provide --backup-sift-stop-time");
     exit(1);
   }
   if (backupTakeoffTime == -1 && !imuOnly) {

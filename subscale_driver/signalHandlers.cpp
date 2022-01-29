@@ -40,7 +40,7 @@ void stopMain() {
 }
 
 void ctrlC(int s, siginfo_t *si, void *arg){
-    printf_("Caught signal %d. Stopping Python...\n",s); // Can't call printf because it might call malloc but the ctrlC might have happened in the middle of a malloc or free call, leaving data structures for it invalid. So we use `printf_` from https://github.com/mpaland/printf which is thread-safe and malloc-free but slow because it just write()'s all the characters one by one. Generally, "the signal handler code must not call non-reentrant functions that modify the global program data underneath the hood." ( https://www.delftstack.com/howto/c/sigint-in-c/ )
+    printf_("Caught signal %d. Stopping current main dispatch queue task...\n",s); // Can't call printf because it might call malloc but the ctrlC might have happened in the middle of a malloc or free call, leaving data structures for it invalid. So we use `printf_` from https://github.com/mpaland/printf which is thread-safe and malloc-free but slow because it just write()'s all the characters one by one. Generally, "the signal handler code must not call non-reentrant functions that modify the global program data underneath the hood." ( https://www.delftstack.com/howto/c/sigint-in-c/ )
     // Notes:
     /* https://stackoverflow.com/questions/11487900/best-pratice-to-free-allocated-memory-on-sigint :
      Handling SIGINT: I can think of four common ways to handle a SIGINT:
