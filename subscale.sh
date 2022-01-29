@@ -66,7 +66,11 @@ sleep_ () {
     sleep "$@"
 }
 
-git checkout subscale2
+commitThing="$1"
+if [ -z "$commitThing" ]; then
+    commitThing="subscale2"
+fi
+git checkout "$commitThing"
 # Checkout submodules from the above commit as well:
 git submodule update --init --recursive
 if [ "$mode" == "sift" ]; then
