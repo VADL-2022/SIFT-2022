@@ -597,6 +597,7 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
+      i++;
     }
     else {
       printf("Unrecognized command-line argument given: %s", argv[i]);
