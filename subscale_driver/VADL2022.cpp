@@ -46,6 +46,7 @@ const char* siftParams = nullptr;
 auto startedDriverTime = std::chrono::steady_clock::now();
 auto takeoffTime = std::chrono::steady_clock::now();
 long long backupSIFTStartTime = -1; // Also used as the projected SIFT start time if IMU fails
+long long backupSIFTStopTime = -1;
 long long backupTakeoffTime = -1;
 bool verbose = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
@@ -486,7 +487,7 @@ VADL2022::VADL2022(int argc, char** argv)
   // Parse command-line args
   LOG::UserCallback callback = checkTakeoffCallback;
   // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
-  long long backupSIFTStartTime = -1, backupSIFTStopTime = -1;
+  long long backupSIFTStartTime = -1;
   bool forceNoIMU = false;
   long long flushIMUDataEveryNMilliseconds = 0;
   for (int i = 1; i < argc; i++) {
