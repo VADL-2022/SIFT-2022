@@ -27,6 +27,7 @@
 #include <python3.7m/Python.h>
 #include "../common.hpp"
 #include "../subscale_driver/pyMainThreadInterface.hpp"
+#include "../subscale_driver/py.h"
 
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp

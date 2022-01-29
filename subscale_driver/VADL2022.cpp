@@ -320,13 +320,23 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
   if (verbose) {
     printf("checkMainDeploymentCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   }
-  // Check for IMU disconnect/failure to deliver packets
-  const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
-  if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
+  const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
+  
+  // Check if backup time elapsed in case IMU doesn't ever report main deployment:
+  auto millisSinceTakeoff = since(takeoffTime).count();
+  const float MIN_TIME_FOR_CATCH_UP = 1000;
+  const long long TIME_FOR_IMU_TO_CATCH_UP = MIN_TIME_FOR_CATCH_UP + IMU_MAIN_DEPLOYMENT_ACCEL_DURATION * 1000; // milliseconds to allow IMU to catch up to the fact that we experienced main deployment etc.
+  if (backupSIFTStartTime + TIME_FOR_IMU_TO_CATCH_UP < millisSinceTakeoff) { // Past our backup time, force trigger
+    auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
+    std::cout << "Too much time elapsed without main deployment. Forcing trigger." << std::endl;
+    magnitude = FLT_MAX; force = true;
+  }
+  // Check for IMU disconnect/failure to deliver packets
+  else if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
     // Wait for SIFT backup time
     auto millisSinceTakeoff = since(takeoffTime).count();
-    if (backupSIFTStartTime > millisSinceTakeoff) {
+    if (backupSIFTStartTime > millisSinceTakeoff) { // Then we have to wait
       auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
       std::cout << "IMU considered not responding. Waiting until projected SIFT start time, which is " << (millisTillSIFT/1000.0) << " seconds away from now..." << std::endl;
       std::this_thread::sleep_for(std::chrono::milliseconds(millisTillSIFT));

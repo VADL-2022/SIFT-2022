@@ -11,6 +11,11 @@ if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]; then
    exit 1
 fi
 
+if [ -z "$IN_NIX_SHELL" ]; then
+    echo "THis script must be run within a nix-shell"
+    exit 1
+fi
+
 hostname=$(hostname)
 if [[ "$hostname" =~ ^sift.* ]]; then
     mode=sift
@@ -67,7 +72,8 @@ git submodule update --init --recursive
 if [ "$mode" == "sift" ]; then
     compileSIFT="make -j4 sift_exe_release_commandLine;"
 fi
-nix-shell --run "$compileSIFT make -j4 subscale_exe_release"
+#nix-shell --run "$compileSIFT make -j4 subscale_exe_release" # Problem: this doesn't set the exit code so set -e doesn't exit for it. Instead we use the below and check for nix-shell at the start of this script:
+$compileSIFT make -j4 subscale_exe_release
 # TODO: sha512 Checksum
 # if [ "$dontsleep" != "1" ]; then
 #     echo "@@@@ Sleeping before takeoff"
@@ -99,7 +105,8 @@ fi
 # fi
 echo "@@@@ Starting driver for $mode"
 if [ "$mode" == "sift" ]; then
-    ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --sift-start-time 2000 --backup-takeoff-time 0 --backup-sift-stop-time 4000 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
+    mainDeploymentToTouchDown=74000 # milliseconds
+    ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --sift-start-time 20000 --backup-takeoff-time 0 --backup-sift-stop-time 4000 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 else
     ./subscale_exe_release --video-capture --sift-start-time "$siftStart" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 fi
