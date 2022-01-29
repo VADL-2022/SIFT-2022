@@ -3,6 +3,7 @@
 #include <python3.7m/Python.h>
 #include "VADL2022.hpp"
 #include <thread>
+#include "py.h"
 
 Queue<QueuedFunction, 8> mainDispatchQueue;
 Queue<QueuedFunction, 16> radioDispatchQueue;

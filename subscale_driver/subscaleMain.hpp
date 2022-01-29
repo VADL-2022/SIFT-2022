@@ -34,6 +34,7 @@ enum Status : int {
   AltitudeLessThanDesiredAmount,
   StoppingSIFTOnBackupTimeElapsed,
   TooMuchTimeElapsedWithoutMainDeployment_ThereforeForcingTrigger,
+  RunningPython,
 };
 // Sets the status which sends on the radio
 extern void status(Status status);
