@@ -28,7 +28,7 @@
 #include "subscaleMain.hpp"
 
 // G Forces
-const float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
+float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
 float MAIN_DEPLOYMENT_G_FORCE = 1; //Main parachute deployment is 10-15 g's
 // Timings
 const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
@@ -36,7 +36,7 @@ const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const float IMU_MAIN_DEPLOYMENT_ACCEL_DURATION = 1.0 / 40.0; // Seconds
 const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Milliseconds
 // Acceleration (Meters per second squared)
-const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81; // Meters per second squared
+float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 // Command Line Args
 bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false;
@@ -541,6 +541,18 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
+    else if (strcmp(argv[i], "--takeoff-g-force") == 0) { // Override thing
+      if (i+1 < argc) {
+	TAKEOFF_G_FORCE = stof(argv[i+1]);
+	IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81; // Meters per second squared
+	std::cout << "Set takeoff g force to " << TAKEOFF_G_FORCE << std::endl;
+      }
+      else {
+	puts("Expected g force");
+	exit(1);
+      }
+      i++;
+    }
     else if (strcmp(argv[i], "--backup-takeoff-time") == 0) { // Time in milliseconds until takeoff approximately in case IMU fails
       if (i+1 < argc) {
 	backupTakeoffTime = std::stoll(argv[i+1]); // Must be long long
@@ -551,7 +563,7 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to countdown from --sift-start-time and then start SIFT, *only* used if the IMU fails
+    else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to countdown up to --sift-start-time and then start SIFT, *only* used if the IMU fails
       if (i+1 < argc) {
 	backupSIFTStartTime = std::stoll(argv[i+1]); // Must be long long
       }
