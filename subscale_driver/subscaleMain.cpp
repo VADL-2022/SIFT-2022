@@ -58,7 +58,6 @@ int main(int argc, char **argv) {
 void reportStatus(Status status) {
   const char* path = "subscale_driver/radio.py";
   radioDispatchQueue.enqueue([=](){
-    status(Status::RunningPython);
     std::string status_str = std::to_string(status);
     const char* args[] = {"0", status_str.c_str(), NULL};
     S_RunFile(path, 2, (char**)args);
