@@ -206,10 +206,21 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   double altitudeFeet = computeAltitude(kilopascals);
   if (onGroundAltitude == DBL_MIN) {
     onGroundAltitude = altitudeFeet;
+    numAltitudes = 1;
   }
   else {
-    onGroundAltitude += altitudeFeet; // Running average
-    numAltitudes += 1;
+    // Actually ignore the first altitude value because it is strangely high.
+    double currentOnGroundAltitude = onGroundAltitude / numAltitudes;
+    double percentDifference = abs(altitudeFeet - currentOnGroundAltitude) / currentOnGroundAltitude;
+    if (percentDifference > 0.5) {
+      // Replace
+      onGroundAltitude = altitudeFeet;
+      numAltitudes = 1;
+    }
+    else {
+      onGroundAltitude += altitudeFeet; // Running average
+      numAltitudes += 1;
+    }
   }
   if (verbose) {
     std::cout << "Altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl;
