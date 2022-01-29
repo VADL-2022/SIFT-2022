@@ -25,7 +25,7 @@
 
 #include "signalHandlers.hpp"
 #include <float.h>
-#include "subscaleMain.cpp"
+#include "subscaleMain.hpp"
 
 // G Forces
 const float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
