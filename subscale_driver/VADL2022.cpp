@@ -200,7 +200,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   }
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("checkTakeoffCallback: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  printf("checkTakeoffCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
@@ -261,7 +261,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("checkMainDeploymentCallback: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  printf("checkMainDeploymentCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
@@ -337,7 +337,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("passIMUDataToSIFTCallback: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
@@ -443,7 +443,9 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (strcmp(argv[i], "--flush-imu-data-every-n-milliseconds") == 0) { // Time in milliseconds to delay flushing of data points from the IMU into the log file.
       if (i+1 < argc) {
-	flushIMUDataEveryNMilliseconds = std::stoll(argv[i+1]); // Must be long long
+        puts("--flush-imu-data-every-n-milliseconds currently not supported since it doesn't flush when signals happen or something like that, todo is implement it maybe with atexit or std::set_terminate");
+        exit(1);
+	//flushIMUDataEveryNMilliseconds = std::stoll(argv[i+1]); // Must be long long
       }
       else {
 	puts("Expected flush milliseconds");

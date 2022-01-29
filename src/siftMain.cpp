@@ -957,6 +957,7 @@ int mainMission(DataSourceT* src,
                    , &imu.fseconds);
             std::cout << "fseconds: " << imu.fseconds << std::endl;
             const double EPSILON = 0.001;
+            // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
             if (fabs(imu.fseconds- -1) < EPSILON) {
                 // IMU failed, ignore its data
                 std::cout << "SIFT considering IMU as failed." << std::endl;

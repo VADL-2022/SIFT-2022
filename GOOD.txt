@@ -1,0 +1,25 @@
+53cf68736a5671ad005b40ea7a135af788361a3d
+
+
+
+video capture:
+- importing numpy fails inside of numpy when using imu seemingly
+- otherwise with --force-no-imu IT WORKS
+
+
+
+
+
+
+
+--
+drop test commands:
+
+VIDEO CAPTURE:
+./subscale_exe_debug --video-capture  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 2000
+
+SIFT PI:
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0
+
+sift test:
+/sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission
