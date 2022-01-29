@@ -17,3 +17,4 @@ struct QueuedFunction {
 
 extern Queue<QueuedFunction, 8> mainDispatchQueue;
 extern std::atomic<bool> isRunningPython;
+extern std::atomic<bool> mainDispatchQueueRunning;

@@ -14,7 +14,7 @@ void stopMain() {
   if (!isRunningPython) {
     lastForkedPIDM.lock();
     if (lastForkedPIDValid) {
-      printf_("isRunningPython is false and a last PID is set; killing last forked PID: %d", lastForkedPID); // TODO: assert type of lastForkedPID is int
+      printf_("isRunningPython is false and a last PID is set; killing last forked PID: %d\n", lastForkedPID); // TODO: assert type of lastForkedPID is int
       kill(lastForkedPID, SIGINT);
     }
     lastForkedPIDM.unlock();
