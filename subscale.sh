@@ -26,7 +26,7 @@ dontsleep3="$3"
 
 cleanup() {
     echo "@@@@ Stopping programs"
-    if [ "$videoCapture" == "sift" ]; then
+    if [ "$mode" == "sift" ]; then
 	pkill -SIGINT sift
     fi
     # Stop temperature data
@@ -64,7 +64,7 @@ sleep_ () {
 git checkout subscale2
 # Checkout submodules from the above commit as well:
 git submodule update --init --recursive
-if [ "$videoCapture" == "sift" ]; then
+if [ "$mode" == "sift" ]; then
     compileSIFT="make -j4 sift_exe_release_commandLine;"
 fi
 nix-shell --run "$compileSIFT make -j4 subscale_exe_release"
@@ -84,7 +84,7 @@ nix-shell --run "$compileSIFT make -j4 subscale_exe_release"
 # fi
 # Record temperature data
 #set +o errexit +o errtrace
-if [ "$videoCapture" == "sift" ]; then
+if [ "$mode" == "sift" ]; then
     echo "@@@@ Starting thermocouple temperature recording"
     /usr/bin/python3 WindTunnel/run.py &
 else
@@ -98,7 +98,7 @@ fi
 #     sleep_ 69 # Ensure you don't subtract the above times, since we run the above sleep in the background.
 # fi
 echo "@@@@ Starting driver for $mode"
-if [ "$videoCapture" == "sift" ]; then
+if [ "$mode" == "sift" ]; then
     ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --sift-start-time "$siftStart" --backup-takeoff-time 0 --backup-sift-stop-time 4000 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 else
     ./subscale_exe_release --video-capture --sift-start-time "$siftStart" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
