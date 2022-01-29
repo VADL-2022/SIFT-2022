@@ -20,6 +20,7 @@
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
+#undef BUFFER_SIZE
 #include "../common.hpp"
 
 #include "signalHandlers.hpp"
