@@ -115,7 +115,7 @@ void startDelayedSIFT(bool useIMU) {
       std::cout << "startDelayedSIFT_fork failed" << std::endl;
     }
     else {
-      std::cout << "Started SIFT " << std::endl;
+      std::cout << "Finished SIFT " << std::endl;
     }
   }, "SIFT", QueuedFunctionType::Misc);
 }
@@ -145,7 +145,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     + (false/*useIMU*/ ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
   ;
   
-  puts("Forking");
+  printf("Forking with bash command: %s\n", siftCommandLine.c_str());
   pid_t pid = fork(); // create a new child process
   if (pid > 0) { // Parent process
     lastForkedPIDM.lock();

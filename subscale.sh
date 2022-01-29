@@ -90,13 +90,14 @@ $compileSIFT ; make -j4 subscale_exe_release
 # fi
 # Record temperature data
 #set +o errexit +o errtrace
+quiet=1 # set to 0 for verbose
 if [ "$mode" == "sift" ]; then
     echo "@@@@ Starting thermocouple temperature recording"
-    /usr/bin/python3 WindTunnel/run.py &
+    /usr/bin/python3 WindTunnel/run.py 0 "$quiet" &
 else
     echo "@@@@ Starting pi temperature recording"
     #bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
-    /usr/bin/python3 WindTunnel/run.py 1 & # 1 = no thermocouple
+    /usr/bin/python3 WindTunnel/run.py 1 "$quiet" & # 1 = no thermocouple
 fi
 # Stop SIFT after x seconds:
 # if [ "$dontsleep3" != "1" ]; then
