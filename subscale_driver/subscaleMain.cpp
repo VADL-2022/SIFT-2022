@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
 }
 
 void reportStatus(Status status) {
+  std::cout << "Reporting status: " << status << std::endl;
   const char* path = "subscale_driver/radio.py";
   radioDispatchQueue.enqueue([=](){
     PyGILState_STATE state = PyGILState_Ensure(); // Only run this if no other python code is running now, otherwise wait for a lock
