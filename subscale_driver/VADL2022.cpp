@@ -407,8 +407,8 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   }
 
   // Stop SIFT on timer time elapsed
-  std::cout << "Time till SIFT stops: " << since(mainDeploymentOrStartedSIFTTime) - backupSIFTStopTime << " milliseconds" << std::endl;
-  if (since(mainDeploymentOrStartedSIFTTime) > backupSIFTStopTime) {
+  std::cout << "Time till SIFT stops: " << since(mainDeploymentOrStartedSIFTTime).count() - backupSIFTStopTime << " milliseconds" << std::endl;
+  if (since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime) {
     std::cout << "Stopping SIFT on backup time elapsed" << std::endl;
     raise(SIGINT);
   }
