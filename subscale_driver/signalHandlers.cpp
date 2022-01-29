@@ -11,10 +11,6 @@
 #include "pyMainThreadInterface.hpp"
 
 void stopMain() {
-  // Tell python to sigint
-  printf_("Telling Python to SIGINT\n");
-  PyErr_SetInterrupt(); //PyErr_SetInterruptEx(SIGINT);
-  
   if (!isRunningPython) {
     lastForkedPIDM.lock();
     if (lastForkedPIDValid) {
@@ -22,7 +18,9 @@ void stopMain() {
       kill(lastForkedPID, SIGINT);
     }
     lastForkedPIDM.unlock();
-    return;
+    if (lastForkedPIDValid) {
+      return;
+    }
 
     // Exit since we got a signal while main thread wasn't running python. Note that this means you should only really run python from the main dispatch queue, unless the implementation is improved..
     printf_("isRunningPython is false, cleaning up and exiting\n");
@@ -33,6 +31,11 @@ void stopMain() {
   
     printf_("Exiting\n");
     exit(1);
+  }
+  else {
+    // Tell python to sigint
+    printf_("Telling Python to SIGINT\n");
+    PyErr_SetInterrupt(); // PyErr_SetInterruptEx(SIGINT);
   }
 }
 
