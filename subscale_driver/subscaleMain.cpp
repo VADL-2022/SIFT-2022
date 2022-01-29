@@ -47,8 +47,8 @@ int main(int argc, char **argv) {
 
   std::cout << "Main dispatch queue no longer running" << std::endl;
 
-  std::cout << "Waiting for radio thread to finish..." << std::endl;
-  th.join();
+  //std::cout << "Waiting for radio thread to finish..." << std::endl; // TODO: implement properly
+  //th.join(); // TODO: implement properly
   std::cout << "Radio thread finished" << std::endl;
   
   //PyRun_SimpleString("input('Done')");
