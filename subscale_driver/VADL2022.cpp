@@ -112,7 +112,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
 void startDelayedSIFT(bool useIMU) {
   reportStatus(Status::EnqueuingSIFT);
   mainDispatchQueue.enqueue([useIMU]() {
-    reportStatus(Status::StartingSIFT);
+    //reportStatus(Status::StartingSIFT);
     bool ok = startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]), useIMU);
     if (!ok) {
       std::cout << "startDelayedSIFT_fork failed" << std::endl;
