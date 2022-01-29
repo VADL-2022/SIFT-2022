@@ -107,10 +107,10 @@ fi
 echo "@@@@ Starting driver for $mode"
 if [ "$mode" == "sift" ]; then
     mainDeploymentToTouchDown=74000 # milliseconds
-    realFlight="--takeoff-g-force 5 --main-deployment-g-force 1 --backup-sift-stop-time $(($mainDeploymentToTouchDown-10000))"
-    testing="--backup-sift-stop-time 20000"
+    realFlight="--sift-start-time 20000 --takeoff-g-force 5 --main-deployment-g-force 1 --backup-sift-stop-time $(($mainDeploymentToTouchDown-10000))"
+    testing="--sift-start-time 0 --backup-sift-stop-time 20000"
     extraArgs="$testing"
-    ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --sift-start-time 20000 --backup-takeoff-time 0 --backup-sift-start-time 10000 $extraArgs 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
+    ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 10000 $extraArgs 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 else
     ./subscale_exe_release --video-capture --sift-start-time "$siftStart" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 fi
