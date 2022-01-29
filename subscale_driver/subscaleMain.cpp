@@ -61,6 +61,6 @@ void status(Status status) {
     status(Status::RunningPython);
     std::string status_str = std::to_string(status);
     const char* args[] = {"0", status_str.c_str(), NULL};
-    S_RunFile(path, 2, args);
+    S_RunFile(path, 2, (char**)args);
   },path,QueuedFunctionType::Python);
 }
