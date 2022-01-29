@@ -23,7 +23,8 @@ def test():
 useStdin = (sys.argv[1] == '1') if len(sys.argv) > 1 else False
 sendThisValue = (sys.argv[2]) if len(sys.argv) > 2 else None
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
+if True:
     if sendThisValue is not None:
         res = str(sendThisValue).encode('utf-8')
         print("Sending on radio:",res)

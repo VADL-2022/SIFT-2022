@@ -530,7 +530,8 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
     // toSIFT.flush();
   }
   else {
-    std::cout << "passIMUDataToSIFTCallback: toSIFT is not open, not doing anything" << std::endl;
+    if (verbose)
+      std::cout << "passIMUDataToSIFTCallback: toSIFT is not open, not doing anything" << std::endl;
   }
 }
 
