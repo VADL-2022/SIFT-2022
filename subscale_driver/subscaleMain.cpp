@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
                 << std::endl;
       radioDispatchQueue.dequeue(&f);
       std::cout << "Radio thread executing function with description: " << f.description << std::endl;
-      f.f();
+      //f.f();
     } while (mainDispatchQueueRunning);
   }};
 
