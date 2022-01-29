@@ -460,42 +460,44 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // Give this data to SIFT
   //if (toSIFT.isOpen()) {
   if (toSIFT != nullptr) {
-  // Check for IMU failure first
-  if (verbose) {
-    printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
-  }
-  // Check for IMU disconnect/failure to deliver packets
-  const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
-  if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
-    std::cout << "IMU considered not responding. Telling SIFT we're not using it" << std::endl;
-    // Notify SIFT that IMU failed
-    // toSIFT << "\n" << -1.0f;
-    // toSIFT.flush();
-    fprintf(toSIFT, "\n%x", -1.0f);
-    fflush(toSIFT);
-    
-    VADL2022* v = (VADL2022*)log->callbackUserData;
-    v->mLog->userCallback = nullptr;
-    reportStatus(Status::IMUNotRespondingInPassIMUDataToSIFTCallback);
-    return;
-  }
-  
-            toSIFT << "\n"
-                   << fseconds << ","
-                   << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
-                   << log->mImu->qtn[0] << "," << log->mImu->qtn[1] << "," << log->mImu->qtn[2] << "," << log->mImu->qtn[3] << ","
-                   << log->mImu->rate[0] << "," << log->mImu->rate[1] << "," << log->mImu->rate[2] << ","
-                   << log->mImu->accel[0] << "," << log->mImu->accel[1] << "," << log->mImu->accel[2] << ","
-                   << log->mImu->mag[0] << "," << log->mImu->mag[1] << "," << log->mImu->mag[2] << ","
-                   << log->mImu->temp << "," << log->mImu->pres << "," << log->mImu->dTime << ","
-                   << log->mImu->dTheta[0] << "," << log->mImu->dTheta[1] << "," << log->mImu->dTheta[2] << ","
-                   << log->mImu->dVel[0] << "," << log->mImu->dVel[1] << "," << log->mImu->dVel[2] << ","
-                   << log->mImu->magNed[0] << "," << log->mImu->magNed[1] << "," << log->mImu->magNed[2] << ","
-                   << log->mImu->accelNed[0] << "," << log->mImu->accelNed[1] << "," << log->mImu->accelNed[2] << ","
-                   << log->mImu->linearAccelBody[0] << "," << log->mImu->linearAccelBody[1] << "," << log->mImu->linearAccelBody[2] << ","
-                   << log->mImu->linearAccelNed[0] << "," << log->mImu->linearAccelNed[1] << "," << log->mImu->linearAccelNed[2] << ",";
+    // Check for IMU failure first
+    if (verbose) {
+      printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+    }
+    // Check for IMU disconnect/failure to deliver packets
+    const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
+    if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
+      std::cout << "IMU considered not responding. Telling SIFT we're not using it" << std::endl;
+      // Notify SIFT that IMU failed
+      // toSIFT << "\n" << -1.0f;
+      // toSIFT.flush();
+      fprintf(toSIFT, "\n%x", -1.0f);
+      fflush(toSIFT);
+      
+      VADL2022* v = (VADL2022*)log->callbackUserData;
+      v->mLog->userCallback = nullptr;
+      reportStatus(Status::IMUNotRespondingInPassIMUDataToSIFTCallback);
+      return;
+    }
 
-            fprintf(toSIFT, "\n%x" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+    IMU* imu = log->mImu;
+  
+    // toSIFT << "\n"
+    //        << fseconds << ","
+    //        << log->mImu->yprNed[0] << "," << log->mImu->yprNed[1] << "," << log->mImu->yprNed[2] << ","
+    //        << log->mImu->qtn[0] << "," << log->mImu->qtn[1] << "," << log->mImu->qtn[2] << "," << log->mImu->qtn[3] << ","
+    //        << log->mImu->rate[0] << "," << log->mImu->rate[1] << "," << log->mImu->rate[2] << ","
+    //        << log->mImu->accel[0] << "," << log->mImu->accel[1] << "," << log->mImu->accel[2] << ","
+    //        << log->mImu->mag[0] << "," << log->mImu->mag[1] << "," << log->mImu->mag[2] << ","
+    //        << log->mImu->temp << "," << log->mImu->pres << "," << log->mImu->dTime << ","
+    //        << log->mImu->dTheta[0] << "," << log->mImu->dTheta[1] << "," << log->mImu->dTheta[2] << ","
+    //        << log->mImu->dVel[0] << "," << log->mImu->dVel[1] << "," << log->mImu->dVel[2] << ","
+    //        << log->mImu->magNed[0] << "," << log->mImu->magNed[1] << "," << log->mImu->magNed[2] << ","
+    //        << log->mImu->accelNed[0] << "," << log->mImu->accelNed[1] << "," << log->mImu->accelNed[2] << ","
+    //        << log->mImu->linearAccelBody[0] << "," << log->mImu->linearAccelBody[1] << "," << log->mImu->linearAccelBody[2] << ","
+    //        << log->mImu->linearAccelNed[0] << "," << log->mImu->linearAccelNed[1] << "," << log->mImu->linearAccelNed[2] << ",";
+
+    fprintf(toSIFT, "\n%x" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
                     ",$x,$x,$x" // yprNed
                     ",$x,$x,$x,$x" // qtn
                     ",$x,$x,$x" // rate
@@ -523,7 +525,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
                     imu.accelNed.x, imu.accelNed.y, imu.accelNed.z,
                     imu.linearAccelBody.x, imu.linearAccelBody.y, imu.linearAccelBody.z,
                     imu.linearAccelNed.x, imu.linearAccelNed.y, imu.linearAccelNed.z);
-            fflush(toSIFT);
+    fflush(toSIFT);
   
     // toSIFT.flush();
   }
