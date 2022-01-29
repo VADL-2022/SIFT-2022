@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
 }
 
 void reportStatus(Status status) {
+  return;
   std::cout << "Reporting status: " << status << std::endl;
   const char* path = "subscale_driver/radio.py";
   radioDispatchQueue.enqueue([=](){
