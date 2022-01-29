@@ -23,6 +23,7 @@
 #include "../common.hpp"
 
 #include "signalHandlers.hpp"
+#include <float.h>
 
 // G Forces
 const float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
@@ -30,6 +31,7 @@ float MAIN_DEPLOYMENT_G_FORCE = 1; //Main parachute deployment is 10-15 g's
 // Timings
 const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
+const float IMU_MAIN_DEPLOYMENT_ACCEL_DURATION = 1.0 / 40.0; // Seconds
 const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Milliseconds
 // Acceleration (Meters per second squared)
 const float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81; // Meters per second squared
@@ -62,6 +64,13 @@ const char *sift_args[] =
 
 // Python log file
 ofstream cToPythonLogFile;
+
+double onGroundAltitude = DBL_MIN;
+unsigned int numAltitudes = 0; // For running average
+double computeAltitude(double kilopascals) {
+  double altitudeFeet = 145366.45 * (1.0 - std::pow(10.0 * kilopascals / 1013.25, 0.190284)); // https://en.wikipedia.org/wiki/Pressure_altitude
+  return altitudeFeet;
+}
 
 // Forward declare main deployment callback
 void checkMainDeploymentCallback(LOG *log, float fseconds);
@@ -191,6 +200,19 @@ bool forceSkipNonSIFTCallbacks = false;
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on takeoff
 void checkTakeoffCallback(LOG *log, float fseconds) {
+  double kilopascals = log->mImu->pres;
+  double altitudeFeet = computeAltitude(kilopascals);
+  if (onGroundAltitude == DBL_MIN) {
+    onGroundAltitude = altitudeFeet;
+  }
+  else {
+    onGroundAltitude += altitudeFeet; // Running average
+    numAltitudes += 1;
+  }
+  if (verbose) {
+    std::cout << "Altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl;
+  }
+
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
   float timeSeconds = log->mImu->timestamp / 1.0e9;
@@ -232,9 +254,12 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       
       puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTarget time reached, the rocket has launched\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
       v->startTime = -1; // Reset timer so we don't detect a main parachute deployment afterwards (although IMU would have to report higher g's to do that which is unlikely)
-
+      
       // Record takeoff time
       takeoffTime = std::chrono::steady_clock::now();
+
+      // Record takeoff altitude
+      std::cout << "Takeoff altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl;
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
       //   bool ok = startDelayedSIFT();
@@ -290,7 +315,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
     }
     float duration = fseconds - v->startTime;
     printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
-    if (duration >= IMU_ACCEL_DURATION || force) {
+    if (duration >= IMU_MAIN_DEPLOYMENT_ACCEL_DURATION || force) {
       // Stop these checkMainDeploymentCallback callbacks
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
@@ -338,8 +363,10 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // Convert log->mImu->pres (pressure) to altitude using barometric formula (Cam) and use that to check for nearing the ground + stopping SIFT
   // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
   double kilopascals = log->mImu->pres;
-  double altitudeFeet = 145366.45 * (1.0 - std::pow(10.0 * kilopascals / 1013.25, 0.190284)); // https://en.wikipedia.org/wiki/Pressure_altitude
-  std::cout << "Altitude: " << altitudeFeet << " ft" << std::endl;
+  double altitudeFeet = computeAltitude(kilopascals);
+  if (verbose) {
+    std::cout << "Altitude: " << altitudeFeet << " ft" << std::endl;
+  }
   return;
   
   float magnitude = log->mImu->linearAccelNed.mag();
