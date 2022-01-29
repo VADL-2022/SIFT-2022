@@ -27,6 +27,7 @@ if __name__ == '__main__':
         line = input()
         while line:
             res = str(line).encode('utf-8')
+            print("Sending line:",res)
             ser.write(res)
             
             line = input()
