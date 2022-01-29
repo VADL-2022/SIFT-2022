@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 
   //std::cout << "Waiting for radio thread to finish..." << std::endl; // TODO: implement properly
   //th.join(); // TODO: implement properly
-  std::cout << "Radio thread finished" << std::endl;
+  //std::cout << "Radio thread finished" << std::endl; // TODO: implement properly
   
   //PyRun_SimpleString("input('Done')");
   return 0;
