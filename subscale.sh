@@ -70,10 +70,10 @@ git checkout subscale2
 # Checkout submodules from the above commit as well:
 git submodule update --init --recursive
 if [ "$mode" == "sift" ]; then
-    compileSIFT="make -j4 sift_exe_release_commandLine;"
+    compileSIFT="make -j4 sift_exe_release_commandLine"
 fi
 #nix-shell --run "$compileSIFT make -j4 subscale_exe_release" # Problem: this doesn't set the exit code so set -e doesn't exit for it. Instead we use the below and check for nix-shell at the start of this script:
-$compileSIFT make -j4 subscale_exe_release
+$compileSIFT ; make -j4 subscale_exe_release
 # TODO: sha512 Checksum
 # if [ "$dontsleep" != "1" ]; then
 #     echo "@@@@ Sleeping before takeoff"
