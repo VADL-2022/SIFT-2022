@@ -50,8 +50,12 @@ bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the 
 
 bool pyRunFile(const char *path, int argc, char **argv) {
   mainDispatchQueue.enqueue([=](){
+    PyGILState_STATE state = PyGILState_Ensure(); // Only run this if no other python code is running now, otherwise wait for a lock
+
     reportStatus(Status::RunningPython);
     S_RunFile(path, argc, argv);
+
+    PyGILState_Release(state);
   },path,QueuedFunctionType::Python);
 
   return true;

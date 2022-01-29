@@ -125,7 +125,7 @@ void startDelayedSIFT(bool useIMU) {
 }
 int fd[2]; // write() to fd[1] to send IMU data to sift after running startDelayedSIFT_fork()
 //ofdstream toSIFT;
-FILE* toSIFT;
+std::atomic<FILE*> toSIFT = nullptr;
 bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool useIMU) { //Actually works, need xauthority for root above
   if (pipe(fd)) {
     printf("Error with pipe!\n");
@@ -161,7 +161,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
     
     //toSIFT.open(fd[1]);
-    toSIFT = fdopen(fd[1], "w");
+    //toSIFT = fdopen(fd[1], "w");
     
     int status = 0;
     if (wait(&status) != -1) {
