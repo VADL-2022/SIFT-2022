@@ -110,9 +110,9 @@ if [ "$mode" == "sift" ]; then
     realFlight="--sift-start-time 20000 --takeoff-g-force 5 --main-deployment-g-force 1 --backup-sift-stop-time $(($mainDeploymentToTouchDown-10000))"
     testing="--sift-start-time 0 --backup-sift-stop-time 20000"
     extraArgs="$testing"
-    ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 10000 $extraArgs 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
+    ./subscale_exe_release --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 10000 $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" | tee <(python3 "subscale_driver/radio.py" 1)
 else
-    ./subscale_exe_release --video-capture --sift-start-time "$siftStart" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
+    ./subscale_exe_release --video-capture --sift-start-time "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 fi
 set +e
 cleanup
