@@ -8,6 +8,7 @@
 #include <python3.7m/Python.h>
 #include <pigpio.h>
 #include "subscaleMain.hpp"
+#include "pyMainThreadInterface.hpp"
 
 void stopMain() {
   // Tell python to sigint

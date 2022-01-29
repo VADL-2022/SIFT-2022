@@ -3,6 +3,8 @@
 #include "py.h"
 #include "subscaleMain.hpp"
 
+#include <sys/wait.h>
+
 pid_t lastForkedPID;
 bool lastForkedPIDValid = false;
 std::mutex lastForkedPIDM;

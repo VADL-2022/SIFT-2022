@@ -366,7 +366,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   double altitudeFeet = computeAltitude(kilopascals);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   if (verbose) {
-    std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " relativeAltitude << " ft" << std::endl;
+    std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " << relativeAltitude << " ft" << std::endl;
   }
   if (relativeAltitude < 50) {
     // Stop SIFT
