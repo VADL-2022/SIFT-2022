@@ -43,6 +43,7 @@ auto startedDriverTime = std::chrono::steady_clock::now();
 auto takeoffTime = std::chrono::steady_clock::now();
 long long backupSIFTStartTime = -1; // Also used as the projected SIFT start time if IMU fails
 long long backupTakeoffTime = -1;
+bool verbose = false;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -200,7 +201,9 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   }
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("checkTakeoffCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  if (verbose) {
+    printf("checkTakeoffCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  }
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
@@ -261,7 +264,9 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("checkMainDeploymentCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  if (verbose) {
+    printf("checkMainDeploymentCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  }
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
@@ -344,7 +349,9 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
-  printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  if (verbose) {
+    printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+  }
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
@@ -417,6 +424,9 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     if (strcmp(argv[i], "--sift-and-imu-only") == 0) { // Don't run anything but SIFT with provided IMU data + the IMU data recording, starting SIFT without waiting for takeoff/parachute events.
       forceSkipNonSIFTCallbacks = true;
+    }
+    if (strcmp(argv[i], "--verbose") == 0) {
+      verbose = true;
     }
     else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
       if (i+1 < argc) {
