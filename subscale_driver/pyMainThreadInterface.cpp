@@ -50,6 +50,7 @@ bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the 
 
 bool pyRunFile(const char *path, int argc, char **argv) {
   mainDispatchQueue.enqueue([=](){
+    status(Status::RunningPython);
     S_RunFile(path, argc, argv);
   },path,QueuedFunctionType::Python);
 
