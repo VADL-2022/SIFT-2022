@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-void status(Status status) {
+void reportStatus(Status status) {
   const char* path = "subscale_driver/radio.py";
   radioDispatchQueue.enqueue([=](){
     status(Status::RunningPython);

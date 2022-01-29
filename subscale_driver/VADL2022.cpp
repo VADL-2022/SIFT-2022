@@ -110,16 +110,16 @@ State g_state = State_WaitingForTakeoff;
 // }
 bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool useIMU);
 void startDelayedSIFT(bool useIMU) {
-  status(Status::EnqueuingSIFT);
+  reportStatus(Status::EnqueuingSIFT);
   mainDispatchQueue.enqueue([useIMU]() {
-    status(Status::StartingSIFT);
+    reportStatus(Status::StartingSIFT);
     bool ok = startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]), useIMU);
     if (!ok) {
       std::cout << "startDelayedSIFT_fork failed" << std::endl;
     }
     else {
       std::cout << "Finished SIFT" << std::endl;
-      status(Status::FinishedSIFT);
+      reportStatus(Status::FinishedSIFT);
     }
   }, "SIFT", QueuedFunctionType::Misc);
 }
@@ -261,7 +261,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   bool force = false;
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
-    status(Status::IMUNotRespondingInCheckTakeoffCallback);
+    reportStatus(Status::IMUNotRespondingInCheckTakeoffCallback);
     long long milliSeconds = backupTakeoffTime;
     std::cout << "IMU considered not responding. Waiting until projected launch time guesttimate which is " << milliSeconds/1000.0 << " seconds away from now..." << std::endl;
     // Wait for SIFT backup time
@@ -289,7 +289,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       
       // Record takeoff time
       takeoffTime = std::chrono::steady_clock::now();
-      status(Status::TakeoffTimeRecordedInCheckTakeoffCallback);
+      reportStatus(Status::TakeoffTimeRecordedInCheckTakeoffCallback);
 
       // Record takeoff altitude
       std::cout << "Takeoff altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl;
@@ -311,7 +311,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
     if (v->startTime != -1) {
       puts("Not enough acceleration; resetting timer");
       v->startTime = -1;
-      status(Status::NotEnoughAccelInCheckTakeoffCallback);
+      reportStatus(Status::NotEnoughAccelInCheckTakeoffCallback);
     }
   }
 }
@@ -338,7 +338,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
     auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
     std::cout << "Too much time elapsed without main deployment. Forcing trigger." << std::endl;
     magnitude = FLT_MAX; force = true;
-    status(Status::TooMuchTimeElapsedWithoutMainDeployment_ThereforeForcingTrigger);
+    reportStatus(Status::TooMuchTimeElapsedWithoutMainDeployment_ThereforeForcingTrigger);
   }
   // Check for IMU disconnect/failure to deliver packets
   else if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
@@ -349,7 +349,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
       std::cout << "IMU considered not responding. Waiting until projected SIFT start time, which is " << (millisTillSIFT/1000.0) << " seconds away from now..." << std::endl;
       std::this_thread::sleep_for(std::chrono::milliseconds(millisTillSIFT));
     } else {
-      status(Status::IMUNotRespondingInMainDeploymentCallback);
+      reportStatus(Status::IMUNotRespondingInMainDeploymentCallback);
       std::cout << "IMU considered not responding. No need to wait until projected SIFT start time, with " << (millisSinceTakeoff - backupSIFTStartTime )/1000.0 << " seconds to spare" << std::endl;
     }
     // Start SIFT or video capture
@@ -388,7 +388,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
 	gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
 	gpioWrite(26, 1); // Set GPIO26 high.
 
-        status(Status::SwitchingToSecondCamera);
+        reportStatus(Status::SwitchingToSecondCamera);
 	// Run the python videocapture script again on the second camera
 	pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
       }
@@ -409,7 +409,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
     if (v->startTime != -1) {
       puts("Not enough acceleration; resetting timer");
       v->startTime = -1;
-      status(Status::NotEnoughAccelInMainDeploymentCallback);
+      reportStatus(Status::NotEnoughAccelInMainDeploymentCallback);
     }
   }
 }
@@ -432,7 +432,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
     if (verbose)
       std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, would normally try stopping SIFT" << std::endl;
     //raise(SIGINT); // <-- to stop SIFT
-    status(Status::AltitudeLessThanDesiredAmount);
+    reportStatus(Status::AltitudeLessThanDesiredAmount);
   }
 
   // Stop SIFT on timer time elapsed
@@ -440,7 +440,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
     std::cout << "Time till SIFT stops: " << backupSIFTStopTime - since(mainDeploymentOrStartedSIFTTime).count() << " milliseconds" << std::endl;
   if (since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime && !mainDispatchQueueDrainThenStop) {
     std::cout << "Stopping SIFT on backup time elapsed" << std::endl;
-    status(Status::StoppingSIFTOnBackupTimeElapsed);
+    reportStatus(Status::StoppingSIFTOnBackupTimeElapsed);
     raise(SIGINT);
     // Also close main dispatch queue so the subscale driver terminates
     mainDispatchQueueDrainThenStop = true;

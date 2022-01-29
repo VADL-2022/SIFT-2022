@@ -37,4 +37,4 @@ enum Status : int {
   RunningPython,
 };
 // Sets the status which sends on the radio
-extern void status(Status status);
+extern void reportStatus(Status status);
