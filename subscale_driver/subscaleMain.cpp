@@ -60,6 +60,7 @@ void status(Status status) {
   radioDispatchQueue.enqueue([=](){
     status(Status::RunningPython);
     std::string status_str = std::to_string(status);
-    S_RunFile(path, 2, {"0", status_str.c_str(), NULL});
+    const char* args[] = {"0", status_str.c_str(), NULL};
+    S_RunFile(path, 2, args);
   },path,QueuedFunctionType::Python);
 }
