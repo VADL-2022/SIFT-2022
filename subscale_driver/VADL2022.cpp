@@ -418,12 +418,14 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   }
   if (relativeAltitude < 50) {
     // Future: stop SIFT here but not sure if this would stop too early, so we just output what would happen:
-    std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, would normally try stopping SIFT" << std::endl;
+    if (verbose)
+      std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, would normally try stopping SIFT" << std::endl;
     //raise(SIGINT); // <-- to stop SIFT
   }
 
   // Stop SIFT on timer time elapsed
-  std::cout << "Time till SIFT stops: " << backupSIFTStopTime - since(mainDeploymentOrStartedSIFTTime).count() << " milliseconds" << std::endl;
+  if (verbose)
+    std::cout << "Time till SIFT stops: " << backupSIFTStopTime - since(mainDeploymentOrStartedSIFTTime).count() << " milliseconds" << std::endl;
   if (since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime) {
     std::cout << "Stopping SIFT on backup time elapsed" << std::endl;
     raise(SIGINT);
