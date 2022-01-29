@@ -1,6 +1,7 @@
 import serial
 import random
 import time
+import sys
 
 ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1) # gpio14
 ser.reset_input_buffer()
@@ -18,7 +19,6 @@ def test():
         time.sleep(0.01)
 
         i+=1
-
 
 useStdin = (sys.argv[1] == '1') if len(sys.argv) > 1 else False
 
