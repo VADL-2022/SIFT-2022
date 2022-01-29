@@ -333,7 +333,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // Convert log->mImu->pres (pressure) to altitude using barometric formula (Cam) and use that to check for nearing the ground + stopping SIFT
   // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
   double kilopascals = log->mImu->pres;
-  altitudeFeet = 145366.45 * (1.0 - std::pow(10.0 * kilopascals / 1013.25, 0.190284)); // https://en.wikipedia.org/wiki/Pressure_altitude
+  double altitudeFeet = 145366.45 * (1.0 - std::pow(10.0 * kilopascals / 1013.25, 0.190284)); // https://en.wikipedia.org/wiki/Pressure_altitude
   std::cout << "Altitude: " << altitudeFeet << " ft" << std::endl;
   return;
   
