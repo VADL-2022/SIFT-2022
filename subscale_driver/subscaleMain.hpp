@@ -35,6 +35,7 @@ enum Status : int {
   StoppingSIFTOnBackupTimeElapsed,
   TooMuchTimeElapsedWithoutMainDeployment_ThereforeForcingTrigger,
   RunningPython,
+  IMUNotRespondingInPassIMUDataToSIFTCallback,
 };
 // Sets the status which sends on the radio
 extern void reportStatus(Status status);
