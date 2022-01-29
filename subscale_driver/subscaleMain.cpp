@@ -6,6 +6,7 @@
 Queue<QueuedFunction, 8> mainDispatchQueue;
 std::atomic<bool> isRunningPython = false;
 std::atomic<bool> mainDispatchQueueRunning = false;
+std::atomic<bool> mainDispatchQueueDrainThenStop = false;
 
 int main(int argc, char **argv) {
   VADL2022 vadl(argc, argv);
@@ -22,6 +23,10 @@ int main(int argc, char **argv) {
     f.f();
     if (f.type == QueuedFunctionType::Python) {
       isRunningPython = false;
+    }
+    if (mainDispatchQueueDrainThenStop && mainDispatchQueue.empty()) {
+      std::cout << "Drained queue, now stopping" << std::endl;
+      break;
     }
   } while (mainDispatchQueueRunning);
 

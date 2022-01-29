@@ -84,6 +84,7 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
+  std::cout << "sendOnRadio" << std::endl;
   return pyRunFile("subscale_driver/radio.py", 0, nullptr);
 }
 
