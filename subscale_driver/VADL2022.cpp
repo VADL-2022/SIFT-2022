@@ -364,8 +364,14 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
   double kilopascals = log->mImu->pres;
   double altitudeFeet = computeAltitude(kilopascals);
+  double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   if (verbose) {
-    std::cout << "Altitude: " << altitudeFeet << " ft" << std::endl;
+    std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " relativeAltitude << " ft" << std::endl;
+  }
+  if (relativeAltitude < 50) {
+    // Stop SIFT
+    std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, stopping SIFT" << std::endl;
+    raise(SIGINT);
   }
   return;
   

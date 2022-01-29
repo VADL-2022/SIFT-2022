@@ -1,10 +1,9 @@
-#include "py.h"
-#include "subscaleMain.hpp"
+#include <mutex>
 
-inline bool pyRunFile(const char *path, int argc, char **argv) {
-  mainDispatchQueue.enqueue([=](){
-        S_RunFile(path, argc, argv);
-  },path,QueuedFunctionType::Python);
+extern pid_t lastForkedPID;
+extern bool lastForkedPIDValid;
+extern std::mutex lastForkedPIDM;
 
-  return true;
-}
+extern bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the last element */);
+
+extern bool pyRunFile(const char *path, int argc, char **argv);

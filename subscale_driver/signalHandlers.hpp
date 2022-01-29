@@ -12,6 +12,14 @@ void stopMain() {
   PyErr_SetInterrupt(); //PyErr_SetInterruptEx(SIGINT);
   
   if (!isRunningPython) {
+    lastForkedPIDM.lock();
+    if (lastForkedPIDValid) {
+      printf_("isRunningPython is false and a last PID is set; killing last forked PID");
+      kill(lastForkedPID, SIGINT);
+    }
+    lastForkedPIDM.unlock();
+    return;
+
     // Exit since we got a signal while main thread wasn't running python. Note that this means you should only really run python from the main dispatch queue, unless the implementation is improved..
     printf_("isRunningPython is false, cleaning up and exiting\n");
     
