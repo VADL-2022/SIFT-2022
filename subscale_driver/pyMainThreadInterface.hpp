@@ -1,3 +1,5 @@
+#pragma once
+
 #include <mutex>
 
 extern pid_t lastForkedPID;

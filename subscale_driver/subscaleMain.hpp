@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../src/Queue.hpp"
 #include <functional>
 #include <atomic>
