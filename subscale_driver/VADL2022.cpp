@@ -50,7 +50,7 @@ std::string backupSIFTStartTime_str;
 std::string TAKEOFF_G_FORCE_str;
 #define USE_LIS331HH
 #ifdef USE_LIS331HH // Using the alternative IMU
-const char *LIS331HH_videoCapArgs[];
+const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL};;
 #endif
 #ifdef USE_LIS331HH // Using the alternative IMU
 const char* LIS331HH_calibrationFile = nullptr;
