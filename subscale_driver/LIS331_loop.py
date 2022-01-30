@@ -40,6 +40,10 @@ calibrationFile = (sys.argv[4]) if len(sys.argv) > 4 else None
 if calibrationFile is None:
     print("Must provide calibrationFile")
     exit(1)
+stoppingTime = float(sys.argv[5]) if len(sys.argv) > 5 else None
+if not logOnly and stoppingTime is None:
+    print("Must provide stoppingTime in milliseconds")
+    exit(1)
 
 if not logOnly:
     def thread_function(name):
@@ -185,6 +189,7 @@ def runOneIter():
     # Wait for takeoff
     if not logOnly:
         magnitude = np.linalg.norm(np.array(my_accels))
+        global takeoffTime
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
             print("Takeoff detected")

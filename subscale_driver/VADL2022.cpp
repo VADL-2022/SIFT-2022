@@ -42,6 +42,7 @@ float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE
 bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false;
 // Sift params initialization
 const char* siftParams = nullptr;
+const char* extraSIFTArgs = nullptr
 
 auto startedDriverTime = std::chrono::steady_clock::now();
 auto takeoffTime = std::chrono::steady_clock::now();
@@ -50,12 +51,13 @@ std::string backupSIFTStartTime_str;
 std::string TAKEOFF_G_FORCE_str;
 #define USE_LIS331HH
 #ifdef USE_LIS331HH // Using the alternative IMU
-const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL};;
+const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL};
 #endif
 #ifdef USE_LIS331HH // Using the alternative IMU
 const char* LIS331HH_calibrationFile = nullptr;
 #endif
 long long backupSIFTStopTime = -1;
+std::string backupSIFTStopTime_str;
 long long backupTakeoffTime = -1;
 bool verbose = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
@@ -148,7 +150,8 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   // "} ( https://man7.org/linux/man-pages/man2/fork.2.html )
   // and I don't think std::string is async-signal-safe because it could call malloc
   siftCommandLine =
-      "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine "
+      "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine " +
+    (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string("")) +
       "--main-mission " +
   (siftParams != nullptr
 	       ? ("--sift-params " + std::string(siftParams))
@@ -689,6 +692,10 @@ VADL2022::VADL2022(int argc, char** argv)
       siftParams = argv[i+1];
       i++;
     }
+    else if (i+1 < argc && strcmp(argv[i], "--extra-sift-exe-args") == 0) {
+      extraSIFTArgs = argv[i+1];
+      i++;
+    }
     else {
       printf("Unrecognized command-line argument given: %s", argv[i]);
       printf(" (command line was:\n");
@@ -729,10 +736,12 @@ VADL2022::VADL2022(int argc, char** argv)
   if (videoCapture) {
     backupSIFTStartTime_str = std::to_string(backupSIFTStartTime);
     TAKEOFF_G_FORCE_str = std::to_string(TAKEOFF_G_FORCE);
+    backupSIFTStopTime_str = std::to_string(backupSIFTStopTime);
     LIS331HH_videoCapArgs[0] = "0";
     LIS331HH_videoCapArgs[1] = TAKEOFF_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[2] = backupSIFTStartTime_str.c_str();
     LIS331HH_videoCapArgs[3] = LIS331HH_calibrationFile;
+    LIS331HH_videoCapArgs[3] = backupSIFTStopTime_str.c_str();
     pyRunFile("subscale_driver/LIS331_loop.py", 4, (char **)LIS331HH_videoCapArgs);
   }
 #endif
