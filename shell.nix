@@ -71,6 +71,7 @@ mkShell {
 
       # For LIS331HH IMU
       (callPackage ./nix/smbus2.nix {})
+      (callPackage ./nix/rpi_gpio.nix {})
       (lib.optional (stdenv.hostPlatform.isLinux) (callPackage ./nix/smbus2.nix {}))
       (lib.optional (stdenv.hostPlatform.isLinux) (callPackage ./nix/rpi_gpio.nix {}))
     ]))
