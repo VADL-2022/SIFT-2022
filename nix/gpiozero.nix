@@ -1,8 +1,8 @@
 # Based on https://gist.github.com/taktoa/51af642c37292e6b15d3bd30c4f9c6ff
 
-{ stdenv, fetchFromGitHub, cmake }:
+{ stdenv, fetchFromGitHub, buildPythonPackage }:
 
-stdenv.mkDerivation {
+buildPythonPackage {
   pname = "pigpio";
   version = "1.6.2";
   src = fetchFromGitHub {
