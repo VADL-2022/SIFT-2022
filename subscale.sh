@@ -102,13 +102,14 @@ quiet=1 # set to 0 for verbose
 #sudo pip3 install adafruit-circuitpython-max31855
 #sudo pip3 install adafruit-blinka
 # #
+windTunnel="import sys; sys.path = list(filter(lambda x: '/nix/store/' not in x, sys.path)); import WindTunnel.run #That's all folks"
 if [ "$mode" == "sift" ]; then
     echo "@@@@ Starting thermocouple temperature recording"
-    /usr/bin/python3 WindTunnel/run.py 0 "$quiet" &
+    /usr/bin/python3 -c "$windTunnel" 0 "$quiet" &
 else
     echo "@@@@ Starting pi temperature recording"
     #bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
-    /usr/bin/python3 WindTunnel/run.py 1 "$quiet" & # 1 = no thermocouple
+    /usr/bin/python3 "$windTunnel" 1 "$quiet" & # 1 = no thermocouple
 fi
 # Stop SIFT after x seconds:
 # if [ "$dontsleep3" != "1" ]; then
