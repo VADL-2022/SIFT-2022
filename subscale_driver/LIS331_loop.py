@@ -183,7 +183,7 @@ def runOneIter(write_obj):
     avgZ += zAccl
     counter += 1
     my_accels = [currentTime, (xAccl-offsetX)/1000.0*9.81, (yAccl-offsetY)/1000.0*9.81, (zAccl-offsetZ)/1000.0*9.81]
-    append_list_as_row(write_obj, my_accels)
+    append_list_as_row(write_obj, [xAccl,yAccl,zAccl])
 
     # Wait for takeoff
     if not logOnly:
