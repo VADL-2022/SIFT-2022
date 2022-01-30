@@ -443,8 +443,11 @@ bool S_RunString(const char *str) {
 // Returns true on success
 bool S_RunFile(const char *path, int argc, char **argv)
 {
-    printf("Running Python file: %s\n", path);
-    
+    printf("Running Python file: %s%s", path, argc>1 ? " with args:\n" : "\n");
+    for (int i = 1; i < argc; i++) {
+        printf("\t%s\n", argv[i]);
+    }
+
     bool ret = false;
     FILE *script = fopen(path, "r");
     if(!script)
