@@ -50,6 +50,9 @@ std::string backupSIFTStartTime_str;
 std::string TAKEOFF_G_FORCE_str;
 #define USE_LIS331HH
 #ifdef USE_LIS331HH // Using the alternative IMU
+const char *LIS331HH_videoCapArgs[];
+#endif
+#ifdef USE_LIS331HH // Using the alternative IMU
 const char* LIS331HH_calibrationFile = nullptr;
 #endif
 long long backupSIFTStopTime = -1;
@@ -726,8 +729,8 @@ VADL2022::VADL2022(int argc, char** argv)
   if (videoCapture) {
     backupSIFTStartTime_str = std::to_string(backupSIFTStartTime);
     TAKEOFF_G_FORCE_str = std::to_string(TAKEOFF_G_FORCE);
-    const char *args[] = {"0", TAKEOFF_G_FORCE_str.c_str(), backupSIFTStartTime_str.c_str(), LIS331HH_calibrationFile, NULL};
-    pyRunFile("subscale_driver/LIS331_loop.py", 3, (char **)args);
+    LIS331HH_videoCapArgs = {"0", TAKEOFF_G_FORCE_str.c_str(), backupSIFTStartTime_str.c_str(), LIS331HH_calibrationFile, NULL};
+    pyRunFile("subscale_driver/LIS331_loop.py", 4, (char **)LIS331HH_videoCapArgs);
   }
 #endif
 
