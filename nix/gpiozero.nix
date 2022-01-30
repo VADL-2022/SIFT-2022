@@ -11,5 +11,6 @@ buildPythonPackage {
     rev    = "e55c678ff0dfe0b34c2b0a1683869dbc7e0086d2";
     sha256 = "18hiljf86jncv636rc80ik0s3xsrnq1g2phfc6ild52k6gf5qqbn";
   };
+  doCheck = false;
   buildInputs = [ (callPackage ./colorzero.nix {buildPythonPackage=buildPythonPackage;}) ];
 }
