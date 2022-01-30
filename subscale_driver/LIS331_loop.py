@@ -187,13 +187,14 @@ def runOneIter(write_obj):
 
     # Wait for takeoff
     if not logOnly:
-        magnitude = np.linalg.norm(np.array(my_accels))
+        magnitude = np.linalg.norm(np.array(my_accels[1:]))
         global takeoffTime
         global videoCaptureThread
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
-            print("Takeoff detected with magnitude", magnitude, "and accel", my_accels, "(originals:",[xAccl,yAccl,zAccl],")")
+            print("Takeoff detected with magnitude", magnitude, " m/s^2 and accel", my_accels[1:], "at time", my_accels[0], "(originals:",[xAccl,yAccl,zAccl],")")
             def thread_function2(name):
+                global videoCaptureThread
                 logging.info("Thread %s: starting", name)
                 print("Waiting for camera switching time...")
                 time.sleep(switchCamerasTime/1000.0)
