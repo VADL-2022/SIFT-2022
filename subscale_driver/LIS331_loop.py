@@ -201,8 +201,8 @@ def runOneIter():
                 # Start new video capture
                 videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
                 logging.info("Thread %s: finishing", name)
-            2ndCamThread = threading.Thread(target=thread_function, args=("2ndCam",))
-            2ndCamThread.start()
+            _2ndCamThread = threading.Thread(target=thread_function, args=("2ndCam",))
+            _2ndCamThread.start()
 
             
 
