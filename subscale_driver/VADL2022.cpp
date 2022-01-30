@@ -727,7 +727,7 @@ VADL2022::VADL2022(int argc, char** argv)
     backupSIFTStartTime_str = std::to_string(backupSIFTStartTime);
     TAKEOFF_G_FORCE_str = std::to_string(TAKEOFF_G_FORCE);
     const char *args[] = {"0", TAKEOFF_G_FORCE_str.c_str(), backupSIFTStartTime_str.c_str(), LIS331HH_calibrationFile, NULL};
-    pyRunFile("subscale_driver/LIS331_loop.py", 4, (char **)args);
+    pyRunFile("subscale_driver/LIS331_loop.py", 3, (char **)args);
   }
 #endif
 
