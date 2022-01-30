@@ -70,6 +70,7 @@ mkShell {
       #matplotlib
 
       # For LIS331HH IMU
+      (callPackage ./nix/smbus2.nix {})
       (lib.optional (stdenv.hostPlatform.isLinux) (callPackage ./nix/smbus2.nix {}))
     ]))
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {}) ]) ++ [
