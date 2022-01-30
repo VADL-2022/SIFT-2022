@@ -13,14 +13,14 @@ class thread_with_exception(threading.Thread):
         threading.Thread.__init__(self, None, kwargs)
         self.name = name
              
-    def run(self):
+    # def run(self):
  
-        # target function of the thread class
-        try:
-            while True:
-                print('running ' + self.name)
-        finally:
-            print('ended')
+    #     # target function of the thread class
+    #     try:
+    #         while True:
+    #             print('running ' + self.name)
+    #     finally:
+    #         print('ended')
           
     def get_id(self):
  
