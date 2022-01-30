@@ -672,7 +672,7 @@ VADL2022::VADL2022(int argc, char** argv)
     #ifdef USE_LIS331HH // Using the alternative IMU
     else if (strcmp(argv[i], "--LIS331HH-imu-calibration-file") == 0) {
       if (i+1 < argc) {
-        LIS331HH_calibrationFile = argv[i+1]
+        LIS331HH_calibrationFile = argv[i+1];
       }
       else {
 	puts("Expected calibration file");
