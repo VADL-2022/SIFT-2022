@@ -397,6 +397,9 @@ int main(int argc, char **argv)
             else if (strcmp(argv[i], "--read-backwards") == 0) {
                 continue;
             }
+            else if (strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
+                continue;
+            }
             // //
             
             printf("Unrecognized command-line argument given: %s", argv[i]);
