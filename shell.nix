@@ -75,7 +75,8 @@ mkShell {
       (lib.optional (stdenv.hostPlatform.isLinux) (callPackage ./nix/smbus2.nix {}))
       (lib.optional (stdenv.hostPlatform.isLinux) (callPackage ./nix/rpi_gpio.nix {}))
     ]))
-    ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;}) ]) ++ [
+    ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {}) ]) ++ [
+    #] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;}) ]) ++ [
     libusb1
     # #
 
