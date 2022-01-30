@@ -5,6 +5,19 @@
 video capture:
 - importing numpy fails inside of numpy when using imu seemingly
 - otherwise with --force-no-imu IT WORKS
+IF YOU INTERRUPT PYTHON WITH CTRL C WHILE IT IS IMPORTING a file like numpy then it will error out as if that import failed but really it didn't!!!!!!!!!: for example:
+```
+ImportError: numpy.core.multiarray failed to import
+    File: "�"
+    Line: 127
+    p��
+    ^
+Traceback:
+  [01] subscale_driver/videoCapture.py: 3
+    import cv2
+Main dispatch queue waiting for next function...
+^CCaught signal 2. Stopping current main dispatch queue task...
+```
 
 
 
