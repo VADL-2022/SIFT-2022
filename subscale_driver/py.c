@@ -444,7 +444,7 @@ bool S_RunString(const char *str) {
 bool S_RunFile(const char *path, int argc, char **argv)
 {
     printf("Running Python file: %s%s", path, argc>1 ? " with args:\n" : "\n");
-    for (int i = 1; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
         printf("\t%s\n", argv[i]);
     }
 
