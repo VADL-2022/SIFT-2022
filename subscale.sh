@@ -122,7 +122,7 @@ testing="--sift-start-time 0 --backup-sift-stop-time 20000"
 extraArgs="$testing"
 commonArgs="--backup-takeoff-time 0 --backup-sift-start-time $timeToMainDeployment"
 if [ "$mode" == "sift" ]; then
-    ./$exe --extra-sift-exe-args '--crop-for-fisheye-camera' --sift-params '-C_edge 2 -delta_min 0.6' $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "subscale_driver/radio.py" 1)
+    ./$exe --extra-sift-exe-args '--crop-for-fisheye-camera --no-preview-window' --sift-params '-C_edge 2 -delta_min 0.6' $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "subscale_driver/radio.py" 1)
 else
     #./subscale_exe_release --video-capture --sift-start-time "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
     ./$exe --video-capture --LIS331HH-imu-calibration-file "subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv" $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
