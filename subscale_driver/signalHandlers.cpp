@@ -10,7 +10,9 @@
 #include "subscaleMain.hpp"
 #include "pyMainThreadInterface.hpp"
 
-void stopMain() {
+#undef BACKTRACE_SET_TERMINATE
+#include "../src/tools/backtrace/backtrace_on_terminate.hpp"
+void stopMain(bool backtrace) {
   if (!isRunningPython) {
     lastForkedPIDM.lock();
     if (lastForkedPIDValid) {
@@ -30,6 +32,10 @@ void stopMain() {
     gpioTerminate();
     printf_("Finished shutting down pigpio\n");
   
+    if (backtrace) {
+      printf_("Printing backtrace: ");
+      backtrace_on_terminate();
+    }
     printf_("Exiting\n");
     exit(1);
   }
@@ -59,14 +65,8 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     // Print stack trace
     //backward::sh->handleSignal(s, si, arg);
 }
-#undef BACKTRACE_SET_TERMINATE
-#include "../src/tools/backtrace/backtrace_on_terminate.hpp"
 void terminate_handler(bool backtrace) {
-  stopMain();
-
-  if (backtrace) {
-    backtrace_on_terminate();
-  }
+  stopMain(backtrace);
 }
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
@@ -84,11 +84,11 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 // Installs signal handlers for the current thread.
 void installSignalHandlers() {
     // https://en.cppreference.com/w/cpp/error/set_terminate
-    std::set_terminate([](){
-        std::cout << "Unhandled exception detected by subscale driver. Running terminate_handler()." << std::endl;
-        ::terminate_handler(true);
-        std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
-    });
+    // std::set_terminate([](){
+    //     std::cout << "Unhandled exception detected by subscale driver. Running terminate_handler()." << std::endl;
+    //     ::terminate_handler(true);
+    //     std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
+    // });
     
     // Install ctrl-c handler
     // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event

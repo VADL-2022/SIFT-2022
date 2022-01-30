@@ -578,7 +578,6 @@ VADL2022::VADL2022(int argc, char** argv)
   // Parse command-line args
   LOG::UserCallback callback = checkTakeoffCallback;
   // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
-  long long backupSIFTStartTime = -1;
   bool forceNoIMU = false;
   long long flushIMUDataEveryNMilliseconds = 0;
   for (int i = 1; i < argc; i++) {
@@ -747,6 +746,9 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[3] = LIS331HH_calibrationFile;
     LIS331HH_videoCapArgs[4] = backupSIFTStopTime_str.c_str();
     pyRunFile("subscale_driver/LIS331_loop.py", 5, (char **)LIS331HH_videoCapArgs);
+
+    // Then send on radio afterwards (into dispatch queue)
+    auto ret = sendOnRadio();
   }
 #endif
 
@@ -794,22 +796,51 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   else {
     if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
-
-    #ifndef USE_LIS331HH
-    std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
-    #else
-    // Alternate IMU handles this for us, all good
-    #endif
     
     mLog = nullptr;
     mImu = nullptr;
-    
+
     if (videoCapture) {
-      // Take the ascent video
-      pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+#ifndef USE_LIS331HH
+      videoCaptureOnlyThread = std::make_unique<std::thread>([](){
+        // Take the ascent video
+        pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+
+        std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then switching cameras..." << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
+
+        if (isRunningPython)      
+          raise(SIGINT); // Stop python
+        while (isRunningPython) { // Wait
+          std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
+        gpioWrite(26, 1); // Set GPIO26 high.
+
+        reportStatus(Status::SwitchingToSecondCamera);
+        // Run the python videocapture script again on the second camera
+        pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+
+        std::cout << "Using backupSIFTStopTime for a delay of " << backupSIFTStopTime << " milliseconds, then stopping 2nd camera..." << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStopTime));
+
+        if (isRunningPython)
+          raise(SIGINT); // Stop python
+        while (isRunningPython) { // Wait
+          std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+      });
+#endif
     }
     else {
+      //#ifndef USE_LIS331HH
+      std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
+      std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
+      //#else
+      // Alternate IMU handles this for us, all good
+      //#endif
+
       startDelayedSIFT(false /* <--boolean: when true, use the IMU in SIFT*/);
     }
   }

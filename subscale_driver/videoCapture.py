@@ -3,9 +3,34 @@
 import cv2
 import numpy as np
 from datetime import datetime
-now = datetime.now() # current date and time
+import threading
+import os
+import stat
 
-def run():
+class AtomicInt:
+    def __init__(self, initial=0):
+        self.value=initial
+        self._lock = threading.Lock()
+
+    def incrementAndThenGet(self, num=1):
+        with self._lock:
+            self.value+=num
+            return self.value
+
+    def decrementAndThenGet(self, num=1):
+        with self._lock:
+            self.value-=num
+            return self.value
+    
+    def get(self):
+        with self._lock:
+            return self.value
+
+def run(shouldStop # AtomicInt
+        ):
+    now = datetime.now() # current date and time
+    lastFlush=now
+    
     # Create a VideoCapture object
     cap = cv2.VideoCapture(0)
 
@@ -24,10 +49,16 @@ def run():
     print("Old width,height:",frame_width,frame_height)
     frame_width=640
     frame_height=480
-    out = cv2.VideoWriter('./dataOutput/outpy' + date_time + '.mp4',cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
+    o1=now.strftime("%Y-%m-%d_%H_%M_%S_%Z")
+    p=os.path.join('.', 'dataOutput', o1,'outpy' + date_time + '.mp4')
+    try:
+      os.mkdir(os.path.dirname(p), mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
+    except FileExistsError:
+      pass
+    out = cv2.VideoWriter(p,cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
 
     try:
-        while(True):
+        while(shouldStop.get() == 0):
           ret, frame = cap.read()
 
           if ret == True: 
@@ -44,7 +75,18 @@ def run():
 
           # Break the loop
           else:
-            break  
+            break
+
+          now = datetime.now()
+          duration=now-lastFlush
+          if duration.total_seconds() >= 2:
+              lastFlush = now
+              # Flush video
+              out.release()
+              print("Flushed the video")
+              date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
+              p=os.path.join('.', 'dataOutput',o1,'outpy' + date_time + '.mp4')
+              out.open(p,cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
     except KeyboardInterrupt:
         print("Handing keyboardinterrupt")
         pass
@@ -57,4 +99,4 @@ def run():
         #cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-  run()
+  run(AtomicInt(0))
