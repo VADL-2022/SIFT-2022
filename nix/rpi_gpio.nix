@@ -5,6 +5,6 @@
 stdenv.mkDerivation {
   pname = "rpi_gpio";
   version = "0.7.0";
-  src = ./RPi.GPIO-0.7.0;
+  src = ./nix/RPi.GPIO-0.7.0;
   buildInputs = [];
 }
