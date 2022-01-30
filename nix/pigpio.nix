@@ -2,7 +2,7 @@
 
 { stdenv, fetchFromGitHub, cmake }:
 
-stdenv.mkDerivation {
+buildPythonPackage {
   pname = "pigpio";
   version = "79";
   src = fetchFromGitHub {
