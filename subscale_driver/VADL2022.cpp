@@ -438,12 +438,16 @@ void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
   double kilopascals = log->mImu->pres;
   double altitudeFeet = computeAltitude(kilopascals);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
-  if (verbose) {
+  static bool onceFlag = true;
+  if (onceFlag || verbose) {
+    onceFlag = false;
     std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " << relativeAltitude << " ft" << std::endl;
   }
   if (relativeAltitude < 50) {
     // Future: stop SIFT here but not sure if this would stop too early, so we just output what would happen:
-    if (verbose)
+    static bool onceFlag2 = true;
+    if (onceFlag2 ||verbose)
+      onceFlag2 = false;
       std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, would normally try stopping SIFT" << std::endl;
     //raise(SIGINT); // <-- to stop SIFT
     reportStatus(Status::AltitudeLessThanDesiredAmount);
@@ -741,8 +745,8 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[1] = TAKEOFF_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[2] = backupSIFTStartTime_str.c_str();
     LIS331HH_videoCapArgs[3] = LIS331HH_calibrationFile;
-    LIS331HH_videoCapArgs[3] = backupSIFTStopTime_str.c_str();
-    pyRunFile("subscale_driver/LIS331_loop.py", 4, (char **)LIS331HH_videoCapArgs);
+    LIS331HH_videoCapArgs[4] = backupSIFTStopTime_str.c_str();
+    pyRunFile("subscale_driver/LIS331_loop.py", 5, (char **)LIS331HH_videoCapArgs);
   }
 #endif
 
