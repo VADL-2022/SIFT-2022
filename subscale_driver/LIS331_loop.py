@@ -115,6 +115,7 @@ def calibrate(file):
         last_line = line
         offsetX,offsetY,offsetZ=list(map(float, last_line.split(",")[1:]))
 
+start = time.time_ns() # Time since epoch
 def runOneIter():
     global avgX
     global avgY
@@ -159,6 +160,9 @@ def runOneIter():
     data0 = bus.read_byte_data(address, 0x2C)
     data1 = bus.read_byte_data(address, 0x2D)
     
+    current = time.time_ns() # Time since epoch
+    currentTime = float(current - start) / 1.0e9 # Then we subtract the start time in nanoseconds and convert to seconds by dividing by 1e9.
+    
     # Convert the data
     zAccl = data1 * 256 + data0
     if zAccl > 32767 :
@@ -175,7 +179,7 @@ def runOneIter():
     avgY += yAccl
     avgZ += zAccl
     counter += 1
-    my_accels = [(xAccl-offsetX)/1000.0*9.81, (yAccl-offsetY)/1000.0*9.81, (zAccl-offsetZ)/1000.0*9.81]
+    my_accels = [currentTime, (xAccl-offsetX)/1000.0*9.81, (yAccl-offsetY)/1000.0*9.81, (zAccl-offsetZ)/1000.0*9.81]
     append_list_as_row(my_log, my_accels)
 
     # Wait for takeoff
