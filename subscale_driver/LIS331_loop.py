@@ -48,7 +48,8 @@ if not logOnly and stoppingTime is None:
 if not logOnly:
     def thread_function(name):
         logging.info("Thread %s: starting", name)
-        import videoCapture # This is all that is needed, it will run from this.
+        import videoCapture
+        videoCapture.run()
         logging.info("Thread %s: finishing", name)
     name="videoCapture"
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
@@ -192,7 +193,7 @@ def runOneIter(write_obj):
         global videoCaptureThread
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
-            print("Takeoff detected with magnitude", magnitude, " m/s^2 and accel", my_accels[1:], "at time", my_accels[0], "(originals:",[xAccl,yAccl,zAccl],")")
+            print("Takeoff detected with magnitude", magnitude, " m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
             def thread_function2(name):
                 global videoCaptureThread
                 logging.info("Thread %s: starting", name)
