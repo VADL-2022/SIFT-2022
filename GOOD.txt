@@ -46,3 +46,13 @@ PREPARE:
 
 --tips for mophie
 SWAP TO THE battery icon port in usb for full power to lora so it doesnt hang etc.
+
+
+
+
+
+
+
+-- post subscale 2 launch
+the problem: video capture testing timing was enabled
+altitude offset: 50 feet (constant, since actual apogee was 1181 (brian); we got 1133. on the ground we had 614, and ethan's phone said 660-670.

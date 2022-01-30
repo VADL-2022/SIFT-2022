@@ -10,6 +10,7 @@ Queue<QueuedFunction, 16> radioDispatchQueue;
 std::atomic<bool> isRunningPython = false;
 std::atomic<bool> mainDispatchQueueRunning = false;
 std::atomic<bool> mainDispatchQueueDrainThenStop = false;
+std::unique_ptr<std::thread> videoCaptureOnlyThread;
 
 int main(int argc, char **argv) {
   VADL2022 vadl(argc, argv);

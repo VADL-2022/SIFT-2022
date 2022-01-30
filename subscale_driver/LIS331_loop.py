@@ -25,6 +25,11 @@ import sys
 import numpy as np
 from datetime import datetime
 import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(26, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(26, GPIO.OUT)
+GPIO.output(26, GPIO.LOW) # Switch to first camera
+logging.basicConfig(level=logging.INFO)
 
 logOnly = (sys.argv[1] == '1') if len(sys.argv) > 1 else False # If set to "1", don't do anything but log IMU data
 takeoffGs = float(sys.argv[2]) if len(sys.argv) > 2 else None
@@ -44,12 +49,17 @@ stoppingTime = float(sys.argv[5]) if len(sys.argv) > 5 else None
 if not logOnly and stoppingTime is None:
     print("Must provide stoppingTime in milliseconds")
     exit(1)
+stopper = None
 
+shouldStop=None
+import videoCapture
+shouldStopMain = videoCapture.AtomicInt(0)
 if not logOnly:
+    shouldStop=videoCapture.AtomicInt(0)
     def thread_function(name):
+        global shouldStop
         logging.info("Thread %s: starting", name)
-        import videoCapture
-        videoCapture.run()
+        videoCapture.run(shouldStop)
         logging.info("Thread %s: finishing", name)
     name="videoCapture"
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
@@ -183,6 +193,9 @@ def runOneIter(write_obj):
     avgY += yAccl
     avgZ += zAccl
     counter += 1
+    offsetX = avgX/counter
+    offsetY = avgY/counter
+    offsetZ = avgZ/counter
     my_accels = [currentTime, (xAccl-offsetX)/1000.0*9.81, (yAccl-offsetY)/1000.0*9.81, (zAccl-offsetZ)/1000.0*9.81]
     append_list_as_row(write_obj, [xAccl,yAccl,zAccl])
 
@@ -191,20 +204,24 @@ def runOneIter(write_obj):
         magnitude = np.linalg.norm(np.array(my_accels[1:]))
         global takeoffTime
         global videoCaptureThread
+        global stopper
+        global shouldStop
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
             print("Takeoff detected with magnitude", magnitude, " m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
             def thread_function2(name):
                 global videoCaptureThread
+                global shouldStop
                 logging.info("Thread %s: starting", name)
                 print("Waiting for camera switching time...")
                 time.sleep(switchCamerasTime/1000.0)
 
                 print("Switching cameras")
                 
-                videoCaptureThread.raise_exception() # Stop existing video capture
-                GPIO.setmode(GPIO.BOARD)
-                GPIO.setup(26, GPIO.OUT)
+                shouldStop.incrementAndThenGet() #videoCaptureThread.raise_exception() # Stop existing video capture
+                videoCaptureThread.join()
+                shouldStop.decrementAndThenGet()
+                print("GPIO changing...")
                 GPIO.output(26, GPIO.HIGH)
                 
                 print("Switched cameras")
@@ -217,12 +234,15 @@ def runOneIter(write_obj):
             _2ndCamThread.start()
             
             def thread_function_stopper(name):
+                global shouldStop
                 logging.info("Thread %s: starting", name)
                 print("Waiting for stopping time...")
                 time.sleep(stoppingTime/1000.0)
                 print("Stopping")
+                shouldStop.incrementAndThenGet()
                 logging.info("Thread %s: finishing", name)
-            stopper = thread_with_exception.thread_with_exception(name=name, target=thread_function_stopper, args=("Stopper",))
+                shouldStopMain.incrementAndThenGet()
+            stopper = thread_with_exception.thread_with_exception(name="Stopper", target=thread_function_stopper, args=("Stopper",))
             stopper.start()
 
             
@@ -231,8 +251,16 @@ calibrate(calibrationFile)
 try:
     # Open file in append mode
     with open(file_name, 'a+', newline='') as write_obj:
-        while True:
+        while shouldStopMain.get() == 0:
             runOneIter(write_obj)
+except KeyboardInterrupt:
+    print("Stopping threads due to keyboard interrupt")
+    if shouldStop is not None:
+        shouldStop.incrementAndThenGet()
+    if videoCaptureThread is not None:
+        videoCaptureThread.join()
+    if stopper is not None:
+        stopper.join()
 finally:
     if counter > 0:
         with open(file_name, 'a+', newline='') as write_obj:

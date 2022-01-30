@@ -3,6 +3,8 @@
 #include "../src/Queue.hpp"
 #include <functional>
 #include <atomic>
+#include <memory>
+#include <thread>
 
 enum QueuedFunctionType {
   Misc,
@@ -20,6 +22,7 @@ extern Queue<QueuedFunction, 16> radioDispatchQueue;
 extern std::atomic<bool> isRunningPython;
 extern std::atomic<bool> mainDispatchQueueRunning;
 extern std::atomic<bool> mainDispatchQueueDrainThenStop;
+extern std::unique_ptr<std::thread> videoCaptureOnlyThread;
 
 enum Status : int {
   EnqueuingSIFT = 1,
