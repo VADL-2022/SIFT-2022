@@ -9,6 +9,6 @@ buildPythonPackage {
     owner  = "waveform80";
     repo   = "colorzero";
     rev    = "d1bf757f59d507817635a09955d2753e3092e7c9";
-    sha256 = "18hiljf86jncv636rc80ik0s3xsrnq1g2phac6ild52k6gf5qqbn";
+    sha256 = "1i58kmw5h1s2d1ws8715cz8n1h8962l03f6wh9d6zjm0xc53za98";
   };
 }
