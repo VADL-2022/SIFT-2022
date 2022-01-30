@@ -11,7 +11,10 @@ https://www.sparkfun.com/datasheets/Sensors/Accelerometer/LIS331HH.pdf
 
 """
 
-import smbus
+try:
+    import smbus
+except:
+    import smbus2 as smbus
 import time
 from csv import writer
 import time
