@@ -2,7 +2,7 @@
 
 { stdenv, fetchFromGitHub, cmake, buildPythonPackage }:
 
-buildPythonPackage {
+buildPythonPackage rec {
   pname = "pigpio";
   version = "79";
   src = fetchFromGitHub {
