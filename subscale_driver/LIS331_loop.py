@@ -188,10 +188,10 @@ def runOneIter():
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
             print("Takeoff detected")
-            def thread_function(name):
+            def thread_function2(name):
                 logging.info("Thread %s: starting", name)
                 print("Waiting for camera switching time...")
-                time.sleep(takeoffTime + datetime.timedelta(milliseconds=switchCamerasTime))
+                time.sleep(switchCamerasTime/1000.0)
 
                 print("Switching cameras")
                 
@@ -204,9 +204,19 @@ def runOneIter():
                 print("Starting 2nd camera")
                 # Start new video capture
                 videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
+                videoCaptureThread.start()
                 logging.info("Thread %s: finishing", name)
-            _2ndCamThread = threading.Thread(target=thread_function, args=("2ndCam",))
+            _2ndCamThread = thread_with_exception.thread_with_exception(name=name, target=thread_function2, args=("2ndCam",))
             _2ndCamThread.start()
+            
+            def thread_function_stopper(name):
+                logging.info("Thread %s: starting", name)
+                print("Waiting for stopping time...")
+                time.sleep(stoppingTime/1000.0)
+                print("Stopping")
+                logging.info("Thread %s: finishing", name)
+            stopper = thread_with_exception.thread_with_exception(name=name, target=thread_function_stopper, args=("Stopper",))
+            stopper.start()
 
             
 
