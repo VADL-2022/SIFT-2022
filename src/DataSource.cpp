@@ -248,10 +248,10 @@ cv::Rect DataSourceBase::crop() const {
 
 const double OpenCVVideoCaptureDataSource::default_fps =
 #ifdef USE_COMMAND_LINE_ARGS
-2 //4 //30
+3 //4 //30
 // NOTE: FPS of 1 will make the camera really dark! Don't use it!
 #else
-2
+3
 // NOTE: FPS of 1 will make the camera really dark! Don't use it!
 #endif
 ;

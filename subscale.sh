@@ -36,7 +36,7 @@ cleanup() {
     fi
     # Stop temperature data
     #pkill -f vcgencmd
-    pkill -SIGINT -f 'python3 WindTunnel'
+    pkill -SIGINT -f 'import WindTunnel.run' # Python matches this
     # sha512 Checksum
 
     exit
@@ -109,7 +109,7 @@ if [ "$mode" == "sift" ]; then
 else
     echo "@@@@ Starting pi temperature recording"
     #bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
-    /usr/bin/python3 "$windTunnel" 1 "$quiet" & # 1 = no thermocouple
+    /usr/bin/python3 -c "$windTunnel" 1 "$quiet" & # 1 = no thermocouple
 fi
 # Stop SIFT after x seconds:
 # if [ "$dontsleep3" != "1" ]; then
@@ -123,9 +123,16 @@ mainDeploymentToTouchDown=74000 # milliseconds
 siftAllowanceForStopping=10000 # Time to take away from mainDeploymentToTouchDown for stopping SIFT in backupSIFTStopTime. Larger values stop SIFT sooner.
 timeToMainDeployment=10000 # Originally we were going to start SIFT on main deployment. But we use this instead since unsure about IMU trigger on 1 g of main deployment, and there's a fallback via --backup-sift-start-time for this.
 backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))" # Originally we were going to stop SIFT on altitude data. But we're unsure about altitude data being reliable, so we don't use it to stop SIFT, and there's a fallback via backupSIFTStopTime.
-realFlight="--sift-start-time $mainStabilizationTime --takeoff-g-force 5 --main-deployment-g-force 999999999999 --backup-sift-stop-time $backupSIFTStopTime" # --main-deployment-g-force is unused, just using timing
+if [ "$mode" == "sift" ]; then
+    asdasd="--takeoff-g-force 5"
+else
+    asdasd="--takeoff-g-force 4"
+fi
+gforce=
+realFlight="--sift-start-time $mainStabilizationTime $asdasd --main-deployment-g-force 999999999999 --backup-sift-stop-time $backupSIFTStopTime" # --main-deployment-g-force is unused, just using timing
 testing="--sift-start-time 0 --backup-sift-stop-time 20000"
-extraArgs="$testing"
+#extraArgs="$testing"
+extraArgs="$realFlight"
 commonArgs="--backup-takeoff-time 0 --backup-sift-start-time $timeToMainDeployment"
 if [ "$mode" == "sift" ]; then
     ./$exe --extra-sift-exe-args '--crop-for-fisheye-camera --no-preview-window' --sift-params '-C_edge 2 -delta_min 0.6' $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "subscale_driver/radio.py" 1)
