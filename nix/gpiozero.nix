@@ -9,6 +9,6 @@ buildPythonPackage {
     owner  = "gpiozero";
     repo   = "gpiozero";
     rev    = "e55c678ff0dfe0b34c2b0a1683869dbc7e0086d2";
-    sha256 = "0wgcy9jvd659s66khrrp5qlhhy27464d1pildrknpdava29b1r37";
+    sha256 = "18hiljf86jncv636rc80ik0s3xsrnq1g2phfc6ild52k6gf5qqbn";
   };
 }
