@@ -729,7 +729,10 @@ VADL2022::VADL2022(int argc, char** argv)
   if (videoCapture) {
     backupSIFTStartTime_str = std::to_string(backupSIFTStartTime);
     TAKEOFF_G_FORCE_str = std::to_string(TAKEOFF_G_FORCE);
-    LIS331HH_videoCapArgs = {"0", TAKEOFF_G_FORCE_str.c_str(), backupSIFTStartTime_str.c_str(), LIS331HH_calibrationFile, NULL};
+    LIS331HH_videoCapArgs[0] = "0";
+    LIS331HH_videoCapArgs[1] = TAKEOFF_G_FORCE_str.c_str();
+    LIS331HH_videoCapArgs[2] = backupSIFTStartTime_str.c_str();
+    LIS331HH_videoCapArgs[3] = LIS331HH_calibrationFile;
     pyRunFile("subscale_driver/LIS331_loop.py", 4, (char **)LIS331HH_videoCapArgs);
   }
 #endif
