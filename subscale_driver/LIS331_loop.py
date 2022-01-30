@@ -45,6 +45,7 @@ if not logOnly:
         logging.info("Thread %s: finishing", name)
     name="videoCapture"
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
+    videoCaptureThread.start()
 else:
     videoCaptureThread = None
     name=None
@@ -180,20 +181,26 @@ def runOneIter():
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
             print("Takeoff detected")
-            print("Waiting for camera switching time...")
-            time.sleep(takeoffTime + datetime.timedelta(milliseconds=switchCamerasTime))
-            
-            print("Switching cameras")
+            def thread_function(name):
+                logging.info("Thread %s: starting", name)
+                print("Waiting for camera switching time...")
+                time.sleep(takeoffTime + datetime.timedelta(milliseconds=switchCamerasTime))
 
-            videoCaptureThread.raise_exception() # Stop existing video capture
-            GPIO.setmode(GPIO.BOARD)
-            GPIO.setup(26, GPIO.OUT)
-            GPIO.output(26, GPIO.HIGH)
+                print("Switching cameras")
+                
+                videoCaptureThread.raise_exception() # Stop existing video capture
+                GPIO.setmode(GPIO.BOARD)
+                GPIO.setup(26, GPIO.OUT)
+                GPIO.output(26, GPIO.HIGH)
+                
+                print("Switched cameras")
+                print("Starting 2nd camera")
+                # Start new video capture
+                videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
+                logging.info("Thread %s: finishing", name)
+            2ndCamThread = threading.Thread(target=thread_function, args=("2ndCam",))
+            2ndCamThread.start()
 
-            print("Switched cameras")
-            print("Starting 2nd camera")
-            # Start new video capture
-            videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
             
 
 calibrate(calibrationFile)
