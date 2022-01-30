@@ -54,6 +54,8 @@ mkShell {
     # #
     
       # VADL2022 "library" #
+      ircrobots
+      python37m
     (python37m.withPackages (p: with p; [
       (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
       #opencv4
