@@ -67,6 +67,9 @@ mkShell {
       (lib.optional useGtk (toPythonModule (pkgs.opencv4.override { enableGTK2 = true; enablePython = true; pythonPackages = python37Packages; }))) # Temp hack
       numpy
       #matplotlib
+
+      # For LIS331HH IMU
+      smbus2
     ]))
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {}) ]) ++ [
     libusb1
