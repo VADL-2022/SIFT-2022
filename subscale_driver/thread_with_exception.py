@@ -10,7 +10,7 @@ import time
   
 class thread_with_exception(threading.Thread):
     def __init__(self, name, **kwargs):
-        threading.Thread.__init__(self, kwargs)
+        threading.Thread.__init__(self, None, kwargs)
         self.name = name
              
     def run(self):
