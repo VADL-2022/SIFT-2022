@@ -57,9 +57,7 @@ else:
     videoCaptureThread = None
     name=None
 
-def append_list_as_row(file_name, list_of_elem):
-    # Open file in append mode
-    with open(file_name, 'a+', newline='') as write_obj:
+def append_list_as_row(write_obj, list_of_elem):
         # Create a writer object from csv module
         csv_writer = writer(write_obj)
         # Add contents of list as last row in the csv file
@@ -67,6 +65,7 @@ def append_list_as_row(file_name, list_of_elem):
 
 timestr = time.strftime("%Y%m%d-%H%M%S")
 my_log = "dataOutput/LOG_" + timestr + ".LIS331.csv"
+file_name=my_log
 
 # Create a new (empty) csv file
 with open(my_log, 'w', newline='') as file:
@@ -120,7 +119,7 @@ def calibrate(file):
         offsetX,offsetY,offsetZ=list(map(float, last_line.split(",")[1:]))
 
 start = time.time_ns() # Time since epoch
-def runOneIter():
+def runOneIter(write_obj):
     global avgX
     global avgY
     global avgZ
@@ -184,7 +183,7 @@ def runOneIter():
     avgZ += zAccl
     counter += 1
     my_accels = [currentTime, (xAccl-offsetX)/1000.0*9.81, (yAccl-offsetY)/1000.0*9.81, (zAccl-offsetZ)/1000.0*9.81]
-    append_list_as_row(my_log, my_accels)
+    append_list_as_row(write_obj, my_accels)
 
     # Wait for takeoff
     if not logOnly:
@@ -227,8 +226,11 @@ def runOneIter():
 
 calibrate(calibrationFile)
 try:
-    while True:
-        runOneIter()
+    # Open file in append mode
+    with open(file_name, 'a+', newline='') as write_obj:
+        while True:
+            runOneIter(write_obj)
 finally:
     if counter > 0:
-        append_list_as_row(my_log, ["Calibration data",avgX/counter,avgY/counter,avgZ/counter])
+        with open(file_name, 'a+', newline='') as write_obj:
+            append_list_as_row(write_obj, ["Calibration data",avgX/counter,avgY/counter,avgZ/counter])
