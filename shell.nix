@@ -53,7 +53,8 @@ mkShell {
     ] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [
     # #
     
-    # VADL2022 "library" #
+      # VADL2022 "library" #
+      python37m
     (python37m.withPackages (p: with p; [
       (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
       #opencv4
