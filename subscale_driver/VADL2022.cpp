@@ -152,7 +152,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   siftCommandLine =
       "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine " +
     (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string("")) +
-      "--main-mission " +
+      " --main-mission " +
   (siftParams != nullptr
 	       ? ("--sift-params " + std::string(siftParams))
 	       : std::string("")) +
