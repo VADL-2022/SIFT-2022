@@ -774,8 +774,12 @@ VADL2022::VADL2022(int argc, char** argv)
   else {
     if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
 
+    #ifndef USE_LIS331HH
     std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
+    #else
+    // Alternate IMU handles this for us, all good
+    #endif
     
     mLog = nullptr;
     mImu = nullptr;
