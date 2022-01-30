@@ -42,7 +42,7 @@ float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE
 bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false;
 // Sift params initialization
 const char* siftParams = nullptr;
-const char* extraSIFTArgs = nullptr
+const char* extraSIFTArgs = nullptr;
 
 auto startedDriverTime = std::chrono::steady_clock::now();
 auto takeoffTime = std::chrono::steady_clock::now();
