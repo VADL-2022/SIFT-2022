@@ -47,6 +47,7 @@ auto startedDriverTime = std::chrono::steady_clock::now();
 auto takeoffTime = std::chrono::steady_clock::now();
 long long backupSIFTStartTime = -1; // Also used as the projected SIFT start time if IMU fails
 std::string backupSIFTStartTime_str;
+std::string TAKEOFF_G_FORCE_str;
 #define USE_LIS331HH
 #ifdef USE_LIS331HH // Using the alternative IMU
 const char* LIS331HH_calibrationFile = nullptr;
@@ -724,8 +725,9 @@ VADL2022::VADL2022(int argc, char** argv)
 #ifdef USE_LIS331HH // Using the alternative IMU
   if (videoCapture) {
     backupSIFTStartTime_str = std::to_string(backupSIFTStartTime);
-    const char *args[] = {"0", backupSIFTStartTime_str.c_str(), LIS331HH_calibrationFile, NULL};
-    pyRunFile("subscale_driver/LIS331_loop.py", 2, (char **)args);
+    TAKEOFF_G_FORCE_str = std::to_string(TAKEOFF_G_FORCE);
+    const char *args[] = {"0", TAKEOFF_G_FORCE_str, backupSIFTStartTime_str.c_str(), LIS331HH_calibrationFile, NULL};
+    pyRunFile("subscale_driver/LIS331_loop.py", 4, (char **)args);
   }
 #endif
 

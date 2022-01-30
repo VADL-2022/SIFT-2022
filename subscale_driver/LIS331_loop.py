@@ -36,7 +36,7 @@ if not logOnly and switchCamerasTime is None:
     print("Must provide switchCamerasTime in milliseconds")
     exit(1)
 takeoffTime = None
-calibrationFile = (sys.argv[3]) if len(sys.argv) > 3 else None
+calibrationFile = (sys.argv[4]) if len(sys.argv) > 4 else None
 if calibrationFile is None:
     print("Must provide calibrationFile")
     exit(1)
