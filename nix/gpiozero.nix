@@ -3,7 +3,7 @@
 { stdenv, fetchFromGitHub, buildPythonPackage }:
 
 buildPythonPackage {
-  pname = "pigpio";
+  pname = "gpiozero";
   version = "1.6.2";
   src = fetchFromGitHub {
     owner  = "gpiozero";
