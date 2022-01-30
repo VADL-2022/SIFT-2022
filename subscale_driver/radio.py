@@ -3,6 +3,7 @@ import random
 import time
 import sys
 
+print("DOING Radio")
 ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1) # gpio14
 ser.reset_input_buffer()
 
