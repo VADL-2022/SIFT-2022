@@ -109,7 +109,7 @@ if [ "$mode" == "sift" ]; then
 else
     echo "@@@@ Starting pi temperature recording"
     #bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
-    /usr/bin/python3 "$windTunnel" 1 "$quiet" & # 1 = no thermocouple
+    /usr/bin/python3 -c "$windTunnel" 1 "$quiet" & # 1 = no thermocouple
 fi
 # Stop SIFT after x seconds:
 # if [ "$dontsleep3" != "1" ]; then
