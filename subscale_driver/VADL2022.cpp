@@ -46,6 +46,11 @@ const char* siftParams = nullptr;
 auto startedDriverTime = std::chrono::steady_clock::now();
 auto takeoffTime = std::chrono::steady_clock::now();
 long long backupSIFTStartTime = -1; // Also used as the projected SIFT start time if IMU fails
+std::string backupSIFTStartTime_str;
+#define USE_LIS331HH
+#ifdef USE_LIS331HH // Using the alternative IMU
+const char* LIS331HH_calibrationFile = nullptr;
+#endif
 long long backupSIFTStopTime = -1;
 long long backupTakeoffTime = -1;
 bool verbose = false;
@@ -664,6 +669,18 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--video-capture") == 0) { // Run video saving from camera only
       videoCapture = true;
     }
+    #ifdef USE_LIS331HH // Using the alternative IMU
+    else if (strcmp(argv[i], "--LIS331HH-imu-calibration-file") == 0) {
+      if (i+1 < argc) {
+        LIS331HH_calibrationFile = argv[i+1]
+      }
+      else {
+	puts("Expected calibration file");
+	exit(1);
+      }
+      i++;
+    }
+    #endif
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
       i++;
@@ -703,7 +720,15 @@ VADL2022::VADL2022(int argc, char** argv)
   // Ensure Python gets sigints and other signals
   // We do this after connect_GPIO() because "For those of us who ended up here wanting to implement their own signal handler, make sure you do your signal() call AFTER you call gpioInitialise(). This will override the pigpio handler." ( https://github.com/fivdi/pigpio/issues/127 )
   installSignalHandlers();
-	
+
+#ifdef USE_LIS331HH // Using the alternative IMU
+  if (videoCapture) {
+    backupSIFTStartTime_str = std::to_string(backupSIFTStartTime);
+    const char *args[] = {"0", backupSIFTStartTime_str.c_str(), LIS331HH_calibrationFile, NULL};
+    pyRunFile("subscale_driver/LIS331_loop.py", 2, (char **)args);
+  }
+#endif
+
   if (sendOnRadio_) {
     auto ret = sendOnRadio();
     std::cout << "sendOnRadio returned: " << ret << std::endl;
