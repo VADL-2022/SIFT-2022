@@ -42,3 +42,7 @@ sift test:
 
 PREPARE:
 ./subscale.sh subscale2_goodMostly
+
+
+--tips for mophie
+SWAP TO THE battery icon port in usb for full power to lora so it doesnt hang etc.
