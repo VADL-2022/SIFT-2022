@@ -72,6 +72,7 @@ mkShell {
       # For LIS331HH IMU
       (callPackage ./nix/smbus2.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
       (callPackage ./nix/rpi_gpio.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
+      (callPackage ./nix/gpiozero.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
       (lib.optional (stdenv.hostPlatform.isLinux) (callPackage ./nix/smbus2.nix {}))
       (lib.optional (stdenv.hostPlatform.isLinux) (callPackage ./nix/rpi_gpio.nix {}))
     ]))

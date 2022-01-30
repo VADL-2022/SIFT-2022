@@ -97,6 +97,11 @@ $compileSIFT ; make -j4 $exe
 # Record temperature data
 #set +o errexit +o errtrace
 quiet=1 # set to 0 for verbose
+# For WindTunnel #
+#sudo pip3 install RPi.GPIO
+#sudo pip3 install adafruit-circuitpython-max31855
+#sudo pip3 install adafruit-blinka
+# #
 if [ "$mode" == "sift" ]; then
     echo "@@@@ Starting thermocouple temperature recording"
     /usr/bin/python3 WindTunnel/run.py 0 "$quiet" &
