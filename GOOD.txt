@@ -56,3 +56,9 @@ SWAP TO THE battery icon port in usb for full power to lora so it doesnt hang et
 -- post subscale 2 launch
 the problem: video capture testing timing was enabled
 altitude offset: 50 feet (constant, since actual apogee was 1181 (brian); we got 1133. on the ground we had 614, and ethan's phone said 660-670.
+
+ADD TO the checklist: check timing of SIFT pi and the IMU pi
+
+cd dataOutput
+ls -t | head -n 26 | xargs tar --xattrs --acls --preserve-permissions -H posix --use-compress-program='gzip' -cf "../filesaaa.gzip" && echo $?
+ls -t | head -n 26 | xargs -i{} -n 1 find {} -exec stat {} \; > ../ctimes.txt

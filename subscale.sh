@@ -131,8 +131,8 @@ fi
 gforce=
 realFlight="--sift-start-time $mainStabilizationTime $asdasd --main-deployment-g-force 999999999999 --backup-sift-stop-time $backupSIFTStopTime" # --main-deployment-g-force is unused, just using timing
 testing="--sift-start-time 0 --backup-sift-stop-time 20000"
-extraArgs="$testing"
-#extraArgs="$realFlight"
+#extraArgs="$testing"
+extraArgs="$realFlight"
 commonArgs="--backup-takeoff-time 0 --backup-sift-start-time $timeToMainDeployment"
 if [ "$mode" == "sift" ]; then
     ./$exe --extra-sift-exe-args '--crop-for-fisheye-camera --no-preview-window' --sift-params '-C_edge 2 -delta_min 0.6' $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "subscale_driver/radio.py" 1)

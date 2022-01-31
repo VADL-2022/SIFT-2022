@@ -84,11 +84,11 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 // Installs signal handlers for the current thread.
 void installSignalHandlers() {
     // https://en.cppreference.com/w/cpp/error/set_terminate
-    std::set_terminate([](){
-        std::cout << "Unhandled exception detected by subscale driver. Running terminate_handler()." << std::endl;
-        ::terminate_handler(true);
-        std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
-    });
+    // std::set_terminate([](){
+    //     std::cout << "Unhandled exception detected by subscale driver. Running terminate_handler()." << std::endl;
+    //     ::terminate_handler(true);
+    //     std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
+    // });
     
     // Install ctrl-c handler
     // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
