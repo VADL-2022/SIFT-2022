@@ -29,7 +29,7 @@ protected:
 
 struct PreviewWindowDataOutput : public DataOutputBase
 {
-    void showCanvas(std::string name, cv::Mat& canvas, bool flush = false, cv::Rect* crop);
+    void showCanvas(std::string name, cv::Mat& canvas, bool flush = false, cv::Rect* crop = nullptr);
     
     template <typename DataSourceT>
     void run(DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n);
