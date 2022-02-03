@@ -38,6 +38,7 @@ void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degr
 
 #pragma mark imshow
 
+namespace commonUtils {
 // Wrapper around imshow that reuses the same window each time
 void imshow(std::string name, cv::Mat& mat) {
     static std::optional<std::string> prevWindowTitle;
@@ -57,6 +58,7 @@ void imshow(std::string name, cv::Mat& mat) {
 //        on_trackbar( alpha_slider, 0 );
     }
     cv::imshow(*prevWindowTitle, mat); // prevWindowTitle (the first title) is always used as an identifier for this window, regardless of the renaming done via setWindowTitle().
+}
 }
 
 #pragma mark RNG

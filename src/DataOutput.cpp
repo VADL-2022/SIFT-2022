@@ -14,7 +14,7 @@
 
 void PreviewWindowDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool flush, cv::Rect* crop) {
     t.reset();
-    imshow(name, crop ? canvas(*crop) : canvas);
+    commonUtils::imshow(name, crop ? canvas(*crop) : canvas);
     t.logElapsed("show canvas window");
 }
 

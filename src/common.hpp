@@ -22,7 +22,9 @@ void drawRect(cv::Mat& img, cv::Point center, cv::Size2f size, float orientation
 void drawSquare(cv::Mat& img, cv::Point center, int size, float orientation_degrees, int thickness = 2);
 
 // Wrapper around imshow that reuses the same window each time
+namespace commonUtils {
 void imshow(std::string name, cv::Mat& mat);
+}
 
 extern thread_local cv::RNG rng; // Random number generator
 extern thread_local cv::Scalar lastColor;
