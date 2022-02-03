@@ -10,6 +10,7 @@
 
 #include "opencv2/highgui.hpp"
 #include "utils.hpp"
+#include "common.hpp"
 
 void PreviewWindowDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool flush, cv::Rect* crop) {
     t.reset();
