@@ -930,8 +930,9 @@ int mainMission(DataSourceT* src,
                 }
             }
             
-            cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
-            o2.showCanvas("", mat, flush, rect.empty() ? nullptr : &rect);
+            //cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
+            //o2.showCanvas("", mat, flush, rect.empty() ? nullptr : &rect);
+            o2.showCanvas("", mat, flush, nullptr);
         }
         t.reset();
         cv::Mat greyscale = src->siftImageForMat(i);
