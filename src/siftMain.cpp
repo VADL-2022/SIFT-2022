@@ -1201,7 +1201,7 @@ int mainMission(DataSourceT* src,
             ProcessedImage<SIFT_T> img;
             canvasesReadyQueue.dequeue(&img);
             cv::Mat realCanvas = prepareCanvas(img);
-            imshow("", realCanvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
+            commonUtils::imshow("", realCanvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
@@ -1260,7 +1260,7 @@ int mainMission(DataSourceT* src,
             }
             canvasesReadyQueue.dequeue(&img);
             cv::Mat realCanvas = prepareCanvas(img);
-            imshow("", realCanvas);
+            commonUtils::imshow("", realCanvas);
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
