@@ -873,7 +873,7 @@ int mainMission(DataSourceT* src,
         t.logElapsed("get image");
         if (mat.empty()) {
             printf("No more images left to process. Exiting.\n");
-            //stopMain();
+            stopMain();
             break;
         }
         // Possibly saving it:
@@ -904,6 +904,15 @@ int mainMission(DataSourceT* src,
                         // Save the intermediate homography matrix
                         std::string name;
                         saveMatrixGivenStr(M, name /* <--output */, str);
+#define SAVE_IMAGE
+#ifdef SAVE_IMAGE
+                        // Save image for debugging only
+                        cv::Mat canvas;
+                        cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
+                        //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
+                        std::cout << "Saving to " << name << std::endl;
+                        cv::imwrite(name, canvas);
+#endif
                     }
                     else {
                         std::cout << "Homography not flushed since it is empty" << std::endl;

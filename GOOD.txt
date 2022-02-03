@@ -62,3 +62,5 @@ ADD TO the checklist: check timing of SIFT pi and the IMU pi
 cd dataOutput
 ls -t | head -n 26 | xargs tar --xattrs --acls --preserve-permissions -H posix --use-compress-program='gzip' -cf "../filesaaa.gzip" && echo $?
 ls -t | head -n 26 | xargs -i{} -n 1 find {} -exec stat {} \; > ../ctimes.txt
+
+final gzip: tar --use-compress-program='gzip -9' -cf ./subscale2_data.tar.gz ./files*.gzip ./ctimes*
