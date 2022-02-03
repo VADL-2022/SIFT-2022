@@ -20,7 +20,7 @@ struct DataOutputBase {
     virtual ~DataOutputBase() {}
     #endif
     
-    MaybeVirtual void showCanvas(std::string name, cv::Mat& canvas, bool flush) MaybePureVirtual;
+    MaybeVirtual void showCanvas(std::string name, cv::Mat& canvas, bool flush, cv::Rect* crop) MaybePureVirtual;
     MaybeVirtual void release() {}
     
 protected:
@@ -29,7 +29,7 @@ protected:
 
 struct PreviewWindowDataOutput : public DataOutputBase
 {
-    void showCanvas(std::string name, cv::Mat& canvas, bool flush = false);
+    void showCanvas(std::string name, cv::Mat& canvas, bool flush = false, cv::Rect* crop);
     
     template <typename DataSourceT>
     void run(DataSourceT& src, SIFTState& s, SIFTParams& p, cv::Mat& backtorgb, struct sift_keypoints* keypoints, bool retryNeeded, size_t& index, int n);
