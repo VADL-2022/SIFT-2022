@@ -18,7 +18,7 @@ void PreviewWindowDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool
 }
 
 int PreviewWindowDataOutput::waitKey(int delay) {
-    if (delay == 0) { delay = 1; return 'g'; }
+    if (delay == 0) { delay = 1;  cv::waitKey(delay); return 'g'; }
     return cv::waitKey(delay);
 }
 
