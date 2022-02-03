@@ -925,7 +925,8 @@ int mainMission(DataSourceT* src,
                 }
             }
             
-            o2.showCanvas("", mat, flush, src->shouldCrop() ? src->crop() : nullptr);
+            cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
+            o2.showCanvas("", mat, flush, rect.empty() ? nullptr : &rect);
         }
         t.reset();
         cv::Mat greyscale = src->siftImageForMat(i);
@@ -1197,7 +1198,8 @@ int mainMission(DataSourceT* src,
             imshow("", realCanvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
-                o2.showCanvas("", img.canvas, false, src->shouldCrop() ? src->crop() : nullptr);
+                cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
+                o2.showCanvas("", img.canvas, false, rect.empty() ? nullptr : &rect);
             }
             //cv::waitKey(30);
             auto size = canvasesReadyQueue.size();
@@ -1249,7 +1251,8 @@ int mainMission(DataSourceT* src,
             imshow("", realCanvas);
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
-                o2.showCanvas("", realCanvas, false, src->shouldCrop() ? src->crop() : nullptr);
+                cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
+                o2.showCanvas("", realCanvas, false, rect.empty() ? nullptr : &rect);
             }
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
