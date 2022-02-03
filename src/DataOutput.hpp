@@ -41,7 +41,7 @@ struct PreviewWindowDataOutput : public DataOutputBase
 struct FileDataOutput : public DataOutputBase
 {
     FileDataOutput(std::string filenameNoExt, double fps = 30, cv::Size sizeFrame = {640,480});
-    void run(cv::Mat frame, bool flush);
+    void run(cv::Mat frame, bool flush, cv::Rect* crop = nullptr);
     
     void release() MaybeOverride;
     

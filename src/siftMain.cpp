@@ -904,11 +904,11 @@ int mainMission(DataSourceT* src,
                         // Save the intermediate homography matrix
                         std::string name;
                         saveMatrixGivenStr(M, name /* <--output */, str);
-#define SAVE_IMAGE
-#ifdef SAVE_IMAGE
+#define SAVE_INTERMEDIATE_SCALED_IMAGES
+#ifdef SAVE_INTERMEDIATE_SCALED_IMAGES
                         // Save image for debugging only
                         cv::Mat canvas;
-                        cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
+                        cv::warpPerspective(src->shouldCrop() ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
                         //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
                         std::cout << "Saving to " << name << std::endl;
                         cv::imwrite(name, canvas);
@@ -925,7 +925,7 @@ int mainMission(DataSourceT* src,
                 }
             }
             
-            o2.showCanvas("", mat, flush);
+            o2.showCanvas("", mat, flush, src->shouldCrop() ? src->crop() : nullptr);
         }
         t.reset();
         cv::Mat greyscale = src->siftImageForMat(i);
@@ -1197,7 +1197,7 @@ int mainMission(DataSourceT* src,
             imshow("", realCanvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
-                o2.showCanvas("", img.canvas, false);
+                o2.showCanvas("", img.canvas, false, src->shouldCrop() ? src->crop() : nullptr);
             }
             //cv::waitKey(30);
             auto size = canvasesReadyQueue.size();
@@ -1249,7 +1249,7 @@ int mainMission(DataSourceT* src,
             imshow("", realCanvas);
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
-                o2.showCanvas("", realCanvas, false);
+                o2.showCanvas("", realCanvas, false, src->shouldCrop() ? src->crop() : nullptr);
             }
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
@@ -1302,7 +1302,7 @@ int mainMission(DataSourceT* src,
         return 0;
     }
     cv::Mat canvas;
-    cv::warpPerspective(firstImage, canvas /* <-- destination */, M, firstImage.size());
+    cv::warpPerspective(src->shouldCrop() ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
 //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
     std::cout << "Saving to " << name << std::endl;
     cv::imwrite(name, canvas);

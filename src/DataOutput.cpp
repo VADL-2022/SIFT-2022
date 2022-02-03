@@ -24,7 +24,7 @@ int PreviewWindowDataOutput::waitKey(int delay) {
 FileDataOutput::FileDataOutput(std::string filenameNoExt_, double fps_, cv::Size sizeFrame_) :
 fps(fps_), sizeFrame(sizeFrame_), filenameNoExt(filenameNoExt_) {}
 
-void FileDataOutput::run(cv::Mat frame, bool flush) {
+void FileDataOutput::run(cv::Mat frame, bool flush, cv::Rect* crop) {
     writerMutex.lock();
     bool first = !writer.isOpened();
     if (first) {
@@ -68,7 +68,7 @@ void FileDataOutput::run(cv::Mat frame, bool flush) {
     std::cout << "newFrame.data: " << (void*)newFrame.data << std::endl;
     std::cout << "Writing frame with type " << mat_type2str(newFrame.type()) << std::endl;
     writerMutex.lock();
-    writer.write(newFrame);
+    writer.write(crop ? newFrame(*crop) : newFrame);
     if (flush) {
         std::cout << "Flushing the video" << std::endl;
         writer.release(); // We check again if not opened at the top of this function and then reopen the video so this is ok to do here.
