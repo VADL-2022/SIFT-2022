@@ -1204,7 +1204,13 @@ int mainMission(DataSourceT* src,
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
-                o2.showCanvas("", img.canvas, false, rect.empty() ? nullptr : &rect);
+                if (img.canvas.empty()) {
+                    std::cout << "Canvas has empty image, using original" << std::endl;
+                    o2.showCanvas("", img.image, false, rect.empty() ? nullptr : &rect);
+                }
+                else {
+                    o2.showCanvas("", img.canvas, false, rect.empty() ? nullptr : &rect);
+                }
             }
             //cv::waitKey(30);
             auto size = canvasesReadyQueue.size();
