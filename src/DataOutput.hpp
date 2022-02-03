@@ -49,7 +49,7 @@ struct FileDataOutput : public DataOutputBase
     std::mutex writerMutex;
     bool releasedWriter; // Protected by g_o2->writerMutex since multiple threads could call segfault_sigaction below at the same time, resulting in the video not saving since the second save overwrites the first I think
     
-    void showCanvas(std::string name, cv::Mat& canvas, bool flush = false);
+    void showCanvas(std::string name, cv::Mat& canvas, bool flush = false, cv::Rect* crop = nullptr);
     int waitKey(int delay=0);
 protected:
     double fps;

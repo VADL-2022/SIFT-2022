@@ -92,9 +92,9 @@ void FileDataOutput::release() {
     }
 }
 
-void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool flush) {
+void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool flush, cv::Rect* crop) {
     t.reset();
-    run(canvas, flush);
+    run(canvas, flush, crop);
     t.logElapsed("save frame to FileDataOutput");
 }
 
