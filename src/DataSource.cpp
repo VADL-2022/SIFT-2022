@@ -78,7 +78,7 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
                 std::cout << "Using size " << sizeFrame << '\n';
                 i += 2;
             }
-            else if (i+1 < argc && strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
+            else if (strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
                 std::cout << "Using crop for fisheye camera." << '\n';
                 _crop = true;
                 i++;
@@ -279,7 +279,7 @@ CameraDataSource::CameraDataSource(int argc, char** argv) {
                 std::cout << "Using size " << sizeFrame << '\n';
                 i += 2;
             }
-            else if (i+1 < argc && strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
+            else if (strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
                 std::cout << "Using crop for fisheye camera." << '\n';
                 _crop = true;
                 i++;
@@ -411,7 +411,7 @@ VideoFileDataSource::VideoFileDataSource(int argc, char** argv) {
         else if (strcmp(argv[i], "--read-backwards") == 0) {
             ensureReadBackwards = true;
         }
-        else if (i+1 < argc && strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
+        else if (strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
             std::cout << "Using crop for fisheye camera." << '\n';
             _crop = true;
             i++;
