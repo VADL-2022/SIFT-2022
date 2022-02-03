@@ -893,7 +893,7 @@ int mainMission(DataSourceT* src,
                 auto now = std::chrono::steady_clock::now();
                 auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now - timeSinceLastFlush);
                 auto destMillis = cfg.flushVideoOutputEveryNSeconds*1000;
-                if (millis.count() > destMillis) {
+                if (millis.count() > destMillis || cfg.flushVideoOutputEveryNSeconds == 0) {
                     flush = true;
                     std::cout << "Flushing with lag " << millis.count() - destMillis << " milliseconds" << std::endl;
                     
