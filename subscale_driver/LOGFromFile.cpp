@@ -19,20 +19,22 @@ void LOGFromFile::callback(void *userData)
     fscanf(data->mLog, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
 	   , &imu.fseconds);
     fscanf(data->mLog,
-	   ",$x,$x,$x" // yprNed
-	   ",$x,$x,$x,$x" // qtn
-	   ",$x,$x,$x" // rate
-	   ",$x,$x,$x" // accel
-	   ",$x,$x,$x" // mag
-	   ",$x,$x,$x" // temp,pres,dTime
-	   ",$x,$x,$x" // dTheta
-	   ",$x,$x,$x" // dVel
-	   ",$x,$x,$x" // magNed
-	   ",$x,$x,$x" // accelNed
-	   ",$x,$x,$x" // linearAccelBody
-	   ",$x,$x,$x" // linearAccelNed
+	   "," "%" PRIu64 // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
+	   ",%f,%f,%f" // yprNed
+	   ",%f,%f,%f,%f" // qtn
+	   ",%f,%f,%f" // rate
+	   ",%f,%f,%f" // accel
+	   ",%f,%f,%f" // mag
+	   ",%f,%f,%f" // temp,pres,dTime
+	   ",%f,%f,%f" // dTheta
+	   ",%f,%f,%f" // dVel
+	   ",%f,%f,%f" // magNed
+	   ",%f,%f,%f" // accelNed
+	   ",%f,%f,%f" // linearAccelBody
+	   ",%f,%f,%f" // linearAccelNed
 	   "," // Nothing after this comma on purpose.
 	   ,
+	   &imu.timestamp,
 	   &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
 	   &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
 	   &imu.rate.x, &imu.rate.y, &imu.rate.z,
