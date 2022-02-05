@@ -13,7 +13,7 @@ void LOGFromFile::callback(void *userData)
 {
     LOGFromFile *data = (LOGFromFile *)userData;
 
-    IMUData* imu = data->mImu;
+    IMUData& imu = *data->mImu;
     fscanf(data->mLog, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
 	   , &imu.fseconds);
     fscanf(data->mLog,
