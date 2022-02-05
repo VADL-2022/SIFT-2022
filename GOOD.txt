@@ -64,3 +64,10 @@ ls -t | head -n 26 | xargs tar --xattrs --acls --preserve-permissions -H posix -
 ls -t | head -n 26 | xargs -i{} -n 1 find {} -exec stat {} \; > ../ctimes.txt
 
 final gzip: tar --use-compress-program='gzip -9' -cf ./subscale2_data.tar.gz ./files*.gzip ./ctimes*
+
+
+
+
+-- preparing for fullscale1: testing commands:
+
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 1.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose
