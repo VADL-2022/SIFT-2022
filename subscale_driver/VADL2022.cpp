@@ -524,7 +524,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     //        << log->mImu->linearAccelNed[0] << "," << log->mImu->linearAccelNed[1] << "," << log->mImu->linearAccelNed[2] << ",";
 
     fprintf(toSIFT, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                    ",%a" // timestamp
+                    "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
                     ",%a,%a,%a" // yprNed
                     ",%a,%a,%a,%a" // qtn
                     ",%a,%a,%a" // rate
