@@ -90,10 +90,15 @@ double computeAltitude(double kilopascals) {
 
 // Forward declare main deployment callback
 template<typename LOG_T>
-void checkMainDeploymentCallback(LOG *log, float fseconds);
+void checkMainDeploymentCallback(LOG_T *log, float fseconds);
+// template void checkMainDeploymentCallback(LOG *log, float fseconds);
+// template void checkMainDeploymentCallback(LOGFromFile_T *log, float fseconds);
 // Other forward declarations
 template<typename LOG_T>
-void passIMUDataToSIFTCallback(LOG *log, float fseconds);
+void passIMUDataToSIFTCallback(LOG_T *log, float fseconds);
+// https://stackoverflow.com/questions/2152002/how-do-i-force-a-particular-instance-of-a-c-template-to-instantiate
+// template void passIMUDataToSIFTCallback(LOG *log, float fseconds);
+// template void passIMUDataToSIFTCallback(LOGFromFile_T *log, float fseconds);
 
 // Returns true on success
 bool sendOnRadio() {
