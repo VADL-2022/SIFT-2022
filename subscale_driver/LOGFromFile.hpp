@@ -23,6 +23,7 @@ public:
     void* callbackUserData;
     IMUData *mImu;     // IMUData
     IMUData mImu_;     // IMUData
+    bool first = false;
     
 private:
     // LIDAR *mLidar; // LIDAR

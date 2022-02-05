@@ -16,10 +16,17 @@ void LOGFromFile::callback(void *userData)
     LOGFromFile *data = (LOGFromFile *)userData;
 
     IMUData& imu = *data->mImu;
-    fscanf(data->mLog, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+    if (!first) {
+      fscanf(data->mLog, "\n");
+    }
+    else {
+      first = false;
+    }
+    fscanf(data->mLog, "%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
 	   , &imu.fseconds);
+    #define TIMESTAMP "," "%" PRIu64 ""
     fscanf(data->mLog,
-	   "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
+	   TIMESTAMP // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
 	   ",%f,%f,%f" // yprNed
 	   ",%f,%f,%f,%f" // qtn
 	   ",%f,%f,%f" // rate
@@ -83,6 +90,12 @@ LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, co
 	  cout << "LogFromFile: Failed to Open Log File " << filename << " with error " << strerror(errno) << endl;
 	  exit(1);
         }
+
+	// Skip first line
+	char c;
+	do {
+	  c = fgetc(mLog);
+	} while (c != '\n');
 
         cout << "LogFromFile: File Opened: " << filename << endl;
         cout << "LogFromFile: Connected" << endl;

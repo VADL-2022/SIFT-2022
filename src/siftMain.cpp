@@ -973,7 +973,7 @@ int mainMission(DataSourceT* src,
             // NOTE: this blocks until the fd gets data. Probably not an issue..
             t.reset();
             std::cout << "Grabbing from subscale driver fd..." << std::endl;
-            fscanf(driverInput_file, "\n%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+            fscanf(driverInput_file, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
                    , &imu.fseconds);
             std::cout << "fseconds: " << imu.fseconds << std::endl;
             const double EPSILON = 0.001;
