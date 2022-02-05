@@ -9,7 +9,7 @@
 class LOG
 {
 public:
-    ofstream mLog; // Log File
+    std::ofstream mLog; // Log File
 
     typedef void (*UserCallback)(LOG* log, float fseconds);
     // Anything except IMU* may be nullptr:
