@@ -13,3 +13,6 @@
 [submodule "WindTunnel"]
 	path = WindTunnel
 	url = https://github.com/VADL-2022/WindTunnel.git
+[submodule "Data"]
+	path = Data
+	url = https://github.com/VADL-2022/Data.git
