@@ -298,7 +298,7 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
       #else
-      v->mLog->userCallback = (LOG_T::UserCallback)reinterpret_cast<void(*)()>(&checkMainDeploymentCallback<LOG_T>);
+      v->mLog->userCallback = reinterpret_cast<LOG_T::UserCallback>(reinterpret_cast<void(*)()>(&checkMainDeploymentCallback<LOG_T>));
       #endif
       
       puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTarget time reached, the rocket has launched\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -387,7 +387,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
       #else
       if (!videoCapture) {
         mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now();
-	v->mLog->userCallback = (LOG_T::UserCallback)reinterpret_cast<void(*)()>(&passIMUDataToSIFTCallback<LOG_T>);
+	v->mLog->userCallback = reinterpret_cast<LOG_T::UserCallback>(reinterpret_cast<void(*)()>(&passIMUDataToSIFTCallback<LOG_T>));
       }
       else {
 	v->mLog->userCallback = nullptr;			    
