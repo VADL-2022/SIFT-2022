@@ -523,20 +523,20 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     //        << log->mImu->linearAccelBody[0] << "," << log->mImu->linearAccelBody[1] << "," << log->mImu->linearAccelBody[2] << ","
     //        << log->mImu->linearAccelNed[0] << "," << log->mImu->linearAccelNed[1] << "," << log->mImu->linearAccelNed[2] << ",";
 
-    fprintf(toSIFT, "\n%x" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                    ",%x" // timestamp
-                    ",%x,%x,%x" // yprNed
-                    ",%x,%x,%x,%x" // qtn
-                    ",%x,%x,%x" // rate
-                    ",%x,%x,%x" // accel
-                    ",%x,%x,%x" // mag
-                    ",%x,%x,%x" // temp,pres,dTime
-                    ",%x,%x,%x" // dTheta
-                    ",%x,%x,%x" // dVel
-                    ",%x,%x,%x" // magNed
-                    ",%x,%x,%x" // accelNed
-                    ",%x,%x,%x" // linearAccelBody
-                    ",%x,%x,%x" // linearAccelNed
+    fprintf(toSIFT, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+                    ",%a" // timestamp
+                    ",%a,%a,%a" // yprNed
+                    ",%a,%a,%a,%a" // qtn
+                    ",%a,%a,%a" // rate
+                    ",%a,%a,%a" // accel
+                    ",%a,%a,%a" // mag
+                    ",%a,%a,%a" // temp,pres,dTime
+                    ",%a,%a,%a" // dTheta
+                    ",%a,%a,%a" // dVel
+                    ",%a,%a,%a" // magNed
+                    ",%a,%a,%a" // accelNed
+                    ",%a,%a,%a" // linearAccelBody
+                    ",%a,%a,%a" // linearAccelNed
                     "," // Nothing after this comma on purpose.
                     ,
                     fseconds,

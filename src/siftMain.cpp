@@ -990,19 +990,19 @@ int mainMission(DataSourceT* src,
                 }
                 // TODO: read all data
                 fscanf(driverInput_file,
-                       ",%x" // timestamp
-                       ",%x,%x,%x" // yprNed
-                       ",%x,%x,%x,%x" // qtn
-                       ",%x,%x,%x" // rate
-                       ",%x,%x,%x" // accel
-                       ",%x,%x,%x" // mag
-                       ",%x,%x,%x" // temp,pres,dTime
-                       ",%x,%x,%x" // dTheta
-                       ",%x,%x,%x" // dVel
-                       ",%x,%x,%x" // magNed
-                       ",%x,%x,%x" // accelNed
-                       ",%x,%x,%x" // linearAccelBody
-                       ",%x,%x,%x" // linearAccelNed
+                       ",%a" // timestamp
+                       ",%a,%a,%a" // yprNed
+                       ",%a,%a,%a,%a" // qtn
+                       ",%a,%a,%a" // rate
+                       ",%a,%a,%a" // accel
+                       ",%a,%a,%a" // mag
+                       ",%a,%a,%a" // temp,pres,dTime
+                       ",%a,%a,%a" // dTheta
+                       ",%a,%a,%a" // dVel
+                       ",%a,%a,%a" // magNed
+                       ",%a,%a,%a" // accelNed
+                       ",%a,%a,%a" // linearAccelBody
+                       ",%a,%a,%a" // linearAccelNed
                        "," // Nothing after this comma on purpose.
                        ,
                        &imu.timestamp,
