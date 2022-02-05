@@ -67,6 +67,7 @@ void LOGFromFile::callback(void *userData)
 
 LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, const char* filename) : callbackUserData(callbackUserData_)
 {
+    mImu = &mImu_;
     userCallback = reinterpret_cast<void(*)()>(userCallback_);
     
     if (LOG_ACTIVE || VERBOSE)

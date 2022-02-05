@@ -74,7 +74,6 @@ void LOG::callback(void *userData)
 LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long long flushToLogEveryNMilliseconds_) : callbackUserData(callbackUserData_), mImu(imu),
 														  flushToLogEveryNMilliseconds(flushToLogEveryNMilliseconds_)
 {
-    mImu = &mImu_;
     userCallback = reinterpret_cast<void(*)()>(userCallback_);
   
     if (LOG_ACTIVE || VERBOSE)
