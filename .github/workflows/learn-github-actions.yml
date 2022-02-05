@@ -5,7 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run ls
-        run: sshpass -p $RASPI_PASS ssh pi@$RASPI_IP ls
+        run: echo $NOT_REALLY_SECRET; sshpass -p $RASPI_PASS ssh pi@$RASPI_IP ls
         env:
+          NOT_REALLY_SECRET: ${{secrets.NOT_REALLY_SECRET}}
           RASPI_PASS: ${{secrets.RASPI_PASS}}
           RASPI_IP: ${{secrets.RASPI_IP}}
