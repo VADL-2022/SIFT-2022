@@ -598,7 +598,7 @@ VADL2022::VADL2022(int argc, char** argv)
       callback = nullptr;
       imuOnly = true;
     }
-    if (strcmp(argv[i], "--imu-data-source-path") == 0) { // Grab IMU data from a file instead of the VectorNav
+    else if (strcmp(argv[i], "--imu-data-source-path") == 0) { // Grab IMU data from a file instead of the VectorNav
       if (i+1 < argc) {
         imuDataSourcePath = argv[i+i];
         callback = reinterpret_cast<void*>(reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOGFromFile>));
@@ -609,10 +609,10 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    if (strcmp(argv[i], "--sift-and-imu-only") == 0) { // Don't run anything but SIFT with provided IMU data + the IMU data recording, starting SIFT without waiting for takeoff/parachute events.
+    else if (strcmp(argv[i], "--sift-and-imu-only") == 0) { // Don't run anything but SIFT with provided IMU data + the IMU data recording, starting SIFT without waiting for takeoff/parachute events.
       forceSkipNonSIFTCallbacks = true;
     }
-    if (strcmp(argv[i], "--verbose") == 0) {
+    else if (strcmp(argv[i], "--verbose") == 0) {
       verbose = true;
     }
     else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
