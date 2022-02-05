@@ -89,8 +89,10 @@ double computeAltitude(double kilopascals) {
 }
 
 // Forward declare main deployment callback
+template<typename LOG_T>
 void checkMainDeploymentCallback(LOG *log, float fseconds);
 // Other forward declarations
+template<typename LOG_T>
 void passIMUDataToSIFTCallback(LOG *log, float fseconds);
 
 // Returns true on success
