@@ -2,6 +2,7 @@
 #define VADL2022_HPP
 
 #include "LOG.hpp"
+#include "LOGFromFile.hpp"
 #include "IMU.hpp"
 
 using namespace std;
@@ -10,6 +11,7 @@ class VADL2022
 {
 public:
     LOG *mLog = nullptr;     // LOG
+    LOGFromFile *mLogFromFile = nullptr;     // LOGFromFile
     IMU *mImu = nullptr;     // IMU
     // LIDAR *mLidar; // LIDAR
     // LDS *mLds;     // LDS
