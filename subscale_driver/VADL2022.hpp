@@ -10,8 +10,7 @@ using namespace std;
 class VADL2022
 {
 public:
-    LOG *mLog = nullptr;     // LOG
-    LOGFromFile *mLogFromFile = nullptr;     // LOGFromFile
+    void* /*LOG or LOGFromFile*/ mLog = nullptr;
     IMU *mImu = nullptr;     // IMU
     // LIDAR *mLidar; // LIDAR
     // LDS *mLds;     // LDS
@@ -30,6 +29,8 @@ public:
 
 private:
     //bool GDSTimeout = 0;
+
+    const char* imuDataSourcePath = nullptr;
 
     void connect_GPIO();
     void disconnect_GPIO();

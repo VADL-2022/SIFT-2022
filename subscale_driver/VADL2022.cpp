@@ -303,7 +303,7 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
       #else
-      v->mLog->userCallback = (reinterpret_cast<void(*)()>(&checkMainDeploymentCallback<LOG_T>));
+      ((LOG_T*)v->mLog)->userCallback = (reinterpret_cast<void(*)()>(&checkMainDeploymentCallback<LOG_T>));
       #endif
       
       puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTarget time reached, the rocket has launched\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -392,10 +392,10 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
       #else
       if (!videoCapture) {
         mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now();
-	v->mLog->userCallback = (reinterpret_cast<void(*)()>(&passIMUDataToSIFTCallback<LOG_T>));
+	((LOG_T*)v->mLog)->userCallback = (reinterpret_cast<void(*)()>(&passIMUDataToSIFTCallback<LOG_T>));
       }
       else {
-	v->mLog->userCallback = nullptr;			    
+	((LOG_T*)v->mLog)->userCallback = nullptr;			    
       }
       #endif
       
@@ -501,7 +501,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
       fflush(toSIFT);
       
       VADL2022* v = (VADL2022*)log->callbackUserData;
-      v->mLog->userCallback = nullptr;
+      ((LOG_T*)v->mLog)->userCallback = nullptr;
       reportStatus(Status::IMUNotRespondingInPassIMUDataToSIFTCallback);
       return;
     }
@@ -592,7 +592,6 @@ VADL2022::VADL2022(int argc, char** argv)
   // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
   bool forceNoIMU = false;
   long long flushIMUDataEveryNMilliseconds = 0;
-  const char* imuDataSourcePath = nullptr;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
       callback = nullptr;
@@ -810,13 +809,13 @@ VADL2022::VADL2022(int argc, char** argv)
   // mMotor = new MOTOR();
   if (vn) {
     if (imuDataSourcePath) {
-      mLogFromFile = new LOGFromFile((LOGFromFile::UserCallback)callback, this, imuDataSourcePath);
-      mLogFromFile->receive();
+      mLog = (void*)new LOGFromFile((LOGFromFile::UserCallback)callback, this, imuDataSourcePath);
+      ((LOGFromFile*)mLog)->receive();
     }
     else {
-      mLog = new LOG((LOG::UserCallback)callback, this, mImu, flushIMUDataEveryNMilliseconds); //, nullptr /*mLidar*/, nullptr /*mLds*/);
+      mLog = (void*)new LOG((LOG::UserCallback)callback, this, mImu, flushIMUDataEveryNMilliseconds); //, nullptr /*mLidar*/, nullptr /*mLds*/);
       mImu->receive();
-      mLog->receive();
+      ((LOG*)mLog)->receive();
     }
 
     // Always start the video to ensure we get some data in case takeoff detection fails or SIFT doesn't start etc.
@@ -890,8 +889,13 @@ VADL2022::~VADL2022()
 {
 	cout << "Main: Destorying" << endl;
 
-	delete (mLog);
-	// delete (mMotor);
+        if (imuDataSourcePath == nullptr) {
+          delete ((LOG*)mLog);
+        }
+        else {
+          delete ((LOGFromFile *)mLog);
+        }
+        // delete (mMotor);
 	// delete (mLds);
 	// delete (mLidar);
 	delete (mImu);
