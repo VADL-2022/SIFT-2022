@@ -581,7 +581,7 @@ VADL2022::VADL2022(int argc, char** argv)
   gpioUserPermissionFixingCommands_arg = argv[0];
 	  
   // Parse command-line args
-  void(*)() /*LOG::UserCallback or LOGFromFile::UserCallback*/ callback = reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOG>);
+  void* /*LOG::UserCallback or LOGFromFile::UserCallback*/ callback = reinterpret_cast<void*>(reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOG>));
   // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
   bool forceNoIMU = false;
   long long flushIMUDataEveryNMilliseconds = 0;
@@ -594,7 +594,7 @@ VADL2022::VADL2022(int argc, char** argv)
     if (strcmp(argv[i], "--imu-data-source-path") == 0) { // Grab IMU data from a file instead of the VectorNav
       if (i+1 < argc) {
         imuDataSourcePath = argv[i+i];
-        callback = reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOGFromFile>);
+        callback = reinterpret_cast<void*>(reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOGFromFile>));
       }
       else {
 	puts("Expected path");
