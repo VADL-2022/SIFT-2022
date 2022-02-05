@@ -71,7 +71,7 @@ LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, co
     {
         cout << "LogFromFile: Connecting" << endl;
 
-        mLog = fopen(filename, 'r');
+        mLog = fopen(filename, "r");
 
         if (!mLog)
         {
