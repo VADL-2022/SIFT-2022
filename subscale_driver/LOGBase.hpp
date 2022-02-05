@@ -1,5 +1,5 @@
 #pragma once
 
 struct LOGBase {
-  void(*)() /*UserCallback*/ userCallback;
+  void /*UserCallback*/ (*userCallback)();
 };
