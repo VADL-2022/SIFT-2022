@@ -6,7 +6,6 @@
 //#include "LIDAR.hpp"
 //#include "LDS.hpp"
 
-using namespace std;
 class LOG
 {
 public:
@@ -18,7 +17,7 @@ public:
     ~LOG();
     void receive();
     void halt();
-    void write(string);
+    void write(std::string);
 
     UserCallback userCallback;
     void* callbackUserData;

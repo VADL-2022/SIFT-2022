@@ -233,7 +233,8 @@ bool forceSkipNonSIFTCallbacks = false;
 
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on takeoff
-void checkTakeoffCallback(LOG *log, float fseconds) {
+template<typename LOG_T>
+void checkTakeoffCallback(LOG_T *log, float fseconds) {
   double kilopascals = log->mImu->pres;
   double altitudeFeet = computeAltitude(kilopascals);
   if (onGroundAltitude == DBL_MIN) {
@@ -295,7 +296,7 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
       #else
-      v->mLog->userCallback = checkMainDeploymentCallback;
+      v->mLog->userCallback = checkMainDeploymentCallback<LOG_T>;
       #endif
       
       puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTarget time reached, the rocket has launched\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -332,7 +333,8 @@ void checkTakeoffCallback(LOG *log, float fseconds) {
 
 // Will: this is called on a non-main thread (on a thread for the IMU)
 // Callback for waiting on main parachute deployment
-void checkMainDeploymentCallback(LOG *log, float fseconds) {
+template<typename LOG_T>
+void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
   float timeSeconds = log->mImu->timestamp / 1.0e9;
@@ -383,7 +385,7 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
       #else
       if (!videoCapture) {
         mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now();
-	v->mLog->userCallback = passIMUDataToSIFTCallback;
+	v->mLog->userCallback = passIMUDataToSIFTCallback<LOG_T>;
       }
       else {
 	v->mLog->userCallback = nullptr;			    
@@ -428,7 +430,8 @@ void checkMainDeploymentCallback(LOG *log, float fseconds) {
   }
 }
 
-void passIMUDataToSIFTCallback(LOG *log, float fseconds) {
+template<typename LOG_T>
+void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
@@ -576,14 +579,26 @@ VADL2022::VADL2022(int argc, char** argv)
   gpioUserPermissionFixingCommands_arg = argv[0];
 	  
   // Parse command-line args
-  LOG::UserCallback callback = checkTakeoffCallback;
+  void* /*LOG::UserCallback or LOGFromFile::UserCallback*/ callback = checkTakeoffCallback<LOG>;
   // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
   bool forceNoIMU = false;
   long long flushIMUDataEveryNMilliseconds = 0;
+  const char* imuDataSourcePath = nullptr;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--imu-record-only") == 0) { // Don't run anything but IMU data recording
       callback = nullptr;
       imuOnly = true;
+    }
+    if (strcmp(argv[i], "--imu-data-source-path") == 0) { // Grab IMU data from a file instead of the VectorNav
+      if (i+1 < argc) {
+        imuDataSourcePath = argv[i+i];
+        callback = checkTakeoffCallback<LOGFromFile>;
+      }
+      else {
+	puts("Expected path");
+	exit(1);
+      }
+      i++;
     }
     if (strcmp(argv[i], "--sift-and-imu-only") == 0) { // Don't run anything but SIFT with provided IMU data + the IMU data recording, starting SIFT without waiting for takeoff/parachute events.
       forceSkipNonSIFTCallbacks = true;
@@ -763,7 +778,7 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   bool vn = forceNoIMU ? false : true;
   try {
-    if (vn)
+    if (vn && imuDataSourcePath == nullptr)
       mImu = new IMU();
   }
   catch (const vn::not_found &e) {
@@ -785,9 +800,15 @@ VADL2022::VADL2022(int argc, char** argv)
   // mLds = new LDS();
   // mMotor = new MOTOR();
   if (vn) {
-    mLog = new LOG(callback, this, mImu, flushIMUDataEveryNMilliseconds); //, nullptr /*mLidar*/, nullptr /*mLds*/);
-    mImu->receive();
-    mLog->receive();
+    if (imuDataSourcePath) {
+      mLogFromFile = new LOGFromFile((LOGFromFile::UserCallback)callback, this, imuDataSourcePath);
+      mLogFromFile->receive();
+    }
+    else {
+      mLog = new LOG((LOG::UserCallback)callback, this, mImu, flushIMUDataEveryNMilliseconds); //, nullptr /*mLidar*/, nullptr /*mLds*/);
+      mImu->receive();
+      mLog->receive();
+    }
 
     // Always start the video to ensure we get some data in case takeoff detection fails or SIFT doesn't start etc.
     // Take an ascent video (on SIFT and video capture pi's)
