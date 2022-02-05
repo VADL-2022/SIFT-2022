@@ -600,7 +600,7 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (strcmp(argv[i], "--imu-data-source-path") == 0) { // Grab IMU data from a file instead of the VectorNav
       if (i+1 < argc) {
-        imuDataSourcePath = argv[i+i];
+        imuDataSourcePath = argv[i+1];
         callback = reinterpret_cast<void*>(reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOGFromFile>));
       }
       else {
