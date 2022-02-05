@@ -46,7 +46,7 @@ void LOG::callback(void *userData)
       else {
         data->mLog << '\n';
       }
-      data->mLog << fseconds << "," << data->mImu->timestamp << ","
+      data->mLog << fseconds << /*"," << data->mImu->timestamp <<*/ ","
                    << data->mImu->yprNed[0] << "," << data->mImu->yprNed[1] << "," << data->mImu->yprNed[2] << ","
                    << data->mImu->qtn[0] << "," << data->mImu->qtn[1] << "," << data->mImu->qtn[2] << "," << data->mImu->qtn[3] << ","
                    << data->mImu->rate[0] << "," << data->mImu->rate[1] << "," << data->mImu->rate[2] << ","

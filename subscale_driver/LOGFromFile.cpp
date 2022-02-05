@@ -24,6 +24,7 @@ void LOGFromFile::callback(void *userData)
     }
     // fscanf(data->mLog, "%f," // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
     // 	   , &imu.fseconds);
+    float timestampSeconds;
     fscanf(data->mLog,
 	   "%f"
 	   ",%f,%f,%f" // yprNed
@@ -40,7 +41,7 @@ void LOGFromFile::callback(void *userData)
 	   ",%f,%f,%f" // linearAccelNed
 	   "," // Nothing after this comma on purpose.
 	   ,
-	   &imu.timestamp,
+	   &timestampSeconds,
 	   &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
 	   &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
 	   &imu.rate.x, &imu.rate.y, &imu.rate.z,
@@ -54,6 +55,7 @@ void LOGFromFile::callback(void *userData)
 	   &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
 	   &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
 	   );
+    imu.timestamp = timestampSeconds * 1e9; // Convert to nanoseconds
     
     int seconds;
     int microseconds;
