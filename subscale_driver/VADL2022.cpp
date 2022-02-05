@@ -497,7 +497,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
       // Notify SIFT that IMU failed
       // toSIFT << "\n" << -1.0f;
       // toSIFT.flush();
-      fprintf(toSIFT, "\n%x", -1.0f);
+      fprintf(toSIFT, "\n%a", -1.0f);
       fflush(toSIFT);
       
       VADL2022* v = (VADL2022*)log->callbackUserData;
