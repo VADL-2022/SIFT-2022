@@ -5,8 +5,9 @@
 #include "IMU.hpp"
 //#include "LIDAR.hpp"
 //#include "LDS.hpp"
+#include "LOGBase.hpp"
 
-class LOG
+class LOG : public LOGBase
 {
 public:
     std::ofstream mLog; // Log File
@@ -19,7 +20,6 @@ public:
     void halt();
     void write(std::string);
 
-    UserCallback userCallback;
     void* callbackUserData;
     IMU *mImu;     // IMU
     long long flushToLogEveryNMilliseconds;

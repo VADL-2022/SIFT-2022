@@ -6,8 +6,9 @@
 //#include "LIDAR.hpp"
 //#include "LDS.hpp"
 #include "../src/IMUData.hpp"
+#include "LOGBase.hpp"
 
-class LOGFromFile
+class LOGFromFile : public LOGBase
 {
 public:
     FILE* mLog; // Log File
@@ -19,7 +20,6 @@ public:
     void receive();
     void halt();
 
-    UserCallback userCallback;
     void* callbackUserData;
     IMUData *mImu;     // IMU
     
