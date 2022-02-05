@@ -1,12 +1,13 @@
-name: learn-github-actions
+name: test-on-pi
 on: [push]
 jobs:
   run-pi-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Run ls
-        run: echo $NOT_REALLY_SECRET; sshpass -p $RASPI_PASS ssh pi@$RASPI_IP ls
+        run: sshpass -p $RASPI_PASS ssh pi@$RASPI_IP 'source .profile; ci_cmd $CI_CMD_ARG'
         env:
           NOT_REALLY_SECRET: ${{secrets.NOT_REALLY_SECRET}}
           RASPI_PASS: ${{secrets.RASPI_PASS}}
           RASPI_IP: ${{secrets.RASPI_IP}}
+          CI_CMD_ARG: ${{secrets.CI_CMD_ARG}}
