@@ -22,11 +22,11 @@ void LOGFromFile::callback(void *userData)
     else {
       data->first = false;
     }
-    // fscanf(data->mLog, "%f" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+    // fscanf(data->mLog, "%f," // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
     // 	   , &imu.fseconds);
-    #define TIMESTAMP "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
+    #define TIMESTAMP "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
     fscanf(data->mLog,
-	   ",%ju"
+	   "%ju"
 	   ",%f,%f,%f" // yprNed
 	   ",%f,%f,%f,%f" // qtn
 	   ",%f,%f,%f" // rate
