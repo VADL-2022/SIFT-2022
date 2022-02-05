@@ -65,7 +65,7 @@ void LOGFromFile::callback(void *userData)
     }
 }
 
-LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, const char* filename) : userCallback(userCallback_), callbackUserData(callbackUserData_)
+LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, const char* filename) : userCallback(reinterpret_cast<void(*)()>(userCallback_)), callbackUserData(callbackUserData_)
 {
     if (LOG_ACTIVE || VERBOSE)
     {
