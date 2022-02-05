@@ -519,21 +519,23 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     //        << log->mImu->linearAccelNed[0] << "," << log->mImu->linearAccelNed[1] << "," << log->mImu->linearAccelNed[2] << ",";
 
     fprintf(toSIFT, "\n%x" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                    ",$x,$x,$x" // yprNed
-                    ",$x,$x,$x,$x" // qtn
-                    ",$x,$x,$x" // rate
-                    ",$x,$x,$x" // accel
-                    ",$x,$x,$x" // mag
-                    ",$x,$x,$x" // temp,pres,dTime
-                    ",$x,$x,$x" // dTheta
-                    ",$x,$x,$x" // dVel
-                    ",$x,$x,$x" // magNed
-                    ",$x,$x,$x" // accelNed
-                    ",$x,$x,$x" // linearAccelBody
-                    ",$x,$x,$x" // linearAccelNed
+                    ",%x" // timestamp
+                    ",%x,%x,%x" // yprNed
+                    ",%x,%x,%x,%x" // qtn
+                    ",%x,%x,%x" // rate
+                    ",%x,%x,%x" // accel
+                    ",%x,%x,%x" // mag
+                    ",%x,%x,%x" // temp,pres,dTime
+                    ",%x,%x,%x" // dTheta
+                    ",%x,%x,%x" // dVel
+                    ",%x,%x,%x" // magNed
+                    ",%x,%x,%x" // accelNed
+                    ",%x,%x,%x" // linearAccelBody
+                    ",%x,%x,%x" // linearAccelNed
                     "," // Nothing after this comma on purpose.
                     ,
                     fseconds,
+                    imu.timestamp,
                     imu.yprNed.x, imu.yprNed.y, imu.yprNed.z,
                     imu.qtn.x, imu.qtn.y, imu.qtn.z, imu.qtn.w,
                     imu.rate.x, imu.rate.y, imu.rate.z,

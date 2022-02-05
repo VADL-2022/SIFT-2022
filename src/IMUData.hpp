@@ -19,7 +19,7 @@ class IMUData
 {
 public:
     //VnSensor mImu;
-    //uint64_t timestamp = 0; // Nanoseconds
+    uint64_t timestamp = 0; // Nanoseconds
     float fseconds;
     vec3f yprNed;            // Degrees
     vec4f qtn;                // Quaternion
