@@ -21,7 +21,8 @@ public:
     void halt();
 
     void* callbackUserData;
-    IMUData *mImu;     // IMU
+    IMUData *mImu;     // IMUData
+    IMUData mImu_;     // IMUData
     
 private:
     // LIDAR *mLidar; // LIDAR

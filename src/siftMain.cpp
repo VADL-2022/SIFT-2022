@@ -607,7 +607,7 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewW
         if (CMD_CONFIG(showPreviewWindow())) {
             #ifdef USE_COMMAND_LINE_ARGS
             //assert(!img2.canvas.empty());
-            if (!img2.canvas.empty()) {
+            if (img2.canvas.empty()) {
                 std::cout << "Empty canvas image, avoiding showing it on canvasesReadyQueue" << std::endl;
             }
             else {

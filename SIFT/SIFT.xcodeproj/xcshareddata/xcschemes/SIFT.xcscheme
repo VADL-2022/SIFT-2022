@@ -98,15 +98,15 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--video-file-data-source"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--video-file-data-source-path"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Volumes/MyTestVolume/Projects/DataRocket/Derived/output.mp4"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/testVideos/matcherTest.m4v"
