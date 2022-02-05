@@ -990,7 +990,7 @@ int mainMission(DataSourceT* src,
                 }
                 // TODO: read all data
                 fscanf(driverInput_file,
-                       "," "%" PRIu64 // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
+                       "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
                        ",%a,%a,%a" // yprNed
                        ",%a,%a,%a,%a" // qtn
                        ",%a,%a,%a" // rate
