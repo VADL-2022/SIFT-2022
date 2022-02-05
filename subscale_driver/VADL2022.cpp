@@ -506,7 +506,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
       return;
     }
 
-    IMU& imu = *log->mImu;
+    auto/*IMU or IMUData*/& imu = *log->mImu;
   
     // toSIFT << "\n"
     //        << fseconds << ","
