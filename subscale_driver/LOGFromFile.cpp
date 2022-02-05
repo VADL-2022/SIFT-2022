@@ -26,7 +26,7 @@ void LOGFromFile::callback(void *userData)
 	   , &imu.fseconds);
     #define TIMESTAMP "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
     fscanf(data->mLog,
-	   TIMESTAMP
+	   ",%ju"
 	   ",%f,%f,%f" // yprNed
 	   ",%f,%f,%f,%f" // qtn
 	   ",%f,%f,%f" // rate
