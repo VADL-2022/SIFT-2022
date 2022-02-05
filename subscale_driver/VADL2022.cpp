@@ -298,7 +298,7 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
       #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
       #else
-      v->mLog->userCallback = static_cast<void(*)()>(&checkMainDeploymentCallback<LOG_T>);
+      v->mLog->userCallback = reinterpret_cast<void(*)()>(&checkMainDeploymentCallback<LOG_T>);
       #endif
       
       puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTarget time reached, the rocket has launched\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -387,7 +387,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
       #else
       if (!videoCapture) {
         mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now();
-	v->mLog->userCallback = static_cast<void(*)()>(&passIMUDataToSIFTCallback<LOG_T>);
+	v->mLog->userCallback = reinterpret_cast<void(*)()>(&passIMUDataToSIFTCallback<LOG_T>);
       }
       else {
 	v->mLog->userCallback = nullptr;			    
@@ -581,7 +581,7 @@ VADL2022::VADL2022(int argc, char** argv)
   gpioUserPermissionFixingCommands_arg = argv[0];
 	  
   // Parse command-line args
-  void(*)() /*LOG::UserCallback or LOGFromFile::UserCallback*/ callback = static_cast<void(*)()>(&checkTakeoffCallback<LOG>);
+  void(*)() /*LOG::UserCallback or LOGFromFile::UserCallback*/ callback = reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOG>);
   // bool sendOnRadio_ = false, siftOnly = false, videoCapture = false;
   bool forceNoIMU = false;
   long long flushIMUDataEveryNMilliseconds = 0;
@@ -594,7 +594,7 @@ VADL2022::VADL2022(int argc, char** argv)
     if (strcmp(argv[i], "--imu-data-source-path") == 0) { // Grab IMU data from a file instead of the VectorNav
       if (i+1 < argc) {
         imuDataSourcePath = argv[i+i];
-        callback = static_cast<void(*)()>(&checkTakeoffCallback<LOGFromFile>);
+        callback = reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOGFromFile>);
       }
       else {
 	puts("Expected path");
