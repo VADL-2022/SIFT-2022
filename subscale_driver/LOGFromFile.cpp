@@ -54,7 +54,7 @@ void LOGFromFile::callback(void *userData)
     gpioTime(PI_TIME_RELATIVE, &seconds, &microseconds);
     fseconds = seconds + microseconds / 1000000.0;
     if (data->userCallback != nullptr) {
-      data->userCallback(data, fseconds);
+      reinterpret_cast<UserCallback>(data->userCallback)(data, fseconds);
     }
 
     if (VERBOSE)

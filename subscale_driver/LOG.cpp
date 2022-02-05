@@ -19,7 +19,7 @@ void LOG::callback(void *userData)
     gpioTime(PI_TIME_RELATIVE, &seconds, &microseconds);
     fseconds = seconds + microseconds / 1000000.0;
     if (data->userCallback != nullptr) {
-      data->userCallback(data, fseconds);
+      reinterpret_cast<UserCallback>(data->userCallback)(data, fseconds);
     }
 
     if (LOG_ACTIVE)
@@ -71,7 +71,7 @@ void LOG::callback(void *userData)
     }
 }
 
-LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long long flushToLogEveryNMilliseconds_) : userCallback(userCallback_), callbackUserData(callbackUserData_), mImu(imu),
+LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long long flushToLogEveryNMilliseconds_) : userCallback(reinterpret_cast<void(*)()>(userCallback_)), callbackUserData(callbackUserData_), mImu(imu),
 														  flushToLogEveryNMilliseconds(flushToLogEveryNMilliseconds_)
 {
     if (LOG_ACTIVE || VERBOSE)
