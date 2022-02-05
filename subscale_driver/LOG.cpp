@@ -71,9 +71,11 @@ void LOG::callback(void *userData)
     }
 }
 
-LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long long flushToLogEveryNMilliseconds_) : userCallback(reinterpret_cast<void(*)()>(userCallback_)), callbackUserData(callbackUserData_), mImu(imu),
+LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long long flushToLogEveryNMilliseconds_) : callbackUserData(callbackUserData_), mImu(imu),
 														  flushToLogEveryNMilliseconds(flushToLogEveryNMilliseconds_)
 {
+    userCallback = reinterpret_cast<void(*)()>(userCallback_);
+  
     if (LOG_ACTIVE || VERBOSE)
     {
         cout << "Log: Connecting" << endl;

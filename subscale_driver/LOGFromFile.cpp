@@ -65,8 +65,10 @@ void LOGFromFile::callback(void *userData)
     }
 }
 
-LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, const char* filename) : userCallback(reinterpret_cast<void(*)()>(userCallback_)), callbackUserData(callbackUserData_)
+LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, const char* filename) : callbackUserData(callbackUserData_)
 {
+    userCallback = reinterpret_cast<void(*)()>(userCallback_);
+    
     if (LOG_ACTIVE || VERBOSE)
     {
         cout << "LogFromFile: Connecting" << endl;
