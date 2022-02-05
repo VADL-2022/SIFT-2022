@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run ls
-        run: sshpass -p $TUNNEL_PASS ssh -p $TUNNEL_PORT $TUNNEL_IP 'set +o history; ./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \'set +o history; source .profile; ci_cmd $CI_CMD_ARG\''
+        run: sshpass -p $TUNNEL_PASS ssh -p $TUNNEL_PORT $TUNNEL_IP "set +o history; ./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd $CI_CMD_ARG\""
         env:
           TUNNEL_PASS: ${{secrets.TUNNEL_PASS}}
           TUNNEL_PORT: ${{secrets.TUNNEL_PORT}}
