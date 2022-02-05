@@ -6,6 +6,8 @@
 #include "IMU.hpp"
 // #include "LIDAR.hpp"
 // #include "LDS.hpp"
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 
@@ -63,7 +65,7 @@ void LOGFromFile::callback(void *userData)
     }
 }
 
-LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, const char* filename) : userCallback(userCallback_), callbackUserData(callbackUserData_), mImu(imu)
+LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, const char* filename) : userCallback(userCallback_), callbackUserData(callbackUserData_)
 {
     if (LOG_ACTIVE || VERBOSE)
     {
@@ -82,7 +84,7 @@ LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, co
     }
 }
 
-LOG::~LOG()
+LOGFromFile::~LOGFromFile()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
@@ -95,7 +97,7 @@ LOG::~LOG()
     }
 }
 
-void LOG::receive()
+void LOGFromFile::receive()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
@@ -107,7 +109,7 @@ void LOG::receive()
     }
 }
 
-void LOG::halt()
+void LOGFromFile::halt()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
