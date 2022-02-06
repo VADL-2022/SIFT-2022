@@ -28,6 +28,7 @@
 #include "../common.hpp"
 #include "../subscale_driver/pyMainThreadInterface.hpp"
 #include "../subscale_driver/py.h"
+#include <fcntl.h>
 
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp
@@ -294,6 +295,7 @@ int main(int argc, char **argv)
         }
         else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
             driverInput_fd = std::stoi(argv[i+1]);
+            fcntl(driverInput_fd, F_SETFD, (fcntl(driverInput_fd, F_GETFD)|O_NONBLOCK)); // https://stackoverflow.com/questions/27266346/how-to-set-file-descriptor-non-blocking , https://man7.org/linux/man-pages/man2/fcntl.2.html
             driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
             if (driverInput_file == nullptr) {
                 perror("fdopen failed");
