@@ -181,7 +181,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
     
     //toSIFT.open(fd[1]);
-    //toSIFT = fdopen(fd[1], "w");
+    toSIFT = fdopen(fd[1], "w");
     
     int status = 0;
     if (wait(&status) != -1) {
