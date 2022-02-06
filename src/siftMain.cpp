@@ -988,12 +988,16 @@ int mainMission(DataSourceT* src,
             char buf[MSGSIZE+1/*for null terminator*/];
             while (true) {
                 ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
+                std::cout << "nread from driverInput_fd: " << nread << std::endl;
                 if (nread == -1) {
                     perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
                     break;
                 }
                 else if (nread == 0) {
-                    std::cout << "No IMU data present yet" << std::endl;
+                    if (count == 0)
+                        std::cout << "No IMU data present yet" << std::endl;
+                    else
+                        std::cout << "No IMU data left" << std::endl;
                     break;
                 }
                 buf[nread] = '\0'; // Null terminate
