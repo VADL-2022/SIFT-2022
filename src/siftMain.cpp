@@ -52,6 +52,7 @@ std::mutex lastImageToFirstImageTransformationMutex;
 Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
 #endif
 int driverInput_fd = -1; // File descriptor for reading from the driver program, if any (else it is -1)
+int driverInput_fd_fcntl_flags = 0;
 FILE* driverInput_file = NULL;
 
 //// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
@@ -295,12 +296,15 @@ int main(int argc, char **argv)
         }
         else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
             driverInput_fd = std::stoi(argv[i+1]);
-            int ret = fcntl(driverInput_fd, F_SETFL, (fcntl(driverInput_fd, F_GETFL)|O_NONBLOCK)); // https://stackoverflow.com/questions/27266346/how-to-set-file-descriptor-non-blocking , https://man7.org/linux/man-pages/man2/fcntl.2.html
-            if (ret < 0) {
+            driverInput_fd_fcntl_flags = fcntl(driverInput_fd, F_GETFL);
+            //int ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags); // https://stackoverflow.com/questions/27266346/how-to-set-file-descriptor-non-blocking   // Returns flags for F_GETFL on success ( https://man7.org/linux/man-pages/man2/fcntl.2.html )
+            if (driverInput_fd_fcntl_flags < 0) {
                 perror("fcntl on driverInput_fd failed");
                 std::cout << "Continuing despite failure to fcntl on subscale driver fd (" << driverInput_fd << ")" << std::endl;
+                driverInput_fd = -1;
             }
             else {
+                //driverInput_fd_fcntl_flags = ret;
 //                driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
 //                if (driverInput_file == nullptr) {
 //                    perror("fdopen failed");
@@ -987,8 +991,25 @@ int mainMission(DataSourceT* src,
 #define MSGSIZE 65536
             char buf[MSGSIZE+1/*for null terminator*/];
             while (true) {
+                // Set nonblocking
+                int ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags | O_NONBLOCK);
+                if (ret < 0) {
+                    perror("First fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+                    break;
+                }
+                driverInput_fd_fcntl_flags = ret;
+                
                 // Read from fd
                 ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
+                
+                // Unset nonblocking
+                ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags & ~O_NONBLOCK);
+                if (ret < 0) {
+                    perror("Second fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+                    break;
+                }
+                driverInput_fd_fcntl_flags = ret;
+                
                 std::cout << "nread from driverInput_fd: " << nread << std::endl;
                 if (nread == -1) {
                     perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
