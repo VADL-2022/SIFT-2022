@@ -295,7 +295,7 @@ int main(int argc, char **argv)
         }
         else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
             driverInput_fd = std::stoi(argv[i+1]);
-            int ret = fcntl(driverInput_fd, F_SETFL, (fcntl(driverInput_fd, F_GETFD)|O_NONBLOCK)); // https://stackoverflow.com/questions/27266346/how-to-set-file-descriptor-non-blocking , https://man7.org/linux/man-pages/man2/fcntl.2.html
+            int ret = fcntl(driverInput_fd, F_SETFL, (fcntl(driverInput_fd, F_GETFL)|O_NONBLOCK)); // https://stackoverflow.com/questions/27266346/how-to-set-file-descriptor-non-blocking , https://man7.org/linux/man-pages/man2/fcntl.2.html
             if (ret < 0) {
                 perror("fcntl on driverInput_fd failed");
                 std::cout << "Continuing despite failure to fcntl on subscale driver fd (" << driverInput_fd << ")" << std::endl;
