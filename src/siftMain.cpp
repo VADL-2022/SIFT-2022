@@ -987,6 +987,7 @@ int mainMission(DataSourceT* src,
 #define MSGSIZE 65536
             char buf[MSGSIZE+1/*for null terminator*/];
             while (true) {
+                // Read from fd
                 ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
                 std::cout << "nread from driverInput_fd: " << nread << std::endl;
                 if (nread == -1) {
@@ -1001,56 +1002,63 @@ int mainMission(DataSourceT* src,
                     break;
                 }
                 buf[nread] = '\0'; // Null terminate
-                int ret = sscanf(buf, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                       , &imu.fseconds); // Returns number of items read on success
-                if (ret == EOF || ret != 1 /*want 1 item read*/) {
-                    std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
+                
+                // Grab from the buf
+                while (true) {
+                    int ret = sscanf(buf, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+                           , &imu.fseconds); // Returns number of items read on success
+                    if (ret == EOF || ret != 1 /*want 1 item read*/) {
+                        std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
+                        break;
+                    }
+                    std::cout << "fseconds: " << imu.fseconds << std::endl;
+                    // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
+                    if (fabs(imu.fseconds- -1) < EPSILON) {
+                        // IMU failed, ignore its data
+                        std::cout << "SIFT considering IMU as failed for this grab attempt." << std::endl;
+        //                fclose(driverInput_file);
+        //                driverInput_file = nullptr;
+                        break;
+                    }
+                    ret = sscanf(buf,
+                       "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
+                       ",%a,%a,%a" // yprNed
+                       ",%a,%a,%a,%a" // qtn
+                       ",%a,%a,%a" // rate
+                       ",%a,%a,%a" // accel
+                       ",%a,%a,%a" // mag
+                       ",%a,%a,%a" // temp,pres,dTime
+                       ",%a,%a,%a" // dTheta
+                       ",%a,%a,%a" // dVel
+                       ",%a,%a,%a" // magNed
+                       ",%a,%a,%a" // accelNed
+                       ",%a,%a,%a" // linearAccelBody
+                       ",%a,%a,%a" // linearAccelNed
+                       "," // Nothing after this comma on purpose.
+                       ,
+                       &imu.timestamp,
+                       &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
+                       &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
+                       &imu.rate.x, &imu.rate.y, &imu.rate.z,
+                       &imu.accel.x, &imu.accel.y, &imu.accel.z,
+                       &imu.mag.x, &imu.mag.y, &imu.mag.z,
+                       &imu.temp, &imu.pres, &imu.dTime,
+                       &imu.dTheta.x, &imu.dTheta.y, &imu.dTheta.z,
+                       &imu.dVel.x, &imu.dVel.y, &imu.dVel.z,
+                       &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
+                       &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
+                       &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
+                       &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
+                       );
+                    if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/) {
+                        std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
+                        break;
+                    }
+                    count++;
+                }
+                if (count > 0) {
                     break;
                 }
-                std::cout << "fseconds: " << imu.fseconds << std::endl;
-                // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
-                if (fabs(imu.fseconds- -1) < EPSILON) {
-                    // IMU failed, ignore its data
-                    std::cout << "SIFT considering IMU as failed for this grab attempt." << std::endl;
-    //                fclose(driverInput_file);
-    //                driverInput_file = nullptr;
-                    break;
-                }
-                ret = sscanf(buf,
-                   "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
-                   ",%a,%a,%a" // yprNed
-                   ",%a,%a,%a,%a" // qtn
-                   ",%a,%a,%a" // rate
-                   ",%a,%a,%a" // accel
-                   ",%a,%a,%a" // mag
-                   ",%a,%a,%a" // temp,pres,dTime
-                   ",%a,%a,%a" // dTheta
-                   ",%a,%a,%a" // dVel
-                   ",%a,%a,%a" // magNed
-                   ",%a,%a,%a" // accelNed
-                   ",%a,%a,%a" // linearAccelBody
-                   ",%a,%a,%a" // linearAccelNed
-                   "," // Nothing after this comma on purpose.
-                   ,
-                   &imu.timestamp,
-                   &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
-                   &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
-                   &imu.rate.x, &imu.rate.y, &imu.rate.z,
-                   &imu.accel.x, &imu.accel.y, &imu.accel.z,
-                   &imu.mag.x, &imu.mag.y, &imu.mag.z,
-                   &imu.temp, &imu.pres, &imu.dTime,
-                   &imu.dTheta.x, &imu.dTheta.y, &imu.dTheta.z,
-                   &imu.dVel.x, &imu.dVel.y, &imu.dVel.z,
-                   &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
-                   &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
-                   &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
-                   &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
-                   );
-                if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/) {
-                    std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
-                    break;
-                }
-                count++;
             }
             t.logElapsed("grabbing from subscale driver fd");
             if (count > 0) {
