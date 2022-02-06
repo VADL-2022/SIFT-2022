@@ -986,10 +986,14 @@ int mainMission(DataSourceT* src,
             // Read all data out first
 #define MSGSIZE 65536
             char buf[MSGSIZE];
-            do {
+            while (true) {
                 ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
                 if (nread == -1) {
                     perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+                    goto skipScanf;
+                }
+                else if (nread == 0) {
+                    std::cout << "No IMU data present yet" << std::endl;
                     goto skipScanf;
                 }
                 int ret = sscanf(buf, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
@@ -1042,7 +1046,7 @@ int mainMission(DataSourceT* src,
                     goto skipScanf;
                 }
                 count++;
-            } while (!feof(driverInput_file));
+            }
             std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
             
             // Use the IMU data:
