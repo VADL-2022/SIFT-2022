@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run pi tests
-        run: echo "$TUNNEL_KNOWN_HOSTS" >> ~/.ssh/known_hosts; sshpass -p $TUNNEL_PASS ssh -o "StrictHostKeyChecking no" -p $TUNNEL_PORT $TUNNEL_USER@$TUNNEL_ADDRESS "./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd \\\"$CI_CMD_ARG\\\" \\\"${GITHUB_REF#refs/heads/}\\\"\""
+        run: mkdir -p ~/.ssh; echo "$TUNNEL_KNOWN_HOSTS" >> ~/.ssh/known_hosts; sshpass -p $TUNNEL_PASS ssh -o "StrictHostKeyChecking no" -p $TUNNEL_PORT $TUNNEL_USER@$TUNNEL_ADDRESS "./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd \\\"$CI_CMD_ARG\\\" \\\"${GITHUB_REF#refs/heads/}\\\"\""
         env:
           TUNNEL_PASS: ${{secrets.TUNNEL_PASS}}
           TUNNEL_PORT: ${{secrets.TUNNEL_PORT}}
