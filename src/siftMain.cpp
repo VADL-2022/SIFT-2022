@@ -295,14 +295,20 @@ int main(int argc, char **argv)
         }
         else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
             driverInput_fd = std::stoi(argv[i+1]);
-            fcntl(driverInput_fd, F_SETFD, (fcntl(driverInput_fd, F_GETFD)|O_NONBLOCK)); // https://stackoverflow.com/questions/27266346/how-to-set-file-descriptor-non-blocking , https://man7.org/linux/man-pages/man2/fcntl.2.html
-            driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
-            if (driverInput_file == nullptr) {
-                perror("fdopen failed");
-                std::cout << "Continuing despite failure to open subscale driver fd (" << driverInput_fd << ")" << std::endl;
+            int ret = fcntl(driverInput_fd, F_SETFD, (fcntl(driverInput_fd, F_GETFD)|O_NONBLOCK)); // https://stackoverflow.com/questions/27266346/how-to-set-file-descriptor-non-blocking , https://man7.org/linux/man-pages/man2/fcntl.2.html
+            if (ret < 0) {
+                perror("fcntl on driverInput_fd failed");
+                std::cout << "Continuing despite failure to fcntl on subscale driver fd (" << driverInput_fd << ")" << std::endl;
             }
             else {
-                std::cout << "Opened subscale driver fd " << driverInput_fd << " for reading" << std::endl;
+//                driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
+//                if (driverInput_file == nullptr) {
+//                    perror("fdopen failed");
+//                    std::cout << "Continuing despite failure to open subscale driver fd (" << driverInput_fd << ")" << std::endl;
+//                }
+//                else {
+//                    std::cout << "Opened subscale driver fd " << driverInput_fd << " for reading" << std::endl;
+//                }
             }
             i++;
         }
@@ -969,7 +975,7 @@ int mainMission(DataSourceT* src,
         t.logElapsed("blur detection");
         
         // IMU
-        if (driverInput_file) {
+        if (driverInput_fd) { //driverInput_file) {
             IMUData imu;
             // TODO: try using %a to read (and to write in the subscale driver) hex floats instead of a human-readable string (%f), to prevent slight loss of precision?
             // NOTE: this blocks until the fd gets data. Probably not an issue..
@@ -978,13 +984,20 @@ int mainMission(DataSourceT* src,
             const double EPSILON = 0.001;
             int count=0;
             // Read all data out first
+#define MSGSIZE 65536
+            char buf[MSGSIZE];
             do {
-                if (feof(driverInput_file)) {
-                    puts("eof");
+                ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
+                if (nread == -1) {
+                    perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
                     goto skipScanf;
                 }
-                fscanf(driverInput_file, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                       , &imu.fseconds);
+                int ret = sscanf(buf, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+                       , &imu.fseconds); // Returns number of items read on success
+                if (ret == EOF || ret != 1 /*want 1 item read*/) {
+                    std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
+                    goto skipScanf;
+                }
                 std::cout << "fseconds: " << imu.fseconds << std::endl;
                 // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
                 if (fabs(imu.fseconds- -1) < EPSILON) {
@@ -994,11 +1007,7 @@ int mainMission(DataSourceT* src,
     //                driverInput_file = nullptr;
                     goto skipScanf;
                 }
-                if (feof(driverInput_file)) {
-                    puts("eof");
-                    goto skipScanf;
-                }
-                fscanf(driverInput_file,
+                ret = sscanf(buf,
                    "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
                    ",%a,%a,%a" // yprNed
                    ",%a,%a,%a,%a" // qtn
@@ -1028,6 +1037,10 @@ int mainMission(DataSourceT* src,
                    &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
                    &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
                    );
+                if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/) {
+                    std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
+                    goto skipScanf;
+                }
                 count++;
             } while (!feof(driverInput_file));
             std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
