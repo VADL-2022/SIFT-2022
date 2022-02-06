@@ -975,7 +975,7 @@ int mainMission(DataSourceT* src,
         t.logElapsed("blur detection");
         
         // IMU
-        if (driverInput_fd) { //driverInput_file) {
+        if (driverInput_fd != -1) { //driverInput_file) {
             IMUData imu;
             // TODO: try using %a to read (and to write in the subscale driver) hex floats instead of a human-readable string (%f), to prevent slight loss of precision?
             // NOTE: this blocks until the fd gets data. Probably not an issue..
@@ -985,22 +985,23 @@ int mainMission(DataSourceT* src,
             int count=0;
             // Read all data out first
 #define MSGSIZE 65536
-            char buf[MSGSIZE];
+            char buf[MSGSIZE+1/*for null terminator*/];
             while (true) {
                 ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
                 if (nread == -1) {
                     perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
-                    goto skipScanf;
+                    break;
                 }
                 else if (nread == 0) {
                     std::cout << "No IMU data present yet" << std::endl;
-                    goto skipScanf;
+                    break;
                 }
+                buf[nread] = '\0'; // Null terminate
                 int ret = sscanf(buf, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
                        , &imu.fseconds); // Returns number of items read on success
                 if (ret == EOF || ret != 1 /*want 1 item read*/) {
                     std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
-                    goto skipScanf;
+                    break;
                 }
                 std::cout << "fseconds: " << imu.fseconds << std::endl;
                 // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
@@ -1009,7 +1010,7 @@ int mainMission(DataSourceT* src,
                     std::cout << "SIFT considering IMU as failed for this grab attempt." << std::endl;
     //                fclose(driverInput_file);
     //                driverInput_file = nullptr;
-                    goto skipScanf;
+                    break;
                 }
                 ret = sscanf(buf,
                    "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
@@ -1043,17 +1044,20 @@ int mainMission(DataSourceT* src,
                    );
                 if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/) {
                     std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
-                    goto skipScanf;
+                    break;
                 }
                 count++;
             }
-            std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
-            
-            // Use the IMU data:
-            S_RunFile("src/python/Precession.py", 0, nullptr);
-            
-            skipScanf:
             t.logElapsed("grabbing from subscale driver fd");
+            if (count > 0) {
+                // We have something to use
+                std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
+                
+                // Use the IMU data:
+                t.reset();
+                S_RunFile("src/python/Precession.py", 0, nullptr);
+                t.logElapsed("Precession.py");
+            }
         }
         // //
         
