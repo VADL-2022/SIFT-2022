@@ -11,11 +11,10 @@
 
 using namespace std;
 
-void LOGFromFile::callback(void *userData)
-{
-    LOGFromFile *data = (LOGFromFile *)userData;
-
-    IMUData& imu = *data->mImu;
+void LOGFromFile::scanRow(IMUData& out) {
+    LOGFromFile* data = this;
+    IMUData& imu = out;
+    
     if (!data->first) {
       fscanf(data->mLog, "\n");
     }
@@ -56,6 +55,14 @@ void LOGFromFile::callback(void *userData)
 	   &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
 	   );
     imu.timestamp = timestampSeconds * 1e9; // Convert to nanoseconds
+}
+
+void LOGFromFile::callback(void *userData)
+{
+    LOGFromFile *data = (LOGFromFile *)userData;
+
+    IMUData& imu = *data->mImu;
+    data->scanRow(imu);
     
     int seconds;
     int microseconds;

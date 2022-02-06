@@ -13,6 +13,8 @@ class LOGFromFile : public LOGBase
 public:
     FILE* mLog; // Log File
 
+    void scanRow(IMUData& out);
+
     typedef void (*UserCallback)(LOGFromFile* log, float fseconds);
     // Anything except IMU* may be nullptr:
     LOGFromFile(UserCallback userCallback_, void* callbackUserData_, const char* filename);

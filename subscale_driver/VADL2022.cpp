@@ -62,6 +62,7 @@ long long backupTakeoffTime = -1;
 bool verbose = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
 auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not actually `now`
+long long imuDataSourceOffset = 0; // For --imu-data-source-path only
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -608,6 +609,16 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
+    else if (strcmp(argv[i], "--imu-data-source-time-offset") == 0) { // Offset by n milliseconds by seeking past timestamps less than this amount in the file given by `--imu-data-source-path`
+      if (i+1 < argc) {
+        imuDataSourceOffset = argv[i+1];
+      }
+      else {
+	puts("Expected seconds");
+	exit(1);
+      }
+      i++;
+    }
     else if (strcmp(argv[i], "--sift-and-imu-only") == 0) { // Don't run anything but SIFT with provided IMU data + the IMU data recording, starting SIFT without waiting for takeoff/parachute events.
       forceSkipNonSIFTCallbacks = true;
     }
@@ -809,7 +820,14 @@ VADL2022::VADL2022(int argc, char** argv)
   // mMotor = new MOTOR();
   if (vn) {
     if (imuDataSourcePath) {
-      mLog = (void*)new LOGFromFile((LOGFromFile::UserCallback)callback, this, imuDataSourcePath);
+      mLog = (void *)new LOGFromFile((LOGFromFile::UserCallback)callback, this, imuDataSourcePath);
+      // Seek past times less than imuDataSourceOffset if any
+      if (imuDataSourceOffset > 0) {
+        IMUData imu;
+        while (imu.timestamp / 1.0e9 < imuDataSourceOffset / 1000.0) {
+          ((LOGFromFile *)mLog)->scanRow(imu); // Seek past this row
+        }
+      }
       ((LOGFromFile*)mLog)->receive();
     }
     else {
