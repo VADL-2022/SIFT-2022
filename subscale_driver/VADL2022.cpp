@@ -611,7 +611,7 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (strcmp(argv[i], "--imu-data-source-time-offset") == 0) { // Offset by n milliseconds by seeking past timestamps less than this amount in the file given by `--imu-data-source-path`
       if (i+1 < argc) {
-        imuDataSourceOffset = argv[i+1];
+        imuDataSourceOffset = std::stoll(argv[i+1]);
       }
       else {
 	puts("Expected seconds");
