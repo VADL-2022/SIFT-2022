@@ -494,7 +494,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     // Check for IMU disconnect/failure to deliver packets
     const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
     if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
-      std::cout << "IMU considered not responding. Telling SIFT we're not using it" << std::endl;
+      std::cout << "IMU considered not responding. Telling SIFT we're not using it for now" << std::endl;
       // Notify SIFT that IMU failed
       // toSIFT << "\n" << -1.0f;
       // toSIFT.flush();

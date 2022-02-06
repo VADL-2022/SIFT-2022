@@ -973,57 +973,67 @@ int mainMission(DataSourceT* src,
             // NOTE: this blocks until the fd gets data. Probably not an issue..
             t.reset();
             std::cout << "Grabbing from subscale driver fd..." << std::endl;
-            fscanf(driverInput_file, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                   , &imu.fseconds);
-            std::cout << "fseconds: " << imu.fseconds << std::endl;
             const double EPSILON = 0.001;
-            // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
-            if (fabs(imu.fseconds- -1) < EPSILON) {
-                // IMU failed, ignore its data
-                std::cout << "SIFT considering IMU as failed." << std::endl;
-                fclose(driverInput_file);
-                driverInput_file = nullptr;
-            }
-            else {
+            int count=0;
+            // Read all data out first
+            do {
                 if (feof(driverInput_file)) {
                     puts("eof");
+                    goto skipScanf;
                 }
-                // TODO: read all data
+                fscanf(driverInput_file, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+                       , &imu.fseconds);
+                std::cout << "fseconds: " << imu.fseconds << std::endl;
+                // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
+                if (fabs(imu.fseconds- -1) < EPSILON) {
+                    // IMU failed, ignore its data
+                    std::cout << "SIFT considering IMU as failed for this grab attempt." << std::endl;
+    //                fclose(driverInput_file);
+    //                driverInput_file = nullptr;
+                    goto skipScanf;
+                }
+                if (feof(driverInput_file)) {
+                    puts("eof");
+                    goto skipScanf;
+                }
                 fscanf(driverInput_file,
-                       "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
-                       ",%a,%a,%a" // yprNed
-                       ",%a,%a,%a,%a" // qtn
-                       ",%a,%a,%a" // rate
-                       ",%a,%a,%a" // accel
-                       ",%a,%a,%a" // mag
-                       ",%a,%a,%a" // temp,pres,dTime
-                       ",%a,%a,%a" // dTheta
-                       ",%a,%a,%a" // dVel
-                       ",%a,%a,%a" // magNed
-                       ",%a,%a,%a" // accelNed
-                       ",%a,%a,%a" // linearAccelBody
-                       ",%a,%a,%a" // linearAccelNed
-                       "," // Nothing after this comma on purpose.
-                       ,
-                       &imu.timestamp,
-                       &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
-                       &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
-                       &imu.rate.x, &imu.rate.y, &imu.rate.z,
-                       &imu.accel.x, &imu.accel.y, &imu.accel.z,
-                       &imu.mag.x, &imu.mag.y, &imu.mag.z,
-                       &imu.temp, &imu.pres, &imu.dTime,
-                       &imu.dTheta.x, &imu.dTheta.y, &imu.dTheta.z,
-                       &imu.dVel.x, &imu.dVel.y, &imu.dVel.z,
-                       &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
-                       &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
-                       &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
-                       &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
-                       );
-                std::cout << "Linear accel NED: " << imu.linearAccelNed << std::endl;
-                
-                // Use the IMU data:
-                S_RunFile("src/python/Precession.py", 0, nullptr);
-            }
+                   "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
+                   ",%a,%a,%a" // yprNed
+                   ",%a,%a,%a,%a" // qtn
+                   ",%a,%a,%a" // rate
+                   ",%a,%a,%a" // accel
+                   ",%a,%a,%a" // mag
+                   ",%a,%a,%a" // temp,pres,dTime
+                   ",%a,%a,%a" // dTheta
+                   ",%a,%a,%a" // dVel
+                   ",%a,%a,%a" // magNed
+                   ",%a,%a,%a" // accelNed
+                   ",%a,%a,%a" // linearAccelBody
+                   ",%a,%a,%a" // linearAccelNed
+                   "," // Nothing after this comma on purpose.
+                   ,
+                   &imu.timestamp,
+                   &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
+                   &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
+                   &imu.rate.x, &imu.rate.y, &imu.rate.z,
+                   &imu.accel.x, &imu.accel.y, &imu.accel.z,
+                   &imu.mag.x, &imu.mag.y, &imu.mag.z,
+                   &imu.temp, &imu.pres, &imu.dTime,
+                   &imu.dTheta.x, &imu.dTheta.y, &imu.dTheta.z,
+                   &imu.dVel.x, &imu.dVel.y, &imu.dVel.z,
+                   &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
+                   &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
+                   &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
+                   &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
+                   );
+                count++;
+            } while (!feof(driverInput_file));
+            std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
+            
+            // Use the IMU data:
+            S_RunFile("src/python/Precession.py", 0, nullptr);
+            
+            skipScanf:
             t.logElapsed("grabbing from subscale driver fd");
         }
         // //
