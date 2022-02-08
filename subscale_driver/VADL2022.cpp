@@ -558,11 +558,11 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     fflush(toSIFT);
     
     int cnt;
-    if (ioctl(toSIFT, FIONREAD, &cnt) < 0) { // "If you're on Linux, this call should tell you how many unread bytes are in the pipe" --Professor Balasubramanian
-      perror("driver: ioctl to check bytes in toSIFT failed (ignoring)");
+    if (ioctl(fd[1] /* <-- used by toSIFT */, FIONREAD, &cnt) < 0) { // "If you're on Linux, this call should tell you how many unread bytes are in the pipe" --Professor Balasubramanian
+      perror("driver: ioctl to check bytes in fd[1] failed (ignoring)");
     }
     else {
-      printf("driver: ioctl says %d bytes are left in the toSIFT pipe\n", cnt);
+      printf("driver: ioctl says %d bytes are left in the fd[1] pipe\n", cnt);
     }
   
     // toSIFT.flush();
