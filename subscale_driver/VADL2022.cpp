@@ -562,7 +562,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
       perror("driver: ioctl to check bytes in fd[1] failed (ignoring)");
     }
     else {
-      printf("driver: ioctl says %d bytes are left in the fd[1] pipe\n", cnt);
+      printf("driver: ioctl says %d bytes are left in the fd[1] pipe (pipe fd is %d)\n", cnt, fd[1]);
     }
   
     // toSIFT.flush();
