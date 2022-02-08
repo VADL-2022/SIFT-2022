@@ -129,8 +129,8 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
         cv::Mat backtorgb = src->colorImageForMat(img2.i);
         backtorgb.copyTo(img2.canvas);
 
-        auto xoff=0;//100;
-        auto yoff=0;//-100;
+        auto xoff=100;//100;
+        auto yoff=-100;//-100;
         if (src->shouldCrop()) {
             auto crop = src->crop();
             xoff = crop.x;
