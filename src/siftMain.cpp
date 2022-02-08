@@ -1006,8 +1006,8 @@ int mainMission(DataSourceT* src,
                     perror("First fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
                     break;
                 }
-                driverInput_fd_fcntl_flags = ret;
-                printf("driverInput_fd_fcntl_flags should have nonblocking: %d\n", driverInput_fd_fcntl_flags);
+//                driverInput_fd_fcntl_flags = ret;
+//                printf("driverInput_fd_fcntl_flags should have nonblocking: %d\n", driverInput_fd_fcntl_flags);  // Update: "When you set nonblocking, the return value from the call to fcntl should be 0 (instead of the current value of the flags)" --Professor Balasubramanian
                 
                 // Read from fd
                 ssize_t nread = read(driverInput_fd, buf, MSGSIZE); // "The read will return "resource temporarily unavailable" if the pipe is empty, O_NONBLOCK is set, and you try to read." --Professor Balasubramanian
@@ -1018,8 +1018,8 @@ int mainMission(DataSourceT* src,
                     perror("Second fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
                     break;
                 }
-                driverInput_fd_fcntl_flags = ret;
-                printf("driverInput_fd_fcntl_flags should not have nonblocking: %d\n", driverInput_fd_fcntl_flags);
+//                driverInput_fd_fcntl_flags = ret;
+//                printf("driverInput_fd_fcntl_flags should not have nonblocking: %d\n", driverInput_fd_fcntl_flags);
                 
                 std::cout << "nread from driverInput_fd: " << nread << std::endl;
                 if (nread == -1) {
