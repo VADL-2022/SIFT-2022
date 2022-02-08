@@ -17,6 +17,7 @@
 #include <thread>
 #include <chrono>
 #include <float.h>
+#include <sys/ioctl.h>
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
