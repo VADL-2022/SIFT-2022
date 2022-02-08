@@ -16,6 +16,9 @@ if [ -z "$IN_NIX_SHELL" ]; then
     exit 1
 fi
 
+# Disable ASLR for slight speedup
+echo 0 | sudo tee /proc/sys/kernel/randomize_va_space # https://askubuntu.com/questions/318315/how-can-i-temporarily-disable-aslr-address-space-layout-randomization
+
 hostname=$(hostname)
 if [[ "$hostname" =~ ^sift.* ]]; then
     mode=sift

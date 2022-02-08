@@ -182,12 +182,12 @@ common:
 ############################# SIFT targets #############################
 
 # commandLine targets in general
-ADDITIONAL_CFLAGS_ALL_COMMANDLINE = -DUSE_COMMAND_LINE_ARGS
+ADDITIONAL_CFLAGS_ALL_COMMANDLINE = -DUSE_COMMAND_LINE_ARGS -no-pie -fno-PIE -fno-PIC # `-no-pie -fno-PIE -fno-PIC`: no position-indepdent code so that linux always uses constant addresses in the address space for functions in code section etc. -- this makes it more debuggable and reverse-engineerable for stack traces with addresses etc. at the cost of security
 
 # release target
 # NOTE: -DNDEBUG turns off assertions (only for the code being compiled from source, not for libraries, including those from Nix like OpenCV unless we set it explicitly..).
 # NOTE: -g is needed for stack traces for https://github.com/bombela/backward-cpp
-ADDITIONAL_CFLAGS_RELEASE = -march=native -mtune=native -Ofast -g -DNDEBUG #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
+ADDITIONAL_CFLAGS_RELEASE = -march=native -mtune=native -Ofast -g -DNDEBUG -fno-stack-protector # -fno-stack-protector for speedup but possible stack corruption with no segfaults indicating it happened (it might be -fno-stack-protector by default though) at the cost of security.   #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
 # ^ `-mtune=native` optimizes for the machine being compiled on
 $(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
 

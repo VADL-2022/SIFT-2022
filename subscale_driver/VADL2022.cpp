@@ -555,6 +555,14 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
                     imu.linearAccelBody.x, imu.linearAccelBody.y, imu.linearAccelBody.z,
                     imu.linearAccelNed.x, imu.linearAccelNed.y, imu.linearAccelNed.z);
     fflush(toSIFT);
+    
+    int cnt;
+    if (ioctl(driverInput_fd, FIONREAD, &cnt) < 0) { // "If you're on Linux, this call should tell you how many unread bytes are in the pipe" --Professor Balasubramanian
+      perror("driver: ioctl to check bytes in toSIFT failed (ignoring)");
+    }
+    else {
+      printf("driver: ioctl says %d bytes are left in the toSIFT pipe\n", cnt);
+    }
   
     // toSIFT.flush();
   }
