@@ -136,6 +136,8 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
             xoff = crop.x;
             yoff = crop.y;
         }
+	xoff+=90;
+	yoff+=-100;
         
         // Draw keypoints on `img2.canvas`
         struct sift_keypoint_std *k = img2.k.get();

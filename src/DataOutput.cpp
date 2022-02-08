@@ -93,6 +93,7 @@ void FileDataOutput::release() {
 }
 
 void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool flush) {
+    if (canvas.empty()) return;
     t.reset();
     run(canvas, flush);
     t.logElapsed("save frame to FileDataOutput");
