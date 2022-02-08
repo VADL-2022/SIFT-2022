@@ -29,6 +29,7 @@
 #include "../subscale_driver/pyMainThreadInterface.hpp"
 #include "../subscale_driver/py.h"
 #include <fcntl.h>
+#include <sys/ioctl.h>
 
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp
@@ -991,6 +992,14 @@ int mainMission(DataSourceT* src,
 #define MSGSIZE 65536
             char buf[MSGSIZE+1/*for null terminator*/];
             while (true) {
+                int cnt;
+                if (ioctl(driverInput_fd, FIONREAD, &cnt) < 0) { // "If you're on Linux, this call should tell you how many unread bytes are in the pipe" --Professor Balasubramanian
+                    perror("ioctl to check bytes in driverInput_fd failed (ignoring)");
+                }
+                else {
+                    printf("ioctl says %d bytes are left in the driverInput_fd pipe\n", cnt);
+                }
+                
                 // Set nonblocking
                 int ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags | O_NONBLOCK);
                 if (ret < 0) {
@@ -998,9 +1007,10 @@ int mainMission(DataSourceT* src,
                     break;
                 }
                 driverInput_fd_fcntl_flags = ret;
+                printf("driverInput_fd_fcntl_flags should have nonblocking: %d\n", driverInput_fd_fcntl_flags);
                 
                 // Read from fd
-                ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
+                ssize_t nread = read(driverInput_fd, buf, MSGSIZE); // "The read will return "resource temporarily unavailable" if the pipe is empty, O_NONBLOCK is set, and you try to read." --Professor Balasubramanian
                 
                 // Unset nonblocking
                 ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags & ~O_NONBLOCK);
@@ -1009,6 +1019,7 @@ int mainMission(DataSourceT* src,
                     break;
                 }
                 driverInput_fd_fcntl_flags = ret;
+                printf("driverInput_fd_fcntl_flags should not have nonblocking: %d\n", driverInput_fd_fcntl_flags);
                 
                 std::cout << "nread from driverInput_fd: " << nread << std::endl;
                 if (nread == -1) {
