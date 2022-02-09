@@ -179,7 +179,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     lastForkedPIDValid=true;
     lastForkedPIDM.unlock();
     
-    close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
+    //close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
     
     //toSIFT.open(fd[1]);
     toSIFT = fdopen(fd[1], "w");
@@ -521,6 +521,41 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   // Give this data to SIFT
   //if (toSIFT.isOpen()) {
   if (toSIFT != nullptr) {
+    // Grab existing data if any since we don't want to fill the pipe //
+    int driverInput_fd = fd[0];
+    // Set nonblocking
+    int ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags | O_NONBLOCK);
+    if (ret < 0) {
+      perror("Driver: first fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+    }
+    
+    // Grab data
+#define MSGSIZE 65536
+    char buf[MSGSIZE+1/*for null terminator*/];
+    // Read from fd
+    ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
+
+    // Unset nonblocking
+    ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags & ~O_NONBLOCK);
+    if (ret < 0) {
+      perror("Driver: second fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+    }
+    
+    std::cout << "Driver: nread from driverInput_fd: " << nread << std::endl;
+    if (nread == -1) {
+      perror("Driver: error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+    }
+    else if (nread == 0) {
+      if (count == 0)
+        std::cout << "Driver: no IMU data present yet" << std::endl;
+      else
+        std::cout << "Driver: no IMU data left" << std::endl;
+      break;
+    }
+    // //
+
+    
+    
     // Check for IMU failure first
     if (verbose) {
       printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
