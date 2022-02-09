@@ -1054,6 +1054,7 @@ int mainMission(DataSourceT* src,
                         continue; // Make sure to seek past all the other junk that may be after this -1 value.
                     }
                     ret = sscanf(buf,
+                       "\n%a" // Need to seek past the stuff we read already..
                        "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
                        ",%a,%a,%a" // yprNed
                        ",%a,%a,%a,%a" // qtn
@@ -1069,6 +1070,7 @@ int mainMission(DataSourceT* src,
                        ",%a,%a,%a" // linearAccelNed
                        "," // Nothing after this comma on purpose.
                        ,
+                       &imu.fseconds,
                        &imu.timestamp,
                        &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
                        &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
