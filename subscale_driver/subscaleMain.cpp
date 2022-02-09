@@ -51,7 +51,12 @@ int main(int argc, char **argv) {
   //std::cout << "Waiting for radio thread to finish..." << std::endl; // TODO: implement properly
   //th.join(); // TODO: implement properly
   std::cout << "Radio thread finished" << std::endl;
-  
+
+  if (videoCaptureOnlyThread) {
+    videoCaptureOnlyThread->join();
+    videoCaptureOnlyThread.reset(); // Do this here instead of outside main()/in global scope since std threads don't like to be destructor'ed in global scope
+  }
+
   //PyRun_SimpleString("input('Done')");
   return 0;
 }

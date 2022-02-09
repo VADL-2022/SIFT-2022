@@ -1051,7 +1051,7 @@ int mainMission(DataSourceT* src,
                         std::cout << "SIFT considering IMU as failed for this grab attempt." << std::endl;
         //                fclose(driverInput_file);
         //                driverInput_file = nullptr;
-                        break;
+                        continue; // Make sure to seek past all the other junk that may be after this -1 value.
                     }
                     ret = sscanf(buf,
                        "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )

@@ -536,9 +536,9 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
       fflush(toSIFT);
       
       VADL2022* v = (VADL2022*)log->callbackUserData;
-      ((LOG_T*)v->mLog)->userCallback = nullptr;
+      //((LOG_T*)v->mLog)->userCallback = nullptr;
       reportStatus(Status::IMUNotRespondingInPassIMUDataToSIFTCallback);
-      return;
+      return; // Try again next time
     }
 
     auto/*IMU or IMUData*/& imu = *log->mImu;
