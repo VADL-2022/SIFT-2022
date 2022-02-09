@@ -215,7 +215,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     sift_args[sift_args_size-2] = siftCommandLine.c_str();
   
     const char** args = sift_args;
-    #define NO_EXEC_TEST
+    //#define NO_EXEC_TEST
     #ifdef NO_EXEC_TEST
     // Just see if the pipe works
     int i = 0;
