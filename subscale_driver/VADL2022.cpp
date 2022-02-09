@@ -221,8 +221,10 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     int i = 0;
 #define MSGSIZE 65536
     char buf[MSGSIZE+1/*for null terminator*/];
+    int count = 0;
     while (true) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100 + i+=3));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100 + i));
+      i += 3;
       
       // Read from fd
       ssize_t nread = read(fd[0], buf, MSGSIZE);
@@ -242,6 +244,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
       buf[nread] = '\0'; // Null terminate
       
       printf("Read into buf: %s", buf);
+      count++;
     }
 #else
     execvp((char*)args[0], (char**)args); // one variant of exec
