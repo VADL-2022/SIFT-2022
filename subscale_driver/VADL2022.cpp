@@ -215,8 +215,38 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     sift_args[sift_args_size-2] = siftCommandLine.c_str();
   
     const char** args = sift_args;
+    #define NO_EXEC_TEST
+    #ifdef NO_EXEC_TEST
+    // Just see if the pipe works
+    int i = 0;
+#define MSGSIZE 65536
+    char buf[MSGSIZE+1/*for null terminator*/];
+    while (true) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100 + i+=3));
+      
+      // Read from fd
+      ssize_t nread = read(fd[0], buf, MSGSIZE);
+      
+      std::cout << "nread from driverInput_fd: " << nread << std::endl;
+      if (nread == -1) {
+        perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+        break;
+      }
+      else if (nread == 0) {
+        if (count == 0)
+          std::cout << "No IMU data present yet" << std::endl;
+        else
+          std::cout << "No IMU data left" << std::endl;
+        break;
+      }
+      buf[nread] = '\0'; // Null terminate
+      
+      printf("Read into buf: %s", buf);
+    }
+#else
     execvp((char*)args[0], (char**)args); // one variant of exec
     perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
+    #endif
     return false; //exit(1); // [DONETODO: answer is yes, because of flushing with endl] saves IMU data? If not, set atexit or std terminate handler
   } else {
     perror("Error with fork");
