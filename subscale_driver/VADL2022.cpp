@@ -553,10 +553,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
       perror("Driver: error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
     }
     else if (nread == 0) {
-      if (count == 0)
-        std::cout << "Driver: no IMU data present yet" << std::endl;
-      else
-        std::cout << "Driver: no IMU data left" << std::endl;
+      std::cout << "Driver: no IMU data left over to clear" << std::endl;
     }
     // //
 
