@@ -17,6 +17,7 @@
 #include <thread>
 #include <chrono>
 #include <float.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
 
 #include "pyMainThreadInterface.hpp"
@@ -550,7 +551,6 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
         std::cout << "Driver: no IMU data present yet" << std::endl;
       else
         std::cout << "Driver: no IMU data left" << std::endl;
-      break;
     }
     // //
 
