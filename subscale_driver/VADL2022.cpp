@@ -19,6 +19,7 @@
 #include <float.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+int driverInput_fd_fcntl_flags = 0;
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
@@ -181,6 +182,11 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     lastForkedPIDM.unlock();
     
     //close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
+    driverInput_fd_fcntl_flags = fcntl(fd[0], F_GETFL);
+    if (driverInput_fd_fcntl_flags < 0) {
+      perror("Driver: fcntl on driverInput_fd failed");
+      std::cout << "Driver: continuing despite failure to fcntl on subscale driver fd (" << fd[0] << ")" << std::endl;
+    }
     
     //toSIFT.open(fd[1]);
     toSIFT = fdopen(fd[1], "w");
