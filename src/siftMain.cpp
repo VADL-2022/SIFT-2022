@@ -1037,13 +1037,18 @@ int mainMission(DataSourceT* src,
                 buf[nread] = '\0'; // Null terminate
                 
                 // Grab from the buf
+                int charsReadTotal = 0;
                 while (true) {
-                    int ret = sscanf(buf, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                           , &imu.fseconds); // Returns number of items read on success
-                    if (ret == EOF || ret != 1 /*want 1 item read*/) {
+                    // https://stackoverflow.com/questions/3320533/how-can-i-get-how-many-bytes-sscanf-s-read-in-its-last-operation : "With scanf and family, use %n in the format string. It won't read anything in, but it will cause the number of characters read so far (by this call) to be stored in the corresponding parameter (expects an int*)."
+                    int charsRead;
+                    int ret = sscanf(buf + charsReadTotal, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
+                                     "%n"
+                           , &imu.fseconds, &charsRead); // Returns number of items read on success
+                    if (ret == EOF || ret != 1 /*want 1 item read*/ + 1/*charsRead*/) {
                         std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
                         break;
                     }
+                    charsReadTotal += charsRead;
                     std::cout << "fseconds: " << imu.fseconds << std::endl;
                     // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
                     if (fabs(imu.fseconds- -1) < EPSILON) {
@@ -1053,8 +1058,7 @@ int mainMission(DataSourceT* src,
         //                driverInput_file = nullptr;
                         continue; // Make sure to seek past all the other junk that may be after this -1 value.
                     }
-                    ret = sscanf(buf,
-                       "\n%a" // Need to seek past the stuff we read already..
+                    ret = sscanf(buf + charsReadTotal,
                        "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
                        ",%a,%a,%a" // yprNed
                        ",%a,%a,%a,%a" // qtn
@@ -1069,6 +1073,7 @@ int mainMission(DataSourceT* src,
                        ",%a,%a,%a" // linearAccelBody
                        ",%a,%a,%a" // linearAccelNed
                        "," // Nothing after this comma on purpose.
+                       "%n"
                        ,
                        &imu.fseconds,
                        &imu.timestamp,
@@ -1083,12 +1088,14 @@ int mainMission(DataSourceT* src,
                        &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
                        &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
                        &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
-                       &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
+                       &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z,
+                       &charsRead
                        );
-                    if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/) {
+                    if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/ + 1/*charsRead*/) {
                         std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
                         break;
                     }
+                    charsReadTotal += charsRead;
                     count++;
                 }
                 if (count > 0) {
