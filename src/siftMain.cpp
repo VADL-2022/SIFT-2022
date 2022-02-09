@@ -1044,7 +1044,7 @@ int mainMission(DataSourceT* src,
                     int ret = sscanf(buf + charsReadTotal, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
                                      "%n"
                            , &imu.fseconds, &charsRead); // Returns number of items read on success
-                    if (ret == EOF || ret != 1 /*want 1 item read*/ + 1/*charsRead*/) {
+                    if (ret == EOF || ret != 1 /*want 1 item read*/) {
                         std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
                         break;
                     }
@@ -1091,7 +1091,7 @@ int mainMission(DataSourceT* src,
                        &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z,
                        &charsRead
                        );
-                    if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/ + 1/*charsRead*/) {
+                    if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/) {
                         std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
                         break;
                     }
