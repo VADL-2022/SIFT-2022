@@ -192,18 +192,19 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     toSIFT = fdopen(fd[1], "w");
 
     // toSIFT: Grab flags
-    driverInput_fd_fcntl_flags = fcntl(fd[0], F_GETFL);
+    driverInput_fd_fcntl_flags = fcntl(fd[1], F_GETFL);
     if (driverInput_fd_fcntl_flags < 0) {
-      perror("Driver: F_GETFL fcntl on driverInput_fd failed");
+      perror("Driver: F_GETFL fcntl on fd[1] failed");
       std::cout << "Driver: continuing despite failure to fcntl on subscale driver fd (" << fd[0] << ")" << std::endl;
     }
-
-    // toSIFT: Set nonblocking (in case it fills up.. though if so then SIFT will be behind on IMU data..)
-    int ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags | O_NONBLOCK);
-    if (ret < 0) {
-      perror("Driver: F_SETFL fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+    else {
+      // toSIFT: Set nonblocking (in case it fills up.. though if so then SIFT will be behind on IMU data..)
+      int ret = fcntl(fd[1], F_SETFL, driverInput_fd_fcntl_flags | O_NONBLOCK);
+      if (ret < 0) {
+        perror("Driver: F_SETFL fcntl on fd[1] failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
+      }
     }
-
+  
     // Wait for SIFT process to end
     int status = 0;
     if (wait(&status) != -1) {
