@@ -48,6 +48,10 @@ mkShell {
       
     #bear # Optional, for generating emacs compile_commands.json
 
+    # For Python interop #
+    python37Packages.pybind11
+    # #
+    
     # For stack traces #
     (callPackage ./backward-cpp.nix {}) # https://github.com/bombela/backward-cpp
     ] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [

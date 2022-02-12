@@ -29,6 +29,7 @@
 #include "../subscale_driver/pyMainThreadInterface.hpp"
 #include "../subscale_driver/py.h"
 #include "main/SubscaleDriverInterface.hpp"
+#include <pybind11/pybind11.h>
 
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp
@@ -833,6 +834,10 @@ int mainMission(DataSourceT* src,
     }
     
     common::connect_Python();
+    // Warm up python (seems to take ~1 second)
+    t.reset();
+    S_RunFile("src/python/Precession.py", 0, nullptr);
+    t.logElapsed("Precession.py warmup");
     
     // SIFT
     cv::Mat firstImage;
@@ -985,8 +990,8 @@ int mainMission(DataSourceT* src,
                 
                 // Use the IMU data:
                 t.reset();
-                S_RunFile("src/python/Precession.py", 0, nullptr);
-                t.logElapsed("Precession.py");
+                
+                t.logElapsed("Precession.judge_image");
             }
             subscaleDriverInterfaceMutex_imuData.unlock();
             t.logElapsed("grabbing from subscale driver interface thread");
