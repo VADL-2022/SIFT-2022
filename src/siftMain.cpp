@@ -28,8 +28,7 @@
 #include "../common.hpp"
 #include "../subscale_driver/pyMainThreadInterface.hpp"
 #include "../subscale_driver/py.h"
-#include <fcntl.h>
-#include <sys/ioctl.h>
+#include "main/SubscaleDriverInterface.hpp"
 
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp
@@ -298,24 +297,6 @@ int main(int argc, char **argv)
         else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
             driverInput_fd = std::stoi(argv[i+1]);
             printf("driverInput_fd set to: %d\n", driverInput_fd);
-            driverInput_fd_fcntl_flags = fcntl(driverInput_fd, F_GETFL);
-            //int ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags); // https://stackoverflow.com/questions/27266346/how-to-set-file-descriptor-non-blocking   // Returns flags for F_GETFL on success ( https://man7.org/linux/man-pages/man2/fcntl.2.html )
-            if (driverInput_fd_fcntl_flags < 0) {
-                perror("fcntl on driverInput_fd failed");
-                std::cout << "Continuing despite failure to fcntl on subscale driver fd (" << driverInput_fd << ")" << std::endl;
-                driverInput_fd = -1;
-            }
-            else {
-                //driverInput_fd_fcntl_flags = ret;
-//                driverInput_file = fdopen(driverInput_fd, "r"); // Open the fd for reading
-//                if (driverInput_file == nullptr) {
-//                    perror("fdopen failed");
-//                    std::cout << "Continuing despite failure to open subscale driver fd (" << driverInput_fd << ")" << std::endl;
-//                }
-//                else {
-//                    std::cout << "Opened subscale driver fd " << driverInput_fd << " for reading" << std::endl;
-//                }
-            }
             i++;
         }
         else if (strcmp(argv[i], "--debug-no-std-terminate") == 0) { // Disables the SIFT unhandled exception handler for C++ exceptions. Use for lldb purposes.
@@ -856,6 +837,12 @@ int mainMission(DataSourceT* src,
     pthread_t matcherThread;
     pthread_create(&matcherThread, NULL, matcherThreadFunc, &s);
     
+    pthread_t subscaleDriverInterfaceThread;
+    if (driverInput_fd != -1) {
+        static_assert(sizeof(void*) >= sizeof(int));
+        pthread_create(&subscaleDriverInterfaceThread, NULL, subscaleDriverInterfaceThreadFunc, /*warning is wrong, this is ok*/(void*)driverInput_fd);
+    }
+    
     auto start = std::chrono::steady_clock::now();
     auto last = std::chrono::steady_clock::now();
     auto timeSinceLastFlush = std::chrono::steady_clock::now();
@@ -983,128 +970,14 @@ int mainMission(DataSourceT* src,
         // IMU
         if (driverInput_fd != -1) { //driverInput_file) {
             IMUData imu;
-            // TODO: try using %a to read (and to write in the subscale driver) hex floats instead of a human-readable string (%f), to prevent slight loss of precision?
-            // NOTE: this blocks until the fd gets data. Probably not an issue..
+            // NOTE: this blocks until the fd gets data.
             t.reset();
-            std::cout << "Grabbing from subscale driver fd..." << std::endl;
-            const double EPSILON = 0.001;
-            int count=0;
-            // Read all data out first
-#define MSGSIZE 65536
-            char buf[MSGSIZE+1/*for null terminator*/];
-            while (true) {
-                int cnt;
-                if (ioctl(driverInput_fd, FIONREAD, &cnt) < 0) { // "If you're on Linux, this call should tell you how many unread bytes are in the pipe" --Professor Balasubramanian
-                    perror("ioctl to check bytes in driverInput_fd failed (ignoring)");
-                }
-                else {
-                    printf("ioctl says %d bytes are left in the driverInput_fd pipe\n", cnt);
-                }
-                
-                // Set nonblocking
-                int ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags | O_NONBLOCK);
-                if (ret < 0) {
-                    perror("First fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
-                    break;
-                }
-//                driverInput_fd_fcntl_flags = ret;
-//                printf("driverInput_fd_fcntl_flags should have nonblocking: %d\n", driverInput_fd_fcntl_flags);  // Update: "When you set nonblocking, the return value from the call to fcntl should be 0 (instead of the current value of the flags)" --Professor Balasubramanian
-                
-                // Read from fd
-                ssize_t nread = read(driverInput_fd, buf, MSGSIZE); // "The read will return "resource temporarily unavailable" if the pipe is empty, O_NONBLOCK is set, and you try to read." --Professor Balasubramanian
-                
-                // Unset nonblocking
-                ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags & ~O_NONBLOCK);
-                if (ret < 0) {
-                    perror("Second fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
-                    break;
-                }
-//                driverInput_fd_fcntl_flags = ret;
-//                printf("driverInput_fd_fcntl_flags should not have nonblocking: %d\n", driverInput_fd_fcntl_flags);
-                
-                std::cout << "nread from driverInput_fd: " << nread << std::endl;
-                if (nread == -1) {
-                    perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
-                    break;
-                }
-                else if (nread == 0) {
-                    if (count == 0)
-                        std::cout << "No IMU data present yet" << std::endl;
-                    else
-                        std::cout << "No IMU data left" << std::endl;
-                    break;
-                }
-                buf[nread] = '\0'; // Null terminate
-                
-                // Grab from the buf
-                int charsReadTotal = 0;
-                while (true) {
-                    // https://stackoverflow.com/questions/3320533/how-can-i-get-how-many-bytes-sscanf-s-read-in-its-last-operation : "With scanf and family, use %n in the format string. It won't read anything in, but it will cause the number of characters read so far (by this call) to be stored in the corresponding parameter (expects an int*)."
-                    int charsRead;
-                    int ret = sscanf(buf + charsReadTotal, "\n%a" // fseconds -- timestamp in seconds since gpio library initialization (that is, essentially since the driver program started)
-                                     "%n"
-                           , &imu.fseconds, &charsRead); // Returns number of items read on success
-                    if (ret == EOF || ret != 1 /*want 1 item read*/) {
-                        std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
-                        break;
-                    }
-                    charsReadTotal += charsRead;
-                    std::cout << "fseconds: " << imu.fseconds << std::endl;
-                    // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
-                    if (fabs(imu.fseconds- -1) < EPSILON) {
-                        // IMU failed, ignore its data
-                        std::cout << "SIFT considering IMU as failed for this grab attempt." << std::endl;
-        //                fclose(driverInput_file);
-        //                driverInput_file = nullptr;
-                        continue; // Make sure to seek past all the other junk that may be after this -1 value.
-                    }
-                    ret = sscanf(buf + charsReadTotal,
-                       "," "%" PRIu64 "" // timestamp  // `PRIu64` is a nasty thing needed for uint64_t format strings.. ( https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c )
-                       ",%a,%a,%a" // yprNed
-                       ",%a,%a,%a,%a" // qtn
-                       ",%a,%a,%a" // rate
-                       ",%a,%a,%a" // accel
-                       ",%a,%a,%a" // mag
-                       ",%a,%a,%a" // temp,pres,dTime
-                       ",%a,%a,%a" // dTheta
-                       ",%a,%a,%a" // dVel
-                       ",%a,%a,%a" // magNed
-                       ",%a,%a,%a" // accelNed
-                       ",%a,%a,%a" // linearAccelBody
-                       ",%a,%a,%a" // linearAccelNed
-                       "," // Nothing after this comma on purpose.
-                       "%n"
-                       ,
-                       &imu.fseconds,
-                       &imu.timestamp,
-                       &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
-                       &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
-                       &imu.rate.x, &imu.rate.y, &imu.rate.z,
-                       &imu.accel.x, &imu.accel.y, &imu.accel.z,
-                       &imu.mag.x, &imu.mag.y, &imu.mag.z,
-                       &imu.temp, &imu.pres, &imu.dTime,
-                       &imu.dTheta.x, &imu.dTheta.y, &imu.dTheta.z,
-                       &imu.dVel.x, &imu.dVel.y, &imu.dVel.z,
-                       &imu.magNed.x, &imu.magNed.y, &imu.magNed.z,
-                       &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
-                       &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
-                       &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z,
-                       &charsRead
-                       );
-                    if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/) {
-                        std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
-                        break;
-                    }
-                    charsReadTotal += charsRead;
-                    count++;
-                }
-                if (count > 0) {
-                    break;
-                }
-            }
-            t.logElapsed("grabbing from subscale driver fd");
+            std::cout << "grabbing from subscale driver interface thread..." << std::endl;
+            subscaleDriverInterfaceMutex_imuData.lock();
+            int count = subscaleDriverInterface_count;
             if (count > 0) {
                 // We have something to use
+                IMUData& imu = subscaleDriverInterface_imu;
                 std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
                 
                 // Use the IMU data:
@@ -1112,6 +985,8 @@ int mainMission(DataSourceT* src,
                 S_RunFile("src/python/Precession.py", 0, nullptr);
                 t.logElapsed("Precession.py");
             }
+            subscaleDriverInterfaceMutex_imuData.unlock();
+            t.logElapsed("grabbing from subscale driver interface thread");
         }
         // //
         
@@ -1375,9 +1250,16 @@ int mainMission(DataSourceT* src,
 
     // Sometimes, the matcher thread is waiting on the condition variable still, and it will be waiting forever unless we interrupt it somehow (or broadcast on the condition variable..).
     pthread_cancel(matcherThread); // https://man7.org/linux/man-pages/man3/pthread_cancel.3.html
+    if (driverInput_fd != -1) {
+        pthread_cancel(subscaleDriverInterfaceThread);
+    }
     
     int ret1;
     pthread_join(matcherThread, (void**)&ret1);
+    if (driverInput_fd != -1) {
+        int ret2;
+        pthread_join(subscaleDriverInterfaceThread, (void**)&ret2);
+    }
     
     // Print the final homography
     //[unnecessary since matcherThread is stopped now:] lastImageToFirstImageTransformationMutex.lock();

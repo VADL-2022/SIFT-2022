@@ -17,11 +17,8 @@
 #include <thread>
 #include <chrono>
 #include <float.h>
-#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <limits>
-
-int driverInput_fd_fcntl_flags = 0;
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
@@ -187,11 +184,6 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     lastForkedPIDM.unlock();
     
     //close(fd[0]); // Close the read end of the pipe since we'll be writing data to the pipe instead of reading it
-    driverInput_fd_fcntl_flags = fcntl(fd[0], F_GETFL);
-    if (driverInput_fd_fcntl_flags < 0) {
-      perror("Driver: fcntl on driverInput_fd failed");
-      std::cout << "Driver: continuing despite failure to fcntl on subscale driver fd (" << fd[0] << ")" << std::endl;
-    }
     
     //toSIFT.open(fd[1]);
     toSIFT = fdopen(fd[1], "w");
@@ -553,37 +545,6 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   // Give this data to SIFT
   //if (toSIFT.isOpen()) {
   if (toSIFT != nullptr) {
-    // Grab existing data if any since we don't want to fill the pipe //
-    int driverInput_fd = fd[0];
-    // Set nonblocking
-    int ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags | O_NONBLOCK);
-    if (ret < 0) {
-      perror("Driver: first fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
-    }
-    
-    // Grab data
-#define MSGSIZE 65536
-    char buf[MSGSIZE+1/*for null terminator*/];
-    // Read from fd
-    ssize_t nread = read(driverInput_fd, buf, MSGSIZE);
-
-    // Unset nonblocking
-    ret = fcntl(driverInput_fd, F_SETFL, driverInput_fd_fcntl_flags & ~O_NONBLOCK);
-    if (ret < 0) {
-      perror("Driver: second fcntl on driverInput_fd failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
-    }
-    
-    std::cout << "Driver: nread from driverInput_fd: " << nread << std::endl;
-    if (nread == -1) {
-      perror("Driver: error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
-    }
-    else if (nread == 0) {
-      std::cout << "Driver: no IMU data left over to clear" << std::endl;
-    }
-    // //
-
-    
-    
     // Check for IMU failure first
     if (checkIMUFailure("passIMUDataToSIFTCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timeSecondsOffset, Status::IMUNotRespondingInPassIMUDataToSIFTCallback)) {
       std::cout << "IMU considered not responding. Telling SIFT we're not using it for now" << std::endl;
