@@ -352,7 +352,7 @@ bool checkIMUFailure(const char* callbackName, LOG_T *log, float magnitude, floa
 // Callback for waiting on takeoff
 template<typename LOG_T>
 void checkTakeoffCallback(LOG_T *log, float fseconds) {
-  updateRelativeAltitude(true);
+  double altitudeFeet = updateRelativeAltitude(true);
 
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
