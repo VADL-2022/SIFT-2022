@@ -285,7 +285,7 @@ float fsecondsOffset = FLT_MIN;
 float timeSecondsOffset = 0;
 bool forceSkipNonSIFTCallbacks = false;
 
-void updateRelativeAltitude(bool showAltitudeOnce) {
+double updateRelativeAltitude(bool showAltitudeOnce) {
   // Convert log->mImu->pres (pressure) to altitude using barometric formula (Cam) and use that to check for nearing the ground + stopping SIFT
   // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
   double kilopascals = log->mImu->pres;
@@ -313,6 +313,7 @@ void updateRelativeAltitude(bool showAltitudeOnce) {
     onceFlag = false;
     std::cout << "Altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl;
   }
+  return altitudeFeet;
 }
 
 // Returns true if IMU failure detected.
@@ -510,7 +511,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
 template<typename LOG_T>
 void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
-  updateRelativeAltitude(false);
+  double altitudeFeet = updateRelativeAltitude(false);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   static bool onceFlag = true;
   if (onceFlag || verbose) {
