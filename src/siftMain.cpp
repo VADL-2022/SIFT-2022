@@ -30,6 +30,8 @@
 #include "../subscale_driver/py.h"
 #include "main/SubscaleDriverInterface.hpp"
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h> // for py::array_t
+namespace py = pybind11;
 
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp
@@ -782,6 +784,23 @@ cv::Mat prepareCanvas(ProcessedImage<SIFT_T>& img) {
 
 cv::Rect g_desktopSize;
 
+// This is a wrapper for calling Python using pybind11. Use it when you don't want unhandled Python exceptions to stop the entirety of SIFT (basically always use it).
+// https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html : "Any noexcept function should have a try-catch block that traps class:error_already_set (or any other exception that can occur). Note that pybind11 wrappers around Python exceptions such as pybind11::value_error are not Python exceptions; they are C++ exceptions that pybind11 catches and converts to Python exceptions. Noexcept functions cannot propagate these exceptions either. A useful approach is to convert them to Python exceptions and then discard_as_unraisable as shown below."
+template <typename F>
+void nonthrowing_python(F f) noexcept(true) {
+    try {
+        f();
+    } catch (py::error_already_set &eas) {
+        // Discard the Python error using Python APIs, using the C++ magic
+        // variable __func__. Python already knows the type and value and of the
+        // exception object.
+        eas.discard_as_unraisable(__func__);
+    } catch (const std::exception &e) {
+        // Log and discard C++ exceptions.
+        std::cout << "C++ exception from python: " << e.what() << std::endl;
+    }
+}
+
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 //ctpl::thread_pool tp(4); // Number of threads in the pool
@@ -983,6 +1002,8 @@ int mainMission(DataSourceT* src,
             std::cout << "grabbing from subscale driver interface thread..." << std::endl;
             subscaleDriverInterfaceMutex_imuData.lock();
             int count = subscaleDriverInterface_count;
+            static bool firstGrab = true;
+            static py::object my_or;
             if (count > 0) {
                 // We have something to use
                 IMUData& imu = subscaleDriverInterface_imu;
@@ -990,11 +1011,37 @@ int mainMission(DataSourceT* src,
                 
                 // Use the IMU data:
                 t.reset();
-                
+                nonthrowing_python([](){
+                    using namespace pybind11::literals; // to bring in the `_a` literal
+                    
+                    py::module_ np = py::module_::import("numpy");  // like 'import numpy as np'
+                    py::module_ precession = py::module_::import("src.python.Precession");
+                    
+                    py::list l;
+                    l.append(imu.yprNed.x); l.append(imu.yprNed.y); l.append(imu.yprNed.z);
+                    py::array_t<float> arr = np.attr("array")(l, "dtype"_a="float32");
+                    
+                    if (firstGrab) {
+                        // Init the first orientation
+                        my_or = precession.attr("init_orientation")(arr);
+                        firstGrab = false;
+                    }
+                    
+                    // Judge image
+                    py::tuple shouldAcceptAndOrientation = precession.attr("judge_image")(my_or, arr);
+                    py::bool_ shouldAccept = shouldAcceptAndOrientation[0];
+                    my_or = shouldAcceptAndOrientation[1];
+                    if (shouldAccept == true) {
+                        std::cout << "Python likes this image" << std::endl;
+                    }
+                    else {
+                        std::cout << "Python doesn't like this image" << std::endl;
+                    }
+                });
                 t.logElapsed("Precession.judge_image");
             }
             subscaleDriverInterfaceMutex_imuData.unlock();
-            t.logElapsed("grabbing from subscale driver interface thread");
+            t.logElapsed("grabbing from subscale driver interface thread and running Precession.judge_image");
         }
         // //
         

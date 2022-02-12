@@ -66,6 +66,7 @@ void runOneIteration(int driverInput_fd) {
         // Grab from the buf
         int charsReadTotal = 0;
         subscaleDriverInterfaceMutex_imuData.lock();
+        subscaleDriverInterface_count = 0; // Reset count since the IMUData object's data will be overwritten
         while (true) {
             // https://stackoverflow.com/questions/3320533/how-can-i-get-how-many-bytes-sscanf-s-read-in-its-last-operation : "With scanf and family, use %n in the format string. It won't read anything in, but it will cause the number of characters read so far (by this call) to be stored in the corresponding parameter (expects an int*)."
             int charsRead;
