@@ -1010,7 +1010,6 @@ int mainMission(DataSourceT* src,
                 std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
                 
                 // Use the IMU data:
-                t.reset();
                 nonthrowing_python([](){
                     using namespace pybind11::literals; // to bring in the `_a` literal
                     
@@ -1038,7 +1037,6 @@ int mainMission(DataSourceT* src,
                         std::cout << "Python doesn't like this image" << std::endl;
                     }
                 });
-                t.logElapsed("Precession.judge_image");
             }
             subscaleDriverInterfaceMutex_imuData.unlock();
             t.logElapsed("grabbing from subscale driver interface thread and running Precession.judge_image");
