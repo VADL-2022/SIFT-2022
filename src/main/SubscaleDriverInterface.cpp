@@ -69,7 +69,7 @@ void runOneIteration(int driverInput_fd) {
                 break;
             }
             charsReadTotal += charsRead;
-            std::cout << "fseconds: " << imu.fseconds << std::endl;
+            std::cout << "fseconds: " << imu.fseconds << ", charsRead: " << charsRead << std::endl;
             // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
             if (fabs(imu.fseconds- -1) < EPSILON) {
                 // IMU failed, ignore its data
@@ -114,6 +114,7 @@ void runOneIteration(int driverInput_fd) {
                 std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
                 break;
             }
+            std::cout << "charsRead: " charsRead << std::endl;
             charsReadTotal += charsRead;
             count++;
         }
