@@ -359,7 +359,7 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
   float magnitude = log->mImu->linearAccelNed.mag();
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   bool force;
-  if (checkIMUFailure("checkTakeoffCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timesecondsOffset, Status::IMUNotRespondingInCheckTakeoffCallback) // LOG_T *log, float& magnitude, float& timeSeconds, float& fseconds, float& fsecondsOffset, float& timeSecondsOffset
+  if (checkIMUFailure("checkTakeoffCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timeSecondsOffset, Status::IMUNotRespondingInCheckTakeoffCallback) // LOG_T *log, float& magnitude, float& timeSeconds, float& fseconds, float& fsecondsOffset, float& timeSecondsOffset
       ) {
     force = true;
     long long milliSeconds = backupTakeoffTime;
