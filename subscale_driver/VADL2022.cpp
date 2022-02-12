@@ -351,7 +351,7 @@ bool checkIMUFailure(const char* callbackName, LOG_T *log, float magnitude, floa
 // Callback for waiting on takeoff
 template<typename LOG_T>
 void checkTakeoffCallback(LOG_T *log, float fseconds) {
-  updateRelativeAltitude(false);
+  updateRelativeAltitude(true);
 
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
@@ -510,7 +510,13 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
 template<typename LOG_T>
 void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
-  updateRelativeAltitude(true);
+  updateRelativeAltitude(false);
+  double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
+  static bool onceFlag = true;
+  if (onceFlag || verbose) {
+    onceFlag = false;
+    std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " << relativeAltitude << " ft" << std::endl;
+  }
   if (relativeAltitude < 50) {
     // Future: stop SIFT here but not sure if this would stop too early, so we just output what would happen:
     static bool onceFlag2 = true;
