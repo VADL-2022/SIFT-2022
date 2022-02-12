@@ -127,7 +127,7 @@ void runOneIteration(int driverInput_fd) {
                 std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
                 break;
             }
-            if (CMD_CONFIG(verbose) {
+            if (CMD_CONFIG(verbose)) {
                 std::cout << "charsRead: " << charsRead << std::endl;
             }
             charsReadTotal += charsRead;
