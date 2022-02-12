@@ -285,7 +285,8 @@ float fsecondsOffset = FLT_MIN;
 float timeSecondsOffset = 0;
 bool forceSkipNonSIFTCallbacks = false;
 
-double updateRelativeAltitude(bool showAltitudeOnce) {
+template <typename LOG_T>
+double updateRelativeAltitude(LOG_T log, bool showAltitudeOnce) {
   // Convert log->mImu->pres (pressure) to altitude using barometric formula (Cam) and use that to check for nearing the ground + stopping SIFT
   // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
   double kilopascals = log->mImu->pres;
@@ -352,7 +353,7 @@ bool checkIMUFailure(const char* callbackName, LOG_T *log, float magnitude, floa
 // Callback for waiting on takeoff
 template<typename LOG_T>
 void checkTakeoffCallback(LOG_T *log, float fseconds) {
-  double altitudeFeet = updateRelativeAltitude(true);
+  double altitudeFeet = updateRelativeAltitude(log, true);
 
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
@@ -419,7 +420,7 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
 // Callback for waiting on main parachute deployment
 template<typename LOG_T>
 void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
-  updateRelativeAltitude(false);
+  updateRelativeAltitude(log, false);
   
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
@@ -511,7 +512,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
 template<typename LOG_T>
 void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
-  double altitudeFeet = updateRelativeAltitude(false);
+  double altitudeFeet = updateRelativeAltitude(log, false);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   static bool onceFlag = true;
   if (onceFlag || verbose) {
