@@ -9,7 +9,8 @@
 #ifndef SubscaleDriverInterface_hpp
 #define SubscaleDriverInterface_hpp
 
-#include <stdio.h>
+#include "../IMUData.hpp"
+#include <mutex>
 
 void* subscaleDriverInterfaceThreadFunc(void* arg);
 

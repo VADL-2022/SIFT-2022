@@ -8,7 +8,6 @@
 
 #include "SubscaleDriverInterface.hpp"
 
-#include "../IMUData.hpp"
 #include "../common.hpp"
 #include <fcntl.h>
 #include <sys/ioctl.h>
