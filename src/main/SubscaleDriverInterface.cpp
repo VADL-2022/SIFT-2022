@@ -95,7 +95,6 @@ void runOneIteration(int driverInput_fd) {
                "," // Nothing after this comma on purpose.
                "%n"
                ,
-               &imu.fseconds,
                &imu.timestamp,
                &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
                &imu.qtn.x, &imu.qtn.y, &imu.qtn.z, &imu.qtn.w,
