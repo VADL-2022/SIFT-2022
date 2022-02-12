@@ -35,16 +35,22 @@ int driverInput_fd_fcntl_flags = 0;
 // G Forces
 float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
 float MAIN_DEPLOYMENT_G_FORCE = 1; //Main parachute deployment is 10-15 g's
+float MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE = 35; //Main parachute deployment without drogue is 35-40 g's
+
 // Timings
 const float ASCENT_IMAGE_CAPTURE = 1.6; // MECO is 1.6 seconds
 const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const float IMU_MAIN_DEPLOYMENT_ACCEL_DURATION = 1.0 / 40.0; // Seconds
 const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Milliseconds
+
 // Acceleration (Meters per second squared)
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
+float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS = MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE * 9.81; // Meters per second squared
+
 // Command Line Args
 bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false;
+
 // Sift params initialization
 const char* siftParams = nullptr;
 const char* extraSIFTArgs = nullptr;
@@ -466,7 +472,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
       v->startTime = fseconds;
     }
     float duration = fseconds - v->startTime;
-    printf("Exceeded acceleration magnitude threshold for %f seconds\n", duration);
+    printf("Exceeded main deployment acceleration magnitude threshold for %f seconds\n", duration);
     if (duration >= IMU_MAIN_DEPLOYMENT_ACCEL_DURATION || force) {
       // Stop these checkMainDeploymentCallback callbacks
       #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
@@ -486,30 +492,77 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
       
       // Let video capture python script know that the main parachute has deployed in order to swap cameras
       if (videoCapture) {
-	// Stop the python videocapture script
+	      // Stop the python videocapture script
         if (isRunningPython)
           raise(SIGINT);
 	
-	gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
-	gpioWrite(26, 1); // Set GPIO26 high.
+        gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
+        gpioWrite(26, 1); // Set GPIO26 high.
 
         reportStatus(Status::SwitchingToSecondCamera);
-	// Run the python videocapture script again on the second camera
-	pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+        // Run the python videocapture script again on the second camera
+        pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
       }
       else {
         // Stop the same videocapture script from on the pad in VADL2022::VADL2022():
         if (isRunningPython)
           raise(SIGINT);
         
-	// Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
-	startDelayedSIFT(true /* <--boolean: when true, use the IMU in SIFT*/);
-	// ^if an error happens, continue with this error, we might as well try recording IMU data at least.
-	g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
+        // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
+        startDelayedSIFT(true /* <--boolean: when true, use the IMU in SIFT*/);
+        // ^if an error happens, continue with this error, we might as well try recording IMU data at least.
+        g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
       }
     }
-  }
-  else {
+  //Check for emergency main parachute deployment with no drogue
+  } else if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS) {
+    // Record this, it must last for IMU_ACCEL_DURATION
+    if (v->startTime == -1) {
+      v->startTime = fseconds;
+    }
+    float duration = fseconds - v->startTime;
+    printf("Exceeded emergency main deployment acceleration magnitude threshold for %f seconds\n", duration);
+    if (duration >= IMU_MAIN_DEPLOYMENT_ACCEL_DURATION) {
+      // Stop these checkMainDeploymentCallback callbacks
+      #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
+      #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
+      #else
+      if (!videoCapture) {
+        mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now();
+	      ((LOG_T*)v->mLog)->userCallback = (reinterpret_cast<void(*)()>(&passIMUDataToSIFTCallback<LOG_T>));
+      }
+      else {
+	      ((LOG_T*)v->mLog)->userCallback = nullptr;			    
+      }
+      #endif
+      
+      puts("**************************************************************\n************************************************************************\nTarget time reached, EMERGENCY main parachute has deployed WITHOUT DROGUE\n****************************************************************************\n**************************************************************************");
+      v->startTime = -1; // Reset timer
+      
+      // Let video capture python script know that the main parachute has deployed in order to swap cameras
+      if (videoCapture) {
+	      // Stop the python videocapture script
+        if (isRunningPython)
+          raise(SIGINT);
+	
+        gpioSetMode(26, PI_OUTPUT); // Set GPIO26 as output.
+        gpioWrite(26, 1); // Set GPIO26 high.
+
+        reportStatus(Status::SwitchingToSecondCamera);
+        // Run the python videocapture script again on the second camera
+        pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+      } else {
+        // Stop the same videocapture script from on the pad in VADL2022::VADL2022():
+        if (isRunningPython)
+          raise(SIGINT);
+        
+        // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
+        startDelayedSIFT(true /* <--boolean: when true, use the IMU in SIFT*/);
+        // ^if an error happens, continue with this error, we might as well try recording IMU data at least.
+        g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
+      }
+    }
+  } else {
     // Reset timer
     if (v->startTime != -1) {
       puts("Not enough acceleration; resetting timer");
