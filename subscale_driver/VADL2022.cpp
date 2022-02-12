@@ -17,8 +17,11 @@
 #include <thread>
 #include <chrono>
 #include <float.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <limits>
+
+int driverInput_fd_fcntl_flags = 0;
 
 #include "pyMainThreadInterface.hpp"
 #include "../src/fdstream.hpp"
