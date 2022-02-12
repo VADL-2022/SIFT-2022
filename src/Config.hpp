@@ -34,7 +34,7 @@
 
 #ifdef USE_COMMAND_LINE_ARGS
 struct CommandLineConfig {
-    bool cameraTestOnly = false, imageCaptureOnly = false, imageFileOutput = false, siftVideoOutput = false, folderDataSource = false, videoFileDataSource = false, mainMission = false, noPreviewWindow = false, useSetTerminate = true;
+    bool cameraTestOnly = false, imageCaptureOnly = false, imageFileOutput = false, siftVideoOutput = false, folderDataSource = false, videoFileDataSource = false, mainMission = false, noPreviewWindow = false, useSetTerminate = true, verbose = false;
     int flushVideoOutputEveryNSeconds = 2; // Default is to flush after every 2 seconds
     
     bool showPreviewWindow() const {

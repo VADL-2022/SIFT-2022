@@ -141,6 +141,7 @@
 		309ACB4A279A1D03003504BA /* IMUData.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IMUData.hpp; sourceTree = "<group>"; };
 		30C5F59C27B73831007D9BF5 /* SubscaleDriverInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SubscaleDriverInterface.cpp; sourceTree = "<group>"; };
 		30C5F59D27B73831007D9BF5 /* SubscaleDriverInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SubscaleDriverInterface.hpp; sourceTree = "<group>"; };
+		30C5F59F27B74599007D9BF5 /* siftMain.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMain.hpp; sourceTree = "<group>"; };
 		30CBDBBE2731A01600473B25 /* DataSource.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataSource.cpp; sourceTree = "<group>"; };
 		30CBDBBF2731A01600473B25 /* DataSource.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = DataSource.hpp; sourceTree = "<group>"; };
 		30CBDBC72732EBF200473B25 /* DataOutput.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DataOutput.cpp; sourceTree = "<group>"; };
@@ -334,6 +335,7 @@
 				300EE48827209F9400969C5F /* utils.cpp */,
 				300EE48B27209F9400969C5F /* my_sift_additions.h */,
 				300EE48D27209F9400969C5F /* my_sift_additions.c */,
+				30C5F59F27B74599007D9BF5 /* siftMain.hpp */,
 				300EE48E27209F9400969C5F /* siftMain.cpp */,
 				300EE48F27209F9400969C5F /* Semaphore.cpp */,
 				300EE49027209F9400969C5F /* utils.hpp */,

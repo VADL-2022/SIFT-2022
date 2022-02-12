@@ -16,6 +16,7 @@
 extern ctpl::thread_pool tp;
 
 #ifdef USE_COMMAND_LINE_ARGS
+extern CommandLineConfig cfg;
 extern cv::Rect g_desktopSize;
 #endif
 

@@ -21,8 +21,10 @@ std::mutex subscaleDriverInterfaceMutex_imuData;
 void runOneIteration(int driverInput_fd) {
     // IMU
     IMUData& imu = subscaleDriverInterface_imu;
-    t.reset();
-    std::cout << "Subscale driver interface thread: grabbing from subscale driver fd..." << std::endl;
+    if (CMD_CONFIG(verbose)) {
+        t.reset();
+        std::cout << "Subscale driver interface thread: grabbing from subscale driver fd..." << std::endl;
+    }
     const double EPSILON = 0.001;
     int count=0;
     // Read all data out first
@@ -34,23 +36,29 @@ void runOneIteration(int driverInput_fd) {
             perror("ioctl to check bytes in driverInput_fd failed (ignoring)");
         }
         else {
-            printf("ioctl says %d bytes are left in the driverInput_fd pipe\n", cnt);
+            if (CMD_CONFIG(verbose)) {
+                printf("ioctl says %d bytes are left in the driverInput_fd pipe\n", cnt);
+            }
         }
         
         // Read from fd
         // NOTE: this is set up to block until the fd gets data.
         ssize_t nread = read(driverInput_fd, buf, MSGSIZE); // "The read will return "resource temporarily unavailable" if the pipe is empty, O_NONBLOCK is set, and you try to read." --Professor Balasubramanian
-        
-        std::cout << "nread from driverInput_fd: " << nread << std::endl;
+
+        if (CMD_CONFIG(verbose)) {
+            std::cout << "nread from driverInput_fd: " << nread << std::endl;
+        }
         if (nread == -1) {
             perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
             break;
         }
         else if (nread == 0) {
-            if (count == 0)
-                std::cout << "No IMU data present yet" << std::endl;
-            else
-                std::cout << "No IMU data left" << std::endl;
+            if (CMD_CONFIG(verbose)) {
+                if (count == 0)
+                    std::cout << "No IMU data present yet" << std::endl;
+                else
+                    std::cout << "No IMU data left" << std::endl;
+            }
             break;
         }
         buf[nread] = '\0'; // Null terminate
@@ -65,12 +73,16 @@ void runOneIteration(int driverInput_fd) {
                              "%n"
                    , &imu.fseconds, &charsRead); // Returns number of items read on success
             if (ret == EOF || ret != 1 /*want 1 item read*/) {
-                std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
+                // EOF is ok/expected once we read all data
+                if (CMD_CONFIG(verbose) || ret != EOF) {
+                    std::cout << "driverInput_fd gave incomplete data for fseconds (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
+                }
                 break;
             }
             charsReadTotal += charsRead;
-            std::cout << "fseconds: " << imu.fseconds << ", charsRead: " << charsRead << std::endl;
-            // TODO: need to drain the pipe instead of reading only one each frame in case we fall behind which is very likely..
+            if (CMD_CONFIG(verbose)) {
+                std::cout << "fseconds: " << imu.fseconds << ", charsRead: " << charsRead << std::endl;
+            }
             if (fabs(imu.fseconds- -1) < EPSILON) {
                 // IMU failed, ignore its data
                 std::cout << "SIFT considering IMU as failed for this grab attempt." << std::endl;
@@ -111,6 +123,7 @@ void runOneIteration(int driverInput_fd) {
                &charsRead
                );
             if (ret == EOF || ret != 38 /*number of `&imu`[...] items passed to the sscanf above*/) {
+                // (EOF here is an error)
                 std::cout << "driverInput_fd gave incomplete data (" << (ret == EOF ? std::string("EOF") : std::to_string(ret)) << "), ignoring for now" << std::endl;
                 break;
             }
@@ -124,8 +137,10 @@ void runOneIteration(int driverInput_fd) {
             break;
         }
     }
-    std::cout << "subscale driver interface thread: read " << count << " line(s) of IMU data" << std::endl; // Should be 1 line read (count == 1) ideally
-    t.logElapsed("subscale driver interface thread: grabbing from subscale driver fd");
+    if (CMD_CONFIG(verbose)) {
+        std::cout << "subscale driver interface thread: read " << count << " line(s) of IMU data" << std::endl; // Should be 1 line read (count == 1) ideally
+        t.logElapsed("subscale driver interface thread: grabbing from subscale driver fd");
+    }
 }
 
 void* subscaleDriverInterfaceThreadFunc(void* arg) {
