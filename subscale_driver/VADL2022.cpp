@@ -19,6 +19,8 @@
 #include <float.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <limits>
+
 int driverInput_fd_fcntl_flags = 0;
 
 #include "pyMainThreadInterface.hpp"
@@ -91,6 +93,9 @@ double computeAltitude(double kilopascals) {
   double altitudeFeet = 145366.45 * (1.0 - std::pow(10.0 * kilopascals / 1013.25, 0.190284)); // https://en.wikipedia.org/wiki/Pressure_altitude
   return altitudeFeet;
 }
+
+uint64_t lastIMUTimestamp = std::numeric_limits<uint64_t>::max();
+int imuFailureCounter = 0;
 
 // Forward declare main deployment callback
 template<typename LOG_T>
@@ -280,10 +285,9 @@ float fsecondsOffset = FLT_MIN;
 float timeSecondsOffset = 0;
 bool forceSkipNonSIFTCallbacks = false;
 
-// Will: this is called on a non-main thread (on a thread for the IMU)
-// Callback for waiting on takeoff
-template<typename LOG_T>
-void checkTakeoffCallback(LOG_T *log, float fseconds) {
+void updateRelativeAltitude(bool showAltitudeOnce) {
+  // Convert log->mImu->pres (pressure) to altitude using barometric formula (Cam) and use that to check for nearing the ground + stopping SIFT
+  // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
   double kilopascals = log->mImu->pres;
   double altitudeFeet = computeAltitude(kilopascals);
   if (onGroundAltitude == DBL_MIN) {
@@ -304,13 +308,16 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       numAltitudes += 1;
     }
   }
-  if (verbose) {
+  static bool onceFlag = true;
+  if ((showAltitudeOnce && onceFlag) || verbose) {
+    onceFlag = false;
     std::cout << "Altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl;
   }
+}
 
-  VADL2022* v = (VADL2022*)log->callbackUserData;
-  float magnitude = log->mImu->linearAccelNed.mag();
-  float timeSeconds = log->mImu->timestamp / 1.0e9;
+// Returns true if IMU failure detected.
+template<typename LOG_T>
+bool checkIMUFailure(const char* callbackName, LOG_T *log, float magnitude, float& timeSeconds, float& fseconds, float& fsecondsOffset, float& timeSecondsOffset, Status statusOnFailure) {
   // First run: set fsecondsOffset
   if (fsecondsOffset == FLT_MIN || fsecondsOffset == 0 || timeSecondsOffset == 0) { // Feel free to change this, may be a hack
     fsecondsOffset = fseconds;
@@ -319,19 +326,46 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
   fseconds -= fsecondsOffset;
   timeSeconds -= timeSecondsOffset;
   if (verbose) {
-    printf("checkTakeoffCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
+    printf("%s: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", callbackName, fseconds, timeSeconds, magnitude);
   }
   // Check for IMU disconnect/failure to deliver packets
   const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
-  bool force = false;
+  if (log->mImu->timestamp - lastIMUTimestamp == 0) {
+    imuFailureCounter++;
+  }
+  else {
+    imuFailureCounter = 0;
+  }
+  lastIMUTimestamp = log->mImu->timestamp;
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
-    reportStatus(Status::IMUNotRespondingInCheckTakeoffCallback);
+    std::cout << "WARNING: Lagging behind in IMU data by " << fseconds - timeSeconds << " seconds." << std::endl;
+  }
+  if (imuFailureCounter > 5    /*fseconds - timeSeconds > EPSILON*/ && timeSeconds != 0) {
+    reportStatus(statusOnFailure);
+    return true;
+  }
+  return false;
+}
+
+// Will: this is called on a non-main thread (on a thread for the IMU)
+// Callback for waiting on takeoff
+template<typename LOG_T>
+void checkTakeoffCallback(LOG_T *log, float fseconds) {
+  updateRelativeAltitude(false);
+
+  VADL2022* v = (VADL2022*)log->callbackUserData;
+  float magnitude = log->mImu->linearAccelNed.mag();
+  float timeSeconds = log->mImu->timestamp / 1.0e9;
+  bool force;
+  if (checkIMUFailure("checkTakeoffCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timesecondsOffset, Status::IMUNotRespondingInCheckTakeoffCallback) // LOG_T *log, float& magnitude, float& timeSeconds, float& fseconds, float& fsecondsOffset, float& timeSecondsOffset
+      ) {
+    force = true;
     long long milliSeconds = backupTakeoffTime;
     std::cout << "IMU considered not responding. Waiting until projected launch time guesttimate which is " << milliSeconds/1000.0 << " seconds away from now..." << std::endl;
     // Wait for SIFT backup time
     std::this_thread::sleep_for(std::chrono::milliseconds(milliSeconds));
     // Start SIFT or video capture
-    magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
+    magnitude = FLT_MAX; // Hack to force next if statement to succeed
   }
   if ((g_state == State_WaitingForTakeoff && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS) || forceSkipNonSIFTCallbacks) {
     // Record this, it must last for IMU_ACCEL_DURATION
@@ -384,16 +418,12 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
 // Callback for waiting on main parachute deployment
 template<typename LOG_T>
 void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
+  updateRelativeAltitude(false);
+  
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
   float timeSeconds = log->mImu->timestamp / 1.0e9;
-  fseconds -= fsecondsOffset;
-  timeSeconds -= timeSecondsOffset;
-  if (verbose) {
-    printf("checkMainDeploymentCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
-  }
   bool force = false;
-  const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
   
   // Check if backup time elapsed in case IMU doesn't ever report main deployment:
   auto millisSinceTakeoff = since(takeoffTime).count();
@@ -406,15 +436,13 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
     reportStatus(Status::TooMuchTimeElapsedWithoutMainDeployment_ThereforeForcingTrigger);
   }
   // Check for IMU disconnect/failure to deliver packets
-  else if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
-    // Wait for SIFT backup time
+  else if (checkIMUFailure("checkMainDeploymentCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timeSecondsOffset, Status::IMUNotRespondingInMainDeploymentCallback)) {
     auto millisSinceTakeoff = since(takeoffTime).count();
     if (backupSIFTStartTime > millisSinceTakeoff) { // Then we have to wait
       auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
       std::cout << "IMU considered not responding. Waiting until projected SIFT start time, which is " << (millisTillSIFT/1000.0) << " seconds away from now..." << std::endl;
       std::this_thread::sleep_for(std::chrono::milliseconds(millisTillSIFT));
     } else {
-      reportStatus(Status::IMUNotRespondingInMainDeploymentCallback);
       std::cout << "IMU considered not responding. No need to wait until projected SIFT start time, with " << (millisSinceTakeoff - backupSIFTStartTime )/1000.0 << " seconds to spare" << std::endl;
     }
     // Start SIFT or video capture
@@ -482,19 +510,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
 template<typename LOG_T>
 void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   float timeSeconds = log->mImu->timestamp / 1.0e9;
-  fseconds -= fsecondsOffset;
-  timeSeconds -= timeSecondsOffset;
-  
-  // Convert log->mImu->pres (pressure) to altitude using barometric formula (Cam) and use that to check for nearing the ground + stopping SIFT
-  // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
-  double kilopascals = log->mImu->pres;
-  double altitudeFeet = computeAltitude(kilopascals);
-  double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
-  static bool onceFlag = true;
-  if (onceFlag || verbose) {
-    onceFlag = false;
-    std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " << relativeAltitude << " ft" << std::endl;
-  }
+  updateRelativeAltitude(true);
   if (relativeAltitude < 50) {
     // Future: stop SIFT here but not sure if this would stop too early, so we just output what would happen:
     static bool onceFlag2 = true;
@@ -506,8 +522,9 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   }
 
   // Stop SIFT on timer time elapsed
-  if (verbose)
+  if (verbose) {
     std::cout << "Time till SIFT stops: " << backupSIFTStopTime - since(mainDeploymentOrStartedSIFTTime).count() << " milliseconds" << std::endl;
+  }
   if (since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime && !mainDispatchQueueDrainThenStop) {
     std::cout << "Stopping SIFT on backup time elapsed" << std::endl;
     reportStatus(Status::StoppingSIFTOnBackupTimeElapsed);
@@ -560,12 +577,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     
     
     // Check for IMU failure first
-    if (verbose) {
-      printf("passIMUDataToSIFTCallback: times with offset are: fseconds %f, imu timestamp seconds %f, accel mag: %f\n", fseconds, timeSeconds, magnitude);
-    }
-    // Check for IMU disconnect/failure to deliver packets
-    const float EPSILON = 1.0/15; // Max time between packets before IMU is considered failed. i.e. <15 Hz out of 40 Hz.
-    if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
+    if (checkIMUFailure("passIMUDataToSIFTCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timeSecondsOffset, Status::IMUNotRespondingInPassIMUDataToSIFTCallback)) {
       std::cout << "IMU considered not responding. Telling SIFT we're not using it for now" << std::endl;
       // Notify SIFT that IMU failed
       // toSIFT << "\n" << -1.0f;
@@ -573,9 +585,8 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
       fprintf(toSIFT, "\n%a", -1.0f);
       fflush(toSIFT);
       
-      VADL2022* v = (VADL2022*)log->callbackUserData;
+      //VADL2022* v = (VADL2022*)log->callbackUserData;
       //((LOG_T*)v->mLog)->userCallback = nullptr;
-      reportStatus(Status::IMUNotRespondingInPassIMUDataToSIFTCallback);
       return; // Try again next time
     }
 
