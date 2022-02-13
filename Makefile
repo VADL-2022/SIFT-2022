@@ -68,7 +68,7 @@ USE_JEMALLOC=1
 USE_PTR_INC_MALLOC=0
 
 # Can speed up compilation but at the expense of writing to more temporary .gch files.
-USE_PRECOMPILED_HEADERS=1
+#USE_PRECOMPILED_HEADERS=1
 
 # END CONFIG #
 
