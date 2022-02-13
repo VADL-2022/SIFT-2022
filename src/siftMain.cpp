@@ -401,6 +401,10 @@ int main(int argc, char **argv)
             else if (strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
                 continue;
             }
+            else if (strcmp(argv[i], "--fps") == 0) {
+                i++; // Also go past the extra argument for this argument
+                continue;
+            }
             // //
             
             printf("Unrecognized command-line argument given: %s", argv[i]);
@@ -439,7 +443,7 @@ int main(int argc, char **argv)
     }
     
     if (cfg.cameraDataSource()) {
-        src = std::make_unique<DataSourceT>();
+        src = std::make_unique<DataSourceT>(argc, argv); // Sets fps, etc. from command line args
     }
     
     FileDataOutput o2(getDataOutputFolder() + "/live", src->fps() /* fps */ /*, sizeFrame */);
@@ -968,7 +972,8 @@ int mainMission(DataSourceT* src,
         //auto path = src->nameForIndex(i);
         
         // Apply filters to possibly discard the image //
-        bool discardImage = false;
+        static bool discardImage;
+        discardImage = false;
         // Blur detection
         t.reset();
         cv::Mat laplacianImage;
@@ -1035,6 +1040,7 @@ int mainMission(DataSourceT* src,
                     }
                     else {
                         std::cout << "Python doesn't like this image" << std::endl;
+                        discardImage = true;
                     }
                 });
             }
