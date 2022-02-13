@@ -1,8 +1,8 @@
 # BEGIN LIBRARY FUNCTIONS #
 
 # Template to make compilation rules and flags for C and C++ files. Based on https://www.gnu.org/software/make/manual/html_node/Eval-Function.html
-# Usage: `$(eval $(call C_AND_CXX_FLAGS_template,targetNameHere,cFlagsHere,cxxFlagsHere))` where `targetNameHere` is the name of this specific configuration, `cFlagsHere` are CFLAGS to pass, if any, and cxxFlagsHere are CXXFLAGS if any.
-# Example result of calling `$(eval $(call C_AND_CXX_FLAGS_template,release,-Ofast,))` (no CXXFLAGS were provided):
+# Usage: `$(eval $(call C_AND_CXX_FLAGS_template,targetNameHere,cFlagsHere,cxxFlagsHere,cPrecompiledHeaders,cppPrecompiledHeaders))` where `targetNameHere` is the name of this specific configuration, `cFlagsHere` are CFLAGS to pass, if any, and cxxFlagsHere are CXXFLAGS if any.
+# Example result of calling `$(eval $(call C_AND_CXX_FLAGS_template,release,-Ofast,,))` (no CXXFLAGS were provided):
 #
 # CFLAGS_release = $(CFLAGS) -Ofast
 # %_r.o: %.c
@@ -13,11 +13,21 @@
 #
 define C_AND_CXX_FLAGS_template =
 CFLAGS_$(1) = $(CFLAGS) $(2)
-%_$(1).o: %.c
+# C sources
+%_$(1).o: %.c $(addsuffix _$(1).h.gch,$(patsubst %.h,%,$(4)))
 	$(CC) $$(CFLAGS_$(1)) -c $$< -o $$@
 CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
-%_$(1).o: %.cpp
+# C++ sources
+%_$(1).o: %.cpp $(addsuffix _$(1).hpp.gch,$(patsubst %.hpp,%,$(5)))#<--Example: src/common_$(1).hpp.gch
 	$(CXX) $$(CXXFLAGS_$(1)) -c $$< -o $$@
+# C precompiled headers
+%_$(1).h.gch: %.h
+	$(CC) $$(CFLAGS_$(1)) $$< -o $$@
+# C++ precompiled headers
+%_$(1).hpp.gch: %.hpp
+	$(CXX) $$(CXXFLAGS_$(1)) $$< -o $$@
+# Don't delete the precompiled headers (Make does this automatically it seems..)
+.PRECIOUS: %_$(1).h.gch %_$(1).hpp.gch # https://stackoverflow.com/questions/15189704/makefile-removes-object-files-for-no-reason
 
 # https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 #-include $(SRC:%.cpp=%.d)
@@ -57,6 +67,9 @@ USE_JEMALLOC=1
 
 USE_PTR_INC_MALLOC=0
 
+# Can speed up compilation but at the expense of writing to more temporary .gch files.
+USE_PRECOMPILED_HEADERS=1
+
 # END CONFIG #
 
 
@@ -89,6 +102,7 @@ CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng python-3.7m ${addi
 $(info $(OS))
 ifeq ($(OS),Darwin)
 CFLAGS += -target x86_64-apple-macos10.15 #-isysroot $(shell xcrun --sdk macosx --show-sdk-path)
+CFLAGS += -I/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/include -I/nix/store/690a3qx1w73vd86aawgih3fv5bn393lf-python3.7-pybind11-2.7.0/include
 endif
 CXXFLAGS += -std=c++17 $(CFLAGS)
 CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*) .*/\1/' | awk '{$$1=$$1;print}') # https://stackoverflow.com/questions/5188267/checking-the-gcc-version-in-a-makefile
@@ -160,6 +174,13 @@ SOURCES_C += $(SIFT_ANATOMY_SRC)/io_png.c $(SIFT_ANATOMY_SRC)/lib_util.c
 endif
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
+ifeq ($(USE_PRECOMPILED_HEADERS),1)
+PCH_C :=
+PCH_CPP := src/common.hpp # Pre-compiled headers (speedup for compilation)
+else
+PCH_C :=
+PCH_CPP :=
+endif
 SOURCES := common.cpp $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/tools/*.cpp) $(wildcard $(SRC)/tools/backtrace/*.cpp) $(wildcard $(SRC)/main/*.cpp) #$(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
 SOURCES_C := subscale_driver/py.c subscale_driver/lib/pf_string.c $(SOURCES_C) $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c)
 ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
@@ -189,19 +210,19 @@ ADDITIONAL_CFLAGS_ALL_COMMANDLINE = -DUSE_COMMAND_LINE_ARGS -no-pie -fno-PIE -fn
 # NOTE: -g is needed for stack traces for https://github.com/bombela/backward-cpp
 ADDITIONAL_CFLAGS_RELEASE = -march=native -mtune=native -Ofast -g -DNDEBUG -fno-stack-protector # -fno-stack-protector for speedup but possible stack corruption with no segfaults indicating it happened (it might be -fno-stack-protector by default though) at the cost of security.   #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
 # ^ `-mtune=native` optimizes for the machine being compiled on
-$(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
+$(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),,$(PCH_C),$(PCH_CPP)))
 
 # release_commandLine target
 ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE = $(ADDITIONAL_CFLAGS_RELEASE) $(ADDITIONAL_CFLAGS_ALL_COMMANDLINE)
-$(eval $(call C_AND_CXX_FLAGS_template,release_commandLine,$(ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE),))
+$(eval $(call C_AND_CXX_FLAGS_template,release_commandLine,$(ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE),,$(PCH_C),$(PCH_CPP)))
 
 # debug target
 ADDITIONAL_CFLAGS_DEBUG = -O0 -g3 -DDEBUG # -Og # -O0
-$(eval $(call C_AND_CXX_FLAGS_template,debug,$(ADDITIONAL_CFLAGS_DEBUG),))
+$(eval $(call C_AND_CXX_FLAGS_template,debug,$(ADDITIONAL_CFLAGS_DEBUG),,$(PCH_C),$(PCH_CPP)))
 
 # debug_commandLine target
 ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE = $(ADDITIONAL_CFLAGS_DEBUG) $(ADDITIONAL_CFLAGS_ALL_COMMANDLINE)
-$(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE),))
+$(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEBUG_COMMANDLINE),,$(PCH_C),$(PCH_CPP)))
 
 # release linking
 ADDITIONAL_CFLAGS_RELEASE += -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
