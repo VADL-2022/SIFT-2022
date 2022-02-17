@@ -278,6 +278,10 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--sift-video-output") == 0) { // Outputs frames with SIFT keypoints, etc. rendered to video file
             cfg.siftVideoOutput = true;
         }
+        else if (i+2 < argc && strcmp(argv[i], "--skip-image-indices") == 0) { // Ignore images with this index. Usage: `--skip-image-indices 1 2` to skip images 1 and 2 (0-based indices, end index is exclusive)
+            cfg.skipImageIndices.push_back(std::make_pair(std::stoi(argv[i+1]), std::stoi(argv[i+2])));
+            i += 2;
+        }
         else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
             cfg.noPreviewWindow = true;
         }
@@ -889,6 +893,29 @@ int mainMission(DataSourceT* src,
 //        OPTICK_FRAME("MainThread"); // https://github.com/bombomby/optick
         
         std::cout << "i: " << i << std::endl;
+        #ifdef USE_COMMAND_LINE_ARGS
+        for (auto& pair : cfg.skipImageIndices) {
+            if (pair.first == i) {
+                std::cout << "Skipping to index: " << pair.second << std::endl;
+                for (size_t i2 = pair.first; i2 < pair.second; i2++) {
+                    cv::Mat mat = src->get(i2); // Consume images
+                    // Enqueue null image
+                    processedImageQueue.enqueue(mat,
+                                            shared_keypoints_ptr(),
+                                            std::shared_ptr<struct sift_keypoint_std>(),
+                                            0,
+                                            shared_keypoints_ptr(),
+                                            shared_keypoints_ptr(),
+                                            shared_keypoints_ptr(),
+                                            cv::Mat(),
+                                            p,
+                                            i2);
+                }
+                i = pair.second - 1; // -1 due to the i++
+                continue;
+            }
+        }
+        #endif
         auto sinceLast_milliseconds = since(last).count();
         if (src->wantsCustomFPS()) {
             if (sinceLast_milliseconds < timeBetweenFrames_milliseconds) {
