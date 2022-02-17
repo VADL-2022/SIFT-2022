@@ -242,7 +242,9 @@ bool DataSourceBase::shouldCrop() const {
 cv::Rect DataSourceBase::crop() const {
     if (shouldCrop()) {
         //return cv::Rect(cv::Point(137,62), cv::Point(490,401));
-        int inset = 60;
+        int inset;
+        //inset = 60;
+        inset = 0;
         return cv::Rect(cv::Point(137+inset,62+inset), cv::Point(490-inset,401-inset));
     }
     return cv::Rect();
