@@ -7,7 +7,23 @@ import threading
 import os
 import stat
 import timeit
+import Queue
 
+dispatchQueue = Queue.Queue()
+def dispatchQueueThreadFunc(name):
+    print("videoCapture: Thread %s: starting", name)
+    # Based on bottom of page at https://docs.python.org/2/library/queue.html#module-Queue
+    while True:
+        item = dispatchQueue.get()
+        item()
+        dispatchQueue.task_done()
+    print("videoCapture: Thread %s: finishing", name)
+num_worker_threads = 2
+for i in range(num_worker_threads):
+     t = threading.Thread(target=dispatchQueueThreadFunc)
+     t.daemon = True
+     t.start()
+     
 class AtomicInt:
     def __init__(self, initial=0):
         self.value=initial
@@ -83,8 +99,11 @@ def run(shouldStop # AtomicInt
           if duration.total_seconds() >= 2:
               lastFlush = now
               # Flush video
-              print("out.release() took", timeit.timeit(lambda: out.release(), number=1), "seconds")
-              print("Flushed the video")
+              def flushFn():
+                  print("out.release() took", timeit.timeit(lambda: out.release(), number=1), "seconds")
+                  print("Flushed the video")
+              print("Enqueuing flush")
+              dispatchQueue.put(flushFn)
               date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
               p=os.path.join('.', 'dataOutput',o1,'outpy' + date_time + '.mp4')
               out.open(p,cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
@@ -94,7 +113,9 @@ def run(shouldStop # AtomicInt
     finally:    
         # When everything done, release the video capture and video write objects
         cap.release()
-        out.release()
+        #out.release()
+        
+        dispatchQueue.join()       # block until all tasks are done
 
         # Closes all the frames
         #cv2.destroyAllWindows()
