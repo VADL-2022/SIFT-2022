@@ -13,21 +13,27 @@ M2 = np.matrix([[-59.3289, 29.2448, 10803.0552],
 M3= np.matrix([[-5.977999828068925, -0.9880255704017129, 1419.808234618616],
                [1.324702984623343, -1.788003135189102, -126.9216461371965],
                [-0.009412539975000779, 0.005062239418966106, 1.913349141488792]])
+M4=np.matrix([[-114.7408342913017, 16.58993654620327, 12207.12269585698],
+               [-68.88147321559404, -17.05208611593818, 16051.28685834884],
+              [-0.231843067828002, -0.005023504292161232, 38.05148315615509]
+              ]) # From /Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_09_13_39_CST/scaled15...
 
-M=M3
+M=M4
 
 
 
 Mcurrent = np.matrix([[1.0, 0.0, 0.0],
                       [0.0, 1.0, 0.0],
                       [0.0, 0.0, 1.0]])
-inc=0.005*2
+#inc=0.005*2
+inc=0.005/2
 
 # https://medium.com/swlh/youre-using-lerp-wrong-73579052a3c3
 def lerp(a, b, t):
     return a + (b-a) * t
 
-imgOrig = cv2.imread("Data/subscale2/PostFlightSIFTReRuns_derived/output.png")
+imgOrig = cv2.imread("/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_09_31_47_CST/firstImage0.png")
+    #"Data/subscale2/PostFlightSIFTReRuns_derived/output.png")
 while True:
     print(imgOrig.shape[:2])
     img = cv2.warpPerspective(imgOrig, Mcurrent, imgOrig.shape[:2])
@@ -37,4 +43,6 @@ while True:
         for j in range(0, len(x)):
             y = x[j]
             Mcurrent[i][j] = lerp(y, M[i][j], inc)
-    cv2.waitKey(0)
+            #inc*=1.5
+    if cv2.waitKey(0) & 0xFF == ord('q'): # https://stackoverflow.com/questions/20539497/python-opencv-waitkey0-does-not-respond
+        exit(0)

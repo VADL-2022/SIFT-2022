@@ -11,7 +11,7 @@ if [ "$OS" == "Darwin" ]; then
     CXX="xcrun -sdk macosx clang++"
     CFLAGS="$CFLAGS -target x86_64-apple-macos10.15"
     LFLAGS="$LDFLAGS -lc++fs"
-    LFLAGS="$LDFLAGS -framework CoreGraphics -framework Foundation"
+    LFLAGS="$LFLAGS $LDFLAGS -framework CoreGraphics -framework Foundation"
 else
     CC="clang"
     CXX="clang++"
