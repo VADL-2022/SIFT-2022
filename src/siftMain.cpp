@@ -949,7 +949,10 @@ int mainMission(DataSourceT* src,
 #ifdef SAVE_INTERMEDIATE_SCALED_IMAGES
                         // Save image for debugging only
                         cv::Mat canvas;
-                        cv::warpPerspective(src->shouldCrop() ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
+                        bool crop;
+                        //crop = src->shouldCrop();
+                        crop = false; // Hardcode, since it is weird when you scale the cropped image?
+                        cv::warpPerspective(crop ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
                         //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
                         std::cout << "Saving to " << name << std::endl;
                         cv::imwrite(name, canvas);
@@ -1354,7 +1357,7 @@ int mainMission(DataSourceT* src,
     cv::Mat canvas;
     bool crop;
     //crop = src->shouldCrop();
-    crop = false; // Hardcode
+    crop = false; // Hardcode, since it is weird when you scale the cropped image?
     cv::warpPerspective(crop ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
 //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
     std::cout << "Saving to " << name << std::endl;
