@@ -1352,7 +1352,10 @@ int mainMission(DataSourceT* src,
         return 0;
     }
     cv::Mat canvas;
-    cv::warpPerspective(src->shouldCrop() ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
+    bool crop;
+    //crop = src->shouldCrop();
+    crop = false; // Hardcode
+    cv::warpPerspective(crop ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
 //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
     std::cout << "Saving to " << name << std::endl;
     cv::imwrite(name, canvas);
