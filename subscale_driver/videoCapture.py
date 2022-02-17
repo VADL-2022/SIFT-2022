@@ -65,7 +65,7 @@ def run(shouldStop # AtomicInt
           if ret == True: 
 
             # Write the frame into the file 'output.avi'
-            timeit.timeit(lambda: out.write(frame), number=1)
+            print("out.write(frame) took", timeit.timeit(lambda: out.write(frame), number=1), "seconds")
 
             # Display the resulting frame    
             #cv2.imshow('frame',frame)
@@ -83,7 +83,7 @@ def run(shouldStop # AtomicInt
           if duration.total_seconds() >= 2:
               lastFlush = now
               # Flush video
-              timeit.timeit(lambda: out.release(), number=1)
+              print("out.release() took", timeit.timeit(lambda: out.release(), number=1), "seconds")
               print("Flushed the video")
               date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
               p=os.path.join('.', 'dataOutput',o1,'outpy' + date_time + '.mp4')
