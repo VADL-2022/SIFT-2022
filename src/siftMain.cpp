@@ -170,8 +170,10 @@ const std::string& getDataOutputFolder() {
 void saveMatrixGivenStr(const cv::Mat& M, std::string& name/*image name output*/,
                         const cv::Ptr<cv::Formatted>& str /*matrix contents input*/) {
     name = M.empty() ? openFileWithUniqueName(getDataOutputFolder() + "/firstImage", ".png") : openFileWithUniqueName(getDataOutputFolder() + "/scaled", ".png");
-    auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
-    std::ofstream(matName.c_str()) << str << std::endl;
+    if (!M.empty()) {
+        auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
+        std::ofstream(matName.c_str()) << str << std::endl;
+    }
 }
 void matrixToString(const cv::Mat& M,
                     cv::Ptr<cv::Formatted>& str /*matrix contents output*/) {
@@ -281,6 +283,9 @@ int main(int argc, char **argv)
         else if (i+2 < argc && strcmp(argv[i], "--skip-image-indices") == 0) { // Ignore images with this index. Usage: `--skip-image-indices 1 2` to skip images 1 and 2 (0-based indices, end index is exclusive)
             cfg.skipImageIndices.push_back(std::make_pair(std::stoi(argv[i+1]), std::stoi(argv[i+2])));
             i += 2;
+        }
+        else if (strcmp(argv[i], "--save-first-image") == 0) { // Save the first image SIFT encounters. Counts as a flush towards the start of SIFT.
+            cfg.saveFirstImage = true;
         }
         else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
             cfg.noPreviewWindow = true;
@@ -897,7 +902,7 @@ int mainMission(DataSourceT* src,
         for (auto& pair : cfg.skipImageIndices) {
             if (pair.first == i) {
                 std::cout << "Skipping to index: " << pair.second << std::endl;
-                for (size_t i2 = pair.first; i2 < pair.second; i2++) {
+                for (size_t i2 = pair.first; i2 <= pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
                     // Enqueue null image
                     processedImageQueue.enqueue(mat,
@@ -956,22 +961,27 @@ int mainMission(DataSourceT* src,
                 auto now = std::chrono::steady_clock::now();
                 auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now - timeSinceLastFlush);
                 auto destMillis = cfg.flushVideoOutputEveryNSeconds*1000;
-                if (millis.count() > destMillis || cfg.flushVideoOutputEveryNSeconds == 0) {
+                if (millis.count() > destMillis || cfg.flushVideoOutputEveryNSeconds == 0 || CMD_CONFIG(saveFirstImage)) {
                     flush = true;
                     std::cout << "Flushing with lag " << millis.count() - destMillis << " milliseconds" << std::endl;
                     
                     // Flush the matrix too //
                     lastImageToFirstImageTransformationMutex.lock();
-                    if (!lastImageToFirstImageTransformation.empty()) {
+                    if (!lastImageToFirstImageTransformation.empty() || CMD_CONFIG(saveFirstImage)) {
                         // Print the intermediate homography matrix
                         cv::Mat& M = lastImageToFirstImageTransformation;
                         cv::Ptr<cv::Formatted> str;
-                        matrixToString(M, str);
-                        std::cout << "Flushing homography: " << str << std::endl;
+                        if (CMD_CONFIG(saveFirstImage)) {
+                            std::cout << "Flushing first image" << std::endl;
+                        }
+                        else {
+                            matrixToString(M, str);
+                            std::cout << "Flushing homography: " << str << std::endl;
+                        }
                         
                         // Save the intermediate homography matrix
                         std::string name;
-                        saveMatrixGivenStr(M, name /* <--output */, str);
+                        saveMatrixGivenStr(CMD_CONFIG(saveFirstImage) ? cv::Mat() : M, name /* <--output */, str);
 #define SAVE_INTERMEDIATE_SCALED_IMAGES
 #ifdef SAVE_INTERMEDIATE_SCALED_IMAGES
                         // Save image for debugging only
@@ -979,9 +989,16 @@ int mainMission(DataSourceT* src,
                         bool crop;
                         crop = src->shouldCrop();
                         //crop = false; // Hardcode, since it is weird when you scale the cropped image?
-                        cv::Mat img = crop ? firstImage(src->crop()) : firstImage;
-                        cv::warpPerspective(img, canvas /* <-- destination */, M, img.size());
-                        //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
+                        cv::Mat& firstImage_ = CMD_CONFIG(saveFirstImage) ? mat : firstImage; // firstImage is empty on first frame grab since it is set *after* running SIFT on it
+                        cv::Mat img = crop ? firstImage_(src->crop()) : firstImage_;
+                        if (!CMD_CONFIG(saveFirstImage)) {
+                            cv::warpPerspective(img, canvas /* <-- destination */, M, img.size());
+                            //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
+                        }
+                        else {
+                            canvas = img;
+                            cfg.saveFirstImage = false; // Did already, don't do it again
+                        }
                         std::cout << "Saving to " << name << std::endl;
                         cv::imwrite(name, canvas);
 #endif
