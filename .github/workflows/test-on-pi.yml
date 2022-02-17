@@ -1,14 +1,14 @@
 name: test-on-pi
 on: [push]
-jobs:
-  run-pi-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run ls
-        run: sshpass -p $TUNNEL_PASS ssh -o "StrictHostKeyChecking no" -p $TUNNEL_PORT $TUNNEL_IP "./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd\""
-        env:
-          TUNNEL_PASS: ${{secrets.TUNNEL_PASS}}
-          TUNNEL_PORT: ${{secrets.TUNNEL_PORT}}
-          TUNNEL_IP: ${{secrets.TUNNEL_IP}}
-          RASPI_PASS: ${{secrets.RASPI_PASS}}
-          RASPI_PORT: ${{secrets.RASPI_PORT}}
+#jobs:
+#  run-pi-tests:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Run ls
+#        run: sshpass -p $TUNNEL_PASS ssh -o "StrictHostKeyChecking no" -p $TUNNEL_PORT $TUNNEL_IP "./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd\""
+#        env:
+#          TUNNEL_PASS: ${{secrets.TUNNEL_PASS}}
+#          TUNNEL_PORT: ${{secrets.TUNNEL_PORT}}
+#          TUNNEL_IP: ${{secrets.TUNNEL_IP}}
+#          RASPI_PASS: ${{secrets.RASPI_PASS}}
+#          RASPI_PORT: ${{secrets.RASPI_PORT}}
