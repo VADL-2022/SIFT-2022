@@ -288,6 +288,10 @@ int main(int argc, char **argv)
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
         }
+        else if (strcmp(argv[i], "--main-mission-interactive") == 0) { // Is --main-mission, but waits forever after a frame is shown in the preview window
+            cfg.mainMission = true;
+            cfg.waitKeyForever = true;
+        }
         else if (strcmp(argv[i], "--verbose") == 0) {
             cfg.verbose = true;
         }
@@ -962,6 +966,7 @@ int mainMission(DataSourceT* src,
                 }
             }
             
+            // Save frame to video writer or etc. in o2:
             //cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
             //o2.showCanvas("", mat, flush, rect.empty() ? nullptr : &rect);
             o2.showCanvas("", mat, flush, nullptr);
@@ -1239,7 +1244,7 @@ int mainMission(DataSourceT* src,
             //cv::waitKey(30);
             auto size = canvasesReadyQueue.size();
             std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
-            char c = cv::waitKey(1 + 150.0 / (1 + size)); // Sleep less as more come in
+            char c = cv::waitKey(CMD_CONFIG(waitKeyForever) ? 0 : (1 + 150.0 / (1 + size))); // Sleep less as more come in
             if (c == 'q') {
                 // Quit
                 std::cout << "Exiting (q pressed)" << std::endl;

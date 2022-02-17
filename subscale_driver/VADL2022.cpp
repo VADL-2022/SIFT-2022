@@ -800,7 +800,7 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to countdown up to --sift-start-time and then start SIFT, *only* used if the IMU fails
+    else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to countdown up to --sift-start-time and then start SIFT, *only* used if the IMU fails        // Is the camera switching time too for the LIS
       if (i+1 < argc) {
 	backupSIFTStartTime = std::stoll(argv[i+1]); // Must be long long
       }

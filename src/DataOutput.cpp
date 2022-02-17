@@ -96,9 +96,10 @@ void FileDataOutput::release() {
 }
 
 void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool flush, cv::Rect* crop) {
-    t.reset();
+    static thread_local Timer t2;
+    t2.reset();
     run(canvas, flush, crop);
-    t.logElapsed("save frame to FileDataOutput");
+    t2.logElapsed("save frame to FileDataOutput");
 }
 
 int FileDataOutput::waitKey(int delay) {
