@@ -73,7 +73,7 @@ const char* LIS331HH_calibrationFile = nullptr;
 long long backupSIFTStopTime = -1;
 std::string backupSIFTStopTime_str;
 long long backupTakeoffTime = -1;
-bool verbose = false;
+bool verbose = false, verboseSIFTFD = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
 auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not actually `now`
 long long imuDataSourceOffset = 0; // For --imu-data-source-path only
@@ -186,6 +186,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     std::string(timeAfterMainDeployment) //+
     //std::string(" --no-preview-window") // --video-file-data-source
     + (useIMU ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
+    + (verboseSIFTFD ? (std::string(" --verbose")))
   ;
   
   printf("Forking with bash command: %s\n", siftCommandLine.c_str());
@@ -558,11 +559,12 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   if (relativeAltitude < 50) {
     // Future: stop SIFT here but not sure if this would stop too early, so we just output what would happen:
     static bool onceFlag2 = true;
-    if (onceFlag2 ||verbose)
+    if (onceFlag2 ||verbose) {
       onceFlag2 = false;
       std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, would normally try stopping SIFT" << std::endl;
+    }
     //raise(SIGINT); // <-- to stop SIFT
-    reportStatus(Status::AltitudeLessThanDesiredAmount);
+    reportStatus(Status::AltitudeLessThanDesiredAmount);    
   }
 
   // Stop SIFT on timer time elapsed
@@ -670,10 +672,10 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     fflush(toSIFT);
     
     int cnt;
-    if (ioctl(fd[1] /* <-- used by toSIFT */, FIONREAD, &cnt) < 0) { // "If you're on Linux, this call should tell you how many unread bytes are in the pipe" --Professor Balasubramanian
+    if (verboseSIFTFD && ioctl(fd[1] /* <-- used by toSIFT */, FIONREAD, &cnt) < 0) { // "If you're on Linux, this call should tell you how many unread bytes are in the pipe" --Professor Balasubramanian
       perror("driver: ioctl to check bytes in fd[1] failed (ignoring)");
     }
-    else {
+    else if (verboseSIFTFD) {
       printf("driver: ioctl says %d bytes are left in the fd[1] pipe (pipe fd is %d)\n", cnt, fd[1]);
     }
   
@@ -745,6 +747,9 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (strcmp(argv[i], "--verbose") == 0) {
       verbose = true;
+    }
+    else if (strcmp(argv[i], "--verbose-sift-fd") == 0) {
+      verboseSIFTFD = true;
     }
     else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
       if (i+1 < argc) {
