@@ -34,6 +34,7 @@ enum Status : int {
   IMUNotRespondingInMainDeploymentCallback,
   SwitchingToSecondCamera,
   NotEnoughAccelInMainDeploymentCallback,
+  WaitingForMECOButExceededDesiredAccelInMainDeploymentCallback,
   AltitudeLessThanDesiredAmount,
   StoppingSIFTOnBackupTimeElapsed,
   StoppingSIFTOrVideoCaptureOnLanding,
