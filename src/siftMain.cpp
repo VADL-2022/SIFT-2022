@@ -640,6 +640,7 @@ void matcherWaitForNonPlaceHolderImageNoLockOnlyWait(bool seekInsteadOfDequeue, 
     while( processedImageQueue.count < 1 + (seekInsteadOfDequeue ? currentIndex : 0) ) // Wait until more images relative to the starting position (`currentIndex`) are in the queue. (Usually `currentCount` is 0 but if it is >= 1 then it is because we're peeking further.)
     {
         if (stoppedMain()) {
+            pthread_mutex_unlock( &processedImageQueue.mutex );
             // Stop matcher thread
             pthread_exit(0);
         }
@@ -676,7 +677,9 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
                 if (CMD_CONFIG(showPreviewWindow()) && !seekInsteadOfDequeue) {
                     #ifdef USE_COMMAND_LINE_ARGS
                     assert(!placeholder.image.empty());
-                    canvasesReadyQueue.enqueue(placeholder);
+                    pthread_mutex_unlock( &processedImageQueue.mutex ); // Don't be "greedy"
+                    canvasesReadyQueue.enqueueNoLock(placeholder);
+                    pthread_mutex_lock( &processedImageQueue.mutex );
                     #endif
                 }
             }
@@ -714,6 +717,12 @@ int matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedIm
 }
 void* matcherThreadFunc(void* arg) {
     installSignalHandlers();
+    
+    #ifdef __APPLE__
+    // https://stackoverflow.com/questions/2369738/how-to-set-the-name-of-a-thread-in-linux-pthreads
+    // "Mac OS X: must be set from within the thread (can't specify thread ID)"
+    pthread_setname_np("matcherThread");
+    #endif
     
     SIFTState* s = (SIFTState*)arg;
     
@@ -892,11 +901,17 @@ int mainMission(DataSourceT* src,
     cv::Mat prevImage;
     pthread_t matcherThread;
     pthread_create(&matcherThread, NULL, matcherThreadFunc, &s);
+    #ifdef __linux__
+    pthread_setname_np(matcherThread, "matcherThread"); // https://man7.org/linux/man-pages/man3/pthread_setname_np.3.html
+    #endif
     
     pthread_t subscaleDriverInterfaceThread;
     if (driverInput_fd != -1) {
         static_assert(sizeof(void*) >= sizeof(int));
         pthread_create(&subscaleDriverInterfaceThread, NULL, subscaleDriverInterfaceThreadFunc, /*warning is wrong, this is ok*/(void*)driverInput_fd);
+        #ifdef __linux__
+        pthread_setname_np(subscaleDriverInterfaceThread, "subscaleDriverInterfaceThread"); // https://man7.org/linux/man-pages/man3/pthread_setname_np.3.html
+        #endif
     }
     
     auto start = std::chrono::steady_clock::now();
@@ -1370,20 +1385,30 @@ int mainMission(DataSourceT* src,
         #endif
     }
     
+    std::cout << "Broadcasting stoppedMain()" << std::endl;
+    
     // Wake up matcher thread and other SIFT threads so they see that we stoppedMain()
     pthread_cond_broadcast(&processedImageQueue.condition); // Note: "The signal and broadcast operations do not require a mutex. A condition variable also is not permanently associated with a specific mutex; the external mutex does not protect the condition variable." ( https://stackoverflow.com/questions/2763714/why-do-pthreads-condition-variable-functions-require-a-mutex#:~:text=The%20signal%20and%20broadcast%20operations,not%20protect%20the%20condition%20variable. ) + verified by POSIX spec: "The pthread_cond_broadcast() or pthread_cond_signal() functions may be called by a thread whether or not it currently owns the mutex that threads calling pthread_cond_wait() or pthread_cond_timedwait() have associated with the condition variable during their waits; however, if predictable scheduling behavior is required, then that mutex shall be locked by the thread calling pthread_cond_broadcast() or pthread_cond_signal()." ( https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_cond_broadcast.html )
     
+    std::cout << "Stopping thread pool" << std::endl;
+    
     tp.stop(!stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
-
+    
+    std::cout << "Cancelling matcher thread" << std::endl;
+    
     // Sometimes, the matcher thread is waiting on the condition variable still, and it will be waiting forever unless we interrupt it somehow (or broadcast on the condition variable..).
     pthread_cancel(matcherThread); // https://man7.org/linux/man-pages/man3/pthread_cancel.3.html
     if (driverInput_fd != -1) {
+        std::cout << "Joining subscaleDriverInterfaceThread" << std::endl;
         pthread_cancel(subscaleDriverInterfaceThread);
     }
+    
+    std::cout << "Joining matcher thread" << std::endl;
     
     int ret1;
     pthread_join(matcherThread, (void**)&ret1);
     if (driverInput_fd != -1) {
+        std::cout << "Joining subscaleDriverInterfaceThread" << std::endl;
         int ret2;
         pthread_join(subscaleDriverInterfaceThread, (void**)&ret2);
     }
