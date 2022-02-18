@@ -44,7 +44,9 @@ mkShell {
     pkgconfig libpng
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ lldb x11 ]) ++ [
 
-    jemalloc
+      #] ++ (builtins.exec ["bash" "-c", "xcrun --show-sdk-version"] >= 11.3 [] # no jemalloc for Latif due to newer macOS SDK impurity causing jemalloc build to fail..
+      #else: [
+      jemalloc #] 
       
     #bear # Optional, for generating emacs compile_commands.json
 
@@ -61,7 +63,7 @@ mkShell {
       coreutils
     (python37m.withPackages (p: with p; [
       (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
-      #opencv4
+      opencv4
       #numpy
       
       # For Python interop #
@@ -72,6 +74,8 @@ mkShell {
       (lib.optional useGtk (toPythonModule (pkgs.opencv4.override { enableGTK2 = true; enablePython = true; pythonPackages = python37Packages; }))) # Temp hack
       numpy
       #matplotlib
+
+      #scipy
 
       # For LIS331HH IMU
       (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/smbus2.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})

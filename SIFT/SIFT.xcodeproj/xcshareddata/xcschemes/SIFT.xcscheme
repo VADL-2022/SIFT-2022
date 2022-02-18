@@ -61,6 +61,18 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--skip-image-indices"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "3"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "10"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "--no-preview-window"
             isEnabled = "NO">
          </CommandLineArgument>
@@ -98,11 +110,15 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--video-file-data-source"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--video-file-data-source-path"
-            isEnabled = "NO">
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "Data/subscale2/Derived/SIFT/output.mp4"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Volumes/MyTestVolume/Projects/DataRocket/Derived/output.mp4"
