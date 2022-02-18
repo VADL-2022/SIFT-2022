@@ -48,7 +48,7 @@ const float LANDING_ACCEL_DURATION = 1.0 / 40.0; // Seconds
 // Acceleration (Meters per second squared)
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
-float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS = MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE * 9.81; // Meters per second squared
+float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS = MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE * 9.81 /*is set in main() also*/; // Meters per second squared
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS = LANDING_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 
 // Command Line Args
@@ -529,14 +529,13 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
   } else if (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds, false /*no drogue can't force IMU not detected*/, true);
   } else {
+    if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS && millisSinceTakeoff <= mecoDuration) {
+      printf("Still need %ll milliseconds until main deployment g duration can be recorded\n", millisSinceTakeoff - mecoDuration);
+      reportStatus(Status::WaitingForMECOButExceededDesiredAccelInMainDeploymentCallback);
+    }
+      
     // Reset timer
     if (v->startTime != -1) {
-      if (millisSinceTakeoff <= mecoDuration) {
-        printf("Still need %ll milliseconds until main deployment g duration can be recorded\n", millisSinceTakeoff - mecoDuration);
-        reportStatus(Status::WaitingForMECOButExceededDesiredAccelInMainDeploymentCallback);
-        v->startTime = -1;
-      }
-    
       puts("Not enough acceleration; resetting timer");
       v->startTime = -1;
       reportStatus(Status::NotEnoughAccelInMainDeploymentCallback);
@@ -762,6 +761,18 @@ VADL2022::VADL2022(int argc, char** argv)
 	MAIN_DEPLOYMENT_G_FORCE = stof(argv[i+1]);
 	IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS = MAIN_DEPLOYMENT_G_FORCE * 9.81 ; // Meters per second squared
 	std::cout << "Set main deployment g force to " << MAIN_DEPLOYMENT_G_FORCE << std::endl;
+      }
+      else {
+	puts("Expected g force");
+	exit(1);
+      }
+      i++;
+    }
+    else if (strcmp(argv[i], "--emergency-main-deployment-g-force") == 0) { // Override thing, optional // g force for main deployment after drogue failure
+      if (i+1 < argc) {
+	MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE = stof(argv[i+1]);
+	IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS = MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE * 9.81 ; // Meters per second squared
+	std::cout << "Set emergency main deployment g force to " << MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE << std::endl;
       }
       else {
 	puts("Expected g force");
