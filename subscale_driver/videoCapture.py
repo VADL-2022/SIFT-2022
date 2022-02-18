@@ -72,7 +72,7 @@ def run(shouldStop # AtomicInt
       os.mkdir(os.path.dirname(p), mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     except FileExistsError:
       pass
-    out = cv2.VideoWriter(cv2.VideoWriter_fourcc('X', 'V', 'I', 'D'), fps=fps, frameSize=(frame_width,frame_height))
+    out = cv2.VideoWriter(p, cv2.VideoWriter_fourcc('X', 'V', 'I', 'D'), fps, (frame_width,frame_height))
 
     try:
         while(shouldStop.get() == 0):
@@ -107,7 +107,7 @@ def run(shouldStop # AtomicInt
               date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
               p=os.path.join('.', 'dataOutput',o1,'outpy' + date_time + '.mp4')
               print("Making new VideoWriter at", p)
-              out = cv2.VideoWriter(p,cv2.VideoWriter_fourcc('X', 'V', 'I', 'D'), fps=fps, frameSize=(frame_width,frame_height))
+              out = cv2.VideoWriter(p,cv2.VideoWriter_fourcc('X', 'V', 'I', 'D'), fps, (frame_width,frame_height))
               print("Made new VideoWriter at", p)
     except KeyboardInterrupt:
         print("Handing keyboardinterrupt")
