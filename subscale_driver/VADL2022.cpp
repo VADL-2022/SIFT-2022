@@ -77,6 +77,7 @@ bool verbose = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
 auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not actually `now`
 long long imuDataSourceOffset = 0; // For --imu-data-source-path only
+long long mecoDuration = -1;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -522,14 +523,20 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
     // Start SIFT or video capture
     magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
   }
-  if ((g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) || forceSkipNonSIFTCallbacks) {
+  if ((millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) || forceSkipNonSIFTCallbacks) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds, force, false);
   //Check for emergency main parachute deployment with no drogue
-  } else if (g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS) {
+  } else if (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds, false /*no drogue can't force IMU not detected*/, true);
   } else {
     // Reset timer
     if (v->startTime != -1) {
+      if (millisSinceTakeoff <= mecoDuration) {
+        printf("Still need %ll milliseconds until main deployment g duration can be recorded\n", millisSinceTakeoff - mecoDuration);
+        reportStatus(Status::WaitingForMECOButExceededDesiredAccelInMainDeploymentCallback);
+        v->startTime = -1;
+      }
+    
       puts("Not enough acceleration; resetting timer");
       v->startTime = -1;
       reportStatus(Status::NotEnoughAccelInMainDeploymentCallback);
@@ -786,6 +793,16 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
+    else if (strcmp(argv[i], "--meco") == 0) { // Time in milliseconds from takeoff to main engine cutoff. Prevents main deployment detection from firing accidentally due to takeoff g's lasting too long (beyond the takeoff callback finishing its duration)
+      if (i+1 < argc) {
+	mecoDuration = std::stoll(argv[i+1]); // Must be long long
+      }
+      else {
+	puts("Expected MECO");
+	exit(1);
+      }
+      i++;
+    }
     else if (strcmp(argv[i], "--backup-takeoff-time") == 0) { // Time in milliseconds until takeoff approximately in case IMU fails
       if (i+1 < argc) {
 	backupTakeoffTime = std::stoll(argv[i+1]); // Must be long long
@@ -886,6 +903,10 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   if (backupTakeoffTime == -1 && !imuOnly) {
     puts("Need to provide --backup-takeoff-time, using 60000 milliseconds (60 seconds) is recommended");
+    exit(1);
+  }
+  if (mecoDuration == -1 && !imuOnly) {
+    puts("Need to provide --meco");
     exit(1);
   }
 
