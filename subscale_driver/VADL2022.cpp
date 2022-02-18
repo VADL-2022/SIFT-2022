@@ -568,6 +568,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   }
   
   // Check for IMU failure first
+  float magnitude = log->mImu->linearAccelNed.mag();
   bool imuFailed = false;
   if (checkIMUFailure("passIMUDataToSIFTCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timeSecondsOffset, Status::IMUNotRespondingInPassIMUDataToSIFTCallback)) {
     std::cout << "IMU considered not responding. Telling SIFT we're not using it for now" << std::endl;
@@ -595,7 +596,6 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     ((LOG_T*)v->mLog)->userCallback = nullptr;
   }
 
-  float magnitude = log->mImu->linearAccelNed.mag();
   // Check for landing
   if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS) {
     // Record this, it must last for IMU_ACCEL_DURATION
