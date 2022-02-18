@@ -106,7 +106,7 @@ def run(shouldStop # AtomicInt
               dispatchQueue.put(flushFn)
               date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
               p=os.path.join('.', 'dataOutput',o1,'outpy' + date_time + '.mp4')
-              out.open(p,cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
+              out = cv2.VideoWriter(p,cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
     except KeyboardInterrupt:
         print("Handing keyboardinterrupt")
         pass
