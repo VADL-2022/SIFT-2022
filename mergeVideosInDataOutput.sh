@@ -9,5 +9,5 @@ output="$1/output.mp4"
 #ffmpeg -f concat -i <("$DIR/compareNatSort/compareNatSort" "$1" | sed 's:\ :\\\ :g'| sed 's/^/file /') -c copy "$output"
 
 "$DIR/compareNatSort/compareNatSort" "$1" | sed 's:\ :\\\ :g'| sed 's/^/file /' > "$DIR/fl.txt"
-ffmpeg -f concat -i "$DIR/fl.txt" -c copy "$output"
+ffmpeg -f concat -safe 0 -i "$DIR/fl.txt" -c copy "$output"
 rm "$DIR/fl.txt"

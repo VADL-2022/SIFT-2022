@@ -170,8 +170,10 @@ const std::string& getDataOutputFolder() {
 void saveMatrixGivenStr(const cv::Mat& M, std::string& name/*image name output*/,
                         const cv::Ptr<cv::Formatted>& str /*matrix contents input*/) {
     name = M.empty() ? openFileWithUniqueName(getDataOutputFolder() + "/firstImage", ".png") : openFileWithUniqueName(getDataOutputFolder() + "/scaled", ".png");
-    auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
-    std::ofstream(matName.c_str()) << str << std::endl;
+    if (!M.empty()) {
+        auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
+        std::ofstream(matName.c_str()) << str << std::endl;
+    }
 }
 void matrixToString(const cv::Mat& M,
                     cv::Ptr<cv::Formatted>& str /*matrix contents output*/) {
@@ -281,6 +283,9 @@ int main(int argc, char **argv)
         else if (i+2 < argc && strcmp(argv[i], "--skip-image-indices") == 0) { // Ignore images with this index. Usage: `--skip-image-indices 1 2` to skip images 1 and 2 (0-based indices, end index is exclusive)
             cfg.skipImageIndices.push_back(std::make_pair(std::stoi(argv[i+1]), std::stoi(argv[i+2])));
             i += 2;
+        }
+        else if (strcmp(argv[i], "--save-first-image") == 0) { // Save the first image SIFT encounters. Counts as a flush towards the start of SIFT.
+            cfg.saveFirstImage = true;
         }
         else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
             cfg.noPreviewWindow = true;
@@ -630,18 +635,28 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewW
         }
     }
 }
+// Assumes processedImageQueue.mutex is locked already.
+void matcherWaitForNonPlaceHolderImageNoLockOnlyWait(bool seekInsteadOfDequeue, const int& currentIndex, const char* extraDescription="") {
+    while( processedImageQueue.count < 1 + (seekInsteadOfDequeue ? currentIndex : 0) ) // Wait until more images relative to the starting position (`currentIndex`) are in the queue. (Usually `currentCount` is 0 but if it is >= 1 then it is because we're peeking further.)
+    {
+//        if (stoppedMain()) {
+//            pthread_mutex_unlock( &processedImageQueue.mutex );
+//            // Stop matcher thread
+//            pthread_exit(0);
+//        }
+        pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
+        std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << extraDescription << std::endl;
+        pthread_mutex_unlock( &processedImageQueue.mutex );
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << extraDescription << std::endl;
+        pthread_mutex_lock( &processedImageQueue.mutex );
+    }
+}
+// Assumes processedImageQueue.mutex is locked already.
 void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& currentIndex /*input and output*/) {
     t.reset();
     while (true) {
-        while( processedImageQueue.count < 1 + (seekInsteadOfDequeue ? currentIndex : 0) ) // Wait until more images relative to the starting position (`currentIndex`) are in the queue. (Usually `currentCount` is 0 but if it is >= 1 then it is because we're peeking further.)
-        {
-            pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-            std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << std::endl;
-            pthread_mutex_unlock( &processedImageQueue.mutex );
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << std::endl;
-            pthread_mutex_lock( &processedImageQueue.mutex );
-        }
+        matcherWaitForNonPlaceHolderImageNoLockOnlyWait(seekInsteadOfDequeue, currentIndex);
 
         // Dequeue placeholder/null or non-null images as needed
         ProcessedImage<SIFT_T>& front = seekInsteadOfDequeue ? processedImageQueue.get(currentIndex) : processedImageQueue.front();
@@ -655,11 +670,16 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
                 std::cout << "Matcher thread: Dequeued null image with index " << currentIndex-1 << std::endl;
                 // Dequeue (till non-null using the loop containing these statements)
                 ProcessedImage<SIFT_T> placeholder;
+                // Prevents waiting forever if last image we process is null //
+//                matcherWaitForNonPlaceHolderImageNoLockOnlyWait(seekInsteadOfDequeue, currentIndex, ": dequeue till non-null");
+                // //
                 processedImageQueue.dequeueNoLock(&placeholder);
                 if (CMD_CONFIG(showPreviewWindow()) && !seekInsteadOfDequeue) {
                     #ifdef USE_COMMAND_LINE_ARGS
                     assert(!placeholder.image.empty());
-                    canvasesReadyQueue.enqueue(placeholder);
+                    pthread_mutex_unlock( &processedImageQueue.mutex ); // Don't be "greedy"
+                    canvasesReadyQueue.enqueueNoLock(placeholder);
+                    pthread_mutex_lock( &processedImageQueue.mutex );
                     #endif
                 }
             }
@@ -697,6 +717,12 @@ int matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedIm
 }
 void* matcherThreadFunc(void* arg) {
     installSignalHandlers();
+    
+    #ifdef __APPLE__
+    // https://stackoverflow.com/questions/2369738/how-to-set-the-name-of-a-thread-in-linux-pthreads
+    // "Mac OS X: must be set from within the thread (can't specify thread ID)"
+    pthread_setname_np("matcherThread");
+    #endif
     
     SIFTState* s = (SIFTState*)arg;
     
@@ -875,11 +901,17 @@ int mainMission(DataSourceT* src,
     cv::Mat prevImage;
     pthread_t matcherThread;
     pthread_create(&matcherThread, NULL, matcherThreadFunc, &s);
+    #ifdef __linux__
+    pthread_setname_np(matcherThread, "matcherThread"); // https://man7.org/linux/man-pages/man3/pthread_setname_np.3.html
+    #endif
     
     pthread_t subscaleDriverInterfaceThread;
     if (driverInput_fd != -1) {
         static_assert(sizeof(void*) >= sizeof(int));
         pthread_create(&subscaleDriverInterfaceThread, NULL, subscaleDriverInterfaceThreadFunc, /*warning is wrong, this is ok*/(void*)driverInput_fd);
+        #ifdef __linux__
+        pthread_setname_np(subscaleDriverInterfaceThread, "subscaleDriverInterfaceThread"); // https://man7.org/linux/man-pages/man3/pthread_setname_np.3.html
+        #endif
     }
     
     auto start = std::chrono::steady_clock::now();
@@ -897,7 +929,7 @@ int mainMission(DataSourceT* src,
         for (auto& pair : cfg.skipImageIndices) {
             if (pair.first == i) {
                 std::cout << "Skipping to index: " << pair.second << std::endl;
-                for (size_t i2 = pair.first; i2 < pair.second; i2++) {
+                for (size_t i2 = pair.first; i2 <= pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
                     // Enqueue null image
                     processedImageQueue.enqueue(mat,
@@ -956,31 +988,44 @@ int mainMission(DataSourceT* src,
                 auto now = std::chrono::steady_clock::now();
                 auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now - timeSinceLastFlush);
                 auto destMillis = cfg.flushVideoOutputEveryNSeconds*1000;
-                if (millis.count() > destMillis || cfg.flushVideoOutputEveryNSeconds == 0) {
+                if (millis.count() > destMillis || cfg.flushVideoOutputEveryNSeconds == 0 || CMD_CONFIG(saveFirstImage)) {
                     flush = true;
                     std::cout << "Flushing with lag " << millis.count() - destMillis << " milliseconds" << std::endl;
                     
                     // Flush the matrix too //
                     lastImageToFirstImageTransformationMutex.lock();
-                    if (!lastImageToFirstImageTransformation.empty()) {
+                    if (!lastImageToFirstImageTransformation.empty() || CMD_CONFIG(saveFirstImage)) {
                         // Print the intermediate homography matrix
                         cv::Mat& M = lastImageToFirstImageTransformation;
                         cv::Ptr<cv::Formatted> str;
-                        matrixToString(M, str);
-                        std::cout << "Flushing homography: " << str << std::endl;
+                        if (CMD_CONFIG(saveFirstImage)) {
+                            std::cout << "Flushing first image" << std::endl;
+                        }
+                        else {
+                            matrixToString(M, str);
+                            std::cout << "Flushing homography: " << str << std::endl;
+                        }
                         
                         // Save the intermediate homography matrix
                         std::string name;
-                        saveMatrixGivenStr(M, name /* <--output */, str);
+                        saveMatrixGivenStr(CMD_CONFIG(saveFirstImage) ? cv::Mat() : M, name /* <--output */, str);
 #define SAVE_INTERMEDIATE_SCALED_IMAGES
 #ifdef SAVE_INTERMEDIATE_SCALED_IMAGES
                         // Save image for debugging only
                         cv::Mat canvas;
                         bool crop;
-                        //crop = src->shouldCrop();
-                        crop = false; // Hardcode, since it is weird when you scale the cropped image?
-                        cv::warpPerspective(crop ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
-                        //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
+                        crop = src->shouldCrop();
+                        //crop = false; // Hardcode, since it is weird when you scale the cropped image?
+                        cv::Mat& firstImage_ = CMD_CONFIG(saveFirstImage) ? mat : firstImage; // firstImage is empty on first frame grab since it is set *after* running SIFT on it
+                        cv::Mat img = crop ? firstImage_(src->crop()) : firstImage_;
+                        if (!CMD_CONFIG(saveFirstImage)) {
+                            cv::warpPerspective(img, canvas /* <-- destination */, M, img.size());
+                            //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
+                        }
+                        else {
+                            canvas = img;
+                            cfg.saveFirstImage = false; // Did already, don't do it again
+                        }
                         std::cout << "Saving to " << name << std::endl;
                         cv::imwrite(name, canvas);
 #endif
@@ -1340,17 +1385,30 @@ int mainMission(DataSourceT* src,
         #endif
     }
     
+    std::cout << "Broadcasting stoppedMain()" << std::endl;
+    
+    // Wake up matcher thread and other SIFT threads so they see that we stoppedMain()
+//    pthread_cond_broadcast(&processedImageQueue.condition); // Note: "The signal and broadcast operations do not require a mutex. A condition variable also is not permanently associated with a specific mutex; the external mutex does not protect the condition variable." ( https://stackoverflow.com/questions/2763714/why-do-pthreads-condition-variable-functions-require-a-mutex#:~:text=The%20signal%20and%20broadcast%20operations,not%20protect%20the%20condition%20variable. ) + verified by POSIX spec: "The pthread_cond_broadcast() or pthread_cond_signal() functions may be called by a thread whether or not it currently owns the mutex that threads calling pthread_cond_wait() or pthread_cond_timedwait() have associated with the condition variable during their waits; however, if predictable scheduling behavior is required, then that mutex shall be locked by the thread calling pthread_cond_broadcast() or pthread_cond_signal()." ( https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_cond_broadcast.html )
+    
+    std::cout << "Stopping thread pool" << std::endl;
+    
     tp.stop(!stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
-
+    
+    std::cout << "Cancelling matcher thread" << std::endl;
+    
     // Sometimes, the matcher thread is waiting on the condition variable still, and it will be waiting forever unless we interrupt it somehow (or broadcast on the condition variable..).
     pthread_cancel(matcherThread); // https://man7.org/linux/man-pages/man3/pthread_cancel.3.html
     if (driverInput_fd != -1) {
+        std::cout << "Joining subscaleDriverInterfaceThread" << std::endl;
         pthread_cancel(subscaleDriverInterfaceThread);
     }
+    
+    std::cout << "Joining matcher thread" << std::endl;
     
     int ret1;
     pthread_join(matcherThread, (void**)&ret1);
     if (driverInput_fd != -1) {
+        std::cout << "Joining subscaleDriverInterfaceThread" << std::endl;
         int ret2;
         pthread_join(subscaleDriverInterfaceThread, (void**)&ret2);
     }
@@ -1383,9 +1441,10 @@ int mainMission(DataSourceT* src,
     }
     cv::Mat canvas;
     bool crop;
-    //crop = src->shouldCrop();
-    crop = false; // Hardcode, since it is weird when you scale the cropped image?
-    cv::warpPerspective(crop ? firstImage(src->crop()) : firstImage, canvas /* <-- destination */, M, firstImage.size());
+    crop = src->shouldCrop();
+    //crop = false; // Hardcode, since it is weird when you scale the cropped image?
+    cv::Mat img = crop ? firstImage(src->crop()) : firstImage;
+    cv::warpPerspective(img, canvas /* <-- destination */, M, img.size());
 //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
     std::cout << "Saving to " << name << std::endl;
     cv::imwrite(name, canvas);
