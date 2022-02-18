@@ -530,7 +530,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds, false /*no drogue can't force IMU not detected*/, true);
   } else {
     if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS && millisSinceTakeoff <= mecoDuration) {
-      printf("Still need %ll milliseconds until main deployment g duration can be recorded\n", millisSinceTakeoff - mecoDuration);
+      printf("Still need %lld milliseconds until main deployment g duration can be recorded\n", millisSinceTakeoff - mecoDuration);
       reportStatus(Status::WaitingForMECOButExceededDesiredAccelInMainDeploymentCallback);
     }
       

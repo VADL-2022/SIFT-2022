@@ -7,9 +7,9 @@ import threading
 import os
 import stat
 import timeit
-import Queue
+from queue import *
 
-dispatchQueue = Queue.Queue()
+dispatchQueue = Queue()
 def dispatchQueueThreadFunc(name):
     print("videoCapture: Thread %s: starting", name)
     # Based on bottom of page at https://docs.python.org/2/library/queue.html#module-Queue
