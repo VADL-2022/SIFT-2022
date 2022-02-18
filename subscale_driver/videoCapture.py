@@ -15,7 +15,13 @@ def dispatchQueueThreadFunc(nameAndShouldStop):
     shouldStop = nameAndShouldStop[1]
     print("videoCapture: Thread %s: starting", name)
     # Based on bottom of page at https://docs.python.org/2/library/queue.html#module-Queue
-
+    while shouldStop.get() == 0:
+        try:
+            item = dispatchQueue.get(timeout=0.1)
+        except Empty:
+            continue
+        item()
+        dispatchQueue.task_done()
     print("videoCapture: Thread %s: finishing", name)
 num_worker_threads = 2
      
@@ -119,7 +125,7 @@ def run(shouldStop # AtomicInt
         
         shouldStop.incrementAndThenGet() # Stop threads in case it wasn't done already
         
-        dispatchQueue.join()       # block until all tasks are done
+        #dispatchQueue.join()       # block until all tasks are done
 
         # Closes all the frames
         #cv2.destroyAllWindows()

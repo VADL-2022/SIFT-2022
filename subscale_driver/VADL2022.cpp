@@ -523,14 +523,14 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
     // Start SIFT or video capture
     magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
   }
-  if ((millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) || forceSkipNonSIFTCallbacks) {
+  if (force || (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) || forceSkipNonSIFTCallbacks) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds, force, false);
   //Check for emergency main parachute deployment with no drogue
   } else if (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds, false /*no drogue can't force IMU not detected*/, true);
   } else {
     if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS && millisSinceTakeoff <= mecoDuration) {
-      printf("Still need %lld milliseconds until main deployment g duration can be recorded\n", millisSinceTakeoff - mecoDuration);
+      printf("Still need %lld milliseconds until main deployment g duration can be recorded\n", mecoDuration - millisSinceTakeoff);
       reportStatus(Status::WaitingForMECOButExceededDesiredAccelInMainDeploymentCallback);
     }
       
