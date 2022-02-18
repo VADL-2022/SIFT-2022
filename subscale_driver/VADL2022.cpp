@@ -186,7 +186,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     std::string(timeAfterMainDeployment) //+
     //std::string(" --no-preview-window") // --video-file-data-source
     + (useIMU ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
-    + (verboseSIFTFD ? (std::string(" --verbose")))
+    + (verboseSIFTFD ? (std::string(" --verbose")) : "")
   ;
   
   printf("Forking with bash command: %s\n", siftCommandLine.c_str());
