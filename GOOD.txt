@@ -60,7 +60,7 @@ altitude offset: 50 feet (constant, since actual apogee was 1181 (brian); we got
 ADD TO the checklist: check timing of SIFT pi and the IMU pi
 
 cd dataOutput
-ls -t | head -n 26 | xargs tar --xattrs --acls --preserve-permissions -H posix --use-compress-program='gzip' -cf "../filesaaa.gzip" && echo $?
+ls -t | head -n 26 | xargs tar --xattrs --acls --preserve-permissions -H posix --use-compress-program='gzip -9' -cf "../filesaaa.tar.gz" && echo $? # <-- Use instead    #ls -t | head -n 26 | xargs tar --xattrs --acls --preserve-permissions -H posix --use-compress-program='gzip' -cf "../filesaaa.gzip" && echo $?
 ls -t | head -n 26 | xargs -i{} -n 1 find {} -exec stat {} \; > ../ctimes.txt
 
 final gzip: tar --use-compress-program='gzip -9' -cf ./subscale2_data.tar.gz ./files*.gzip ./ctimes*
@@ -109,3 +109,36 @@ start, then 4 second countdown: 4 3 2 1 throw
 camera shatterred/corrupt halfway down:
 /home/pi/VanderbiltRocketTeam/dataOutput/2022-02-13_16_05_06_/outpy02_13_2022_16_05_06.mp4
 /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220213_160504.csv
+
+
+--- fullscale
+
+time for main stabilization: 10 seconds
+descent total: 38.5 seconds
+time to main deployment: 67.5
+
+LOOKUP TABLE
++------------------------+-------------------------+-------------------------+
+|command-line arg        |Sebastian/Ethan-readable |Value in milliseconds    |
+|                        |                         |                         |
++------------------------+-------------------------+-------------------------+
+|--sift-start-time       |Stabalization time after |10,000                   |
+|                        |main deployment          |                         |
++------------------------+-------------------------+-------------------------+
+|--backup-sift-start-time|Time to main deployment  |67,500                   |
+|                        |                         |                         |
++------------------------+-------------------------+-------------------------+
+|--backup-takeoff-time   |Time we sleep for when   |30,000                   |
+|                        |IMU fails on the pad or  |                         |
+|                        |right when takeoff       |                         |
+|                        |happens                  |                         |
++------------------------+-------------------------+-------------------------+
+|--backup-sift-stop-time |This time is how long to |                         |
+|                        |run SIFT. We likely want |                         |
+|                        |to stop SIFT before it   |                         |
+|                        |hits the ground          |                         |
++------------------------+-------------------------+-------------------------+
+|                        |                         |                         |
+|                        |                         |                         |
++------------------------+-------------------------+-------------------------+
+

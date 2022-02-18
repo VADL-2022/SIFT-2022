@@ -36,6 +36,7 @@ enum Status : int {
   NotEnoughAccelInMainDeploymentCallback,
   AltitudeLessThanDesiredAmount,
   StoppingSIFTOnBackupTimeElapsed,
+  StoppingSIFTOrVideoCaptureOnLanding,
   TooMuchTimeElapsedWithoutMainDeployment_ThereforeForcingTrigger,
   RunningPython,
   IMUNotRespondingInPassIMUDataToSIFTCallback,
