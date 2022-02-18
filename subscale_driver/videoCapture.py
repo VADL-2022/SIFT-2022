@@ -108,6 +108,7 @@ def run(shouldStop # AtomicInt
               def flushFn():
                   print("out.release() took", timeit.timeit(lambda: out.release(), number=1), "seconds")
                   print("Flushed the video")
+              out = None
               print("Enqueuing flush")
               dispatchQueue.put(flushFn)
               date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
@@ -121,7 +122,8 @@ def run(shouldStop # AtomicInt
     finally:
         # When everything done, release the video capture and video write objects
         cap.release()
-        #out.release()
+        if out is not None:
+            print("main thread final flush: out.release() took", timeit.timeit(lambda: out.release(), number=1), "seconds")
         
         shouldStop.incrementAndThenGet() # Stop threads in case it wasn't done already
         
