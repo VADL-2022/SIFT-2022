@@ -15,10 +15,13 @@ M3= np.matrix([[-5.977999828068925, -0.9880255704017129, 1419.808234618616],
                [-0.009412539975000779, 0.005062239418966106, 1.913349141488792]])
 M4=np.matrix([[-114.7408342913017, 16.58993654620327, 12207.12269585698],
                [-68.88147321559404, -17.05208611593818, 16051.28685834884],
-              [-0.231843067828002, -0.005023504292161232, 38.05148315615509]
+              [-0.231843067828002, -0.005023504292161232, 38.05148315615509] # Apply this and above to subscale2 footage first image
               ]) # From /Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_09_13_39_CST/scaled15...
-
-M=M4
+M5=np.matrix([[9.762088597832031, -0.06470291995465242, -1035.481126733594],
+              [2.30978168109985, 6.973031221831425, -1042.933476853166],
+              [0.01188577582974148, -0.01071269415985704, 0.7631028038426273]]) # Apply to drone test footage first image
+droneTestFirstImage='/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_17_01_45_CST/firstImage0.png'
+M=M5
 
 
 
@@ -32,7 +35,7 @@ inc=0.005/2
 def lerp(a, b, t):
     return a + (b-a) * t
 
-imgOrig = cv2.imread("/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_09_31_47_CST/firstImage0.png")
+imgOrig = cv2.imread(droneTestFirstImage) #cv2.imread("/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_09_31_47_CST/firstImage0.png")
     #"Data/subscale2/PostFlightSIFTReRuns_derived/output.png")
 while True:
     print(imgOrig.shape[:2])

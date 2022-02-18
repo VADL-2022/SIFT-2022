@@ -635,18 +635,23 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewW
         }
     }
 }
+// Assumes processedImageQueue.mutex is locked already.
+void matcherWaitForNonPlaceHolderImageNoLockOnlyWait(bool seekInsteadOfDequeue, const int& currentIndex, const char* extraDescription="") {
+    while( processedImageQueue.count < 1 + (seekInsteadOfDequeue ? currentIndex : 0) ) // Wait until more images relative to the starting position (`currentIndex`) are in the queue. (Usually `currentCount` is 0 but if it is >= 1 then it is because we're peeking further.)
+    {
+        pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
+        std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << extraDescription << std::endl;
+        pthread_mutex_unlock( &processedImageQueue.mutex );
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << extraDescription << std::endl;
+        pthread_mutex_lock( &processedImageQueue.mutex );
+    }
+}
+// Assumes processedImageQueue.mutex is locked already.
 void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& currentIndex /*input and output*/) {
     t.reset();
     while (true) {
-        while( processedImageQueue.count < 1 + (seekInsteadOfDequeue ? currentIndex : 0) ) // Wait until more images relative to the starting position (`currentIndex`) are in the queue. (Usually `currentCount` is 0 but if it is >= 1 then it is because we're peeking further.)
-        {
-            pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-            std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << std::endl;
-            pthread_mutex_unlock( &processedImageQueue.mutex );
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << std::endl;
-            pthread_mutex_lock( &processedImageQueue.mutex );
-        }
+        matcherWaitForNonPlaceHolderImageNoLockOnlyWait(seekInsteadOfDequeue, currentIndex);
 
         // Dequeue placeholder/null or non-null images as needed
         ProcessedImage<SIFT_T>& front = seekInsteadOfDequeue ? processedImageQueue.get(currentIndex) : processedImageQueue.front();
@@ -660,6 +665,9 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
                 std::cout << "Matcher thread: Dequeued null image with index " << currentIndex-1 << std::endl;
                 // Dequeue (till non-null using the loop containing these statements)
                 ProcessedImage<SIFT_T> placeholder;
+                // Prevents waiting forever if last image we process is null //
+                matcherWaitForNonPlaceHolderImageNoLockOnlyWait(seekInsteadOfDequeue, currentIndex, ": dequeue till non-null");
+                // //
                 processedImageQueue.dequeueNoLock(&placeholder);
                 if (CMD_CONFIG(showPreviewWindow()) && !seekInsteadOfDequeue) {
                     #ifdef USE_COMMAND_LINE_ARGS
