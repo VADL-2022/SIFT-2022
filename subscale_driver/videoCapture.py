@@ -10,9 +10,9 @@ import timeit
 from queue import *
 
 dispatchQueue = Queue()
-def dispatchQueueThreadFunc(nameAndShouldStop):
-    name = nameAndShouldStop[0]
-    shouldStop = nameAndShouldStop[1]
+def dispatchQueueThreadFunc(name, shouldStop):
+    # name = nameAndShouldStop[0]
+    # shouldStop = nameAndShouldStop[1]
     print("videoCapture: Thread %s: starting", name)
     # Based on bottom of page at https://docs.python.org/2/library/queue.html#module-Queue
     while shouldStop.get() == 0:
