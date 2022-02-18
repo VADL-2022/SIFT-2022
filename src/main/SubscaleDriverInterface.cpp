@@ -147,6 +147,12 @@ void runOneIteration(int driverInput_fd) {
 }
 
 void* subscaleDriverInterfaceThreadFunc(void* arg) {
+    #ifdef __APPLE__
+    // https://stackoverflow.com/questions/2369738/how-to-set-the-name-of-a-thread-in-linux-pthreads
+    // "Mac OS X: must be set from within the thread (can't specify thread ID)"
+    pthread_setname_np("subscaleDriverInterfaceThread");
+    #endif
+    
     static_assert(sizeof(void*) >= sizeof(int));
     int driverInput_fd = (int)(intmax_t)arg;
     while (!stoppedMain()) {
