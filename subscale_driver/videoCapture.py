@@ -10,19 +10,17 @@ import timeit
 from queue import *
 
 dispatchQueue = Queue()
-def dispatchQueueThreadFunc(name):
+def dispatchQueueThreadFunc(nameAndShouldStop):
+    name = nameAndShouldStop[0]
+    shouldStop = nameAndShouldStop[1]
     print("videoCapture: Thread %s: starting", name)
     # Based on bottom of page at https://docs.python.org/2/library/queue.html#module-Queue
-    while True:
+    while shouldStop.get() == 0:
         item = dispatchQueue.get()
         item()
         dispatchQueue.task_done()
     print("videoCapture: Thread %s: finishing", name)
 num_worker_threads = 2
-for i in range(num_worker_threads):
-     t = threading.Thread(target=dispatchQueueThreadFunc)
-     t.daemon = True
-     t.start()
      
 class AtomicInt:
     def __init__(self, initial=0):
@@ -45,6 +43,11 @@ class AtomicInt:
 
 def run(shouldStop # AtomicInt
         ):
+    for i in range(num_worker_threads):
+        t = threading.Thread(target=dispatchQueueThreadFunc, args=('dispatchQueueThreadFunc',shouldStop))
+        t.daemon = True
+        t.start()
+     
     now = datetime.now() # current date and time
     lastFlush=now
     
@@ -112,10 +115,12 @@ def run(shouldStop # AtomicInt
     except KeyboardInterrupt:
         print("Handing keyboardinterrupt")
         pass
-    finally:    
+    finally:
         # When everything done, release the video capture and video write objects
         cap.release()
         #out.release()
+        
+        shouldStop.incrementAndThenGet() # Stop threads in case it wasn't done already
         
         dispatchQueue.join()       # block until all tasks are done
 
