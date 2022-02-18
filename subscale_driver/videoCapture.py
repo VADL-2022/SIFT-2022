@@ -6,6 +6,9 @@ from datetime import datetime
 import threading
 import os
 import stat
+import timeit
+from queue import *
+import time
 
 class AtomicInt:
     def __init__(self, initial=0):
@@ -26,8 +29,44 @@ class AtomicInt:
         with self._lock:
             return self.value
 
+#format=cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+format=cv2.VideoWriter_fourcc('a', 'v', 'c', '1')
+
+mainThreadShouldFlush = AtomicInt(0) # 0 if no longer using temporarily shared VideoWriter (between queue and main thread), 1 if so. Also known as, 0 if main thread needs to flush the video in case of Ctrl-C/other exception in main thread *before* main thread can set out = None so it knows not to flush while a dispatchQueue function was already enqueued to flush.
+
+dispatchQueue = Queue()
+def dispatchQueueThreadFunc(name, shouldStop):
+    # name = nameAndShouldStop[0]
+    # shouldStop = nameAndShouldStop[1]
+    print("videoCapture: Thread %s: starting", name)
+    # Based on bottom of page at https://docs.python.org/2/library/queue.html#module-Queue
+    while shouldStop.get() == 0:
+        try:
+            item = dispatchQueue.get(timeout=0.1) # "If timeout is a positive number, it blocks at most timeout seconds and raises the Empty exception if no item was available within that time. Otherwise (block is false), return an item if one is immediately available, else raise the Empty exception (timeout is ignored in that case)." ( https://docs.python.org/3/library/queue.html#queue.Queue.get ) + https://stackoverflow.com/questions/46899021/how-to-abort-threads-that-pull-items-from-a-queue-using-ctrlc-in-python : "Queue.get() will ignore SIGINT unless a timeout is set. That's documented here: https://bugs.python.org/issue1360."
+        except Empty:
+            continue
+        if mainThreadShouldFlush.get() == 0:
+            item()
+        else:
+            print("videoCapture: Thread %s: not flushing due to mainThreadShouldFlush", name)
+            # Wait till it changes, then flush. If it never changes and main says we should stop, then exit.
+            while mainThreadShouldFlush.get() != 0:
+                time.sleep(0.2)
+                if shouldStop.get() == 1:
+                    print("videoCapture: Thread %s: finishing without flush", name)
+                    return
+            item()
+        dispatchQueue.task_done()
+    print("videoCapture: Thread %s: finishing", name)
+num_worker_threads = 1 #<--due to use of mainThreadShouldFlush, we need to use 1 here (else worker threads might not flush all their videos).. could try changing mainThreadShouldFlush to be something better if needed   #2
+
 def run(shouldStop # AtomicInt
         ):
+    for i in range(num_worker_threads):
+        t = threading.Thread(target=dispatchQueueThreadFunc, args=('dispatchQueueThreadFunc',shouldStop))
+        t.daemon = True
+        t.start()
+     
     now = datetime.now() # current date and time
     lastFlush=now
     
@@ -55,7 +94,8 @@ def run(shouldStop # AtomicInt
       os.mkdir(os.path.dirname(p), mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     except FileExistsError:
       pass
-    out = cv2.VideoWriter(p,cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
+    out = cv2.VideoWriter(p, format, fps, (frame_width,frame_height))
+    outMainThreadShouldFlush = out
 
     try:
         while(shouldStop.get() == 0):
@@ -64,7 +104,7 @@ def run(shouldStop # AtomicInt
           if ret == True: 
 
             # Write the frame into the file 'output.avi'
-            out.write(frame)
+            print("out.write(frame) took", timeit.timeit(lambda: out.write(frame), number=1), "seconds")
 
             # Display the resulting frame    
             #cv2.imshow('frame',frame)
@@ -82,18 +122,36 @@ def run(shouldStop # AtomicInt
           if duration.total_seconds() >= 2:
               lastFlush = now
               # Flush video
-              out.release()
-              print("Flushed the video")
+              out2=out
+              def flushFn():
+                  print("out.release() took", timeit.timeit(lambda: out2.release(), number=1), "seconds")
+                  print("Flushed the video")
+              mainThreadShouldFlush.incrementAndThenGet() # Mark main thread as having to flush on behalf of the queue since if an exception occurs anywhere between this statement and the corresponding decrementAndThenGet(), then we want the queue thread to realize that main thread will handle the queued item on its behalf.
+              print("Enqueuing flush") # If an exception occurs after this, <same as below comment>
+              dispatchQueue.put(flushFn) # If an exception occurs after this, <same as below comment>
+              outMainThreadShouldFlush = out # If an exception occurs after this, out is not None, therefore a `"main thread final flush`[...] will occur.
+              out = None # If exception occurs after this, we know outMainThreadShouldFlush = the video writer object, and out = None, so the `"main thread flushing unflushed edge case"` should fire.
+              mainThreadShouldFlush.decrementAndThenGet() # If exception/preemption occurs after we decrement this, we know `out` is None so main thread has nothing to flush, and the queue will handle it.
               date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
               p=os.path.join('.', 'dataOutput',o1,'outpy' + date_time + '.mp4')
-              out.open(p,cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), fps, (frame_width,frame_height))
+              print("Making new VideoWriter at", p)
+              out = cv2.VideoWriter(p,format, fps, (frame_width,frame_height))
+              print("Made new VideoWriter at", p)
     except KeyboardInterrupt:
         print("Handing keyboardinterrupt")
         pass
-    finally:    
+    finally:
         # When everything done, release the video capture and video write objects
         cap.release()
-        out.release()
+        if outMainThreadShouldFlush is not None and out is None and mainThreadShouldFlush.get() == 1:
+            print("main thread flushing unflushed edge case")
+            out = outMainThreadShouldFlush
+        if out is not None:
+            print("main thread final flush: out.release() took", timeit.timeit(lambda: out.release(), number=1), "seconds")
+        
+        shouldStop.incrementAndThenGet() # Stop threads in case it wasn't done already
+        
+        #dispatchQueue.join()       # block until all tasks are done
 
         # Closes all the frames
         #cv2.destroyAllWindows()
