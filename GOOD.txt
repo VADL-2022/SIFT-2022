@@ -142,3 +142,5 @@ LOOKUP TABLE
 |                        |                         |                         |
 +------------------------+-------------------------+-------------------------+
 
+
+pink in video = not connected to a pull down resistor
