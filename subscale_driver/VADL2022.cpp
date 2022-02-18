@@ -566,12 +566,27 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     //raise(SIGINT); // <-- to stop SIFT
     reportStatus(Status::AltitudeLessThanDesiredAmount);    
   }
+  
+  // Check for IMU failure first
+  bool imuFailed = false;
+  if (checkIMUFailure("passIMUDataToSIFTCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timeSecondsOffset, Status::IMUNotRespondingInPassIMUDataToSIFTCallback)) {
+    std::cout << "IMU considered not responding. Telling SIFT we're not using it for now" << std::endl;
+    // Notify SIFT that IMU failed
+    // toSIFT << "\n" << -1.0f;
+    // toSIFT.flush();
+    fprintf(toSIFT, "\n%a", -1.0f);
+    fflush(toSIFT);
+      
+    //VADL2022* v = (VADL2022*)log->callbackUserData;
+    //((LOG_T*)v->mLog)->userCallback = nullptr;
+    imuFailed = true;
+  }
 
-  // Stop SIFT on timer time elapsed
-  if (!videoCapture && verbose) {
+  // Stop SIFT on timer time elapsed and IMU failed
+  if (imuFailed && !videoCapture && verbose) {
     std::cout << "Time till SIFT stops: " << backupSIFTStopTime - since(mainDeploymentOrStartedSIFTTime).count() << " milliseconds" << std::endl;
   }
-  if (!videoCapture && since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime && !mainDispatchQueueDrainThenStop) {
+  if (imuFailed && !videoCapture && since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime && !mainDispatchQueueDrainThenStop) {
     std::cout << "Stopping SIFT on backup time elapsed" << std::endl;
     reportStatus(Status::StoppingSIFTOnBackupTimeElapsed);
     raise(SIGINT);
@@ -608,17 +623,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   // Give this data to SIFT
   //if (toSIFT.isOpen()) {
   if (toSIFT != nullptr) {
-    // Check for IMU failure first
-    if (checkIMUFailure("passIMUDataToSIFTCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timeSecondsOffset, Status::IMUNotRespondingInPassIMUDataToSIFTCallback)) {
-      std::cout << "IMU considered not responding. Telling SIFT we're not using it for now" << std::endl;
-      // Notify SIFT that IMU failed
-      // toSIFT << "\n" << -1.0f;
-      // toSIFT.flush();
-      fprintf(toSIFT, "\n%a", -1.0f);
-      fflush(toSIFT);
-      
-      //VADL2022* v = (VADL2022*)log->callbackUserData;
-      //((LOG_T*)v->mLog)->userCallback = nullptr;
+    if (imuFailed) {
       return; // Try again next time
     }
 
