@@ -61,6 +61,7 @@ def dispatchQueueThreadFunc(name, shouldStop):
 num_worker_threads = 1 #<--due to use of mainThreadShouldFlush, we need to use 1 here (else worker threads might not flush all their videos).. could try changing mainThreadShouldFlush to be something better if needed   #2
 
 def run(shouldStop # AtomicInt
+        , verbose = False
         ):
     for i in range(num_worker_threads):
         t = threading.Thread(target=dispatchQueueThreadFunc, args=('dispatchQueueThreadFunc',shouldStop))
@@ -103,15 +104,16 @@ def run(shouldStop # AtomicInt
 
           if ret == True: 
 
-            # Write the frame into the file 'output.avi'
-            print("out.write(frame) took", timeit.timeit(lambda: out.write(frame), number=1), "seconds")
+              # Write the frame into the file 'output.avi'
+              if verbose:
+                  print("out.write(frame) took", timeit.timeit(lambda: out.write(frame), number=1), "seconds")
 
-            # Display the resulting frame    
-            #cv2.imshow('frame',frame)
+              # Display the resulting frame    
+              #cv2.imshow('frame',frame)
 
-            # Press Q on keyboard to stop recording
-            #if cv2.waitKey(1) & 0xFF == ord('q'):
-            #  break
+              # Press Q on keyboard to stop recording
+              #if cv2.waitKey(1) & 0xFF == ord('q'):
+              #  break
 
           # Break the loop
           else:
