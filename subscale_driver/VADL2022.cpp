@@ -539,6 +539,8 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
 
 template<typename LOG_T>
 void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
+  VADL2022* v = (VADL2022*)log->callbackUserData;
+  
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   double altitudeFeet = updateRelativeAltitude(log, false);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
@@ -579,7 +581,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     }
     float duration = fseconds - v->startTime;
     printf("Exceeded landing acceleration magnitude threshold for %f seconds\n", duration);
-    if (duration >= LANDING_ACCEL_DURATION || ) {
+    if (duration >= LANDING_ACCEL_DURATION) {
        puts("`````````````````````````````````````````````````````````\nTarget time reached, landed\n`````````````````````````````````````````````````````````");
        v->startTime = -1; // Reset timer
        reportStatus(Status::StoppingSIFTOrVideoCaptureOnLanding);
