@@ -639,6 +639,10 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewW
 void matcherWaitForNonPlaceHolderImageNoLockOnlyWait(bool seekInsteadOfDequeue, const int& currentIndex, const char* extraDescription="") {
     while( processedImageQueue.count < 1 + (seekInsteadOfDequeue ? currentIndex : 0) ) // Wait until more images relative to the starting position (`currentIndex`) are in the queue. (Usually `currentCount` is 0 but if it is >= 1 then it is because we're peeking further.)
     {
+        if (stoppedMain()) {
+            // Stop matcher thread
+            pthread_exit(0);
+        }
         pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
         std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << extraDescription << std::endl;
         pthread_mutex_unlock( &processedImageQueue.mutex );
@@ -1365,6 +1369,9 @@ int mainMission(DataSourceT* src,
         std::cout << "Main thread: done waiting for no more in queue" << std::endl;
         #endif
     }
+    
+    // Wake up matcher thread and other SIFT threads so they see that we stoppedMain()
+    pthread_cond_broadcast(&processedImageQueue.condition); // Note: "The signal and broadcast operations do not require a mutex. A condition variable also is not permanently associated with a specific mutex; the external mutex does not protect the condition variable." ( https://stackoverflow.com/questions/2763714/why-do-pthreads-condition-variable-functions-require-a-mutex#:~:text=The%20signal%20and%20broadcast%20operations,not%20protect%20the%20condition%20variable. ) + verified by POSIX spec: "The pthread_cond_broadcast() or pthread_cond_signal() functions may be called by a thread whether or not it currently owns the mutex that threads calling pthread_cond_wait() or pthread_cond_timedwait() have associated with the condition variable during their waits; however, if predictable scheduling behavior is required, then that mutex shall be locked by the thread calling pthread_cond_broadcast() or pthread_cond_signal()." ( https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_cond_broadcast.html )
     
     tp.stop(!stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
 
