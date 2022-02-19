@@ -932,7 +932,7 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --backup-sift-stop-time");
     exit(1);
   }
-  if (backupTakeoffTime == -1 && !imuOnly) {
+  if (backupTakeoffTime == -1 && !videoCapture && !imuOnly) {
     puts("Need to provide --backup-takeoff-time, using 60000 milliseconds (60 seconds) is recommended");
     exit(1);
   }

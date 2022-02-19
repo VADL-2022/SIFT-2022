@@ -38,7 +38,7 @@ dispatchQueue = Queue()
 def dispatchQueueThreadFunc(name, shouldStop):
     # name = nameAndShouldStop[0]
     # shouldStop = nameAndShouldStop[1]
-    print("videoCapture: Thread %s: starting", name)
+    print("videoCapture: Thread %s: starting" % name)
     # Based on bottom of page at https://docs.python.org/2/library/queue.html#module-Queue
     while shouldStop.get() == 0:
         try:
@@ -48,16 +48,16 @@ def dispatchQueueThreadFunc(name, shouldStop):
         if mainThreadShouldFlush.get() == 0:
             item()
         else:
-            print("videoCapture: Thread %s: not flushing due to mainThreadShouldFlush", name)
+            print("videoCapture: Thread %s: not flushing due to mainThreadShouldFlush" % name)
             # Wait till it changes, then flush. If it never changes and main says we should stop, then exit.
             while mainThreadShouldFlush.get() != 0:
                 time.sleep(0.2)
                 if shouldStop.get() == 1:
-                    print("videoCapture: Thread %s: finishing without flush", name)
+                    print("videoCapture: Thread %s: finishing without flush" % name)
                     return
             item()
         dispatchQueue.task_done()
-    print("videoCapture: Thread %s: finishing", name)
+    print("videoCapture: Thread %s: finishing" % name)
 num_worker_threads = 1 #<--due to use of mainThreadShouldFlush, we need to use 1 here (else worker threads might not flush all their videos).. could try changing mainThreadShouldFlush to be something better if needed   #2
 
 def run(shouldStop # AtomicInt
@@ -107,6 +107,8 @@ def run(shouldStop # AtomicInt
               # Write the frame into the file 'output.avi'
               if verbose:
                   print("out.write(frame) took", timeit.timeit(lambda: out.write(frame), number=1), "seconds")
+              else:
+                  out.write(frame)
 
               # Display the resulting frame    
               #cv2.imshow('frame',frame)
