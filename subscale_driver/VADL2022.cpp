@@ -949,11 +949,12 @@ VADL2022::VADL2022(int argc, char** argv)
 						 "&& sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
   gpioUserPermissionFixingCommands_arg = argv[0];
 
-  connect_GPIO(#ifdef USE_LIS331HH // For video capture with Python LIS, let pigpio in Python use the GPIO pins instead
+  connect_GPIO(
+#ifdef USE_LIS331HH // For video capture with Python LIS, let pigpio in Python use the GPIO pins instead
                !videoCapture
-               #else
+#else
                true
-               #endif
+#endif
                );
   connect_Python();
 	
