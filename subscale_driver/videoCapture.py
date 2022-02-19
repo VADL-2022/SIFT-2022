@@ -63,6 +63,11 @@ num_worker_threads = 1 #<--due to use of mainThreadShouldFlush, we need to use 1
 def run(shouldStop # AtomicInt
         , verbose = False
         ):
+    global mainThreadShouldFlush
+    global dispatchQueue
+    mainThreadShouldFlush = AtomicInt(0)
+    dispatchQueue = Queue()
+
     for i in range(num_worker_threads):
         t = threading.Thread(target=dispatchQueueThreadFunc, args=('dispatchQueueThreadFunc',shouldStop))
         t.daemon = True
