@@ -193,10 +193,11 @@ def runOneIter(write_obj):
     #print("Acceleration in Y-Axis : %d" %yAccl)
     #print("Acceleration in Z-Axis : %d" %zAccl)
 
-    avgX += xAccl
-    avgY += yAccl
-    avgZ += zAccl
-    counter += 1
+    if takeoffTime is None: # Grab running average of near stationary, till takeoff
+        avgX += xAccl
+        avgY += yAccl
+        avgZ += zAccl
+        counter += 1
     offsetX = avgX/counter
     offsetY = avgY/counter
     offsetZ = avgZ/counter
