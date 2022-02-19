@@ -31,7 +31,8 @@ void FileDataOutput::run(cv::Mat frame, bool flush, cv::Rect* crop) {
     writerMutex.lock();
     bool first = !writer.isOpened();
     if (first) {
-        int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
+        //int codec = cv::VideoWriter::fourcc('a', 'v', 'c', '1');
+        int codec = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
 
         bool isColor = true; //(frame.channels() > 1);
         //std::cout << "Output type: " << mat_type2str(frame.type()) << "\nisColor: " << isColor << std::endl;

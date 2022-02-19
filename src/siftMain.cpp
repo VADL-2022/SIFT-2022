@@ -1039,6 +1039,9 @@ int mainMission(DataSourceT* src,
                     // Mark this as a finished flush
                     timeSinceLastFlush = now;
                 }
+                else {
+                    flush = false;
+                }
             }
             
             // Save frame to video writer or etc. in o2:
