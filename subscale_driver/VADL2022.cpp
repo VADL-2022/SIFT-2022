@@ -44,6 +44,7 @@ const float IMU_ACCEL_DURATION = 1.0 / 10.0; // Seconds
 const float IMU_MAIN_DEPLOYMENT_ACCEL_DURATION = 1.0 / 40.0; // Seconds
 const char* /* must fit in long long */ timeAfterMainDeployment = nullptr; // Milliseconds
 const float LANDING_ACCEL_DURATION = 1.0 / 40.0; // Seconds
+const long long IMU_POST_MAIN_POSSIBLY_EMERGENCY_COOLDOWN_BEFORE_LANDING_DETECTION = 2000; // milliseconds
 
 // Acceleration (Meters per second squared)
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_TAKEOFF_MPS = TAKEOFF_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
@@ -452,8 +453,8 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
     #if !defined(__x86_64__) && !defined(__i386__) && !defined(__arm64__) && !defined(__aarch64__)
     #error On these processor architectures above, pointer store or load should be an atomic operation. But without these, check the specifics of the processor.
     #else
+    mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now();
     if (!videoCapture) {
-      mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now();
       ((LOG_T*)v->mLog)->userCallback = (reinterpret_cast<void(*)()>(&passIMUDataToSIFTCallback<LOG_T>));
     }
     else {
@@ -547,7 +548,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
 template<typename LOG_T>
 void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
-  
+
   float timeSeconds = log->mImu->timestamp / 1.0e9;
   double altitudeFeet = updateRelativeAltitude(log, false);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
@@ -596,8 +597,16 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     ((LOG_T*)v->mLog)->userCallback = nullptr;
   }
 
+  // Before we check for landing, ensure cooldown time since main deployment or drogue failure has elapsed
+  auto millisSinceMainDeployment = since(mainDeploymentOrStartedSIFTTime).count();
+  if (millisSinceMainDeployment < IMU_POST_MAIN_POSSIBLY_EMERGENCY_COOLDOWN_BEFORE_LANDING_DETECTION) {
+    static bool onceFlag3 = true;
+    if (onceFlag3 || verbose) {
+      onceFlag3 = false;
+      std::cout << "Cooldown before allowing landing detection with " << IMU_POST_MAIN_POSSIBLY_EMERGENCY_COOLDOWN_BEFORE_LANDING_DETECTION - millisSinceMainDeployment << " milliseconds left" << std::endl;
+  }
   // Check for landing
-  if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS) {
+  else if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
       v->startTime = fseconds;
