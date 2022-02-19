@@ -604,6 +604,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     if (onceFlag3 || verbose) {
       onceFlag3 = false;
       std::cout << "Cooldown before allowing landing detection with " << IMU_POST_MAIN_POSSIBLY_EMERGENCY_COOLDOWN_BEFORE_LANDING_DETECTION - millisSinceMainDeployment << " milliseconds left" << std::endl;
+    }
   }
   // Check for landing
   else if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS) {
