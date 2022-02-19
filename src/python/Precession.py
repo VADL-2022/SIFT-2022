@@ -19,8 +19,11 @@ def compare_to_NED(bYPR, pitch_thresh=15, roll_thresh=40):
     
     Returns a boolean telling whether the NED is satisfied based on the body YPR (eg are we close to pointing down)
     '''
-    NED_pitch = -45
-    NED_roll = -90
+    #NED_pitch = -45
+    #NED_roll = -90
+    
+    NED_pitch = 80
+    NED_roll = 160
     
     if ((bYPR[1] < NED_pitch+pitch_thresh) and (bYPR[1] > NED_pitch-pitch_thresh)) and ((bYPR[2] < NED_roll+roll_thresh) and (bYPR[2] > NED_roll-roll_thresh)):
         return True
