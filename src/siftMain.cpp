@@ -1122,10 +1122,21 @@ int mainMission(DataSourceT* src,
                     py::bool_ shouldAccept = shouldAcceptAndOrientation[0];
                     my_or = shouldAcceptAndOrientation[1];
                     if (shouldAccept == true) {
-                        std::cout << "Python likes this image" << std::endl;
+                        std::cout << "judge_image: Python likes this image" << std::endl;
                     }
                     else {
-                        std::cout << "Python doesn't like this image" << std::endl;
+                        std::cout << "judge_image: Python doesn't like this image" << std::endl;
+                        discardImage = true;
+                    }
+                    
+                    // compare_to_NED
+                    // (Make sure it's facing down)
+                    py::bool_ closeToFacingDown = precession.attr("compare_to_NED")(arr);
+                    if (closeToFacingDown == true) {
+                        std::cout << "compare_to_NED: Python likes this image" << std::endl;
+                    }
+                    else {
+                        std::cout << "compare_to_NED: Python doesn't like this image" << std::endl;
                         discardImage = true;
                     }
                 });

@@ -10,6 +10,24 @@ import numpy as np
 from math import acos, sin, cos, tan
 
 
+def compare_to_NED(bYPR, pitch_thresh=15, roll_thresh=40):
+    '''
+    This functions simply compares to see if the body frame YPR is equivalent to "pointing straight down" which is defined as:
+    Pitch of ~-50, Roll of ~-90.  Yaw does not matter.
+    
+    Note that YPR drifts with respect to time and that will destroy the utility of this function...
+    
+    Returns a boolean telling whether the NED is satisfied based on the body YPR (eg are we close to pointing down)
+    '''
+    NED_pitch = -45
+    NED_roll = -90
+    
+    if ((bYPR[1] < NED_pitch+pitch_thresh) and (bYPR > NED_pitch-pitch_thresh)) and ((bYPR[1] < NED_roll+roll_thresh) and (bYPR > NED_roll-roll_thresh)):
+        return True
+    else:
+        return False
+
+
 # ## Helper Functions WE MUST TRANSCRIBE TO C++
 
 # In[2]:
