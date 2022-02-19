@@ -25,6 +25,10 @@ class AtomicInt:
             self.value-=num
             return self.value
     
+    def set(self, num):
+        with self._lock:
+            self.value = num
+        
     def get(self):
         with self._lock:
             return self.value
