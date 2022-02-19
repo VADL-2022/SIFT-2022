@@ -945,7 +945,13 @@ VADL2022::VADL2022(int argc, char** argv)
     exit(1);
   }
 
-  connect_GPIO();
+  #ifdef USE_LIS331HH // For video capture with Python LIS, let pigpio in Python use the GPIO pins instead
+  if (!videoCapture) {
+  #endif
+    connect_GPIO();
+  #ifdef USE_LIS331HH
+  }
+  #endif
   connect_Python();
 	
   // Ensure Python gets sigints and other signals
@@ -1098,23 +1104,29 @@ VADL2022::VADL2022(int argc, char** argv)
 
 VADL2022::~VADL2022()
 {
-	cout << "Main: Destorying" << endl;
+  cout << "Main: Destorying" << endl;
 
-        if (imuDataSourcePath == nullptr) {
-          delete ((LOG*)mLog);
-        }
-        else {
-          delete ((LOGFromFile *)mLog);
-        }
-        // delete (mMotor);
-	// delete (mLds);
-	// delete (mLidar);
-	delete (mImu);
+  if (imuDataSourcePath == nullptr) {
+    delete ((LOG*)mLog);
+  }
+  else {
+    delete ((LOGFromFile *)mLog);
+  }
+  // delete (mMotor);
+  // delete (mLds);
+  // delete (mLidar);
+  delete (mImu);
 
-	disconnect_GPIO();
-	disconnect_Python();
+  #ifdef USE_LIS331HH // For video capture with Python LIS, let pigpio in Python use the GPIO pins instead
+  if (!videoCapture) {
+  #endif
+    disconnect_GPIO();
+  #ifdef USE_LIS331HH
+  }
+  #endif
+  disconnect_Python();
 
-	cout << "Main: Destoryed" << endl;
+  cout << "Main: Destoryed" << endl;
 }
 
 void VADL2022::connect_GPIO()
