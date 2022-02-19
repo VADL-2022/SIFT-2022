@@ -951,8 +951,8 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   
   #ifdef USE_LIS331HH
-  std::string startPigpio = videoCapture ? "sudo pigpiod && " // video capture needs to start pigpiod
-    : "sudo pkill pigpiod && " // SIFT pi needs to stop it in case it's running already
+  std::string startPigpio = videoCapture ? "sudo pigpiod ; " // video capture needs to start pigpiod
+    : "sudo pkill pigpiod ; " // SIFT pi needs to stop it in case it's running already
     ;
   #endif
   gpioUserPermissionFixingCommands = startPigpio + std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
