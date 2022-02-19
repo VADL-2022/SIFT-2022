@@ -33,8 +33,8 @@ class AtomicInt:
         with self._lock:
             return self.value
 
-#format=cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
-format=cv2.VideoWriter_fourcc('a', 'v', 'c', '1')
+format=cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+#format=cv2.VideoWriter_fourcc('a', 'v', 'c', '1')
 
 mainThreadShouldFlush = AtomicInt(0) # 0 if no longer using temporarily shared VideoWriter (between queue and main thread), 1 if so. Also known as, 0 if main thread needs to flush the video in case of Ctrl-C/other exception in main thread *before* main thread can set out = None so it knows not to flush while a dispatchQueue function was already enqueued to flush.
 
