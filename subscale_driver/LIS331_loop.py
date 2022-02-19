@@ -157,6 +157,7 @@ def calibrate(file):
 
 start = time.time_ns() # Time since epoch
 def runOneIter(write_obj):
+    global takeoffTime
     global avgX
     global avgY
     global avgZ
@@ -244,7 +245,6 @@ def runOneIter(write_obj):
     #print("Acceleration in Y-Axis : %d" %yAccl)
     #print("Acceleration in Z-Axis : %d" %zAccl)
 
-    global takeoffTime
     if takeoffTime is None: # Grab running average of near stationary, till takeoff
         avgX += xAccl
         avgY += yAccl
