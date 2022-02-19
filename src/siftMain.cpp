@@ -1111,8 +1111,11 @@ int mainMission(DataSourceT* src,
                         firstGrab = false;
                     }
                     
+                    py::list threshold_vec;
+                    threshold_vec.append(60); threshold_vec.append(60); threshold_vec.append(60);
+                    
                     // Judge image
-                    py::tuple shouldAcceptAndOrientation = precession.attr("judge_image")(my_or, arr);
+                    py::tuple shouldAcceptAndOrientation = precession.attr("judge_image")(my_or, arr, threshold_vec);
                     py::bool_ shouldAccept = shouldAcceptAndOrientation[0];
                     my_or = shouldAcceptAndOrientation[1];
                     if (shouldAccept == true) {
