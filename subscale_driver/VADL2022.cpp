@@ -710,11 +710,6 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
 VADL2022::VADL2022(int argc, char** argv)
 {
   cout << "Main: Initiating" << endl;
-
-  gpioUserPermissionFixingCommands = std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
-						 // For good measure, even though the Makefile does it already (this won't take effect until another run of the executable, so that's why we do it in the Makefile) :
-						 "&& sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
-  gpioUserPermissionFixingCommands_arg = argv[0];
 	  
   // Parse command-line args
   void* /*LOG::UserCallback or LOGFromFile::UserCallback*/ callback = reinterpret_cast<void*>(reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOG>));
@@ -944,14 +939,22 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --time-to-apogee");
     exit(1);
   }
-
-  #ifdef USE_LIS331HH // For video capture with Python LIS, let pigpio in Python use the GPIO pins instead
-  if (!videoCapture) {
-  #endif
-    connect_GPIO();
+  
   #ifdef USE_LIS331HH
-  }
+  //std::string startPigpio = videoCapture ? "sudo pigpiod && " : "";
+  std::string startPigpio = "";
   #endif
+  gpioUserPermissionFixingCommands = startPigpio + std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
+						 // For good measure, even though the Makefile does it already (this won't take effect until another run of the executable, so that's why we do it in the Makefile) :
+						 "&& sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
+  gpioUserPermissionFixingCommands_arg = argv[0];
+
+  connect_GPIO(#ifdef USE_LIS331HH // For video capture with Python LIS, let pigpio in Python use the GPIO pins instead
+               !videoCapture
+               #else
+               true
+               #endif
+               );
   connect_Python();
 	
   // Ensure Python gets sigints and other signals
@@ -1129,7 +1132,7 @@ VADL2022::~VADL2022()
   cout << "Main: Destoryed" << endl;
 }
 
-void VADL2022::connect_GPIO()
+void VADL2022::connect_GPIO(bool initCppGpio)
 {
   cout << "GPIO: Connecting" << endl;
 
@@ -1144,13 +1147,15 @@ void VADL2022::connect_GPIO()
     std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl;
     exit(1);
   } 
-  
-  if (gpioInitialise() < 0) {
-    cout << "GPIO: Failed to Connect" << endl;
-    exit(1);
+
+  if (initCppGpio) {
+    if (gpioInitialise() < 0) {
+      cout << "GPIO: Failed to Connect" << endl;
+      exit(1);
+    }
+
+    gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down on pin 26
   }
-  
-  gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down on pin 26
 
   cout << "GPIO: Connected" << endl;
 }
