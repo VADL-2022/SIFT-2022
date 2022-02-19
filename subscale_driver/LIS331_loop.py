@@ -220,11 +220,11 @@ def runOneIter(write_obj):
                 
                 shouldStop.incrementAndThenGet() #videoCaptureThread.raise_exception() # Stop existing video capture
                 videoCaptureThread.join()
-                shouldStop.decrementAndThenGet()
+                shouldStop.set(0)
                 print("GPIO changing...")
                 GPIO.output(26, GPIO.HIGH)
                 print("GPIO sleep...")
-                time.sleep(1)
+                time.sleep(100.0 / 1000.0)
                 
                 print("Switched cameras")
                 print("Starting 2nd camera")
