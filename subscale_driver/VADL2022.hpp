@@ -32,7 +32,7 @@ private:
 
     const char* imuDataSourcePath = nullptr;
 
-    void connect_GPIO();
+    void connect_GPIO(bool initCppGpio);
     void disconnect_GPIO();
     void connect_Python();
     void disconnect_Python();
