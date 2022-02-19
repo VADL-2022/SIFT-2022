@@ -147,9 +147,10 @@ pink in video = not connected to a pull down resistor
 
 --- more testing
 
-full sift + driver/imu test:
+full sift + driver/imu test: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ```
-offsetInTime=$((30000-4000))
+#offsetInTime=$((30000-4000))
+offsetInTime=$((18000-4000))
 
 mainStabilizationTime=0 #$((offsetInTime + 20000)) # Time to allow rocket to stabilize after main deployment, then running SIFT.
 mainDeploymentToTouchDown=74000 # milliseconds
@@ -163,14 +164,16 @@ backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))"
 # (generate output.mp4 using `./mergeVideosInDataOutput.sh Data/subscale2/SIFT/2022-01-30_01_50_07_CST/`)
 ```
 
+sift only test @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --video-file-data-source --video-file-data-source-path Data/subscale2/SIFT/2022-01-30_01_50_07_CST/output.mp4 --main-mission-interactive --main-mission --sift-params -C_edge 2 -delta_min 0.6 --sleep-before-running 0
 
 
---- video capture testing
+--- video capture testing @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 ./subscale_exe_release --video-capture  --meco 1000 --time-to-apogee 5000 --backup-sift-stop-time 20000 --backup-takeoff-time 0
 
---- sift pi testing
+--- sift pi testing @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-./subscale_exe_release --meco 1000 --time-to-apogee 5000 --backup-sift-stop-time 20000 --backup-takeoff-time 0 --sift-start-time 2000 --backup-sift-start-time 2000
+./subscale_exe_release --meco 1000 --time-to-apogee 5000 --backup-sift-stop-time 20000 --backup-takeoff-time 0 --sift-start-time 2000 --backup-sift-start-time 2000 --extra-sift-exe-args '--fps 6' --sift-params '-C_edge 2 -delta_min 0.6'
 
