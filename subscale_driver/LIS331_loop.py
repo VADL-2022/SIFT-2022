@@ -24,11 +24,15 @@ import thread_with_exception
 import sys
 import numpy as np
 from datetime import datetime
-import RPi.GPIO as GPIO
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(26, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(26, GPIO.OUT)
-GPIO.output(26, GPIO.LOW) # Switch to first camera
+# import RPi.GPIO as GPIO
+# GPIO.setmode(GPIO.BOARD)
+# GPIO.setup(26, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+# GPIO.setup(26, GPIO.OUT)
+# GPIO.output(26, GPIO.LOW) # Switch to first camera
+import pigpio
+pi = pigpio.pi()
+pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
+pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
 logging.basicConfig(level=logging.INFO)
 
 logOnly = (sys.argv[1] == '1') if len(sys.argv) > 1 else False # If set to "1", don't do anything but log IMU data
@@ -222,7 +226,10 @@ def runOneIter(write_obj):
                 videoCaptureThread.join()
                 shouldStop.set(0)
                 print("GPIO changing...")
-                GPIO.output(26, GPIO.HIGH)
+                #GPIO.output(26, GPIO.HIGH)
+                pi.set_pull_up_down(26, pigpio.PUD_OFF) # Clear pull down resistor on pin 26
+                pi.set_mode(26, pigpio.OUTPUT) # Set pin 26 to output
+                pi.write(26, 1) # Set pin 26 to high
                 print("GPIO sleep...")
                 time.sleep(100.0 / 1000.0)
                 
