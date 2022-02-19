@@ -1134,7 +1134,7 @@ int mainMission(DataSourceT* src,
                     py::print("arr:", arr);
                     py::object ffypr = precession.attr("get_ffYPR_theta")(arr);
                     py::print("ffypr:", ffypr);
-                    py::bool_ closeToFacingDown = precession.attr("compare_to_NED")(ffypr);
+                    py::bool_ closeToFacingDown = precession.attr("compare_to_NED")(arr);
                     if (closeToFacingDown == true) {
                         std::cout << "compare_to_NED: Python likes this image" << std::endl;
                     }
