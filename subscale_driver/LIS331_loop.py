@@ -259,7 +259,6 @@ def runOneIter(write_obj):
     # Wait for takeoff
     if not logOnly:
         magnitude = np.linalg.norm(np.array(my_accels[1:]))
-        global takeoffTime
         global videoCaptureThread
         global stopper
         global shouldStop
