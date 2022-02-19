@@ -164,3 +164,13 @@ backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))"
 ```
 
 XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --video-file-data-source --video-file-data-source-path Data/subscale2/SIFT/2022-01-30_01_50_07_CST/output.mp4 --main-mission-interactive --main-mission --sift-params -C_edge 2 -delta_min 0.6 --sleep-before-running 0
+
+
+--- video capture testing
+
+./subscale_exe_release --video-capture  --meco 1000 --time-to-apogee 5000 --backup-sift-stop-time 20000 --backup-takeoff-time 0
+
+--- sift pi testing
+
+./subscale_exe_release --video-capture  --meco 1000 --time-to-apogee 5000 --backup-sift-stop-time 20000 --backup-takeoff-time 0 --sift-start-time 2000 --backup-sift-start-time 2000
+
