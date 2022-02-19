@@ -22,7 +22,7 @@ def compare_to_NED(bYPR, pitch_thresh=15, roll_thresh=40):
     NED_pitch = -45
     NED_roll = -90
     
-    if ((bYPR[1] < NED_pitch+pitch_thresh) and (bYPR > NED_pitch-pitch_thresh)) and ((bYPR[1] < NED_roll+roll_thresh) and (bYPR > NED_roll-roll_thresh)):
+    if ((bYPR[1] < NED_pitch+pitch_thresh) and (bYPR[1] > NED_pitch-pitch_thresh)) and ((bYPR[2] < NED_roll+roll_thresh) and (bYPR[2] > NED_roll-roll_thresh)):
         return True
     else:
         return False
