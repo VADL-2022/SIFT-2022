@@ -71,13 +71,13 @@ const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL};
 const char* LIS331HH_calibrationFile = nullptr;
 #endif
 long long backupSIFTStopTime = -1;
-std::string backupSIFTStopTime_str;
+std::string backupSIFTStopTime_str, timeToApogee_str;
 long long backupTakeoffTime = -1;
 bool verbose = false, verboseSIFTFD = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
 auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not actually `now`
 long long imuDataSourceOffset = 0; // For --imu-data-source-path only
-long long mecoDuration = -1;
+long long mecoDuration = -1, timeToApogee = -1;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -814,12 +814,22 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    else if (strcmp(argv[i], "--meco") == 0) { // Time in milliseconds from takeoff to main engine cutoff. Prevents main deployment detection from firing accidentally due to takeoff g's lasting too long (beyond the takeoff callback finishing its duration)
+    else if (strcmp(argv[i], "--meco") == 0) { // Time in milliseconds from takeoff to main engine cutoff. Prevents main deployment detection from firing accidentally due to takeoff g's lasting too long (beyond the takeoff callback finishing its duration)   // Used by LIS/videoCapture pi to not detect landing by accident
       if (i+1 < argc) {
 	mecoDuration = std::stoll(argv[i+1]); // Must be long long
       }
       else {
 	puts("Expected MECO");
+	exit(1);
+      }
+      i++;
+    }
+    else if (strcmp(argv[i], "--time-to-apogee") == 0) { // Time in milliseconds from takeoff to apogee
+      if (i+1 < argc) {
+	timeToApogee = std::stoll(argv[i+1]); // Must be long long
+      }
+      else {
+	puts("Expected time to apogee");
 	exit(1);
       }
       i++;
@@ -930,6 +940,10 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --meco");
     exit(1);
   }
+  if (videoCapture && timeToApogee == -1 && !imuOnly) {
+    puts("Need to provide --time-to-apogee");
+    exit(1);
+  }
 
   connect_GPIO();
   connect_Python();
@@ -941,11 +955,12 @@ VADL2022::VADL2022(int argc, char** argv)
 #ifdef USE_LIS331HH // Using the alternative IMU
   if (videoCapture) {
     backupSIFTStartTime_str = std::to_string(backupSIFTStartTime);
+    timeToApogee_str = std::to_string(timeToApogee);
     TAKEOFF_G_FORCE_str = std::to_string(TAKEOFF_G_FORCE);
     backupSIFTStopTime_str = std::to_string(backupSIFTStopTime);
     LIS331HH_videoCapArgs[0] = "0";
     LIS331HH_videoCapArgs[1] = TAKEOFF_G_FORCE_str.c_str();
-    LIS331HH_videoCapArgs[2] = backupSIFTStartTime_str.c_str();
+    LIS331HH_videoCapArgs[2] = timeToApogee_str.c_str(); //backupSIFTStartTime_str.c_str();
     if (LIS331HH_calibrationFile == nullptr) {
       #define CALIBRATION_FILE "subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv"
       puts("Using default (unused) --LIS331HH-imu-calibration-file of " CALIBRATION_FILE);
