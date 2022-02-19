@@ -1135,7 +1135,7 @@ void VADL2022::connect_GPIO()
   
   if (gpioInitialise() < 0) {
     cout << "GPIO: Failed to Connect" << endl;
-    //exit(1);
+    exit(1);
   }
   
   gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down on pin 26

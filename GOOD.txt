@@ -144,3 +144,22 @@ LOOKUP TABLE
 
 
 pink in video = not connected to a pull down resistor
+
+--- more testing
+
+full sift + driver/imu test:
+```
+offsetInTime=$((30000-4000))
+
+mainStabilizationTime=0 #$((offsetInTime + 20000)) # Time to allow rocket to stabilize after main deployment, then running SIFT.
+mainDeploymentToTouchDown=74000 # milliseconds
+siftAllowanceForStopping=10000 # Time to take away from mainDeploymentToTouchDown for stopping SIFT in backupSIFTStopTime. Larger values stop SIFT sooner.
+timeToMainDeployment=10000 # Originally we were going to start SIFT on main deployment. But we use this instead since unsure about IMU trigger on 1 g of main deployment, and there's a fallback via --backup-sift-start-time for this.
+backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))"
+./subscale_exe_release --sift-start-time $mainStabilizationTime --takeoff-g-force 0.5  --backup-takeoff-time 10000000  --main-deployment-g-force 1.2 --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 4000 --backup-sift-stop-time 3000 --imu-data-source-time-offset $(($offsetInTime + 374000)) --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/subscale2/SIFT/2022-01-30_01_50_07_CST/output.mp4' --meco 500 --landing-g-force 9999999
+# old sift args: --main-mission-interactive
+# --verbose
+# (generate output.mp4 using `./mergeVideosInDataOutput.sh Data/subscale2/SIFT/2022-01-30_01_50_07_CST/`)
+```
+
+XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --video-file-data-source --video-file-data-source-path Data/subscale2/SIFT/2022-01-30_01_50_07_CST/output.mp4 --main-mission-interactive --main-mission --sift-params -C_edge 2 -delta_min 0.6 --sleep-before-running 0
