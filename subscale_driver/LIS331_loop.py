@@ -88,6 +88,14 @@ with open(my_log, 'w', newline='') as file:
 
 # Get I2C bus
 bus = smbus.SMBus(1)
+try:
+    L3G_bus = smbus.SMBus(2)
+except: # Don't let a gyroscope bring down the whole video capture
+    import traceback
+    print("Caught exception from L3G at 1:")
+    traceback.print_exc()
+    
+    L3G_bus = None
 
 #Syntax:
 #write_byte_data(self, addr, cmd, val)
@@ -111,6 +119,20 @@ bus.write_byte_data(address, 0x20, 0x27)
 #SUBSCALE = +/- 12g: 0x10
 #bus.write_byte_data(0x18, 0x23, 0x00)
 bus.write_byte_data(address, 0x23, 0x10)
+
+
+# Gyroscope data recording
+try:
+    if L3G_bus is not None:
+        # L3G
+        L3G_address=0x6B
+        # Required Binary: 0001 (Set ODR to 100 Hz), 0111 (Enable everything) --> Equivalent Hex: 00010111 -> 0x17
+        L3G_bus.write_byte_data(L3G_address, 0x20, 0x17)
+except: # Don't let a gyroscope bring down the whole video capture
+    import traceback
+    print("Caught exception from L3G at 2:")
+    traceback.print_exc()
+
 
 time.sleep(0.5)
 
@@ -185,7 +207,36 @@ def runOneIter(write_obj):
     zAccl = data1 * 256 + data0
     if zAccl > 32767 :
     	zAccl -= 65536
-    
+
+    rx=None
+    ry=None
+    rz=None
+    try:
+        if L3G_bus is not None:
+            # L3GD20H Gyroscope
+            ###############################################################################
+            rxL = L3G_bus.read_byte_data(L3G_address, 0x28)
+            rxH = L3G_bus.read_byte_data(L3G_address, 0x29)
+            rx = rxH * 256 + rxL
+            if rx > 32767:
+                rx -= 65536
+
+            ryL = L3G_bus.read_byte_data(L3G_address, 0x2A)
+            ryH = L3G_bus.read_byte_data(L3G_address, 0x2B)
+            ry = ryH * 256 + ryL
+            if ry > 32767:
+                ry -= 65536
+
+            rzL = L3G_bus.read_byte_data(L3G_address, 0x2C)
+            rzH = L3G_bus.read_byte_data(L3G_address, 0x2D)
+            rz = rzH * 256 + rzL
+            if rz > 32767:
+                rz -= 65536
+    except: # Don't let a gyroscope bring down the whole video capture
+        import traceback
+        print("Caught exception from L3G at 3:")
+        traceback.print_exc()
+
     # LOG TO CSV
     ###############################################################################
     # Output data to screen
@@ -202,7 +253,7 @@ def runOneIter(write_obj):
     offsetY = avgY/counter
     offsetZ = avgZ/counter
     my_accels = [currentTime, (xAccl-offsetX)/1000.0*9.81, (yAccl-offsetY)/1000.0*9.81, (zAccl-offsetZ)/1000.0*9.81]
-    append_list_as_row(write_obj, [xAccl,yAccl,zAccl])
+    append_list_as_row(write_obj, [xAccl,yAccl,zAccl,rx,ry,rz])
 
     # Wait for takeoff
     if not logOnly:
