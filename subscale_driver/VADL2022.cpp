@@ -941,8 +941,7 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   
   #ifdef USE_LIS331HH
-  //std::string startPigpio = videoCapture ? "sudo pigpiod && " : "";
-  std::string startPigpio = "";
+  std::string startPigpio = videoCapture ? "sudo pigpiod && " : "";
   #endif
   gpioUserPermissionFixingCommands = startPigpio + std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
 						 // For good measure, even though the Makefile does it already (this won't take effect until another run of the executable, so that's why we do it in the Makefile) :
