@@ -223,6 +223,8 @@ def runOneIter(write_obj):
                 shouldStop.decrementAndThenGet()
                 print("GPIO changing...")
                 GPIO.output(26, GPIO.HIGH)
+                print("GPIO sleep...")
+                time.sleep(1)
                 
                 print("Switched cameras")
                 print("Starting 2nd camera")
