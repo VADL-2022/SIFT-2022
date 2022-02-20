@@ -177,3 +177,18 @@ XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --video-file-data
 
 ./subscale_exe_release --meco 1000 --time-to-apogee 5000 --backup-sift-stop-time 20000 --backup-takeoff-time 0 --sift-start-time 2000 --backup-sift-start-time 2000 --extra-sift-exe-args '--fps 3' --sift-params '-C_edge 2 -delta_min 0.6'
 
+
+------ launch fullscale day
+
+EVENT TIMING:
+
+SIFT:
+takeoff
+main deployment: 67.5s
+main stabalization: ~10 seconds
+landing: 106 seconds
+
+FORE:
+takeoff
+apogee: 17.6 sec
+landing: 106 sec

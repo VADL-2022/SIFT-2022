@@ -1050,259 +1050,261 @@ int mainMission(DataSourceT* src,
             o2.showCanvas("", mat, flush, nullptr);
         }
         t.reset();
-        cv::Mat greyscale = src->siftImageForMat(i);
-        t.logElapsed("siftImageForMat");
-        //auto path = src->nameForIndex(i);
-        
-        // Apply filters to possibly discard the image //
-        static bool discardImage;
-        discardImage = false;
-        // Blur detection
-        t.reset();
-        cv::Mat laplacianImage;
-        // https://stackoverflow.com/questions/24080123/opencv-with-laplacian-formula-to-detect-image-is-blur-or-not-in-ios/44579247#44579247 , https://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/ , https://github.com/WillBrennan/BlurDetection2/blob/master/blur_detection/detection.py
-        auto type = CV_32F;
-        assert(type == greyscale.type()); // The type must be the same as `greyscale` else you get an error like `OpenCV(4.5.2) /build/source/modules/imgproc/src/filter.simd.hpp:3173: error: (-213:The function/feature is not implemented) Unsupported combination of source format (=5), and destination format (=6) in function 'getLinearFilter'`
-        cv::Laplacian(greyscale, laplacianImage, type);
-        cv::Scalar mean, stddev; // 0:1st channel, 1:2nd channel and 2:3rd channel
-        cv::meanStdDev(laplacianImage, mean, stddev, cv::Mat());
-        double variance = stddev.val[0] * stddev.val[0];
-        // As variance goes up, image is "less blurry"
-        const double nearBlackImageVariance = 0.0007;
-        double threshold = nearBlackImageVariance; //2900; // TODO: dynamically adjust threshold
-
-        printf("Image %zu: Blur detection: variance %f; ", i, variance);
-        if (variance <= threshold) {
-            // Blurry
-            puts("blurry");
-            discardImage = true;
-        } else {
-            // Not blurry
-            puts("not blurry");
-        }
-        t.logElapsed("blur detection");
-        
-        // IMU
-        if (driverInput_fd != -1) { //driverInput_file) {
-            IMUData imu;
-            // NOTE: this blocks until the fd gets data.
+        if (!CMD_CONFIG(imageCaptureOnly)) {
+            cv::Mat greyscale = src->siftImageForMat(i);
+            t.logElapsed("siftImageForMat");
+            //auto path = src->nameForIndex(i);
+            
+            // Apply filters to possibly discard the image //
+            static bool discardImage;
+            discardImage = false;
+            // Blur detection
             t.reset();
-            std::cout << "grabbing from subscale driver interface thread..." << std::endl;
-            subscaleDriverInterfaceMutex_imuData.lock();
-            int count = subscaleDriverInterface_count;
-            static bool firstGrab = true;
-            static py::object my_or;
-            if (count > 0) {
-                // We have something to use
-                IMUData& imu = subscaleDriverInterface_imu;
-                std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
+            cv::Mat laplacianImage;
+            // https://stackoverflow.com/questions/24080123/opencv-with-laplacian-formula-to-detect-image-is-blur-or-not-in-ios/44579247#44579247 , https://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/ , https://github.com/WillBrennan/BlurDetection2/blob/master/blur_detection/detection.py
+            auto type = CV_32F;
+            assert(type == greyscale.type()); // The type must be the same as `greyscale` else you get an error like `OpenCV(4.5.2) /build/source/modules/imgproc/src/filter.simd.hpp:3173: error: (-213:The function/feature is not implemented) Unsupported combination of source format (=5), and destination format (=6) in function 'getLinearFilter'`
+            cv::Laplacian(greyscale, laplacianImage, type);
+            cv::Scalar mean, stddev; // 0:1st channel, 1:2nd channel and 2:3rd channel
+            cv::meanStdDev(laplacianImage, mean, stddev, cv::Mat());
+            double variance = stddev.val[0] * stddev.val[0];
+            // As variance goes up, image is "less blurry"
+            const double nearBlackImageVariance = 0.0007;
+            double threshold = nearBlackImageVariance; //2900; // TODO: dynamically adjust threshold
+
+            printf("Image %zu: Blur detection: variance %f; ", i, variance);
+            if (variance <= threshold) {
+                // Blurry
+                puts("blurry");
+                discardImage = true;
+            } else {
+                // Not blurry
+                puts("not blurry");
+            }
+            t.logElapsed("blur detection");
+            
+            // IMU
+            if (driverInput_fd != -1) { //driverInput_file) {
+                IMUData imu;
+                // NOTE: this blocks until the fd gets data.
+                t.reset();
+                std::cout << "grabbing from subscale driver interface thread..." << std::endl;
+                subscaleDriverInterfaceMutex_imuData.lock();
+                int count = subscaleDriverInterface_count;
+                static bool firstGrab = true;
+                static py::object my_or;
+                if (count > 0) {
+                    // We have something to use
+                    IMUData& imu = subscaleDriverInterface_imu;
+                    std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
+                    
+                    // Use the IMU data:
+                    nonthrowing_python([](){
+                        using namespace pybind11::literals; // to bring in the `_a` literal
+                        
+                        py::module_ np = py::module_::import("numpy");  // like 'import numpy as np'
+                        py::module_ precession = py::module_::import("src.python.Precession");
+                        
+                        py::list l;
+                        l.append(imu.yprNed.x); l.append(imu.yprNed.y); l.append(imu.yprNed.z);
+                        py::array_t<float> arr = np.attr("array")(l, "dtype"_a="float32");
+                        
+                        if (firstGrab) {
+                            // Init the first orientation
+                            my_or = precession.attr("init_orientation")(arr);
+                            firstGrab = false;
+                        }
+                        
+                        py::list threshold_vec;
+                        threshold_vec.append(60); threshold_vec.append(60); threshold_vec.append(60);
+                        
+                        // Judge image
+                        py::tuple shouldAcceptAndOrientation = precession.attr("judge_image")(my_or, arr, threshold_vec);
+                        py::bool_ shouldAccept = shouldAcceptAndOrientation[0];
+                        my_or = shouldAcceptAndOrientation[1];
+                        if (shouldAccept == true) {
+                            std::cout << "judge_image: Python likes this image" << std::endl;
+                        }
+                        else {
+                            std::cout << "judge_image: Python doesn't like this image" << std::endl;
+                            discardImage = true;
+                        }
+                        
+                        // compare_to_NED
+                        // (Make sure it's facing down)
+                        py::print("arr:", arr);
+                        py::object ffypr = precession.attr("get_ffYPR_theta")(arr);
+                        py::print("ffypr:", ffypr);
+                        py::bool_ closeToFacingDown = precession.attr("compare_to_NED")(arr, 40, 60);
+                        if (closeToFacingDown == true) {
+                            std::cout << "compare_to_NED: Python likes this image" << std::endl;
+                        }
+                        else {
+                            std::cout << "compare_to_NED: Python doesn't like this image" << std::endl;
+                            discardImage = true;
+                        }
+                    });
+                }
+                subscaleDriverInterfaceMutex_imuData.unlock();
+                t.logElapsed("grabbing from subscale driver interface thread and running Precession.judge_image");
+            }
+            // //
+            
+            if (discardImage) {
+                // Enqueue null image
+                processedImageQueue.enqueue(greyscale,
+                                        shared_keypoints_ptr(),
+                                        std::shared_ptr<struct sift_keypoint_std>(),
+                                        0,
+                                        shared_keypoints_ptr(),
+                                        shared_keypoints_ptr(),
+                                        shared_keypoints_ptr(),
+                                        cv::Mat(),
+                                        p,
+                                        i);
                 
-                // Use the IMU data:
-                nonthrowing_python([](){
-                    using namespace pybind11::literals; // to bring in the `_a` literal
-                    
-                    py::module_ np = py::module_::import("numpy");  // like 'import numpy as np'
-                    py::module_ precession = py::module_::import("src.python.Precession");
-                    
-                    py::list l;
-                    l.append(imu.yprNed.x); l.append(imu.yprNed.y); l.append(imu.yprNed.z);
-                    py::array_t<float> arr = np.attr("array")(l, "dtype"_a="float32");
-                    
-                    if (firstGrab) {
-                        // Init the first orientation
-                        my_or = precession.attr("init_orientation")(arr);
-                        firstGrab = false;
-                    }
-                    
-                    py::list threshold_vec;
-                    threshold_vec.append(60); threshold_vec.append(60); threshold_vec.append(60);
-                    
-                    // Judge image
-                    py::tuple shouldAcceptAndOrientation = precession.attr("judge_image")(my_or, arr, threshold_vec);
-                    py::bool_ shouldAccept = shouldAcceptAndOrientation[0];
-                    my_or = shouldAcceptAndOrientation[1];
-                    if (shouldAccept == true) {
-                        std::cout << "judge_image: Python likes this image" << std::endl;
+                // Don't push a function for this image or save it as a possible firstImage
+                goto skipImage;
+            }
+            std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
+            tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
+    //            OPTICK_EVENT();
+                std::cout << "hello from " << id << std::endl;
+                installSignalHandlers();
+
+    #ifdef USE_PTR_INC_MALLOC
+                bigMallocBlock = beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */, bigMallocBlock); // 8 is 8 bytes to align to a reasonable block size malloc might be using
+    #endif
+                SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
+                // Overrides for the params of `pOrig` (into `p`) go below:
+    //            v2Params(p.params);
+    //            lowEdgeParams(p.params);
+    //            p.params->C_edge = 8;    // 5 <-- too many outliers when run in the lab
+    //	    p.params->n_spo = 2;
+    //	    p.params->delta_min = 0.3;
+
+                // compute sift keypoints
+                std::cout << id << " findKeypoints" << std::endl;
+    #ifdef SIFTAnatomy_
+                auto pair = sift.findKeypoints(id, p, greyscale);
+                int n = pair.second.second; // Number of keypoints
+                
+                // SIFT threads can provide an upper bound on the number of matches produced by the matching phase by too low numbers of keypoints. 50 keypoints minimum, raises parameters over time beforehand.
+                float DEC = 1;
+                float INC = DEC;
+                if (n > 500) {
+                    printf("Too many keypoints\n");
+                    if (p.params->C_edge <= 1) {
+                        printf("C_edge too low, runtime will probably be slow\n");
                     }
                     else {
-                        std::cout << "judge_image: Python doesn't like this image" << std::endl;
-                        discardImage = true;
+                        p.params->C_edge -= DEC;
                     }
-                    
-                    // compare_to_NED
-                    // (Make sure it's facing down)
-                    py::print("arr:", arr);
-                    py::object ffypr = precession.attr("get_ffYPR_theta")(arr);
-                    py::print("ffypr:", ffypr);
-                    py::bool_ closeToFacingDown = precession.attr("compare_to_NED")(arr, 40, 60);
-                    if (closeToFacingDown == true) {
-                        std::cout << "compare_to_NED: Python likes this image" << std::endl;
-                    }
-                    else {
-                        std::cout << "compare_to_NED: Python doesn't like this image" << std::endl;
-                        discardImage = true;
-                    }
-                });
-            }
-            subscaleDriverInterfaceMutex_imuData.unlock();
-            t.logElapsed("grabbing from subscale driver interface thread and running Precession.judge_image");
-        }
-        // //
-        
-        if (discardImage) {
-            // Enqueue null image
-            processedImageQueue.enqueue(greyscale,
-                                    shared_keypoints_ptr(),
-                                    std::shared_ptr<struct sift_keypoint_std>(),
-                                    0,
-                                    shared_keypoints_ptr(),
-                                    shared_keypoints_ptr(),
-                                    shared_keypoints_ptr(),
-                                    cv::Mat(),
-                                    p,
-                                    i);
-            
-            // Don't push a function for this image or save it as a possible firstImage
-            goto skipImage;
-        }
-        std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
-        tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
-//            OPTICK_EVENT();
-            std::cout << "hello from " << id << std::endl;
-            installSignalHandlers();
-
-#ifdef USE_PTR_INC_MALLOC
-            bigMallocBlock = beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */, bigMallocBlock); // 8 is 8 bytes to align to a reasonable block size malloc might be using
-#endif
-            SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
-            // Overrides for the params of `pOrig` (into `p`) go below:
-//            v2Params(p.params);
-//            lowEdgeParams(p.params);
-//            p.params->C_edge = 8;    // 5 <-- too many outliers when run in the lab
-//	    p.params->n_spo = 2;
-//	    p.params->delta_min = 0.3;
-
-            // compute sift keypoints
-            std::cout << id << " findKeypoints" << std::endl;
-#ifdef SIFTAnatomy_
-            auto pair = sift.findKeypoints(id, p, greyscale);
-            int n = pair.second.second; // Number of keypoints
-            
-            // SIFT threads can provide an upper bound on the number of matches produced by the matching phase by too low numbers of keypoints. 50 keypoints minimum, raises parameters over time beforehand.
-            float DEC = 1;
-            float INC = DEC;
-            if (n > 500) {
-                printf("Too many keypoints\n");
-                if (p.params->C_edge <= 1) {
-                    printf("C_edge too low, runtime will probably be slow\n");
                 }
-                else {
-                    p.params->C_edge -= DEC;
+                if (n < 80) {
+                    printf("Low keypoints\n");
+                    p.params->C_edge += INC; // We noticed that as C_edge goes up, we get more keypoints.
                 }
-            }
-            if (n < 80) {
-                printf("Low keypoints\n");
-                p.params->C_edge += INC; // We noticed that as C_edge goes up, we get more keypoints.
-            }
-            if (n < 50) {
-                printf("Critically low keypoints\n");
-            }
-            if (n < 4) {
-                // Not enough keypoints, ignore it
-                printf("Not enough keypoints generated by SIFT. This image will be considered \"null\" by the matcher.\n");
-                // Option 1: Now we can retry at most once or so, then skip this image.
-                // Option 2: Just skip this image. We will do this, since the parameters will be adjusted already from the above if statements like C_edge.
-                // DONETODO: don't ignore it, but retry match with previous image? You can store the previous image as a cv::Mat ref inside the current one to allow for this if you want..
-                //[done]need to change i
-                // So we enqueue a placeholder and let the matcher skip it
-                // Nothing to do here, the rest works
-            }
-            struct sift_keypoints* keypoints = pair.first;
-            struct sift_keypoint_std *k = pair.second.first;
-#elif defined(SIFTOpenCV_)
-            auto vecPair = sift.findKeypoints(id, p, greyscale);
-#elif defined(SIFTGPU_)
-            static thread_local SIFTState s;
-            auto pair = sift.findKeypoints(id, s, p, greyscale);
-            auto& keys1 = pair.first;
-            auto& descriptors1 = pair.second.first;
-            auto& num1 = pair.second.second;
-#else
-#error "No known SIFT implementation"
-#endif
-            std::cout << id << " findKeypoints end" << std::endl;
-            
-#ifdef USE_PTR_INC_MALLOC
-            endMallocWithFreeAll();
-#endif
-            t.reset();
-            bool isFirstSleep = true;
-            do {
-                if (isFirstSleep) {
-                    std::cout << "Thread " << id << ": Locking" << std::endl;
+                if (n < 50) {
+                    printf("Critically low keypoints\n");
                 }
-                pthread_mutex_lock( &processedImageQueue.mutex );
-                if (isFirstSleep) {
-                    std::cout << "Thread " << id << ": Locked" << std::endl;
+                if (n < 4) {
+                    // Not enough keypoints, ignore it
+                    printf("Not enough keypoints generated by SIFT. This image will be considered \"null\" by the matcher.\n");
+                    // Option 1: Now we can retry at most once or so, then skip this image.
+                    // Option 2: Just skip this image. We will do this, since the parameters will be adjusted already from the above if statements like C_edge.
+                    // DONETODO: don't ignore it, but retry match with previous image? You can store the previous image as a cv::Mat ref inside the current one to allow for this if you want..
+                    //[done]need to change i
+                    // So we enqueue a placeholder and let the matcher skip it
+                    // Nothing to do here, the rest works
                 }
-                if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
-                    || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
-                    ) {
-                    std::cout << "Thread " << id << ": enqueue" << std::endl;
-                    #ifdef SIFTAnatomy_
-                    processedImageQueue.enqueueNoLock(greyscale,
-                                            shared_keypoints_ptr(keypoints),
-                                            std::shared_ptr<struct sift_keypoint_std>(k),
-                                            n,
-                                            shared_keypoints_ptr(),
-                                            shared_keypoints_ptr(),
-                                            shared_keypoints_ptr(),
-                                            cv::Mat(),
-                                            p,
-                                            i);
-                    #elif defined(SIFTOpenCV_)
-                    processedImageQueue.enqueueNoLock(greyscale,
-                                                      vecPair.first,
-                                                      vecPair.second,
-                                                      std::vector< cv::DMatch >(),
-                                            cv::Mat());
-                    #elif defined(SIFTGPU_)
-                    processedImageQueue.enqueueNoLock(greyscale,
-                                                      keys1,
-                                                      descriptors1,
-                                                      num1,
-                                            cv::Mat());
-                    #else
-                    #error "No known SIFT implementation"
-                    #endif
-                }
-                else {
-                    auto ms = 10;
+                struct sift_keypoints* keypoints = pair.first;
+                struct sift_keypoint_std *k = pair.second.first;
+    #elif defined(SIFTOpenCV_)
+                auto vecPair = sift.findKeypoints(id, p, greyscale);
+    #elif defined(SIFTGPU_)
+                static thread_local SIFTState s;
+                auto pair = sift.findKeypoints(id, s, p, greyscale);
+                auto& keys1 = pair.first;
+                auto& descriptors1 = pair.second.first;
+                auto& num1 = pair.second.second;
+    #else
+    #error "No known SIFT implementation"
+    #endif
+                std::cout << id << " findKeypoints end" << std::endl;
+                
+    #ifdef USE_PTR_INC_MALLOC
+                endMallocWithFreeAll();
+    #endif
+                t.reset();
+                bool isFirstSleep = true;
+                do {
                     if (isFirstSleep) {
-                        std::cout << "Thread " << id << ": Unlocking" << std::endl;
+                        std::cout << "Thread " << id << ": Locking" << std::endl;
                     }
+                    pthread_mutex_lock( &processedImageQueue.mutex );
+                    if (isFirstSleep) {
+                        std::cout << "Thread " << id << ": Locked" << std::endl;
+                    }
+                    if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
+                        || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
+                        ) {
+                        std::cout << "Thread " << id << ": enqueue" << std::endl;
+                        #ifdef SIFTAnatomy_
+                        processedImageQueue.enqueueNoLock(greyscale,
+                                                shared_keypoints_ptr(keypoints),
+                                                std::shared_ptr<struct sift_keypoint_std>(k),
+                                                n,
+                                                shared_keypoints_ptr(),
+                                                shared_keypoints_ptr(),
+                                                shared_keypoints_ptr(),
+                                                cv::Mat(),
+                                                p,
+                                                i);
+                        #elif defined(SIFTOpenCV_)
+                        processedImageQueue.enqueueNoLock(greyscale,
+                                                          vecPair.first,
+                                                          vecPair.second,
+                                                          std::vector< cv::DMatch >(),
+                                                cv::Mat());
+                        #elif defined(SIFTGPU_)
+                        processedImageQueue.enqueueNoLock(greyscale,
+                                                          keys1,
+                                                          descriptors1,
+                                                          num1,
+                                                cv::Mat());
+                        #else
+                        #error "No known SIFT implementation"
+                        #endif
+                    }
+                    else {
+                        auto ms = 10;
+                        if (isFirstSleep) {
+                            std::cout << "Thread " << id << ": Unlocking" << std::endl;
+                        }
+                        pthread_mutex_unlock( &processedImageQueue.mutex );
+                        if (isFirstSleep) {
+                            std::cout << "Thread " << id << ": Unlocked" << std::endl;
+                            std::cout << "Thread " << id << ": Sleeping " << ms << " milliseconds at least once (and possibly locking and unlocking a few times more)..." << std::endl;
+                            isFirstSleep = false;
+                        }
+                        std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+                        continue;
+                    }
+                    std::cout << "Thread " << id << ": Unlocking 2" << std::endl;
                     pthread_mutex_unlock( &processedImageQueue.mutex );
-                    if (isFirstSleep) {
-                        std::cout << "Thread " << id << ": Unlocked" << std::endl;
-                        std::cout << "Thread " << id << ": Sleeping " << ms << " milliseconds at least once (and possibly locking and unlocking a few times more)..." << std::endl;
-                        isFirstSleep = false;
-                    }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-                    continue;
-                }
-                std::cout << "Thread " << id << ": Unlocking 2" << std::endl;
-                pthread_mutex_unlock( &processedImageQueue.mutex );
-                std::cout << "Thread " << id << ": Unlocked 2" << std::endl;
-                break;
-            } while (!stoppedMain());
-            t.logElapsed(id, "enqueue processed image");
+                    std::cout << "Thread " << id << ": Unlocked 2" << std::endl;
+                    break;
+                } while (!stoppedMain());
+                t.logElapsed(id, "enqueue processed image");
 
-            end:
-            ;
-            // cleanup: nothing to do
-            // Log malloc, etc. timers and reset them
-            showTimers(std::string("SIFT ") + std::to_string(id));
-        }, /*extra args:*/ i /*- offset*/, greyscale);
+                end:
+                ;
+                // cleanup: nothing to do
+                // Log malloc, etc. timers and reset them
+                showTimers(std::string("SIFT ") + std::to_string(id));
+            }, /*extra args:*/ i /*- offset*/, greyscale);
+        }
         
         // Save this image for next iteration
         prevImage = mat;
@@ -1312,7 +1314,7 @@ int mainMission(DataSourceT* src,
         *a = 0;
         #endif
         
-        if (firstImage.empty()) { // This is the first iteration.
+        if (firstImage.empty() && !mat.empty()) { // This is the first iteration.
             // Save firstImage once
             firstImage = mat;
         }

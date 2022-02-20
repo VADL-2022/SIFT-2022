@@ -17,7 +17,8 @@ struct QueuedFunction {
   QueuedFunctionType type;
 };
 
-extern Queue<QueuedFunction, 8> mainDispatchQueue;
+//extern Queue<QueuedFunction, 8> mainDispatchQueue;
+extern Queue<QueuedFunction, 1024> mainDispatchQueue;
 extern Queue<QueuedFunction, 16> radioDispatchQueue;
 extern std::atomic<bool> isRunningPython;
 extern std::atomic<bool> mainDispatchQueueRunning;
