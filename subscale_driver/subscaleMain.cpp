@@ -5,7 +5,8 @@
 #include <thread>
 #include "py.h"
 
-Queue<QueuedFunction, 8> mainDispatchQueue;
+//Queue<QueuedFunction, 8> mainDispatchQueue;
+Queue<QueuedFunction, 1024> mainDispatchQueue;
 Queue<QueuedFunction, 16> radioDispatchQueue;
 std::atomic<bool> isRunningPython = false;
 std::atomic<bool> mainDispatchQueueRunning = false;

@@ -12,6 +12,14 @@ ser = serial.Serial(
 )
 
 
-while 1:
+timestr = time.strftime("%Y%m%d-%H%M%S")
+my_log = "dataOutput/LOG_" + timestr + ".gps.txt"
+file_name=my_log
+
+# Create a new (empty) csv file
+with open(my_log, 'w', newline='') as file:
+    for i in range(0,2):
         x=ser.readline()
-        print (x)
+        print(x)
+        file.write (x)
+        file.write("\n")

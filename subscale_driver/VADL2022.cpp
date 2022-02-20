@@ -31,6 +31,7 @@ int driverInput_fd_fcntl_flags = 0;
 #include "signalHandlers.hpp"
 #include <float.h>
 #include "subscaleMain.hpp"
+#include "../src/utils.hpp"
 
 // G Forces
 float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
@@ -120,10 +121,44 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds);
 // template void passIMUDataToSIFTCallback(LOG *log, float fseconds);
 // template void passIMUDataToSIFTCallback(LOGFromFile_T *log, float fseconds);
 
+bool gps();
+
 // Returns true on success
 bool sendOnRadio() {
-  std::cout << "sendOnRadio" << std::endl;
-  return pyRunFile("subscale_driver/radio.py", 0, nullptr);
+  char hostname[HOST_NAME_MAX + 1];
+  if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+    printf("hostname: %s\n", hostname);
+    if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
+      // do radio
+      std::cout << "sendOnRadio" << std::endl;
+      return pyRunFile("subscale_driver/radio.py", 0, nullptr);
+    }
+    else {
+      // do gps
+      gps();
+    }
+  }
+  else {
+    puts("gethostname() errored out");
+  }
+}
+
+// Returns true on success
+bool gps() {
+  char hostname[HOST_NAME_MAX + 1];
+  if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+    printf("hostname: %s\n", hostname);
+    if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") {
+      // nothing.. radio..
+    }
+    else { // sift2 and fore2 are gps
+      std::cout << "gps" << std::endl;
+      return pyRunFile("subscale_driver/gps.py", 0, nullptr);
+    }
+  }
+  else {
+    puts("gethostname() errored out");
+  }
 }
 
 enum State {
@@ -189,6 +224,21 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     + (useIMU ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
     + (verboseSIFTFD ? (std::string(" --verbose")) : "")
   ;
+  
+  char hostname[HOST_NAME_MAX + 1];
+  if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+    printf("hostname: %s\n", hostname);
+    if (endsWith(hostname, "2")) {
+      // video capture with SIFT exe..
+      siftCommandLine += " --image-capture-only --fps 30";
+    }
+    else { // sift2 and fore2 are gps
+      // Nothing
+    }
+  }
+  else {
+    puts("gethostname() errored out");
+  }
   
   printf("Forking with bash command: %s\n", siftCommandLine.c_str());
   pid_t pid = fork(); // create a new child process
@@ -525,12 +575,14 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
     // Start SIFT or video capture
     magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
   }
-  if (force || (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) || forceSkipNonSIFTCallbacks) {
-    mainDeploymentDetectedOrDrogueFailed(log, fseconds, force, false);
   //Check for emergency main parachute deployment with no drogue
-  } else if (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS) {
-    mainDeploymentDetectedOrDrogueFailed(log, fseconds, false /*no drogue can't force IMU not detected*/, true);
-  } else {
+  if (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS) {
+    mainDeploymentDetectedOrDrogueFailed(log, fseconds, false /*no drogue can't force IMU not detected*/, true); 
+  }
+  else if (force || (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) || forceSkipNonSIFTCallbacks) {
+    mainDeploymentDetectedOrDrogueFailed(log, fseconds, force, false);
+  }
+  else {
     if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS && millisSinceTakeoff <= mecoDuration) {
       printf("Still need %lld milliseconds until main deployment g duration can be recorded\n", mecoDuration - millisSinceTakeoff);
       reportStatus(Status::WaitingForMECOButExceededDesiredAccelInMainDeploymentCallback);
@@ -720,6 +772,12 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
 VADL2022::VADL2022(int argc, char** argv)
 {
   cout << "Main: Initiating" << endl;
+
+  printf("(Command line is:\n");
+  for (int i = 0; i < argc; i++) {
+    printf("\t%s\n", argv[i]);
+  }
+  printf(")\n");
 	  
   // Parse command-line args
   void* /*LOG::UserCallback or LOGFromFile::UserCallback*/ callback = reinterpret_cast<void*>(reinterpret_cast<void(*)()>(&checkTakeoffCallback<LOG>));
@@ -972,6 +1030,10 @@ VADL2022::VADL2022(int argc, char** argv)
   // Ensure Python gets sigints and other signals
   // We do this after connect_GPIO() because "For those of us who ended up here wanting to implement their own signal handler, make sure you do your signal() call AFTER you call gpioInitialise(). This will override the pigpio handler." ( https://github.com/fivdi/pigpio/issues/127 )
   installSignalHandlers();
+            
+  if (!imuOnly) {
+    gps();
+  }
 
 #ifdef USE_LIS331HH // Using the alternative IMU
   if (videoCapture) {
