@@ -192,3 +192,28 @@ FORE:
 takeoff
 apogee: 17.6 sec
 landing: 106 sec
+
+-- extracting data: run this whole thing:
+
+[see extractDataOutput.sh]
+
+From your laptop, run these commands in `nix-shell -p coreutils`:
+missionName=fullscale1
+ip=10.3.141.1
+#FIXME: spaces not supported:
+files="$(ssh pi@$ip << EOF
+echo /home/pi/VanderbiltRocketTeam/files* | grep -o --perl-regexp '^.*'"$missionName\.tar\.gz"'$'
+EOF
+     )"
+files="$(echo "$files" | tail -1)" # tail to get past other junk like "Linux fore1 5.10.63-v8+ #1457 SMP PREEMPT Tue Sep 28 11:27:02 BST 2021 aarch64 The programs included with the Debian GNU/Linux system are free software; the exact distribution terms for each program are described in the individual files in /usr/share/doc/*/copyright. Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent permitted by applicable law"
+# Get more files
+files2="$(ssh pi@$ip << EOF
+echo /home/pi/VanderbiltRocketTeam/Data/files* | grep -o --perl-regexp '^.*'"$missionName\.tar\.gz"'$'
+EOF
+     )"
+files2="$(echo "$files2" | tail -1)"
+
+files="$files $files2"
+echo "Files: $files"
+files=$(echo "$files" | xargs -n 1 echo | awk '{print "pi@'"$ip"':"$0}')
+scp -r -p $files /Volumes/MyTestVolume/Projects/DataRocket/
