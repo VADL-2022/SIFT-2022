@@ -20,13 +20,6 @@ CFLAGS_$(1) = $(CFLAGS) $(2)
 CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 # C++ sources
 %_$(1).o: %.cpp $(addsuffix _$(1).hpp.gch,$(patsubst %.hpp,%,$(5)))#<--Example: src/common_$(1).hpp.gch
-#echo $(addsuffix .gch,$(5))
-#echo $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5)))
-#echo $$(filter-out $$<,$$^)
-#echo $$(wildcard $$(filter-out $$<,$$^))
-#ifneq (,$$(wildcard $$(filter-out $$<,$$^))) # If the pointee of the symlink exists       #ifneq (,$(wildcard $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5))))) # If the symlink exists     # This check runs at build time I think ( https://stackoverflow.com/questions/5553352/how-do-i-check-if-file-exists-in-makefile-so-i-can-delete-it )
-	$$(foreach file, $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5))), rm -f $$(file) && cd $$(dir $$(file)) && { ln -s $$(notdir $$(addsuffix _$(1).hpp.gch,$$(patsubst %.hpp.gch,%,$$(file)))) $$(notdir $$(file)) || true; } ) # Remove old symlink if any. Then symlink into name the compiler expects.
-#endif
 	$(CXX) $$(addprefix -include ,$(5)) $$(CXXFLAGS_$(1)) -c $$< -o $$@
 # $$(addprefix -include ,$$(filter-out $$<,$$^))
 # ^^ Grab rest of prerequisites (stuff after the `:` in the rule) after the first one by using `$(filter-out $<,$^)` ( https://stackoverflow.com/questions/12284584/can-i-obtain-just-the-second-prerequisite-in-gnu-make/12284855 )
@@ -52,7 +45,7 @@ ALL_PCH_SYMLINK_FILES_FROM_TARGETS += $(addsuffix .h.gch,$(patsubst %.h,%,$(4)))
 #-include $(SRC:%.cpp=%.d)
 endef
 
-# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFile_folderPathHere,flagsHere,additionalDepsHere,extraCommandsToRunAfterCompilation))`
+# Usage: `$(eval $(call OBJECTS_LINKING_template,targetNameHere,release_orWhateverTargetYouWant,objectFilesHere,mainFile_folderPathHere,flagsHere,additionalDepsHere,extraCommandsToRunAfterCompilation,cPrecompiledHeaders,cppPrecompiledHeaders))`
 # Main file should be named `targetNameHere` followed by `Main` and `.cpp` or `.c`.
 define OBJECTS_LINKING_template =
 OBJECTS_$(1)_$(2) = $(3)
@@ -63,9 +56,26 @@ EXTRA_COMMANDS_$(1)_$(2) =
 else
 EXTRA_COMMANDS_$(1)_$(2) = && $(7)
 endif
+
+.PHONY: pch_c_$(1)_$(2)
+pch_c_$(1)_$(2):
+	$$(foreach file, $(addsuffix .h.gch,$(patsubst %.h,%,$(8))), rm -f $$(file) && cd $$(dir $$(file)) && { ln -s $$(notdir $$(addsuffix _$(1)_$(2).h.gch,$$(patsubst %.h.gch,%,$$(file)))) $$(notdir $$(file)) || true; } ) # Remove old symlink if any. Then symlink into name the compiler expects.
+
+.PHONY: pch_cpp_$(1)_$(2)
+pch_cpp_$(1)_$(2):
+#echo $(addsuffix .gch,$(5))
+#echo $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5)))
+#echo $$(filter-out $$<,$$^)
+#echo $$(wildcard $$(filter-out $$<,$$^))
+#ifneq (,$$(wildcard $$(filter-out $$<,$$^))) # If the pointee of the symlink exists       #ifneq (,$(wildcard $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5))))) # If the symlink exists     # This check runs at build time I think ( https://stackoverflow.com/questions/5553352/how-do-i-check-if-file-exists-in-makefile-so-i-can-delete-it )
+# do this as the first left-to-right dependency of linking step (it will work because it comes before the cpp/obj dependencies in the linking step :
+	$$(foreach file, $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(9))), rm -f $$(file) && cd $$(dir $$(file)) && { ln -s $$(notdir $$(addsuffix _$(1)_$(2).hpp.gch,$$(patsubst %.hpp.gch,%,$$(file)))) $$(notdir $$(file)) || true; } ) # Remove old symlink if any. Then symlink into name the compiler expects.     # https://askubuntu.com/questions/817964/run-two-commands-in-case-of-or
+#endif
+
 #$$(info $$(OBJECTS_$(1)_$(2)))
-$(1)_exe_$(2): $$(OBJECTS_$(1)_$(2)) $(6)
-	$(CXX) $$^ -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(5) $(6) $$(EXTRA_COMMANDS_$(1)_$(2))
+$(1)_exe_$(2): pch_c_$(1)_$(2) pch_cpp_$(1)_$(2) $$(OBJECTS_$(1)_$(2)) $(6)
+	$(CXX) $$(filter-out pch_c_$(1)_$(2) pch_cpp_$(1)_$(2),$$^) -o $$@ $(LIBS) $(LDFLAGS) $(LFLAGS) $(5) $(6) $$(EXTRA_COMMANDS_$(1)_$(2))
+# FIXME: minor: the filter-out used here^^ ( https://www.gnu.org/software/make/manual/html_node/Text-Functions.html ) will make it so you can't make a file with that name and depend on it but who would do that..
 endef
 
 # END LIBRARY FUNCTIONS #
@@ -269,13 +279,13 @@ $(eval $(call C_AND_CXX_FLAGS_template,debug_commandLine,$(ADDITIONAL_CFLAGS_DEB
 
 # release linking
 ADDITIONAL_CFLAGS_RELEASE += -ffast-math -flto=full # https://developers.redhat.com/blog/2019/08/06/customize-the-compilation-process-with-clang-making-compromises
-$(eval $(call OBJECTS_LINKING_template,sift,release,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE),))
-$(eval $(call OBJECTS_LINKING_template,sift,release_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE),))
+$(eval $(call OBJECTS_LINKING_template,sift,release,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE),,,$(PCH_C),$(PCH_CPP)))
+$(eval $(call OBJECTS_LINKING_template,sift,release_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_RELEASE),,,$(PCH_C),$(PCH_CPP)))
 
 # debug linking
 #ADDITIONAL_CFLAGS_DEBUG += 
-$(eval $(call OBJECTS_LINKING_template,sift,debug,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG),))
-$(eval $(call OBJECTS_LINKING_template,sift,debug_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG),))
+$(eval $(call OBJECTS_LINKING_template,sift,debug,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG),,,$(PCH_C),$(PCH_CPP)))
+$(eval $(call OBJECTS_LINKING_template,sift,debug_commandLine,$(OBJECTS) $(SIFT_OBJECTS),src,$(ADDITIONAL_CFLAGS_DEBUG),,,$(PCH_C),$(PCH_CPP)))
 
 ############################# Driver targets #############################
 
@@ -284,8 +294,8 @@ SUBSCALE_SRC := ./subscale_driver/
 SUBSCALE_SOURCES := common.cpp $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp)) $(wildcard src/tools/backtrace/*.cpp) src/utils.cpp
 SUBSCALE_SOURCES_C := $(wildcard $(SUBSCALE_SRC)/*.c) $(wildcard $(SUBSCALE_SRC)/lib/*.c) src/tools/printf.c src/tools/_putchar.c
 SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o) $(SUBSCALE_SOURCES_C:%.c=%.o)
-$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@))
-$(eval $(call OBJECTS_LINKING_template,subscale,debug,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_DEBUG) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@)) # `sudo setcap cap_sys_rawio+ep head` is from https://unix.stackexchange.com/questions/475800/non-root-read-access-to-dev-mem-by-kmem-group-members-fails ; also made it run the other stuff from https://raspberrypi.stackexchange.com/questions/40105/access-gpio-pins-without-root-no-access-to-dev-mem-try-running-as-root
+$(eval $(call OBJECTS_LINKING_template,subscale,release,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_RELEASE) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@,$(PCH_C),$(PCH_CPP)))
+$(eval $(call OBJECTS_LINKING_template,subscale,debug,$(SUBSCALE_OBJECTS),$(SUBSCALE_SRC),$(ADDITIONAL_CFLAGS_DEBUG) -lpigpio -lpython3.7m,./VectorNav/build/bin/libvncxx.a,sudo setcap cap_sys_rawio+ep $$@),$(PCH_C),$(PCH_CPP)) # `sudo setcap cap_sys_rawio+ep head` is from https://unix.stackexchange.com/questions/475800/non-root-read-access-to-dev-mem-by-kmem-group-members-fails ; also made it run the other stuff from https://raspberrypi.stackexchange.com/questions/40105/access-gpio-pins-without-root-no-access-to-dev-mem-try-running-as-root
 
 ############################# VectorNav targets #############################
 
