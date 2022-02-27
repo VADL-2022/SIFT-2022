@@ -8,7 +8,7 @@
 
 #include "DataOutput.hpp"
 
-#include "opencv2/highgui.hpp"
+#include "opencv_highgui_common.hpp"
 #include "utils.hpp"
 #include "../common.hpp"
 

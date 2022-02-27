@@ -9,7 +9,7 @@
 #ifndef DataOutput_hpp
 #define DataOutput_hpp
 
-#include <opencv2/opencv.hpp>
+#include "opencv_common.hpp"
 #include "common.hpp"
 #include "DataSource.hpp"
 #include "KeypointsAndMatching.hpp"

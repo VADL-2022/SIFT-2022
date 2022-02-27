@@ -9,7 +9,7 @@
 #ifndef IMUData_hpp
 #define IMUData_hpp
 
-#include "vn/sensors.h"
+#include "../vn_sensors_common.hpp"
 
 using namespace vn::math;
 using namespace vn::sensors;

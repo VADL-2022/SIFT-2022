@@ -179,7 +179,7 @@ ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
 # SIFT
 ifeq ($(USE_PRECOMPILED_HEADERS),1)
 PCH_C := $(wildcard src/tools/*.h) src/my_sift_additions.h
-PCH_CPP := src/lib/ctpl_stl.hpp ./common.hpp $(filter-out src/fdstream.hpp,$(wildcard src/*.hpp)) $(wildcard src/main/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp) #src/common.hpp
+PCH_CPP := ./vn_sensors_common.hpp src/lib/ctpl_stl.hpp ./common.hpp $(filter-out src/fdstream.hpp,$(wildcard src/*.hpp)) $(wildcard src/main/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp) #src/common.hpp
 else
 PCH_C :=
 PCH_CPP :=
@@ -188,7 +188,7 @@ endif
 # Subscale driver
 ifeq ($(USE_PRECOMPILED_HEADERS),1)
 PCH_C += $(wildcard src/tools/*.h) $(wildcard subscale_driver/*.h) $(wildcard subscale_driver/lib/*.h)
-PCH_CPP += ./common.hpp $(wildcard subscale_driver/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp)
+PCH_CPP += ./vn_sensors_common.hpp ./common.hpp $(wildcard subscale_driver/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp)
 else
 PCH_C :=
 PCH_CPP :=

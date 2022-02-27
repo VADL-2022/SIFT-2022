@@ -1,6 +1,5 @@
 #include <iostream>
 #include <pigpio.h>
-#include "vn/sensors.h"
 #include "config.hpp"
 #include "IMU.hpp"
 

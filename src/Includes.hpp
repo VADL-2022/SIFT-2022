@@ -25,11 +25,11 @@ extern "C" {
 // Use the OpenCV C API ( http://doc.aldebaran.com/2-0/dev/cpp/examples/vision/opencv.html )
 //#include <opencv2/core/core_c.h>
 
-#include <opencv2/opencv.hpp>
+#include "opencv_common.hpp"
 
 #include "my_sift_additions.h"
 
-#include "opencv2/highgui.hpp"
+#include "opencv_highgui_common.hpp"
 #include <optional>
 #include <cinttypes>
 #include <iostream>

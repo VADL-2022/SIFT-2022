@@ -9,7 +9,7 @@
 #ifndef siftMain_h
 #define siftMain_h
 
-#include <opencv2/highgui.hpp>
+#include "opencv_highgui_common.hpp"
 #include "Config.hpp"
 
 #include "lib/ctpl_stl.hpp"
