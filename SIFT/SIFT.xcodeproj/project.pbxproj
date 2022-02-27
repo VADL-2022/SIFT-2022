@@ -139,6 +139,10 @@
 		308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = malloc_with_free_all.cpp; sourceTree = "<group>"; };
 		308B70A0275BC77B00FE86A9 /* malloc_with_free_all.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = malloc_with_free_all.h; sourceTree = "<group>"; };
 		309ACB4A279A1D03003504BA /* IMUData.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = IMUData.hpp; sourceTree = "<group>"; };
+		30A92EB727CB0FE900852B08 /* opencv_common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = opencv_common.hpp; sourceTree = "<group>"; };
+		30A92EB827CB100100852B08 /* opencv_highgui_common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = opencv_highgui_common.hpp; sourceTree = "<group>"; };
+		30A92EB927CB106A00852B08 /* opencv_xfeatures2d_common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = opencv_xfeatures2d_common.hpp; sourceTree = "<group>"; };
+		30A92EBB27CB114300852B08 /* vn_sensors_common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = vn_sensors_common.hpp; path = ../../vn_sensors_common.hpp; sourceTree = "<group>"; };
 		30C5F59C27B73831007D9BF5 /* SubscaleDriverInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SubscaleDriverInterface.cpp; sourceTree = "<group>"; };
 		30C5F59D27B73831007D9BF5 /* SubscaleDriverInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SubscaleDriverInterface.hpp; sourceTree = "<group>"; };
 		30C5F59F27B74599007D9BF5 /* siftMain.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMain.hpp; sourceTree = "<group>"; };
@@ -256,6 +260,7 @@
 				30F99A21278CF13F00DBD9C8 /* SiftGPU */,
 				30ED93AD27A11125001D8655 /* common.cpp */,
 				30ED93AC27A11125001D8655 /* common.hpp */,
+				30A92EBB27CB114300852B08 /* vn_sensors_common.hpp */,
 				30ED93B127A1B2DB001D8655 /* subscale_driver */,
 				300EE48327209F9400969C5F /* src */,
 				300EE4B827209FF000969C5F /* Config.xcconfig */,
@@ -360,6 +365,9 @@
 				30E6A5A52790C80400882438 /* Config.hpp */,
 				309ACB4A279A1D03003504BA /* IMUData.hpp */,
 				30ED93B727A4D968001D8655 /* fdstream.hpp */,
+				30A92EB727CB0FE900852B08 /* opencv_common.hpp */,
+				30A92EB827CB100100852B08 /* opencv_highgui_common.hpp */,
+				30A92EB927CB106A00852B08 /* opencv_xfeatures2d_common.hpp */,
 			);
 			name = src;
 			path = ../../src;

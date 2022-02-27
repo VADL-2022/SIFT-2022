@@ -1,7 +1,7 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include "vn/sensors.h"
+#include "../vn_sensors_common.hpp"
 //#include "LdSensorOneModbus.h"
 
 using namespace std;

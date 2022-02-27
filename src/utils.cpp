@@ -8,7 +8,7 @@
 
 #include "utils.hpp"
 
-#include <opencv2/opencv.hpp>
+#include "opencv_common.hpp"
 #include <fstream>
 #include <signal.h>
 #include "common.hpp"

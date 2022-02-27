@@ -10,7 +10,7 @@
 #define SIFT_hpp
 
 #include "common.hpp"
-#include "opencv2/xfeatures2d.hpp"
+#include "opencv_xfeatures2d_common.hpp"
 #include "KeypointsAndMatching.hpp"
 
 struct CommandLineConfig;

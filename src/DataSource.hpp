@@ -11,7 +11,7 @@
 
 #include <string>
 #include <vector>
-#include <opencv2/opencv.hpp>
+#include "opencv_common.hpp"
 #include <utility>
 #include <unordered_map>
 #include "Config.hpp"
