@@ -20,6 +20,13 @@ CFLAGS_$(1) = $(CFLAGS) $(2)
 CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 # C++ sources
 %_$(1).o: %.cpp $(addsuffix _$(1).hpp.gch,$(patsubst %.hpp,%,$(5)))#<--Example: src/common_$(1).hpp.gch
+#echo $(addsuffix .gch,$(5))
+#echo $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5)))
+#echo $$(filter-out $$<,$$^)
+#echo $$(wildcard $$(filter-out $$<,$$^))
+#ifneq (,$$(wildcard $$(filter-out $$<,$$^))) # If the pointee of the symlink exists       #ifneq (,$(wildcard $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5))))) # If the symlink exists     # This check runs at build time I think ( https://stackoverflow.com/questions/5553352/how-do-i-check-if-file-exists-in-makefile-so-i-can-delete-it )
+	$$(foreach file, $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5))), rm -f $$(file) && cd $$(dir $$(file)) && ln -s $$(notdir $$(addsuffix _$(1).hpp.gch,$$(patsubst %.hpp.gch,%,$$(file)))) $$(notdir $$(file))) # Remove old symlink if any. Then symlink into name the compiler expects.
+#endif
 	$(CXX) $$(addprefix -include ,$(5)) $$(CXXFLAGS_$(1)) -c $$< -o $$@
 # $$(addprefix -include ,$$(filter-out $$<,$$^))
 # ^^ Grab rest of prerequisites (stuff after the `:` in the rule) after the first one by using `$(filter-out $<,$^)` ( https://stackoverflow.com/questions/12284584/can-i-obtain-just-the-second-prerequisite-in-gnu-make/12284855 )
@@ -32,8 +39,8 @@ CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 # C++ precompiled headers
 # https://stackoverflow.com/questions/58841/precompiled-headers-with-gcc
 %_$(1).hpp.gch: %.hpp
-	$(CXX) $$(CXXFLAGS_$(1)) -x c++-header $$< -o $$@
 	rm -f $$(addsuffix .hpp.gch,$$(patsubst %_$(1).hpp.gch,%,$$@)) # Remove old symlink if any
+	$(CXX) $$(CXXFLAGS_$(1)) -x c++-header $$< -o $$@
 	cd $$(dir $$@) && ln -s $$(notdir $$@) $$(notdir $$(addsuffix .hpp.gch,$$(patsubst %_$(1).hpp.gch,%,$$@))) # Symlink into name the compiler expects
 
 ALL_PCH_FILES_FROM_TARGETS += $(addsuffix _$(1).h.gch,$(patsubst %.h,%,$(4))) $(addsuffix _$(1).hpp.gch,$(patsubst %.hpp,%,$(5)))
@@ -248,6 +255,12 @@ $(eval $(call C_AND_CXX_FLAGS_template,release_commandLine,$(ADDITIONAL_CFLAGS_R
 
 # debug target
 ADDITIONAL_CFLAGS_DEBUG = -O0 -g3 -DDEBUG # -Og # -O0
+ifeq ($(OS),Darwin)
+ifneq ($(USE_PRECOMPILED_HEADERS),1)
+ADDITIONAL_CFLAGS_DEBUG += -Xlinker -no_deduplicate
+# ^ `-Xlinker -no_deduplicate` speeds up linking but only works when not using precompiled headers on macOS.. bug?
+endif
+endif
 $(eval $(call C_AND_CXX_FLAGS_template,debug,$(ADDITIONAL_CFLAGS_DEBUG),,$(PCH_C),$(PCH_CPP)))
 
 # debug_commandLine target

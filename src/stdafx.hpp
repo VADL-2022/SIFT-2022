@@ -1,5 +1,5 @@
 //
-//  stdafx.hpp.pch
+//  stdafx.hpp
 //  SIFT
 //
 //  Created by VADL on 2/26/22.
