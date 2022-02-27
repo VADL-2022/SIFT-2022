@@ -22,10 +22,11 @@ CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 	$(CXX) $$(CXXFLAGS_$(1)) -c $$< -o $$@
 # C precompiled headers
 %_$(1).h.gch: %.h
-	$(CC) $$(CFLAGS_$(1)) $$< -o $$@
+	$(CC) $$(CFLAGS_$(1)) -x c-header $$< -o $$@
 # C++ precompiled headers
+# https://stackoverflow.com/questions/58841/precompiled-headers-with-gcc
 %_$(1).hpp.gch: %.hpp
-	$(CXX) $$(CXXFLAGS_$(1)) $$< -o $$@
+	$(CXX) $$(CXXFLAGS_$(1)) -x c++-header $$< -o $$@
 # Don't delete the precompiled headers (Make does this automatically it seems..)
 .PRECIOUS: %_$(1).h.gch %_$(1).hpp.gch # https://stackoverflow.com/questions/15189704/makefile-removes-object-files-for-no-reason
 
@@ -68,7 +69,7 @@ USE_JEMALLOC=1
 USE_PTR_INC_MALLOC=0
 
 # Can speed up compilation but at the expense of writing to more temporary .gch files.
-#USE_PRECOMPILED_HEADERS=1
+USE_PRECOMPILED_HEADERS=1
 
 # END CONFIG #
 
@@ -174,13 +175,25 @@ SOURCES_C += $(SIFT_ANATOMY_SRC)/io_png.c $(SIFT_ANATOMY_SRC)/lib_util.c
 endif
 
 ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
+# Pre-compiled headers (speedup for compilation) # # FIXME: hack here is that both SIFT and subscale driver depend on the same set of precompiled headers..
+# SIFT
 ifeq ($(USE_PRECOMPILED_HEADERS),1)
-PCH_C :=
-PCH_CPP := src/common.hpp # Pre-compiled headers (speedup for compilation)
+PCH_C := $(wildcard src/tools/*.h) src/my_sift_additions.h
+PCH_CPP := src/lib/ctpl_stl.hpp ./common.hpp $(filter-out src/fdstream.hpp,$(wildcard src/*.hpp)) $(wildcard src/main/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp) #src/common.hpp
 else
 PCH_C :=
 PCH_CPP :=
 endif
+
+# Subscale driver
+ifeq ($(USE_PRECOMPILED_HEADERS),1)
+PCH_C += $(wildcard src/tools/*.h) $(wildcard subscale_driver/*.h) $(wildcard subscale_driver/lib/*.h)
+PCH_CPP += ./common.hpp $(wildcard subscale_driver/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp)
+else
+PCH_C :=
+PCH_CPP :=
+endif
+# #
 SOURCES := common.cpp $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/tools/*.cpp) $(wildcard $(SRC)/tools/backtrace/*.cpp) $(wildcard $(SRC)/main/*.cpp) #$(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
 SOURCES_C := subscale_driver/py.c subscale_driver/lib/pf_string.c $(SOURCES_C) $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c)
 ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
