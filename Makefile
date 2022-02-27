@@ -24,18 +24,18 @@ CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 # C precompiled headers
 %_$(1).h.gch: %.h
 	$(CC) $$(CFLAGS_$(1)) -x c-header $$< -o $$@
-	rm -f $$(addsuffix .gch,$$(patsubst %_$(1).h.gch,%,$$@)) # Remove old symlink if any
-	cd $$(dir $$@) && ln -s $$(notdir $$@) $$(notdir $$(addsuffix .gch,$$(patsubst %_$(1).h.gch,%,$$@))) # Symlink into name the compiler expects
+	rm -f $$(addsuffix .h.gch,$$(patsubst %_$(1).h.gch,%,$$@)) # Remove old symlink if any
+	cd $$(dir $$@) && ln -s $$(notdir $$@) $$(notdir $$(addsuffix .h.gch,$$(patsubst %_$(1).h.gch,%,$$@))) # Symlink into name the compiler expects
 # ^^Note: `$(notdir $@) takes away the path from the file name leaving just the file name (so /x/y/foo.a becomes foo.a) $(basename ...) takes away the extension (so foo.a becomes foo)` ( https://stackoverflow.com/questions/16727021/understanding-a-makefile-with-basename-notdir ) + "$(dir names…)	Extracts the directory-part of each file name in names. The directory-part of the file name is everything up through (and including) the last slash in it. If the file name contains no slash, the directory part is the string ‘./’."[...] ( https://www.gnu.org/software/make/manual/html_node/File-Name-Functions.html )
 # C++ precompiled headers
 # https://stackoverflow.com/questions/58841/precompiled-headers-with-gcc
 %_$(1).hpp.gch: %.hpp
 	$(CXX) $$(CXXFLAGS_$(1)) -x c++-header $$< -o $$@
-	rm -f $$(addsuffix .gch,$$(patsubst %_$(1).hpp.gch,%,$$@)) # Remove old symlink if any
-	cd $$(dir $$@) && ln -s $$(notdir $$@) $$(notdir $$(addsuffix .gch,$$(patsubst %_$(1).hpp.gch,%,$$@))) # Symlink into name the compiler expects
+	rm -f $$(addsuffix .hpp.gch,$$(patsubst %_$(1).hpp.gch,%,$$@)) # Remove old symlink if any
+	cd $$(dir $$@) && ln -s $$(notdir $$@) $$(notdir $$(addsuffix .hpp.gch,$$(patsubst %_$(1).hpp.gch,%,$$@))) # Symlink into name the compiler expects
 
 ALL_PCH_FILES_FROM_TARGETS += $(addsuffix _$(1).h.gch,$(patsubst %.h,%,$(4))) $(addsuffix _$(1).hpp.gch,$(patsubst %.hpp,%,$(5)))
-ALL_PCH_SYMLINK_FILES_FROM_TARGETS += $(addsuffix .gch,$(patsubst %.h,%,$(4))) $(addsuffix .gch,$(patsubst %.hpp,%,$(5)))
+ALL_PCH_SYMLINK_FILES_FROM_TARGETS += $(addsuffix .h.gch,$(patsubst %.h,%,$(4))) $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5)))
 # Don't delete the precompiled headers (Make does this automatically it seems..)
 .PRECIOUS: %_$(1).h.gch %_$(1).hpp.gch # https://stackoverflow.com/questions/15189704/makefile-removes-object-files-for-no-reason
 
