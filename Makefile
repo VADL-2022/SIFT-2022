@@ -25,7 +25,7 @@ CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 #echo $$(filter-out $$<,$$^)
 #echo $$(wildcard $$(filter-out $$<,$$^))
 #ifneq (,$$(wildcard $$(filter-out $$<,$$^))) # If the pointee of the symlink exists       #ifneq (,$(wildcard $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5))))) # If the symlink exists     # This check runs at build time I think ( https://stackoverflow.com/questions/5553352/how-do-i-check-if-file-exists-in-makefile-so-i-can-delete-it )
-	$$(foreach file, $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5))), rm -f $$(file) && cd $$(dir $$(file)) && ln -s $$(notdir $$(addsuffix _$(1).hpp.gch,$$(patsubst %.hpp.gch,%,$$(file)))) $$(notdir $$(file))) # Remove old symlink if any. Then symlink into name the compiler expects.
+	$$(foreach file, $(addsuffix .hpp.gch,$(patsubst %.hpp,%,$(5))), rm -f $$(file) && cd $$(dir $$(file)) && { ln -s $$(notdir $$(addsuffix _$(1).hpp.gch,$$(patsubst %.hpp.gch,%,$$(file)))) $$(notdir $$(file)) || true; } ) # Remove old symlink if any. Then symlink into name the compiler expects.
 #endif
 	$(CXX) $$(addprefix -include ,$(5)) $$(CXXFLAGS_$(1)) -c $$< -o $$@
 # $$(addprefix -include ,$$(filter-out $$<,$$^))
