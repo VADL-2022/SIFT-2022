@@ -10,7 +10,7 @@
 
 #include "opencv2/highgui.hpp"
 #include "utils.hpp"
-#include "common.hpp"
+#include "../common.hpp"
 
 void PreviewWindowDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool flush, cv::Rect* crop) {
     t.reset();
@@ -35,7 +35,7 @@ void FileDataOutput::run(cv::Mat frame, bool flush, cv::Rect* crop) {
         int codec = cv::VideoWriter::fourcc('X', 'V', 'I', 'D');
 
         bool isColor = true; //(frame.channels() > 1);
-        //std::cout << "Output type: " << mat_type2str(frame.type()) << "\nisColor: " << isColor << std::endl;
+        //{ out_guard(); std::cout << "Output type: " << mat_type2str(frame.type()) << "\nisColor: " << isColor << std::endl; }
         std::string filename = openFileWithUniqueName(filenameNoExt, ".mp4");
         writer.open(filename, codec, fps, sizeFrame, isColor);
     }
@@ -44,7 +44,8 @@ void FileDataOutput::run(cv::Mat frame, bool flush, cv::Rect* crop) {
     // Resize/convert, then write to video writer
     cv::Mat newFrame;
     cv::Mat* newFramePtr;
-    std::cout << "frame.data: " << (void*)frame.data << std::endl;
+    { out_guard();
+        std::cout << "frame.data: " << (void*)frame.data << std::endl; }
     if (frame.cols != sizeFrame.width || frame.rows != sizeFrame.height) {
         t.reset();
         cv::resize(frame, newFrame, sizeFrame);
@@ -62,21 +63,25 @@ void FileDataOutput::run(cv::Mat frame, bool flush, cv::Rect* crop) {
     }
     if (newFramePtr->type() == CV_8UC4) {
         t.reset();
-        std::cout << "Converting from " << mat_type2str(newFramePtr->type()) << std::endl;
+        { out_guard();
+            std::cout << "Converting from " << mat_type2str(newFramePtr->type()) << std::endl; }
         // https://answers.opencv.org/question/66545/problems-with-the-video-writer-in-opencv-300/
         cv::cvtColor(*newFramePtr, newFrame, cv::COLOR_RGBA2BGR);
         newFramePtr = &newFrame;
         t.logElapsed("convert frame for video writer part 2");
     }
     t.reset();
-    std::cout << "newFrame.data: " << (void*)newFrame.data << std::endl;
-    std::cout << "Writing frame with type " << mat_type2str(newFrame.type()) << std::endl;
+    { out_guard();
+        std::cout << "newFrame.data: " << (void*)newFrame.data << "\n";
+        std::cout << "Writing frame with type " << mat_type2str(newFrame.type()) << std::endl; }
     writerMutex.lock();
     writer.write(crop ? newFrame(*crop) : newFrame);
     if (flush) {
-        std::cout << "Flushing the video" << std::endl;
+        { out_guard();
+            std::cout << "Flushing the video" << std::endl; }
         writer.release(); // We check again if not opened at the top of this function and then reopen the video so this is ok to do here.
-        std::cout << "Flushed the video" << std::endl;
+        { out_guard();
+            std::cout << "Flushed the video" << std::endl; }
     }
     writerMutex.unlock();
     t.logElapsed("write frame for video writer");
@@ -86,13 +91,15 @@ void FileDataOutput::release() {
     writerMutex.lock();
     if (!releasedWriter) {
         writer.release(); // Save the file
-        std::cout << "Saved the video" << std::endl;
+        { out_guard(); // NOTE: this may hang if called from a segfault handler (i.e. if segfault happens inside an out_guard(), but it's ok because it is done *after* the writer.release()... the rest is history. (cout can also have had a mutex locked..)
+            std::cout << "Saved the video" << std::endl; }
         releasedWriter = true;
         writerMutex.unlock();
     }
     else {
         writerMutex.unlock();
-        std::cout << "Video was saved already" << std::endl;
+        { out_guard(); // NOTE: this may hang if called from a segfault handler (i.e. if segfault happens inside an out_guard(), but it's ok because it is done *after* the writer.release()... the rest is history. (cout can also have had a mutex locked..)
+            std::cout << "Video was saved already" << std::endl; }
     }
 }
 
@@ -105,7 +112,8 @@ void FileDataOutput::showCanvas(std::string name, cv::Mat& canvas, bool flush, c
 
 int FileDataOutput::waitKey(int delay) {
     // Advance to next image after user presses enter
-    std::cout << "Press enter to advance to the next frame and get keypoints, g to load or make cached keypoints file, s to apply previous transformations, or q to quit: " << std::flush;
+    { out_guard();
+        std::cout << "Press enter to advance to the next frame and get keypoints, g to load or make cached keypoints file, s to apply previous transformations, or q to quit: " << std::flush; }
 //        std::string n;
 //        std::getline(std::cin, n);
     char n = getchar();

@@ -47,18 +47,21 @@ IMU::IMU()
 {
 	if (IMU_ACTIVE)
 	{
-		cout << "IMU: Connecting" << endl;
+		{ out_guard();
+		  cout << "IMU: Connecting" << endl; }
 
 		mImu.connect(IMU_PORT, IMU_BAUD_RATE);
 
 		if (!mImu.isConnected())
 		{
-			cout << "IMU: Failed to Connect" << endl;
+			{ out_guard();
+			  cout << "IMU: Failed to Connect" << endl; }
 			throw "IMU: Failed to Connect";
 			//exit(1);
 		}
 
-		cout << "IMU: Connected" << endl;
+		{ out_guard();
+		  cout << "IMU: Connected" << endl; }
 	}
 }
 
@@ -66,12 +69,14 @@ IMU::~IMU()
 {
 	if (IMU_ACTIVE)
 	{
-		cout << "IMU: Disconnecting" << endl;
+		{ out_guard();
+		  cout << "IMU: Disconnecting" << endl; }
 
 		halt();
 		mImu.disconnect();
 
-		cout << "IMU: Disconnected" << endl;
+		{ out_guard();
+		  cout << "IMU: Disconnected" << endl; }
 	}
 }
 
@@ -79,12 +84,14 @@ void IMU::reset()
 {
 	if (IMU_ACTIVE)
 	{
-		cout << "IMU: Resetting" << endl;
+		{ out_guard();
+		  cout << "IMU: Resetting" << endl; }
 
 		mImu.restoreFactorySettings();
 		gpioSleep(PI_TIME_RELATIVE, 2, 0);
 
-		cout << "IMU: Resetted" << endl;
+		{ out_guard();
+		  cout << "IMU: Resetted" << endl; }
 	}
 }
 
@@ -92,12 +99,14 @@ void IMU::receive()
 {
 	if (IMU_ACTIVE)
 	{
-		cout << "IMU: Initiating Receiver" << endl;
+		{ out_guard();
+		  cout << "IMU: Initiating Receiver" << endl; }
 
 		mImu.writeBinaryOutput1(IMU_OUTPUT);
 		mImu.registerAsyncPacketReceivedHandler(this, callback);
 
-		cout << "IMU: Initiated Receiver" << endl;
+		{ out_guard();
+		  cout << "IMU: Initiated Receiver" << endl; }
 	}
 }
 
@@ -105,10 +114,12 @@ void IMU::halt()
 {
 	if (IMU_ACTIVE)
 	{
-		cout << "IMU: Destroying Receiver" << endl;
+		{ out_guard();
+		  cout << "IMU: Destroying Receiver" << endl; }
 
 		mImu.unregisterAsyncPacketReceivedHandler();
 
-		cout << "IMU: Destroyed Receiver" << endl;
+		{ out_guard();
+		  cout << "IMU: Destroyed Receiver" << endl; }
 	}
 }

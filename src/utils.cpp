@@ -11,6 +11,7 @@
 #include <opencv2/opencv.hpp>
 #include <fstream>
 #include <signal.h>
+#include "common.hpp"
 
 std::string mat_type2str(int type) {
   std::string r;
@@ -64,7 +65,8 @@ std::string openFileWithUniqueName(std::string name, std::string extension) {
   if(!ofile.is_open())
     {
       //return "";
-        std::cout << fname << " could not be opened" << std::endl;
+      { out_guard();
+          std::cout << fname << " could not be opened" << std::endl; }
       throw "";
     }
 

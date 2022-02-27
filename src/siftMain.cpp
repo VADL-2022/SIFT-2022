@@ -129,6 +129,7 @@ void showTimers(ThreadInfoT threadInfo) {
     Timer::logNanos(threadInfo, "*free total*", freeTimerAccumulator);
     mallocTimerAccumulator = freeTimerAccumulator = 0; // Reset
     // Show malloc stats for this thread
+    out_guard();
     std::cout << "Thread " << threadInfo << ": " << "numMallocsThisFrame" << " was " << numMallocsThisFrame << std::endl;
     std::cout << "Thread " << threadInfo << ": " << "numPointerIncMallocsThisFrame" << " was " << numPointerIncMallocsThisFrame << std::endl;
     std::cout << "Thread " << threadInfo << ": " << "used " << humanSize(mallocWithFreeAll_current - mallocWithFreeAll_origPtr) << " out of " << humanSize(mallocWithFreeAll_max - mallocWithFreeAll_origPtr) << std::endl;
@@ -153,7 +154,8 @@ const std::string& getDataOutputFolder() {
         
         char buf[128];
         if (strftime(buf, sizeof(buf), "%Y-%m-%d_%H_%M_%S_%Z", timeinfo) == 0) {
-            std::cout << "Failed to compute strftime for getDataOutputFolder(). Will use the seconds since 00:00:00 UTC, January 1, 1970 instead." << std::endl;
+            { out_guard();
+                std::cout << "Failed to compute strftime for getDataOutputFolder(). Will use the seconds since 00:00:00 UTC, January 1, 1970 instead." << std::endl; }
             cachedDataOutputFolderPath = root + std::to_string(rawtime);
         }
         cachedDataOutputFolderPath = root + buf;
@@ -535,7 +537,8 @@ void terminate_handler(bool backtrace) {
     }
     else {
         // [!] Take a risk and do something that can't always succeed in a segfault handler: possible malloc and state mutation:
-        std::cout << "No video to save" << std::endl;
+        //std::cout << "No video to save" << std::endl;
+        printf_("No video to save\n");
     }
     
     if (backtrace) {
@@ -603,14 +606,16 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 DataSourceBase* g_src;
 #endif
 void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewWindow, bool useIdentityMatrix = false) {
-    std::cout << "Matcher thread: finished matching" << std::endl;
+    { out_guard();
+        std::cout << "Matcher thread: finished matching" << std::endl; }
     
     // Accumulate homography
     if (!useIdentityMatrix) {
         cv::Mat M = img2.transformation.inv();
         cv::Ptr<cv::Formatted> str;
         matrixToString(M, str);
-        std::cout << "Accumulating new matrix: " << str << std::endl;
+        { out_guard();
+            std::cout << "Accumulating new matrix: " << str << std::endl; }
         lastImageToFirstImageTransformationMutex.lock();
         if (lastImageToFirstImageTransformation.empty()) {
             lastImageToFirstImageTransformation = M;
@@ -626,7 +631,7 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewW
             #ifdef USE_COMMAND_LINE_ARGS
             //assert(!img2.canvas.empty());
             if (img2.canvas.empty()) {
-                std::cout << "Empty canvas image, avoiding showing it on canvasesReadyQueue" << std::endl;
+                std::cout << "Empty canvas image, avoiding showing it on canvasesReadyQueue\n";
             }
             else {
                 canvasesReadyQueue.enqueue(img2);
@@ -645,10 +650,12 @@ void matcherWaitForNonPlaceHolderImageNoLockOnlyWait(bool seekInsteadOfDequeue, 
 //            pthread_exit(0);
 //        }
         pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-        std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << extraDescription << std::endl;
+        { out_guard();
+            std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << extraDescription << std::endl; }
         pthread_mutex_unlock( &processedImageQueue.mutex );
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << extraDescription << std::endl;
+        { out_guard();
+            std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << extraDescription << std::endl; }
         pthread_mutex_lock( &processedImageQueue.mutex );
     }
 }
@@ -664,10 +671,12 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
         if (front.n < 4 /*"null" image*/) {
             if (seekInsteadOfDequeue) {
                 // Peek is done already since we did currentIndex++, nothing to do here.
-                std::cout << "Matcher thread: Seeked to null image with index " << currentIndex-1 << std::endl;
+                { out_guard();
+                    std::cout << "Matcher thread: Seeked to null image with index " << currentIndex-1 << std::endl; }
             }
             else {
-                std::cout << "Matcher thread: Dequeued null image with index " << currentIndex-1 << std::endl;
+                { out_guard();
+                    std::cout << "Matcher thread: Dequeued null image with index " << currentIndex-1 << std::endl; }
                 // Dequeue (till non-null using the loop containing these statements)
                 ProcessedImage<SIFT_T> placeholder;
                 // Prevents waiting forever if last image we process is null //
@@ -685,7 +694,8 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
             }
         }
         else {
-            std::cout << "Matcher thread: Found non-null image with index " << currentIndex-1 << std::endl;
+            { out_guard();
+                std::cout << "Matcher thread: Found non-null image with index " << currentIndex-1 << std::endl; }
             // Dequeue and save the image outside this function, since we found it
             break; // `currentIndex` now points to the image we found that is non-null
         }
@@ -693,10 +703,12 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
     t.logElapsed("matcherWaitForNonPlaceholderImageNoLock");
 }
 int matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedImage<SIFT_T>* img2 /*output*/) {
-    std::cout << "Matcher thread: Locking for 2x matcherWaitForImageNoLock" << std::endl;
+    { out_guard();
+        std::cout << "Matcher thread: Locking for 2x matcherWaitForImageNoLock" << std::endl; }
     pthread_mutex_lock( &processedImageQueue.mutex );
     int currentIndex = 0;
-    std::cout << "matcherWaitForNonPlaceholderImageNoLock: first image" << std::endl;
+    { out_guard();
+        std::cout << "matcherWaitForNonPlaceholderImageNoLock: first image" << std::endl; }
     matcherWaitForNonPlaceholderImageNoLock(false, currentIndex); // Dequeue a bunch of null images
     
     // Save the image from `matcherWaitForNonPlaceholderImageNoLock`
@@ -704,14 +716,15 @@ int matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedIm
     //*img = processedImageQueue.content[processedImageQueue.readPtr + iMin];
     
     currentIndex = 0;
-    std::cout << "matcherWaitForNonPlaceholderImageNoLock: second image" << std::endl;
+    std::cout << "matcherWaitForNonPlaceholderImageNoLock: second image\n";
     matcherWaitForNonPlaceholderImageNoLock(false, currentIndex); // Dequeue a bunch of null images
     
     // Save the image from `matcherWaitForNonPlaceholderImageNoLock` but with a peek instead of dequeue since the next matching round requires img2 as its img1
     processedImageQueue.peekNoLock(img2);
     
     pthread_mutex_unlock( &processedImageQueue.mutex );
-    std::cout << "Matcher thread: Unlocked for 2x matcherWaitForImageNoLock" << std::endl;
+    { out_guard();
+        std::cout << "Matcher thread: Unlocked for 2x matcherWaitForImageNoLock" << std::endl; }
     
     return currentIndex;
 }
@@ -746,17 +759,19 @@ void* matcherThreadFunc(void* arg) {
         assert(enoughDescriptors != MatchResult::NotEnoughKeypoints); // This should be handled beforehand in the SIFT threads
         // If not enough for second image, we can match with a third.
         if (enoughDescriptors == MatchResult::NotEnoughMatchesForSecondImage) {
-            std::cout << "Matcher thread: Not enough descriptors for second image detected. Retrying on third image." << std::endl;
+            std::cout << "Matcher thread: Not enough descriptors for second image detected. Retrying on third image.\n";
             
             // Usually, SIFT threads can predict this by too low numbers of keypoints. 50 keypoints minimum, raises parameters over time beforehand.
             // Retry matching with the next image that comes in. If this fails, discard the last two images and continue.
             ProcessedImage<SIFT_T> img3;
-            
-            std::cout << "Matcher thread: Locking for peek third image" << std::endl;
+
+            { out_guard();
+                std::cout << "Matcher thread: Locking for peek third image" << std::endl; }
             pthread_mutex_lock( &processedImageQueue.mutex );
             matcherWaitForNonPlaceholderImageNoLock(true, currentIndex); // Peek a bunch of null images
             pthread_mutex_unlock( &processedImageQueue.mutex );
-            std::cout << "Matcher thread: Unlocking for peek third image" << std::endl;
+            { out_guard();
+                std::cout << "Matcher thread: Unlocking for peek third image" << std::endl; }
 
             t.reset();
             MatchResult enoughDescriptors2 = sift.findHomography(img1, img3, *s // Writes to img3.transformation
@@ -767,10 +782,10 @@ void* matcherThreadFunc(void* arg) {
             t.logElapsed("find homography for third image");
             
             if (enoughDescriptors2 != MatchResult::Success) {
-                std::cout << "Not enough descriptors the second time around" << std::endl;
+                std::cout << "Not enough descriptors the second time around\n";
             }
             else if (enoughDescriptors2 != MatchResult::NotEnoughKeypoints) {
-                std::cout << "Got enough descriptors the second time around" << std::endl;
+                std::cout << "Got enough descriptors the second time around\n";
             }
 
             onMatcherFinishedMatching(img3, false, enoughDescriptors2 != MatchResult::Success);
@@ -835,7 +850,8 @@ void nonthrowing_python(F f) noexcept(true) {
         eas.discard_as_unraisable(__func__);
     } catch (const std::exception &e) {
         // Log and discard C++ exceptions.
-        std::cout << "C++ exception from python: " << e.what() << std::endl;
+        { out_guard();
+            std::cout << "C++ exception from python: " << e.what() << std::endl; }
     }
 }
 
@@ -919,16 +935,19 @@ int mainMission(DataSourceT* src,
     auto timeSinceLastFlush = std::chrono::steady_clock::now();
     auto fps = src->fps();
     const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
-    std::cout << "Target fps: " << fps << std::endl;
+    { out_guard();
+        std::cout << "Target fps: " << fps << std::endl; }
     //std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
     for (size_t i = src->currentIndex; !stoppedMain(); i++) {
 //        OPTICK_FRAME("MainThread"); // https://github.com/bombomby/optick
         
-        std::cout << "i: " << i << std::endl;
+        { out_guard();
+            std::cout << "i: " << i << std::endl; }
         #ifdef USE_COMMAND_LINE_ARGS
         for (auto& pair : cfg.skipImageIndices) {
             if (pair.first == i) {
-                std::cout << "Skipping to index: " << pair.second << std::endl;
+                { out_guard();
+                    std::cout << "Skipping to index: " << pair.second << std::endl; }
                 for (size_t i2 = pair.first; i2 <= pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
                     // Enqueue null image
@@ -953,12 +972,14 @@ int mainMission(DataSourceT* src,
             if (sinceLast_milliseconds < timeBetweenFrames_milliseconds) {
                 // Sleep
                 auto sleepTime = timeBetweenFrames_milliseconds - sinceLast_milliseconds;
-                std::cout << "Sleeping for " << sleepTime << " milliseconds" << std::endl;
+                { out_guard();
+                    std::cout << "Sleeping for " << sleepTime << " milliseconds" << std::endl; }
                 std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
             }
         }
         last = std::chrono::steady_clock::now();
         if (sinceLast_milliseconds > timeBetweenFrames_milliseconds) {
+            out_guard();
             std::cout << "WARNING: Lagging behind in video capture by " << sinceLast_milliseconds - timeBetweenFrames_milliseconds << " milliseconds" << std::endl;
         }
 #ifdef STOP_AFTER
@@ -969,7 +990,8 @@ int mainMission(DataSourceT* src,
 #endif
         t.reset();
         cv::Mat mat = src->get(i);
-        std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl;
+        { out_guard();
+            std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl; }
         t.logElapsed("get image");
         if (mat.empty()) {
             printf("No more images left to process. Exiting.\n");
@@ -990,7 +1012,8 @@ int mainMission(DataSourceT* src,
                 auto destMillis = cfg.flushVideoOutputEveryNSeconds*1000;
                 if (millis.count() > destMillis || cfg.flushVideoOutputEveryNSeconds == 0 || CMD_CONFIG(saveFirstImage)) {
                     flush = true;
-                    std::cout << "Flushing with lag " << millis.count() - destMillis << " milliseconds" << std::endl;
+                    { out_guard();
+                        std::cout << "Flushing with lag " << millis.count() - destMillis << " milliseconds" << std::endl; }
                     
                     // Flush the matrix too //
                     lastImageToFirstImageTransformationMutex.lock();
@@ -999,11 +1022,12 @@ int mainMission(DataSourceT* src,
                         cv::Mat& M = lastImageToFirstImageTransformation;
                         cv::Ptr<cv::Formatted> str;
                         if (CMD_CONFIG(saveFirstImage)) {
-                            std::cout << "Flushing first image" << std::endl;
+                            std::cout << "Flushing first image\n";
                         }
                         else {
                             matrixToString(M, str);
-                            std::cout << "Flushing homography: " << str << std::endl;
+                            { out_guard();
+                                std::cout << "Flushing homography: " << str << std::endl; }
                         }
                         
                         // Save the intermediate homography matrix
@@ -1026,12 +1050,13 @@ int mainMission(DataSourceT* src,
                             canvas = img;
                             cfg.saveFirstImage = false; // Did already, don't do it again
                         }
-                        std::cout << "Saving to " << name << std::endl;
+                        { out_guard();
+                            std::cout << "Saving to " << name << std::endl; }
                         cv::imwrite(name, canvas);
 #endif
                     }
                     else {
-                        std::cout << "Homography not flushed since it is empty" << std::endl;
+                        std::cout << "Homography not flushed since it is empty\n";
                     }
                     lastImageToFirstImageTransformationMutex.unlock();
                     // //
@@ -1088,7 +1113,8 @@ int mainMission(DataSourceT* src,
                 IMUData imu;
                 // NOTE: this blocks until the fd gets data.
                 t.reset();
-                std::cout << "grabbing from subscale driver interface thread..." << std::endl;
+                { out_guard();
+                    std::cout << "grabbing from subscale driver interface thread..." << std::endl; }
                 subscaleDriverInterfaceMutex_imuData.lock();
                 int count = subscaleDriverInterface_count;
                 static bool firstGrab = true;
@@ -1096,7 +1122,8 @@ int mainMission(DataSourceT* src,
                 if (count > 0) {
                     // We have something to use
                     IMUData& imu = subscaleDriverInterface_imu;
-                    std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl;
+                    { out_guard();
+                        std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl; }
                     
                     // Use the IMU data:
                     nonthrowing_python([](){
@@ -1123,10 +1150,10 @@ int mainMission(DataSourceT* src,
                         py::bool_ shouldAccept = shouldAcceptAndOrientation[0];
                         my_or = shouldAcceptAndOrientation[1];
                         if (shouldAccept == true) {
-                            std::cout << "judge_image: Python likes this image" << std::endl;
+                            std::cout << "judge_image: Python likes this image\n";
                         }
                         else {
-                            std::cout << "judge_image: Python doesn't like this image" << std::endl;
+                            std::cout << "judge_image: Python doesn't like this image\n";
                             discardImage = true;
                         }
                         
@@ -1137,10 +1164,10 @@ int mainMission(DataSourceT* src,
                         py::print("ffypr:", ffypr);
                         py::bool_ closeToFacingDown = precession.attr("compare_to_NED")(arr, 40, 60);
                         if (closeToFacingDown == true) {
-                            std::cout << "compare_to_NED: Python likes this image" << std::endl;
+                            std::cout << "compare_to_NED: Python likes this image\n";
                         }
                         else {
-                            std::cout << "compare_to_NED: Python doesn't like this image" << std::endl;
+                            std::cout << "compare_to_NED: Python doesn't like this image\n";
                             discardImage = true;
                         }
                     });
@@ -1166,10 +1193,12 @@ int mainMission(DataSourceT* src,
                 // Don't push a function for this image or save it as a possible firstImage
                 goto skipImage;
             }
-            std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl;
+            { out_guard();
+                std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
             tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
     //            OPTICK_EVENT();
-                std::cout << "hello from " << id << std::endl;
+                { out_guard();
+                    std::cout << "hello from " << id << std::endl; }
                 installSignalHandlers();
 
     #ifdef USE_PTR_INC_MALLOC
@@ -1184,7 +1213,8 @@ int mainMission(DataSourceT* src,
     //	    p.params->delta_min = 0.3;
 
                 // compute sift keypoints
-                std::cout << id << " findKeypoints" << std::endl;
+                { out_guard();
+                    std::cout << "Thread " << id << ": running findKeypoints" << std::endl; }
     #ifdef SIFTAnatomy_
                 auto pair = sift.findKeypoints(id, p, greyscale);
                 int n = pair.second.second; // Number of keypoints
@@ -1231,7 +1261,8 @@ int mainMission(DataSourceT* src,
     #else
     #error "No known SIFT implementation"
     #endif
-                std::cout << id << " findKeypoints end" << std::endl;
+                { out_guard();
+                    std::cout << "Thread " << id << ": findKeypoints end" << std::endl; }
                 
     #ifdef USE_PTR_INC_MALLOC
                 endMallocWithFreeAll();
@@ -1240,16 +1271,19 @@ int mainMission(DataSourceT* src,
                 bool isFirstSleep = true;
                 do {
                     if (isFirstSleep) {
-                        std::cout << "Thread " << id << ": Locking" << std::endl;
+                        { out_guard();
+                            std::cout << "Thread " << id << ": Locking" << std::endl; }
                     }
                     pthread_mutex_lock( &processedImageQueue.mutex );
                     if (isFirstSleep) {
-                        std::cout << "Thread " << id << ": Locked" << std::endl;
+                        { out_guard();
+                            std::cout << "Thread " << id << ": Locked" << std::endl; }
                     }
                     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
                         || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
                         ) {
-                        std::cout << "Thread " << id << ": enqueue" << std::endl;
+                        { out_guard();
+                            std::cout << "Thread " << id << ": enqueue" << std::endl; }
                         #ifdef SIFTAnatomy_
                         processedImageQueue.enqueueNoLock(greyscale,
                                                 shared_keypoints_ptr(keypoints),
@@ -1280,20 +1314,24 @@ int mainMission(DataSourceT* src,
                     else {
                         auto ms = 10;
                         if (isFirstSleep) {
-                            std::cout << "Thread " << id << ": Unlocking" << std::endl;
+                            { out_guard();
+                                std::cout << "Thread " << id << ": Unlocking" << std::endl; }
                         }
                         pthread_mutex_unlock( &processedImageQueue.mutex );
                         if (isFirstSleep) {
-                            std::cout << "Thread " << id << ": Unlocked" << std::endl;
+                            out_guard();
+                            std::cout << "Thread " << id << ": Unlocked\n";
                             std::cout << "Thread " << id << ": Sleeping " << ms << " milliseconds at least once (and possibly locking and unlocking a few times more)..." << std::endl;
                             isFirstSleep = false;
                         }
                         std::this_thread::sleep_for(std::chrono::milliseconds(ms));
                         continue;
                     }
-                    std::cout << "Thread " << id << ": Unlocking 2" << std::endl;
+                    { out_guard();
+                        std::cout << "Thread " << id << ": Unlocking 2" << std::endl; }
                     pthread_mutex_unlock( &processedImageQueue.mutex );
-                    std::cout << "Thread " << id << ": Unlocked 2" << std::endl;
+                    { out_guard();
+                        std::cout << "Thread " << id << ": Unlocked 2" << std::endl; }
                     break;
                 } while (!stoppedMain());
                 t.logElapsed(id, "enqueue processed image");
@@ -1331,7 +1369,7 @@ int mainMission(DataSourceT* src,
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
                 if (img.canvas.empty()) {
-                    std::cout << "Canvas has empty image, using original" << std::endl;
+                    std::cout << "Canvas has empty image, using original\n";
                     o2.showCanvas("", img.image, false, rect.empty() ? nullptr : &rect);
                 }
                 else {
@@ -1340,11 +1378,13 @@ int mainMission(DataSourceT* src,
             }
             //cv::waitKey(30);
             auto size = canvasesReadyQueue.size();
-            std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
+            { out_guard();
+                std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl; }
             char c = cv::waitKey(CMD_CONFIG(waitKeyForever) ? 0 : (1 + 150.0 / (1 + size))); // Sleep less as more come in
             if (c == 'q') {
                 // Quit
-                std::cout << "Exiting (q pressed)" << std::endl;
+                { out_guard();
+                    std::cout << "Exiting (q pressed)" << std::endl; }
                 stopMain();
             }
         }
@@ -1358,13 +1398,14 @@ int mainMission(DataSourceT* src,
     // Show the rest of the images only if we stopped because we finished reading all frames and if we are showing a preview window
     if (!stoppedMain() && CMD_CONFIG(showPreviewWindow())) {
         #ifdef USE_COMMAND_LINE_ARGS
-        std::cout << "Showing the rest of the images" << std::endl;
+        std::cout << "Showing the rest of the images\n";
         // Show images
         auto waitKey = [](int t = 30){
             char c = cv::waitKey(t);
             if (c == 'q') {
                 // Quit
-                std::cout << "Exiting (q pressed)" << std::endl;
+                { out_guard();
+                    std::cout << "Exiting (q pressed)" << std::endl; }
                 stopMain();
             }
         };
@@ -1392,45 +1433,54 @@ int mainMission(DataSourceT* src,
                 o2.showCanvas("", realCanvas, false, rect.empty() ? nullptr : &rect);
             }
             auto size = canvasesReadyQueue.size();
-            std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl;
+            { out_guard();
+                std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl; }
             waitKey(); // Check if user wants to quit
         }
         #else
         // Wait for no more in queue
-        std::cout << "Main thread: waiting for no more in queue" << std::endl;
+        { out_guard();
+            std::cout << "Main thread: waiting for no more in queue" << std::endl; }
         while (!tp.q.empty() // More functions to run
                && !stoppedMain()
                ) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        std::cout << "Main thread: done waiting for no more in queue" << std::endl;
+        { out_guard();
+            std::cout << "Main thread: done waiting for no more in queue" << std::endl; }
         #endif
     }
-    
-    std::cout << "Broadcasting stoppedMain()" << std::endl;
+
+//    { out_guard();
+//        std::cout << "Broadcasting stoppedMain()" << std::endl; }
     
     // Wake up matcher thread and other SIFT threads so they see that we stoppedMain()
 //    pthread_cond_broadcast(&processedImageQueue.condition); // Note: "The signal and broadcast operations do not require a mutex. A condition variable also is not permanently associated with a specific mutex; the external mutex does not protect the condition variable." ( https://stackoverflow.com/questions/2763714/why-do-pthreads-condition-variable-functions-require-a-mutex#:~:text=The%20signal%20and%20broadcast%20operations,not%20protect%20the%20condition%20variable. ) + verified by POSIX spec: "The pthread_cond_broadcast() or pthread_cond_signal() functions may be called by a thread whether or not it currently owns the mutex that threads calling pthread_cond_wait() or pthread_cond_timedwait() have associated with the condition variable during their waits; however, if predictable scheduling behavior is required, then that mutex shall be locked by the thread calling pthread_cond_broadcast() or pthread_cond_signal()." ( https://pubs.opengroup.org/onlinepubs/9699919799/functions/pthread_cond_broadcast.html )
-    
-    std::cout << "Stopping thread pool" << std::endl;
+
+    { out_guard();
+        std::cout << "Stopping thread pool" << std::endl; }
     
     tp.stop(!stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
-    
-    std::cout << "Cancelling matcher thread" << std::endl;
+
+    { out_guard();
+        std::cout << "Cancelling matcher thread" << std::endl; }
     
     // Sometimes, the matcher thread is waiting on the condition variable still, and it will be waiting forever unless we interrupt it somehow (or broadcast on the condition variable..).
     pthread_cancel(matcherThread); // https://man7.org/linux/man-pages/man3/pthread_cancel.3.html
     if (driverInput_fd != -1) {
-        std::cout << "Joining subscaleDriverInterfaceThread" << std::endl;
-        pthread_cancel(subscaleDriverInterfaceThread);
+        { out_guard();
+            std::cout << "Cancelling subscaleDriverInterfaceThread" << std::endl; }
+        pthread_cancel(subscaleDriverInterfaceThread); // (by default, pthread_cancel() makes the thread exit only when it calls a pthread_-prefixed function (a "cancellation point") ( https://man7.org/linux/man-pages/man3/pthread_cancel.3.html ))
     }
-    
-    std::cout << "Joining matcher thread" << std::endl;
+
+    { out_guard();
+        std::cout << "Joining matcher thread" << std::endl; }
     
     int ret1;
     pthread_join(matcherThread, (void**)&ret1);
     if (driverInput_fd != -1) {
-        std::cout << "Joining subscaleDriverInterfaceThread" << std::endl;
+        { out_guard();
+            std::cout << "Joining subscaleDriverInterfaceThread" << std::endl; }
         int ret2;
         pthread_join(subscaleDriverInterfaceThread, (void**)&ret2);
     }
@@ -1440,7 +1490,8 @@ int mainMission(DataSourceT* src,
     cv::Mat& M = lastImageToFirstImageTransformation;
     cv::Ptr<cv::Formatted> str;
     matrixToString(M, str);
-    std::cout << "Final homography: " << str << std::endl;
+    { out_guard();
+        std::cout << "Final homography: " << str << std::endl; }
     
     // Save final homography matrix
     std::string name;
@@ -1449,14 +1500,15 @@ int mainMission(DataSourceT* src,
     
     // Save final homography to an image
     if (firstImage.empty()) {
-        std::cout << "No first image" << std::endl;
+        std::cout << "No first image\n";
         return 0;
     }
     if (M.empty()) {
-        std::cout << "No final homography" << std::endl;
+        std::cout << "No final homography\n";
         
         // Save just the image
-        std::cout << "Saving to " << name << std::endl;
+        { out_guard();
+            std::cout << "Saving to " << name << std::endl; }
         cv::imwrite(name, firstImage);
         
         return 0;
@@ -1468,7 +1520,8 @@ int mainMission(DataSourceT* src,
     cv::Mat img = crop ? firstImage(src->crop()) : firstImage;
     cv::warpPerspective(img, canvas /* <-- destination */, M, img.size());
 //    cv::warpAffine(firstImage, canvas /* <-- destination */, M, firstImage.size());
-    std::cout << "Saving to " << name << std::endl;
+    { out_guard();
+        std::cout << "Saving to " << name << std::endl; }
     cv::imwrite(name, canvas);
     return 0;
 }

@@ -16,13 +16,16 @@
 #include "DataSource.hpp"
 #endif
 
+#include "../common.hpp"
+
 #ifdef SIFTAnatomy_
 std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int /*n*/>> SIFTAnatomy::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
     assert(greyscale.depth() == CV_32F);
     assert(greyscale.type() == CV_32FC1);
     float* x = (float*)greyscale.data;
     size_t w = greyscale.cols, h = greyscale.rows;
-    std::cout << "width: " << w << ", height: " << h << std::endl;
+    { out_guard();
+        std::cout << "width: " << w << ", height: " << h << std::endl; }
 
     // compute sift keypoints
     t.reset();
@@ -32,7 +35,7 @@ std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int
     k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
     printf("Thread %d: Number of keypoints: %d\n", threadID, n);
     if (n < 4) {
-        printf("Not enough keypoints to find homography! Ignoring this image\n");
+        printf("Thread %d: Not enough keypoints to find homography! Ignoring this image\n", threadID);
         // TODO: Simply let the transformation be an identity matrix?
         //exit(3);
         //stopMain();
@@ -58,14 +61,15 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
     t.reset();
     struct sift_keypoints* keypointsPrev = img1.computedKeypoints.get();
     struct sift_keypoints* keypoints = img2.computedKeypoints.get();
-    std::cout << keypointsPrev << ", " << keypoints << std::endl;
+    { out_guard();
+        std::cout << keypointsPrev << ", " << keypoints << "\n"; }
     assert(keypointsPrev != nullptr && keypoints != nullptr); // This should always hold, since the other thread pool threads enqueued them.
     assert(img2.out_k1 == nullptr && img2.out_k2A == nullptr && img2.out_k2B == nullptr); // This should always hold since we reset the pointers when done with matching
     img2.out_k1.reset(sift_malloc_keypoints());
     img2.out_k2A.reset(sift_malloc_keypoints());
     img2.out_k2B.reset(sift_malloc_keypoints());
     if (keypointsPrev->size == 0 || keypoints->size == 0) {
-        std::cout << "Matcher thread: zero keypoints, cannot match. Saving identity transformation." << std::endl;
+        std::cout << "Matcher thread: zero keypoints, cannot match. Saving identity transformation.\n";
         //throw ""; // TODO: temp, need to notify main thread and retry matching maybe
         return MatchResult::NotEnoughKeypoints;
     }
@@ -119,10 +123,11 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
     
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
     if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
-        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated." << std::endl;
+        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated.\n";
         return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
     }
 
+    printf("Number of matching keypoints: %d\n", k1->size);
     if (CMD_CONFIG(mainMission)) {
 #ifdef USE_COMMAND_LINE_ARGS
         // Draw it //
@@ -156,7 +161,6 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
         t.reset();
         auto& s = img2;
         struct sift_keypoints* k1 = s.out_k1.get();
-        printf("Number of matching keypoints: %d\n", k1->size);
         if (k1->size > 0){
 
             int n_hist = k1->list[0]->n_hist;
@@ -239,7 +243,7 @@ void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage
     // Better:
     img2.transformation = cv::findHomography( obj, scene, cv::LMEDS /*cv::RANSAC*/ );
     if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
-        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated." << std::endl;
+        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated.\n";
         return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
     }
     
@@ -252,7 +256,8 @@ void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage
         //if (!img2.canvas.empty()) {
             // Get scale to destination
             cv::Size2d scale = cv::Size2d((double)g_desktopSize.size().width / img2.image.cols, (double)g_desktopSize.size().height / img2.image.rows);
-            std::cout << "Scale: " << scale << std::endl;
+            { out_guard();
+                std::cout << "Scale: " << scale << "\n"; }
             float max = std::max(scale.width, scale.height);
             
             // Resize canvas
@@ -324,7 +329,8 @@ int SIFTGPU::test(int argc, char** argv) {
 
 std::pair<std::vector<SiftGPU::SiftKeypoint> /*keys1*/, std::pair<std::vector<float> /*descriptors1*/, int /*num1*/>> SIFTGPU::findKeypoints(int threadID, SIFTState& s, SIFTParams& p, cv::Mat& greyscale) {
     if (s.sift.RunSIFT(greyscale.cols, greyscale.rows, greyscale.data, GL_LUMINANCE, GL_UNSIGNED_BYTE) == 0) { // Greyscale gl types (see SiftGPU/src/SiftGPU/GLTexImage.h under `static int  IsSimpleGlFormat(unsigned int gl_format, unsigned int gl_type)`)
-        std::cout << "RunSIFT() failed" << std::endl;
+        { out_guard();
+            std::cout << "RunSIFT() failed" << std::endl; }
         throw ""; // TODO: don't throw
     }
     
@@ -390,7 +396,8 @@ void SIFTGPU::findHomography(ProcessedImage<SIFTGPU>& img1, ProcessedImage<SIFTG
     ScopedAction<Freer, T> freer(match_buf);
     //use the default thresholds. Check the declaration in SiftGPU.h
     int num_match = matcher->GetSiftMatch(num1, match_buf);
-    std::cout << num_match << " sift matches were found;\n";
+    { out_guard();
+        std::cout << num_match << " sift matches were found;\n"; }
     
     //enumerate all the feature matches
 //    for(int i  = 0; i < num_match; ++i)
@@ -418,7 +425,7 @@ void SIFTGPU::findHomography(ProcessedImage<SIFTGPU>& img1, ProcessedImage<SIFTG
     
     img2.transformation = cv::findHomography(obj, scene, cv::LMEDS /*cv::RANSAC*/ );
     if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
-        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated." << std::endl;
+        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated.\n";
         return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
     }
 

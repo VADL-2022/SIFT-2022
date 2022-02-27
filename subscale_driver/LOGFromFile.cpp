@@ -8,6 +8,7 @@
 // #include "LDS.hpp"
 #include <stdio.h>
 #include <string.h>
+#include "../common.hpp"
 
 using namespace std;
 
@@ -76,9 +77,10 @@ void LOGFromFile::callback(void *userData)
 
     if (VERBOSE)
     {
-        cout << "Yaw: " << data->mImu->yprNed[0] << " Pitch: " << data->mImu->yprNed[1] << " Roll: " << data->mImu->yprNed[2]
-             << " Accel: " << data->mImu->linearAccelBody.mag()
-             << " Distance: " << 0.0f /*data->mLidar->distance*/ << endl;
+	{ out_guard();
+          cout << "Yaw: " << data->mImu->yprNed[0] << " Pitch: " << data->mImu->yprNed[1] << " Roll: " << data->mImu->yprNed[2]
+               << " Accel: " << data->mImu->linearAccelBody.mag()
+               << " Distance: " << 0.0f /*data->mLidar->distance*/ << endl; }
     }
 }
 
@@ -89,13 +91,15 @@ LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, co
     
     if (LOG_ACTIVE || VERBOSE)
     {
-        cout << "LogFromFile: Connecting" << endl;
+	{ out_guard();
+          cout << "LogFromFile: Connecting" << endl; }
 
         mLog = fopen(filename, "r");
 
         if (!mLog)
         {
-	  cout << "LogFromFile: Failed to Open Log File " << filename << " with error " << strerror(errno) << endl;
+          { out_guard();
+	    cout << "LogFromFile: Failed to Open Log File " << filename << " with error " << strerror(errno) << endl; }
 	  exit(1);
         }
 
@@ -105,8 +109,9 @@ LOGFromFile::LOGFromFile(UserCallback userCallback_, void* callbackUserData_, co
 	  c = fgetc(mLog);
 	} while (c != '\n');
 
-        cout << "LogFromFile: File Opened: " << filename << endl;
-        cout << "LogFromFile: Connected" << endl;
+	{ out_guard();
+          cout << "LogFromFile: File Opened: " << filename << endl;
+          cout << "LogFromFile: Connected" << endl; }
     }
 }
 
@@ -114,12 +119,14 @@ LOGFromFile::~LOGFromFile()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
-        cout << "Log: Disconnecting" << endl;
+	{ out_guard();
+          cout << "Log: Disconnecting" << endl; }
 
         halt();
 	fclose(mLog);
 
-        cout << "Log: Disconnected" << endl;
+	{ out_guard();
+          cout << "Log: Disconnected" << endl; }
     }
 }
 
@@ -127,11 +134,13 @@ void LOGFromFile::receive()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
-        cout << "LOG: Initiating Receiver" << endl;
+	{ out_guard();
+          cout << "LOG: Initiating Receiver" << endl; }
 
         gpioSetTimerFuncEx(LOG_TIMER, 1000 / FREQUENCY, callback, this);
 
-        cout << "LIDAR: Initiated Receiver" << endl;
+	{ out_guard();
+          cout << "LIDAR: Initiated Receiver" << endl; }
     }
 }
 
@@ -139,10 +148,12 @@ void LOGFromFile::halt()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
-        cout << "LOG: Destroying Receiver" << endl;
+	{ out_guard();
+          cout << "LOG: Destroying Receiver" << endl; }
 
         gpioSetTimerFuncEx(LOG_TIMER, 1000 / FREQUENCY, nullptr, this);
 
-        cout << "LOG: Destroyed Receiver" << endl;
+	{ out_guard();
+          cout << "LOG: Destroyed Receiver" << endl; }
     }
 }

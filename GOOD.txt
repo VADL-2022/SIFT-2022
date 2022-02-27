@@ -217,3 +217,21 @@ files="$files $files2"
 echo "Files: $files"
 files=$(echo "$files" | xargs -n 1 echo | awk '{print "pi@'"$ip"':"$0}')
 scp -r -p $files /Volumes/MyTestVolume/Projects/DataRocket/
+
+
+-- post fullscale1 analysis
+
+
+# Starts the SIFT ASAP at "main deployment" which is really blast charge, but 7 seconds extra due to sift start time
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+# Paths on my laptop:
+# /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4
+# /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_imuAndTemperatureOnly_fullscale1_Derived/Trunc_Fullscale1.csv
+
+
+2885
+2940.37-2867.58
+
+
+pi ip finder: nmap -p 22 10.16.137.0/24 | grep -i "tcp open" -B 4
+full build: git pull && git submodule update --init --recursive && make -j4 sift_exe_release_commandLine subscale_exe_release

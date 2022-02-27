@@ -130,7 +130,8 @@ bool sendOnRadio() {
     printf("hostname: %s\n", hostname);
     if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
       // do radio
-      std::cout << "sendOnRadio" << std::endl;
+      { out_guard();
+        std::cout << "sendOnRadio" << std::endl; }
       return pyRunFile("subscale_driver/radio.py", 0, nullptr);
     }
     else {
@@ -152,7 +153,8 @@ bool gps() {
       // nothing.. radio..
     }
     else { // sift2 and fore2 are gps
-      std::cout << "gps" << std::endl;
+      { out_guard();
+      std::cout << "gps" << std::endl; }
       return pyRunFile("subscale_driver/gps.py", 0, nullptr);
     }
   }
@@ -188,10 +190,12 @@ void startDelayedSIFT(bool useIMU) {
     //reportStatus(Status::StartingSIFT);
     bool ok = startDelayedSIFT_fork(sift_args, sizeof(sift_args) / sizeof(sift_args[0]), useIMU);
     if (!ok) {
-      std::cout << "startDelayedSIFT_fork failed" << std::endl;
+      { out_guard();
+      std::cout << "startDelayedSIFT_fork failed" << std::endl; }
     }
     else {
-      std::cout << "Finished SIFT" << std::endl;
+      { out_guard();
+        std::cout << "Finished SIFT" << std::endl; }
       reportStatus(Status::FinishedSIFT);
     }
   }, "SIFT", QueuedFunctionType::Misc);
@@ -256,6 +260,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     // toSIFT: Grab flags
     driverInput_fd_fcntl_flags = fcntl(fd[1], F_GETFL);
     if (driverInput_fd_fcntl_flags < 0) {
+      out_guard();
       perror("Driver: F_GETFL fcntl on fd[1] failed");
       std::cout << "Driver: continuing despite failure to fcntl on subscale driver fd (" << fd[0] << ")" << std::endl;
     }
@@ -263,6 +268,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
       // toSIFT: Set nonblocking (in case it fills up.. though if so then SIFT will be behind on IMU data..)
       int ret = fcntl(fd[1], F_SETFL, driverInput_fd_fcntl_flags | O_NONBLOCK);
       if (ret < 0) {
+        out_guard();
         perror("Driver: F_SETFL fcntl on fd[1] failed. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
       }
     }
@@ -312,13 +318,16 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
       
       // Read from fd
       ssize_t nread = read(fd[0], buf, MSGSIZE);
-      
-      std::cout << "nread from driverInput_fd: " << nread << std::endl;
+
+      { out_guard();
+        std::cout << "nread from driverInput_fd: " << nread << std::endl; }
       if (nread == -1) {
+        out_guard();
         perror("Error read()ing from driverInput_fd. Ignoring it for now. Error was"/* <The error is printed here by perror> */);
         break;
       }
       else if (nread == 0) {
+        out_guard();
         if (count == 0)
           std::cout << "No IMU data present yet" << std::endl;
         else
@@ -332,11 +341,14 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     }
 #else
     execvp((char*)args[0], (char**)args); // one variant of exec
-    perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
+    { out_guard();
+      perror("Failed to run execvp to run SIFT"); // Will only print if error with execvp.
+      }
     #endif
     return false; //exit(1); // [DONETODO: answer is yes, because of flushing with endl] saves IMU data? If not, set atexit or std terminate handler
   } else {
-    perror("Error with fork");
+    { out_guard();
+      perror("Error with fork"); }
     return false;
   }
   return true;
@@ -384,7 +396,8 @@ double updateRelativeAltitude(LOG_T log, bool showAltitudeOnce) {
   static bool onceFlag = true;
   if ((showAltitudeOnce && onceFlag) || verbose) {
     onceFlag = false;
-    std::cout << "Altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl;
+    { out_guard();
+      std::cout << "Altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl; }
   }
   return altitudeFeet;
 }
@@ -412,7 +425,8 @@ bool checkIMUFailure(const char* callbackName, LOG_T *log, float magnitude, floa
   }
   lastIMUTimestamp = log->mImu->timestamp;
   if (fseconds - timeSeconds > EPSILON && timeSeconds != 0) {
-    std::cout << "WARNING: Lagging behind in IMU data by " << fseconds - timeSeconds << " seconds." << std::endl;
+    { out_guard();
+      std::cout << "WARNING: Lagging behind in IMU data by " << fseconds - timeSeconds << " seconds." << std::endl; }
   }
   if (imuFailureCounter > 5    /*fseconds - timeSeconds > EPSILON*/ && timeSeconds != 0) {
     reportStatus(statusOnFailure);
@@ -435,7 +449,8 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       ) {
     force = true;
     long long milliSeconds = backupTakeoffTime;
-    std::cout << "IMU considered not responding. Waiting until projected launch time guesttimate which is " << milliSeconds/1000.0 << " seconds away from now..." << std::endl;
+    { out_guard();
+      std::cout << "IMU considered not responding. Waiting until projected launch time guesttimate which is " << milliSeconds/1000.0 << " seconds away from now..." << std::endl; }
     // Wait for SIFT backup time
     std::this_thread::sleep_for(std::chrono::milliseconds(milliSeconds));
     // Start SIFT or video capture
@@ -464,7 +479,8 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       reportStatus(Status::TakeoffTimeRecordedInCheckTakeoffCallback);
 
       // Record takeoff altitude
-      std::cout << "Takeoff altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl;
+      { out_guard();
+        std::cout << "Takeoff altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl; }
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
       //   bool ok = startDelayedSIFT();
@@ -558,7 +574,8 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
   const long long TIME_FOR_IMU_TO_CATCH_UP = MIN_TIME_FOR_CATCH_UP + IMU_MAIN_DEPLOYMENT_ACCEL_DURATION * 1000; // milliseconds to allow IMU to catch up to the fact that we experienced main deployment etc.
   if (backupSIFTStartTime + TIME_FOR_IMU_TO_CATCH_UP < millisSinceTakeoff) { // Past our backup time, force trigger
     auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
-    std::cout << "Too much time elapsed without main deployment. Forcing trigger." << std::endl;
+    { out_guard();
+      std::cout << "Too much time elapsed without main deployment. Forcing trigger." << std::endl; }
     magnitude = FLT_MAX; force = true;
     reportStatus(Status::TooMuchTimeElapsedWithoutMainDeployment_ThereforeForcingTrigger);
   }
@@ -567,10 +584,12 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
     auto millisSinceTakeoff = since(takeoffTime).count();
     if (backupSIFTStartTime > millisSinceTakeoff) { // Then we have to wait
       auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
-      std::cout << "IMU considered not responding. Waiting until projected SIFT start time, which is " << (millisTillSIFT/1000.0) << " seconds away from now..." << std::endl;
+      { out_guard();
+        std::cout << "IMU considered not responding. Waiting until projected SIFT start time, which is " << (millisTillSIFT/1000.0) << " seconds away from now..." << std::endl; }
       std::this_thread::sleep_for(std::chrono::milliseconds(millisTillSIFT));
     } else {
-      std::cout << "IMU considered not responding. No need to wait until projected SIFT start time, with " << (millisSinceTakeoff - backupSIFTStartTime )/1000.0 << " seconds to spare" << std::endl;
+      { out_guard();
+        std::cout << "IMU considered not responding. No need to wait until projected SIFT start time, with " << (millisSinceTakeoff - backupSIFTStartTime )/1000.0 << " seconds to spare" << std::endl; }
     }
     // Start SIFT or video capture
     magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
@@ -607,14 +626,16 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   static bool onceFlag = true;
   if (onceFlag || verbose) {
     onceFlag = false;
-    std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " << relativeAltitude << " ft" << std::endl;
+    { out_guard();
+      std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " << relativeAltitude << " ft" << std::endl; }
   }
   if (relativeAltitude < 50) {
     // Future: stop SIFT here but not sure if this would stop too early, so we just output what would happen:
     static bool onceFlag2 = true;
     if (onceFlag2 ||verbose) {
       onceFlag2 = false;
-      std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, would normally try stopping SIFT" << std::endl;
+      { out_guard();
+        std::cout << "Relative altitude " << relativeAltitude << " is less than 50 feet, would normally try stopping SIFT" << std::endl; }
     }
     //raise(SIGINT); // <-- to stop SIFT
     reportStatus(Status::AltitudeLessThanDesiredAmount);    
@@ -624,7 +645,8 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   float magnitude = log->mImu->linearAccelNed.mag();
   bool imuFailed = false;
   if (checkIMUFailure("passIMUDataToSIFTCallback", log, magnitude, timeSeconds, fseconds, fsecondsOffset, timeSecondsOffset, Status::IMUNotRespondingInPassIMUDataToSIFTCallback)) {
-    std::cout << "IMU considered not responding. Telling SIFT we're not using it for now" << std::endl;
+    { out_guard();
+      std::cout << "IMU considered not responding. Telling SIFT we're not using it for now" << std::endl; }
     // Notify SIFT that IMU failed
     // toSIFT << "\n" << -1.0f;
     // toSIFT.flush();
@@ -638,10 +660,12 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
 
   // Stop SIFT on timer time elapsed and IMU failed
   if (imuFailed && !videoCapture && verbose) {
-    std::cout << "Time till SIFT stops: " << backupSIFTStopTime - since(mainDeploymentOrStartedSIFTTime).count() << " milliseconds" << std::endl;
+    { out_guard();
+      std::cout << "Time till SIFT stops: " << backupSIFTStopTime - since(mainDeploymentOrStartedSIFTTime).count() << " milliseconds" << std::endl; }
   }
   if (imuFailed && !videoCapture && since(mainDeploymentOrStartedSIFTTime).count() > backupSIFTStopTime && !mainDispatchQueueDrainThenStop) {
-    std::cout << "Stopping SIFT on backup time elapsed" << std::endl;
+    { out_guard();
+      std::cout << "Stopping SIFT on backup time elapsed" << std::endl; }
     reportStatus(Status::StoppingSIFTOnBackupTimeElapsed);
     raise(SIGINT);
     // Also close main dispatch queue so the subscale driver terminates
@@ -655,7 +679,8 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     static bool onceFlag3 = true;
     if (onceFlag3 || verbose) {
       onceFlag3 = false;
-      std::cout << "Cooldown before allowing landing detection with " << IMU_POST_MAIN_POSSIBLY_EMERGENCY_COOLDOWN_BEFORE_LANDING_DETECTION - millisSinceMainDeployment << " milliseconds left" << std::endl;
+      { out_guard();
+        std::cout << "Cooldown before allowing landing detection with " << IMU_POST_MAIN_POSSIBLY_EMERGENCY_COOLDOWN_BEFORE_LANDING_DETECTION - millisSinceMainDeployment << " milliseconds left" << std::endl; }
     }
   }
   // Check for landing
@@ -749,8 +774,10 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     // toSIFT.flush();
   }
   else {
-    if (!videoCapture && verbose)
-      std::cout << "passIMUDataToSIFTCallback: toSIFT is not open, not doing anything" << std::endl;
+    if (!videoCapture && verbose) {
+      { out_guard();
+        std::cout << "passIMUDataToSIFTCallback: toSIFT is not open, not doing anything" << std::endl; }
+    }
   }
 }
 
@@ -1061,7 +1088,8 @@ VADL2022::VADL2022(int argc, char** argv)
 
   if (sendOnRadio_) {
     auto ret = sendOnRadio();
-    std::cout << "sendOnRadio returned: " << ret << std::endl;
+    { out_guard();
+      std::cout << "sendOnRadio returned: " << ret << std::endl; }
     return;
   }
   else if (siftOnly) {
@@ -1074,18 +1102,22 @@ VADL2022::VADL2022(int argc, char** argv)
       mImu = new IMU();
   }
   catch (const vn::not_found &e) {
+    outMutex.lock(); // Like out_guard() but manual
     std::cout << "VectorNav not found: vn::not_found: " << e.what();
     if (imuOnly) {
       std::cout << std::endl;
+      outMutex.unlock(); // Like out_guard() but manual
       exit(1);
     }
     else {
       std::cout << " ; continuing without it." << std::endl;
     }
+    outMutex.unlock(); // Like out_guard() but manual
     vn=false;
   }
   catch (const char* e) {
-    std::cout << "VectorNav not connected; continuing without it." << std::endl;
+    { out_guard();
+      std::cout << "VectorNav not connected; continuing without it." << std::endl; }
     vn = false;
   }
   // mLidar = new LIDAR();
@@ -1113,12 +1145,16 @@ VADL2022::VADL2022(int argc, char** argv)
       // Always start the video to ensure we get some data in case takeoff
       // detection fails or SIFT doesn't start etc. Take an ascent video (on
       // SIFT and video capture pi's)
-      std::cout << "Starting failsafe video" << std::endl;
+      { out_guard();
+        std::cout << "Starting failsafe video" << std::endl; }
       pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
     }
   }
   else {
-    if (forceNoIMU) std::cout << "Forcing no IMU" << std::endl;
+    if (forceNoIMU) {
+      { out_guard();
+        std::cout << "Forcing no IMU" << std::endl; }
+    }
     
     mLog = nullptr;
     mImu = nullptr;
@@ -1129,7 +1165,8 @@ VADL2022::VADL2022(int argc, char** argv)
         // Take the ascent video
         pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
 
-        std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then switching cameras..." << std::endl;
+        { out_guard();
+          std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then switching cameras..." << std::endl; }
         std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
 
         if (isRunningPython)      
@@ -1145,7 +1182,8 @@ VADL2022::VADL2022(int argc, char** argv)
         // Run the python videocapture script again on the second camera
         pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
 
-        std::cout << "Using backupSIFTStopTime for a delay of " << backupSIFTStopTime << " milliseconds, then stopping 2nd camera..." << std::endl;
+        { out_guard();
+          std::cout << "Using backupSIFTStopTime for a delay of " << backupSIFTStopTime << " milliseconds, then stopping 2nd camera..." << std::endl; }
         std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStopTime));
 
         if (isRunningPython)
@@ -1158,7 +1196,8 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else {
       //#ifndef USE_LIS331HH
-      std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl;
+      { out_guard();
+        std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then launching..." << std::endl; }
       std::this_thread::sleep_for(std::chrono::milliseconds(backupSIFTStartTime));
       //#else
       // Alternate IMU handles this for us, all good
@@ -1167,8 +1206,9 @@ VADL2022::VADL2022(int argc, char** argv)
       startDelayedSIFT(false /* <--boolean: when true, use the IMU in SIFT*/);
     }
   }
-  
-  cout << "Main: Initiated" << endl;
+
+  { out_guard();
+    cout << "Main: Initiated" << endl; }
 
   // Start video capture if doing so
   // if (videoCapture) {
@@ -1181,7 +1221,8 @@ VADL2022::VADL2022(int argc, char** argv)
 
 VADL2022::~VADL2022()
 {
-  cout << "Main: Destorying" << endl;
+  { out_guard();
+    cout << "Main: Destorying" << endl; }
 
   if (imuDataSourcePath == nullptr) {
     delete ((LOG*)mLog);
@@ -1203,12 +1244,14 @@ VADL2022::~VADL2022()
   #endif
   disconnect_Python();
 
-  cout << "Main: Destoryed" << endl;
+  { out_guard();
+    cout << "Main: Destoryed" << endl; }
 }
 
 void VADL2022::connect_GPIO(bool initCppGpio)
 {
-  cout << "GPIO: Connecting" << endl;
+  { out_guard();
+    cout << "GPIO: Connecting" << endl; }
 
   // Prepare for gpioInitialise() by setting perms, etc.
   const char* args[] = {"bash", "-c", gpioUserPermissionFixingCommands.c_str(), "bash", // {"
@@ -1218,29 +1261,34 @@ void VADL2022::connect_GPIO(bool initCppGpio)
     // "} -- https://linux.die.net/man/1/bash
     gpioUserPermissionFixingCommands_arg.c_str(), NULL};
   if (!runCommandWithFork(args)) {
-    std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl;
+    { out_guard();
+      std::cout << "Failed to prepare for gpioInitialise by running gpioUserPermissionFixingCommands. Exiting." << std::endl; }
     exit(1);
   } 
 
   if (initCppGpio) {
     if (gpioInitialise() < 0) {
-      cout << "GPIO: Failed to Connect" << endl;
+      { out_guard();
+        cout << "GPIO: Failed to Connect" << endl; }
       exit(1);
     }
 
     gpioSetPullUpDown(26, PI_PUD_DOWN); // Sets a pull-down on pin 26
   }
 
-  cout << "GPIO: Connected" << endl;
+  { out_guard();
+    cout << "GPIO: Connected" << endl; }
 }
 
 void VADL2022::disconnect_GPIO()
 {
-  cout << "GPIO: Disconnecting" << endl;
+  { out_guard();
+    cout << "GPIO: Disconnecting" << endl; }
   
   gpioTerminate();
   
-  cout << "GPIO: Disconnected" << endl;
+  { out_guard();
+    cout << "GPIO: Disconnected" << endl; }
 }
 
 void VADL2022::connect_Python()
@@ -1250,9 +1298,11 @@ void VADL2022::connect_Python()
 
 void VADL2022::disconnect_Python()
 {
-  cout << "Python: Disconnecting" << endl;
+  { out_guard();
+    cout << "Python: Disconnecting" << endl; }
 
   Py_Finalize();
 
-  cout << "Python: Disconnected" << endl;
+  { out_guard();
+    cout << "Python: Disconnected" << endl; }
 }
