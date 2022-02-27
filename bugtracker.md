@@ -1,4 +1,6 @@
+### Possible issues
 
+1. Possible --sleep-before-running 7000 issue for pipe: Try getting `Forking with bash command: XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine  --no-preview-window --main-mission --sift-params -C_edge 2 -delta_min 0.6 --sleep-before-running 7000 --subscale-driver-fd 13` to happen on a sift pi from `subscale_exe_release`. Maybe we need to make it grab from pipe sooner than the --sleep-before-running 7000?
 
 ### Debugging (3rd to lowest priority, only affects working on SIFT but not in field)
 

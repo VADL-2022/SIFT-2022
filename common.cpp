@@ -1,3 +1,5 @@
+#include "common.hpp"
+
 #include <python3.7m/Python.h>
 #include <iostream>
 
@@ -29,4 +31,5 @@ print(sys.path)");
     cout << "Python: Connected" << endl;
   }
   
+  std::mutex outMutex;
 } // namespace common

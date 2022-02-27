@@ -6,6 +6,7 @@
 #include "IMU.hpp"
 // #include "LIDAR.hpp"
 // #include "LDS.hpp"
+#include "../common.hpp"
 
 using namespace std;
 
@@ -39,7 +40,8 @@ void LOG::callback(void *userData)
 
       if (flush) {
         if (data->flushToLogEveryNMilliseconds != 0) {
-          std::cout << "Flushing IMU data to log" << std::endl;
+	    { out_guard();
+	      std::cout << "Flushing IMU data to log" << std::endl; }
         }
         data->mLog << endl;
       }
@@ -65,9 +67,10 @@ void LOG::callback(void *userData)
     }
     if (VERBOSE)
     {
-        cout << "Yaw: " << data->mImu->yprNed[0] << " Pitch: " << data->mImu->yprNed[1] << " Roll: " << data->mImu->yprNed[2]
-             << " Accel: " << data->mImu->linearAccelBody.mag()
-             << " Distance: " << 0.0f /*data->mLidar->distance*/ << endl;
+        { out_guard();
+	  cout << "Yaw: " << data->mImu->yprNed[0] << " Pitch: " << data->mImu->yprNed[1] << " Roll: " << data->mImu->yprNed[2]
+	       << " Accel: " << data->mImu->linearAccelBody.mag()
+	       << " Distance: " << 0.0f /*data->mLidar->distance*/ << endl; }
     }
 }
 
@@ -78,7 +81,8 @@ LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long lon
   
     if (LOG_ACTIVE || VERBOSE)
     {
-        cout << "Log: Connecting" << endl;
+        { out_guard();
+          cout << "Log: Connecting" << endl; }
 
         time_t now = time(nullptr);
         char timestamp[17];
@@ -94,7 +98,8 @@ LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long lon
 
         if (!mLog.is_open())
         {
-            cout << "Log: Failed to Open Log File" << endl;
+	    { out_guard();
+              cout << "Log: Failed to Open Log File" << endl; }
             exit(1);
         }
 
@@ -115,8 +120,9 @@ LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long lon
              << "Light 1,Light 2,Light 3,Light 4,"
              << "Comments";
 
-        cout << "LOG: File Created at " << LOG_FILE << timestamp << ".csv" << endl;
-        cout << "Log: Connected" << endl;
+	{ out_guard();
+	  cout << "LOG: File Created at " << LOG_FILE << timestamp << ".csv" << endl;
+	  cout << "Log: Connected" << endl; }
     }
 }
 
@@ -124,12 +130,14 @@ LOG::~LOG()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
-        cout << "Log: Disconnecting" << endl;
+        { out_guard();
+	  cout << "Log: Disconnecting" << endl; }
 
         halt();
         mLog.close();
 
-        cout << "Log: Disconnected" << endl;
+	{ out_guard();
+	  cout << "Log: Disconnected" << endl; }
     }
 }
 
@@ -147,11 +155,13 @@ void LOG::receive()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
-        cout << "LOG: Initiating Receiver" << endl;
+        { out_guard();
+	  cout << "LOG: Initiating Receiver" << endl; }
 
         gpioSetTimerFuncEx(LOG_TIMER, 1000 / FREQUENCY, callback, this);
 
-        cout << "LIDAR: Initiated Receiver" << endl;
+	{ out_guard();
+	  cout << "LIDAR: Initiated Receiver" << endl; }
     }
 }
 
@@ -159,10 +169,12 @@ void LOG::halt()
 {
     if (LOG_ACTIVE || VERBOSE)
     {
-        cout << "LOG: Destroying Receiver" << endl;
+	{ out_guard();
+	  cout << "LOG: Destroying Receiver" << endl; }
 
         gpioSetTimerFuncEx(LOG_TIMER, 1000 / FREQUENCY, nullptr, this);
 
-        cout << "LOG: Destroyed Receiver" << endl;
+	{ out_guard();
+	  cout << "LOG: Destroyed Receiver" << endl; }
     }
 }

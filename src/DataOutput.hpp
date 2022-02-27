@@ -14,6 +14,7 @@
 #include "DataSource.hpp"
 #include "KeypointsAndMatching.hpp"
 #include "Config.hpp"
+#include "../common.hpp"
 
 struct DataOutputBase {
     #ifdef USE_COMMAND_LINE_ARGS
@@ -265,7 +266,8 @@ bool run(DataOutputT& o, cv::Mat& canvas, DataSourceT& src, SIFTState& s, SIFTPa
                     fmt->set64fPrecision(4);
                     fmt->set32fPrecision(4);
                     auto str = fmt->format(M);
-                    std::cout << str << std::endl;
+                    { out_guard();
+                        std::cout << str << std::endl; }
                     cv::Mat m = s.allTransformations[currentTransformation];
                     currentTransformation--; // Underflow means we reach a value always >= allTransformations.size() so we are considered finished.
                     // FIXME: Maybe the issue here is that the error accumulates because we transform a slightly different image each time?

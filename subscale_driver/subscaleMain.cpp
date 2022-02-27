@@ -4,6 +4,10 @@
 #include "VADL2022.hpp"
 #include <thread>
 #include "py.h"
+#ifdef THREAD_OUTPUT_TEST2
+#include <mutex>
+#endif
+#include "../common.hpp"
 
 //Queue<QueuedFunction, 8> mainDispatchQueue;
 Queue<QueuedFunction, 1024> mainDispatchQueue;
@@ -14,16 +18,83 @@ std::atomic<bool> mainDispatchQueueDrainThenStop = false;
 std::unique_ptr<std::thread> videoCaptureOnlyThread;
 
 int main(int argc, char **argv) {
+  #ifdef THREAD_OUTPUT_TEST // To use: run the driver with your command followed by `| grep -v a123` (`-v` for inverted match (match *not* what is given)) and ensure no output prints
+  // This fails the test: std::thread t([](){while(1) std::cout << "a"<<1<<2<<3<<std::endl;});
+  // This also fails the test likely because the endl is causing a flush via the second `<<` which happens after the first `<<`. It causes `asd123asd123\n\n` (where `\n` are actual newlines) to be printed sometimes: std::thread t1_1([](){while(1) std::cout << "a123"<<std::endl;});
+  // These all pass the test:
+  std::thread t1_2([](){while(1) std::cout << "a123\n";});
+  std::thread t1([](){while(1)printf("a%d%d%d\n",1,2,3);});
+  std::thread t2([](){while(1)printf("a%d%d%d\n",1,2,3);});
+  std::thread t3([](){while(1)printf("a%d%d%d\n",1,2,3);});
+  while(1){}
+  #endif
+  #ifdef THREAD_OUTPUT_TEST2
+  int i;
+  std::mutex m;
+  std::thread t1_2([&]() {
+    while (1) {
+      m.lock();
+      i = (i + 1) % 26;
+      m.unlock();
+      std::cout << (char)('a' + i);
+    }
+  });
+  std::thread t1_3([&]() {
+    while (1) {
+      m.lock();
+      i = (i + 1) % 9;
+      m.unlock();
+      std::cout << (char)('a' + i);
+    }
+  });
+  std::thread t1_4([&]() {
+    while (1) {
+      m.lock();
+      i = (i + 1) % 9;
+      m.unlock();
+      std::cout << (char)('a' + i);
+    }
+  });
+  std::thread t1([&]() {
+    while (1) {
+      m.lock();
+      i = (i + 1) % 9;
+      m.unlock();
+      printf("%c\n", 'a' + i);
+    }
+  });
+  std::thread t2([&]() {
+    while (1) {
+      m.lock();
+      i = (i + 1) % 9;
+      m.unlock();
+      printf("%c\n", 'a' + i);
+    }
+  });
+  std::thread t3([&]() {
+    while (1) {
+      m.lock();
+      i = (i + 1) % 9;
+      m.unlock();
+      printf("%c\n", 'a' + i);
+    }
+  });
+  while(1){}
+  #endif
+  
   VADL2022 vadl(argc, argv);
 
   std::thread th { [](){
     QueuedFunction f;
-    std::cout << "Started radio thread" << std::endl;
+    { out_guard();
+      std::cout << "Started radio thread" << std::endl; }
     do {
-      std::cout << "Radio thread waiting for next function..."
-                << std::endl;
+      { out_guard();
+        std::cout << "Radio thread waiting for next function..."
+                << std::endl; }
       radioDispatchQueue.dequeue(&f);
-      std::cout << "Radio thread executing function with description: " << f.description << std::endl;
+      { out_guard();
+        std::cout << "Radio thread executing function with description: " << f.description << std::endl;  }
       //f.f(); // TODO: implement properly
     } while (mainDispatchQueueRunning);
   }};
@@ -31,9 +102,11 @@ int main(int argc, char **argv) {
   QueuedFunction f;
   mainDispatchQueueRunning = true;
   do {
-    std::cout << "Main dispatch queue waiting for next function..." << std::endl;
+    { out_guard();
+      std::cout << "Main dispatch queue waiting for next function..." << std::endl; }
     mainDispatchQueue.dequeue(&f);
-    std::cout << "Main dispatch queue executing function with description: " << f.description << std::endl;
+    { out_guard();
+      std::cout << "Main dispatch queue executing function with description: " << f.description << std::endl; }
     if (f.type == QueuedFunctionType::Python) {
       isRunningPython = true;
     }
@@ -42,16 +115,19 @@ int main(int argc, char **argv) {
       isRunningPython = false;
     }
     if (mainDispatchQueueDrainThenStop && mainDispatchQueue.empty()) {
-      std::cout << "Drained queue, now stopping" << std::endl;
+      { out_guard();
+        std::cout << "Drained queue, now stopping" << std::endl; }
       mainDispatchQueueRunning = false;
     }
   } while (mainDispatchQueueRunning);
 
-  std::cout << "Main dispatch queue no longer running" << std::endl;
+  { out_guard();
+    std::cout << "Main dispatch queue no longer running" << std::endl; }
 
   //std::cout << "Waiting for radio thread to finish..." << std::endl; // TODO: implement properly
   //th.join(); // TODO: implement properly
-  std::cout << "Radio thread finished" << std::endl;
+  { out_guard();
+    std::cout << "Radio thread finished" << std::endl; }
 
   if (videoCaptureOnlyThread) {
     videoCaptureOnlyThread->join();

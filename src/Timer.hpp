@@ -12,6 +12,7 @@
 #include <chrono>
 
 #include <iostream>
+#include "../common.hpp"
 
 class Timer {
 public:
@@ -23,7 +24,8 @@ public:
     void logElapsed(int threadID, const char* name) const;
     template <typename ThreadInfoT /* can be threadID or thread name */>
     static void logNanos(ThreadInfoT threadInfo, const char* name, std::chrono::nanoseconds::rep nanos) {
-        std::cout << "Thread " << threadInfo << ": " << name << " took " << nanos / 1000.0 << " milliseconds" << std::endl;
+        { out_guard();
+            std::cout << "Thread " << threadInfo << ": " << name << " took " << nanos / 1000.0 << " milliseconds" << std::endl; }
     }
 private:
     typedef std::chrono::high_resolution_clock clock_;
