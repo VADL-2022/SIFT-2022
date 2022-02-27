@@ -16,7 +16,7 @@ define C_AND_CXX_FLAGS_template =
 CFLAGS_$(1) = $(CFLAGS) $(2)
 # C sources
 %_$(1).o: %.c $(addsuffix _$(1).h.gch,$(patsubst %.h,%,$(4)))
-	$(CC) $$(addprefix -include ,$(5)) $$(CFLAGS_$(1)) -c $$< -o $$@
+	$(CC) $$(addprefix -include ,$(4)) $$(CFLAGS_$(1)) -c $$< -o $$@
 CXXFLAGS_$(1) = $(CXXFLAGS) $$(CFLAGS_$(1)) $(3)
 # C++ sources
 %_$(1).o: %.cpp $(addsuffix _$(1).hpp.gch,$(patsubst %.hpp,%,$(5)))#<--Example: src/common_$(1).hpp.gch
@@ -189,8 +189,11 @@ ALL_SOURCES := $(wildcard $(SRC)/*.cpp)
 # Pre-compiled headers (speedup for compilation) # # FIXME: hack here is that both SIFT and subscale driver depend on the same set of precompiled headers..
 # SIFT
 ifeq ($(USE_PRECOMPILED_HEADERS),1)
-PCH_C := $(wildcard src/tools/*.h) src/my_sift_additions.h
-PCH_CPP := ./vn_sensors_common.hpp src/lib/ctpl_stl.hpp ./common.hpp $(filter-out src/fdstream.hpp,$(wildcard src/*.hpp)) $(wildcard src/main/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp) #src/common.hpp
+#PCH_C := $(wildcard src/tools/*.h) src/my_sift_additions.h
+#PCH_CPP := ./vn_sensors_common.hpp src/lib/ctpl_stl.hpp ./common.hpp $(filter-out src/fdstream.hpp,$(wildcard src/*.hpp)) $(wildcard src/main/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp) #src/common.hpp
+# Realized that actually only one precompiled header is allowed "per compilation unit" ( https://stackoverflow.com/questions/55709100/how-to-use-multiple-precompiled-headers-some-from-a-library ). ( Also for more reference: https://web.mit.edu/rhel-doc/3/rhel-gcc-en-3/precompiled-headers.html ) :
+PCH_C :=
+PCH_CPP := src/stdafx.hpp
 else
 PCH_C :=
 PCH_CPP :=
@@ -198,8 +201,11 @@ endif
 
 # Subscale driver
 ifeq ($(USE_PRECOMPILED_HEADERS),1)
-PCH_C += $(wildcard src/tools/*.h) $(wildcard subscale_driver/*.h) $(wildcard subscale_driver/lib/*.h)
-PCH_CPP += ./vn_sensors_common.hpp ./common.hpp $(wildcard subscale_driver/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp)
+#PCH_C += $(wildcard src/tools/*.h) $(wildcard subscale_driver/*.h) $(wildcard subscale_driver/lib/*.h)
+#PCH_CPP += ./vn_sensors_common.hpp ./common.hpp $(wildcard subscale_driver/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp)
+# Realized that actually only one precompiled header is allowed "per compilation unit" ( https://stackoverflow.com/questions/55709100/how-to-use-multiple-precompiled-headers-some-from-a-library ). ( Also for more reference: https://web.mit.edu/rhel-doc/3/rhel-gcc-en-3/precompiled-headers.html ) :
+PCH_C :=
+PCH_CPP := src/stdafx.hpp
 else
 PCH_C :=
 PCH_CPP :=
