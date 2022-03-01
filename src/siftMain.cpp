@@ -819,48 +819,29 @@ void nonthrowing_python(F f) noexcept(true) {
 //ctpl::thread_pool tp(4); // Number of threads in the pool
 //ctpl::thread_pool tp(8);
 ctpl::thread_pool tp(6); // Thread pool for SIFT threads
-ctpl::thread_pool tpEnqueueProcessedImage(6); // Thread pool for enqueing "null" images when SIFT threads aren't finished (mostly from main thread). // FIXME: this thread pool might need to grow dynamically (with .resize()) since the number/order of null images waiting to be enqueued (alternating with non-null images) may cause the currently executing threads in tpEnqueueProcessedImage to not be able to enqueue, causing an infinite deadlock.
+std::queue<ProcessedImage<SIFT_T>> waitingToEnqueueProcessedImageQueue; // Queue for later enqueing "null" images when SIFT threads are finished. Shares a mutex with processedImageQueue.mutex.
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
+size_t siftProcessingHighestIndex = 0; // Highest index of an image that a SIFT thread is currently processing. Guarded by the processedImageQueue.mutex.
+size_t siftProcessingHighestIndexBeforeNullImages = 0; // Highest index of an image that a SIFT thread is currently processing but for those SIFT threads before any null images in waitingToEnqueueProcessedImageQueue are not processed. Guarded by the processedImageQueue.mutex.
 template< class... Args >
-void tpEnqueueProcessedImage_enqueue(size_t i, Args&&... args) {
+void waitingToEnqueueProcessedImageQueue_enqueue(size_t i, Args&&... args) {
     // Check if we can enqueue now
-    { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ": locking processedImageQueue" << std::endl; }
+    { out_guard(); std::cout << "waitingToEnqueueProcessedImageQueue_enqueue: i=" << i << ": locking processedImageQueue" << std::endl; }
     pthread_mutex_lock( &processedImageQueue.mutex );
+    if (i>0) {
+        siftProcessingHighestIndexBeforeNullImages = i-1;
+    }
     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
         || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
         ) {
         processedImageQueue.enqueueNoLock(args...);
         pthread_mutex_unlock( &processedImageQueue.mutex );
-        { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ": unlocked processedImageQueue" << std::endl; }
+        { out_guard(); std::cout << "waitingToEnqueueProcessedImageQueue_enqueue: i=" << i << ": unlocked processedImageQueue" << std::endl; }
     }
     else {
+        waitingToEnqueueProcessedImageQueue.emplace(args...);
         pthread_mutex_unlock( &processedImageQueue.mutex );
-        { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: need to enqueue later, i=" << i << ", " << tpEnqueueProcessedImage.q.size() << " function(s) queued : unlocked processedImageQueue" << std::endl; }
-        
-        // https://stackoverflow.com/questions/47496358/c-lambdas-how-to-capture-variadic-parameter-pack-from-the-upper-scope
-        // NOTE: this is probably very inefficient and also allocates on the heap:
-        tpEnqueueProcessedImage.push([args = std::make_tuple(std::forward<Args>(args) ...)](int id, size_t i)mutable{
-            return std::apply([id, i](auto&& ... args){
-                // use args
-                
-                while (true) {
-                    { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ", id=" << id << ": locking processedImageQueue" << std::endl; }
-                    pthread_mutex_lock( &processedImageQueue.mutex );
-                    if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
-                        || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
-                    ) {
-                        { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ", id=" << id << ": enqueueNoLock" << std::endl; }
-                        processedImageQueue.enqueueNoLock(args...);
-                        pthread_mutex_unlock( &processedImageQueue.mutex );
-                        { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ", id=" << id << ": unlocked processedImageQueue 1" << std::endl; }
-                        break;
-                    }
-                    pthread_mutex_unlock( &processedImageQueue.mutex );
-                    { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ", id=" << id << ": unlocked processedImageQueue 2" << std::endl; }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Try again next time
-                }
-            }, std::move(args));
-        }, i);
+        { out_guard(); std::cout << "waitingToEnqueueProcessedImageQueue_enqueue: enqueued into waiting images queue, i=" << i << ", " << waitingToEnqueueProcessedImageQueue.size() << " waiting image(s) queued : unlocked processedImageQueue" << std::endl; }
     }
 }
 #ifdef USE_PTR_INC_MALLOC
@@ -953,7 +934,7 @@ int mainMission(DataSourceT* src,
                 for (size_t i2 = pair.first; i2 < pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
                     // Enqueue null image
-                    tpEnqueueProcessedImage_enqueue(i2, mat,
+                    waitingToEnqueueProcessedImageQueue_enqueue(i2, mat,
                                             shared_keypoints_ptr(),
                                             std::shared_ptr<struct sift_keypoint_std>(),
                                             0,
@@ -1185,7 +1166,7 @@ int mainMission(DataSourceT* src,
             
             if (discardImage) {
                 // Enqueue null image
-                processedImageQueue.enqueue(greyscale,
+                waitingToEnqueueProcessedImageQueue_enqueue(i, greyscale,
                                         shared_keypoints_ptr(),
                                         std::shared_ptr<struct sift_keypoint_std>(),
                                         0,
@@ -1208,6 +1189,13 @@ int mainMission(DataSourceT* src,
 //                sin(alpha)*cosine(beta), sin(alpha)*sin(beta)*sin(gamma)+cos(alpha)*cos(gamma), sin(alpha)*sin(beta)*cos(gamma)-cos(alpha)*sin(gamma),
 //                3, 9);
 //            }
+            
+            // Prepare to run SIFT
+            { out_guard(); std::cout << "Main thread: locking processedImageQueue for setting siftProcessingHighestIndex to " << i << std::endl; }
+            pthread_mutex_lock( &processedImageQueue.mutex );
+            siftProcessingHighestIndex = i;
+            pthread_mutex_unlock( &processedImageQueue.mutex );
+            { out_guard(); std::cout << "Main thread: unlocked processedImageQueue for setting siftProcessingHighestIndex" << std::endl; }
             
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
@@ -1330,6 +1318,24 @@ int mainMission(DataSourceT* src,
                         #else
                         #error "No known SIFT implementation"
                         #endif
+                        
+                        // Dequeue from all pending enqueues
+                        size_t counter = i;
+                        { out_guard();
+                            std::cout << "Thread " << id << ": i=" << i << ", waitingToEnqueueProcessedImageQueue.size()=" << waitingToEnqueueProcessedImageQueue.size() << ", siftProcessingHighestIndexBeforeNullImages=" << siftProcessingHighestIndexBeforeNullImages << "\n"; }
+                        if (siftProcessingHighestIndexBeforeNullImages > i) {
+                            while (!waitingToEnqueueProcessedImageQueue.empty() && counter++ < siftProcessingHighestIndex /*don't want to enqueue more than the current main thread limit*/) {
+                                { out_guard();
+                                    std::cout << "Thread " << id << ": draining waiting images (i=" << i << ") and enqueuing with min(" << waitingToEnqueueProcessedImageQueue.size() << "," << (siftProcessingHighestIndex-counter) << ") left\n"; }
+                                ProcessedImage<SIFT_T>& next = waitingToEnqueueProcessedImageQueue.front();
+                                processedImageQueue.enqueueNoLockWithRef(next);
+                                waitingToEnqueueProcessedImageQueue.pop();
+                            }
+                        }
+                        else {
+                            { out_guard();
+                                std::cout << "Thread " << id << ": i=" << i << ", siftProcessingHighestIndexBeforeNullImages=" << siftProcessingHighestIndexBeforeNullImages << "\n"; }
+                        }
                     }
                     else {
                         auto ms = 10;

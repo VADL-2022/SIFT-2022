@@ -20,6 +20,31 @@
 #include "utils.hpp"
 
 #ifdef SIFTAnatomy_
+
+ProcessedImage<SIFTAnatomy>::ProcessedImage(cv::Mat& image_,
+shared_keypoints_ptr_t computedKeypoints_,
+std::shared_ptr<struct sift_keypoint_std> k_,
+int n_, // Number of keypoints in `k`
+shared_keypoints_ptr_t out_k1_,
+shared_keypoints_ptr_t out_k2A_,
+shared_keypoints_ptr_t out_k2B_,
+cv::Mat transformation_,
+SIFTParams p_,
+size_t i_,
+std::shared_ptr<IMUData> imu_) :
+image(image_),
+computedKeypoints(computedKeypoints_),
+k(k_),
+n(n_),
+out_k1(out_k1_),
+out_k2A(out_k2A_),
+out_k2B(out_k2B_),
+transformation(transformation_),
+p(p_),
+i(i_),
+imu(imu_)
+{}
+
 std::pair<sift_keypoints* /*keypoints*/, std::pair<sift_keypoint_std* /*k*/, int /*n*/>> SIFTAnatomy::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
     assert(greyscale.depth() == CV_32F);
     assert(greyscale.type() == CV_32FC1);

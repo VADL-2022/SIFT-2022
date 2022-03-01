@@ -38,6 +38,17 @@ enum MatchResult: uint8_t {
 template <>
 struct ProcessedImage<SIFTAnatomy> {
     ProcessedImage() = default;
+    ProcessedImage(cv::Mat& image,
+                   shared_keypoints_ptr_t computedKeypoints,
+                   std::shared_ptr<struct sift_keypoint_std> k,
+                   int n, // Number of keypoints in `k`
+                   shared_keypoints_ptr_t out_k1,
+                   shared_keypoints_ptr_t out_k2A,
+                   shared_keypoints_ptr_t out_k2B,
+                   cv::Mat transformation,
+                   SIFTParams p,
+                   size_t i,
+                   std::shared_ptr<IMUData> imu);
     
     // Insane move assignment operator
     // move ctor: ProcessedImage(ProcessedImage&& other) {

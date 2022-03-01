@@ -40,6 +40,34 @@ struct Queue {
         pthread_mutex_init(&mutex, NULL);
         pthread_cond_init(&condition, NULL);
     }
+
+    // Adds to the buffer without locking
+    template< class S >
+    void enqueueNoLockWithRef(const S& t) {
+        while( count == BUFFER_SIZE ) // Wait until not full.
+        {
+           pthread_cond_wait( &condition, &mutex );
+        }
+
+        // Place in the new value:
+        T* e = &content[writePtr];
+        *e = t;
+        //e->~T();
+//        new (e) T{std::forward<Args>(args)...}; // Note: `cv::Mat::Mat    (    const Mat &     m    )` only increments refcount of that matrix (copies `m`'s header (or pointer to it?) into `this` and then increments refcount), which is what we want here: https://docs.opencv.org/3.4/d3/d63/classcv_1_1Mat.html#a294eaf8a95d2f9c7be19ff594d06278e
+
+        // Increment the write pointer modulo the BUFFER_SIZE:
+        writePtr = (writePtr + 1) % BUFFER_SIZE;
+
+        // Increment the element count:
+        count++;
+
+        printf("Enqueue: %p\n", (void*)e);
+        fflush(stdout);
+
+        // Wake up all other threads waiting on the condition variable
+        pthread_cond_broadcast(&condition);
+        // Signal only tells one thread that's waiting, whereas broadcast tells all threads waiting on the condition.
+    }
     
     // Adds to the buffer without locking
     template< class... Args >
