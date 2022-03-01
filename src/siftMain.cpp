@@ -139,58 +139,6 @@ void showTimers(ThreadInfoT threadInfo) {
     numPointerIncMallocsThisFrame = 0;
     mallocWithFreeAll_hitLimitCount = 0;
 }
-// https://www.cplusplus.com/reference/ctime/strftime/
-#include <time.h>       /* time_t, struct tm, time, localtime, strftime */
-#include <sys/stat.h> // https://pubs.opengroup.org/onlinepubs/009695299/functions/mkdir.html
-std::string cachedDataOutputFolderPath;
-const std::string& getDataOutputFolder() {
-    if (cachedDataOutputFolderPath.empty()) {
-        const std::string root = "dataOutput/";
-        
-        time_t rawtime;
-        struct tm * timeinfo;
-        time (&rawtime);
-        timeinfo = localtime (&rawtime);
-        
-        char buf[128];
-        if (strftime(buf, sizeof(buf), "%Y-%m-%d_%H_%M_%S_%Z", timeinfo) == 0) {
-            { out_guard();
-                std::cout << "Failed to compute strftime for getDataOutputFolder(). Will use the seconds since 00:00:00 UTC, January 1, 1970 instead." << std::endl; }
-            cachedDataOutputFolderPath = root + std::to_string(rawtime);
-        }
-        cachedDataOutputFolderPath = root + buf;
-        
-        // Make destination directory
-        if (mkdir(cachedDataOutputFolderPath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH /* default mkdir permissions are probably: user can read, write, execute; group and others can read and execute */ ) != 0) {
-            perror("mkdir failed");
-            puts("Exiting.");
-            exit(1);
-        }
-    }
-    return cachedDataOutputFolderPath;
-}
-void saveMatrixGivenStr(const cv::Mat& M, std::string& name/*image name output*/,
-                        const cv::Ptr<cv::Formatted>& str /*matrix contents input*/) {
-    name = M.empty() ? openFileWithUniqueName(getDataOutputFolder() + "/firstImage", ".png") : openFileWithUniqueName(getDataOutputFolder() + "/scaled", ".png");
-    if (!M.empty()) {
-        auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
-        std::ofstream(matName.c_str()) << str << std::endl;
-    }
-}
-void matrixToString(const cv::Mat& M,
-                    cv::Ptr<cv::Formatted>& str /*matrix contents output*/) {
-    cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
-//    fmt->set64fPrecision(4);
-//    fmt->set32fPrecision(4);
-    fmt->set64fPrecision(16);
-    fmt->set32fPrecision(8);
-    str = fmt->format(M);
-}
-void saveMatrix(const cv::Mat& M, std::string& name/*image name output*/,
-                cv::Ptr<cv::Formatted>& str /*matrix contents output*/) {
-    matrixToString(M, str);
-    saveMatrixGivenStr(M, name, str);
-}
 template <typename DataSourceT, typename DataOutputT>
 int mainMission(DataSourceT* src,
                 SIFTState& s,
@@ -831,6 +779,17 @@ cv::Mat prepareCanvas(ProcessedImage<SIFT_T>& img) {
                     1.0,
                     CV_RGB(118, 185, 0), //font color
                     2);
+        
+        // IMU data, if any
+        if (img.imu) {
+            cv::putText(c,
+                        std::to_string(img.imu->yprNed.x) + "," + std::to_string(img.imu->yprNed.y) + "," + std::to_string(img.imu->yprNed.z),
+                        cv::Point(10, c.rows - 20),
+                        cv::FONT_HERSHEY_DUPLEX,
+                        1.0,
+                        CV_RGB(118, 185, 0), //font color
+                        2);
+        }
     }
     return c;
 }
@@ -948,7 +907,7 @@ int mainMission(DataSourceT* src,
             if (pair.first == i) {
                 { out_guard();
                     std::cout << "Skipping to index: " << pair.second << std::endl; }
-                for (size_t i2 = pair.first; i2 <= pair.second; i2++) {
+                for (size_t i2 = pair.first; i2 < pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
                     // Enqueue null image
                     processedImageQueue.enqueue(mat,
@@ -960,9 +919,10 @@ int mainMission(DataSourceT* src,
                                             shared_keypoints_ptr(),
                                             cv::Mat(),
                                             p,
-                                            i2);
+                                            i2,
+                                            std::shared_ptr<IMUData>());
                 }
-                i = pair.second - 1; // -1 due to the i++
+                i = pair.second; // -1 due to the i++
                 continue;
             }
         }
@@ -1109,8 +1069,10 @@ int mainMission(DataSourceT* src,
             t.logElapsed("blur detection");
             
             // IMU
+            std::shared_ptr<IMUData> imu_;
             if (driverInput_fd != -1) { //driverInput_file) {
-                IMUData imu;
+                imu_ = std::make_shared<IMUData>();
+                IMUData& imu = *imu_.get();
                 // NOTE: this blocks until the fd gets data.
                 t.reset();
                 { out_guard();
@@ -1188,14 +1150,15 @@ int mainMission(DataSourceT* src,
                                         shared_keypoints_ptr(),
                                         cv::Mat(),
                                         p,
-                                        i);
+                                        i,
+                                        imu_);
                 
                 // Don't push a function for this image or save it as a possible firstImage
                 goto skipImage;
             }
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
-            tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale) {
+            tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale, std::shared_ptr<IMUData> imu_) {
     //            OPTICK_EVENT();
                 { out_guard();
                     std::cout << "hello from " << id << std::endl; }
@@ -1294,7 +1257,8 @@ int mainMission(DataSourceT* src,
                                                 shared_keypoints_ptr(),
                                                 cv::Mat(),
                                                 p,
-                                                i);
+                                                i,
+                                                imu_);
                         #elif defined(SIFTOpenCV_)
                         processedImageQueue.enqueueNoLock(greyscale,
                                                           vecPair.first,
@@ -1341,7 +1305,7 @@ int mainMission(DataSourceT* src,
                 // cleanup: nothing to do
                 // Log malloc, etc. timers and reset them
                 showTimers(std::string("SIFT ") + std::to_string(id));
-            }, /*extra args:*/ i /*- offset*/, greyscale);
+            }, /*extra args:*/ i /*- offset*/, greyscale, imu_);
         }
         
         // Save this image for next iteration
