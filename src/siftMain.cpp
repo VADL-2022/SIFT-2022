@@ -1072,7 +1072,6 @@ int mainMission(DataSourceT* src,
             std::shared_ptr<IMUData> imu_;
             if (driverInput_fd != -1) { //driverInput_file) {
                 imu_ = std::make_shared<IMUData>();
-                IMUData& imu = *imu_.get();
                 // NOTE: this blocks until the fd gets data.
                 t.reset();
                 { out_guard();
@@ -1084,6 +1083,7 @@ int mainMission(DataSourceT* src,
                 if (count > 0) {
                     // We have something to use
                     IMUData& imu = subscaleDriverInterface_imu;
+                    *imu_ = imu;
                     { out_guard();
                         std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl; }
                     
