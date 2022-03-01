@@ -1102,17 +1102,17 @@ VADL2022::VADL2022(int argc, char** argv)
       mImu = new IMU();
   }
   catch (const vn::not_found &e) {
-    outMutex.lock(); // Like out_guard() but manual
+    common::outMutex.lock(); // Like out_guard() but manual
     std::cout << "VectorNav not found: vn::not_found: " << e.what();
     if (imuOnly) {
       std::cout << std::endl;
-      outMutex.unlock(); // Like out_guard() but manual
+      common::outMutex.unlock(); // Like out_guard() but manual
       exit(1);
     }
     else {
       std::cout << " ; continuing without it." << std::endl;
     }
-    outMutex.unlock(); // Like out_guard() but manual
+    common::outMutex.unlock(); // Like out_guard() but manual
     vn=false;
   }
   catch (const char* e) {
