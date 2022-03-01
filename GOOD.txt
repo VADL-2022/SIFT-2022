@@ -241,11 +241,11 @@ ffypr: [ 69.19365176 103.96088697  71.05956756]
 
 ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission-interactive
 
-./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission --skip-image-indices 2 2 --skip-image-indices --skip-image-indices 5 5 --skip-image-indices --skip-image-indices 7 7 --skip-image-indices 14 14 --skip-image-indices 17 19
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission --skip-image-indices 2 2 --skip-image-indices 5 5 --skip-image-indices 7 7 --skip-image-indices 14 14 --skip-image-indices 17 19  --skip-image-indices 21 24 --skip-image-indices 32 38 --skip-image-indices 55 64  --skip-image-indices 65 88 --skip-image-indices 89 91 --skip-image-indices 94 94 --skip-image-indices 100 108 --skip-image-indices 110 110 --skip-image-indices 111 121 --skip-image-indices 122 129 --skip-image-indices 141 141
 
 nasty matches
 15 -> 16 -> 17 -> 18
-         |      | <--INVERSION of matrix....
+         |      | <--INVERSION of matrix.... and 33 to 38 or so
 
 2885
 2940.37-2867.58

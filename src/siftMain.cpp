@@ -818,8 +818,51 @@ void nonthrowing_python(F f) noexcept(true) {
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 //ctpl::thread_pool tp(4); // Number of threads in the pool
 //ctpl::thread_pool tp(8);
-ctpl::thread_pool tp(6);
+ctpl::thread_pool tp(6); // Thread pool for SIFT threads
+ctpl::thread_pool tpEnqueueProcessedImage(6); // Thread pool for enqueing "null" images when SIFT threads aren't finished (mostly from main thread). // FIXME: this thread pool might need to grow dynamically (with .resize()) since the number/order of null images waiting to be enqueued (alternating with non-null images) may cause the currently executing threads in tpEnqueueProcessedImage to not be able to enqueue, causing an infinite deadlock.
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
+template< class... Args >
+void tpEnqueueProcessedImage_enqueue(size_t i, Args&&... args) {
+    // Check if we can enqueue now
+    { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ": locking processedImageQueue" << std::endl; }
+    pthread_mutex_lock( &processedImageQueue.mutex );
+    if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
+        || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
+        ) {
+        processedImageQueue.enqueueNoLock(args...);
+        pthread_mutex_unlock( &processedImageQueue.mutex );
+        { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ": unlocked processedImageQueue" << std::endl; }
+    }
+    else {
+        pthread_mutex_unlock( &processedImageQueue.mutex );
+        { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: need to enqueue later, i=" << i << ", " << tpEnqueueProcessedImage.q.size() << " function(s) queued : unlocked processedImageQueue" << std::endl; }
+        
+        // https://stackoverflow.com/questions/47496358/c-lambdas-how-to-capture-variadic-parameter-pack-from-the-upper-scope
+        // NOTE: this is probably very inefficient and also allocates on the heap:
+        tpEnqueueProcessedImage.push([args = std::make_tuple(std::forward<Args>(args) ...)](int id, size_t i)mutable{
+            return std::apply([id, i](auto&& ... args){
+                // use args
+                
+                while (true) {
+                    { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ", id=" << id << ": locking processedImageQueue" << std::endl; }
+                    pthread_mutex_lock( &processedImageQueue.mutex );
+                    if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
+                        || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
+                    ) {
+                        { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ", id=" << id << ": enqueueNoLock" << std::endl; }
+                        processedImageQueue.enqueueNoLock(args...);
+                        pthread_mutex_unlock( &processedImageQueue.mutex );
+                        { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ", id=" << id << ": unlocked processedImageQueue 1" << std::endl; }
+                        break;
+                    }
+                    pthread_mutex_unlock( &processedImageQueue.mutex );
+                    { out_guard(); std::cout << "tpEnqueueProcessedImage_enqueue: i=" << i << ", id=" << id << ": unlocked processedImageQueue 2" << std::endl; }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // Try again next time
+                }
+            }, std::move(args));
+        }, i);
+    }
+}
 #ifdef USE_PTR_INC_MALLOC
 thread_local void* bigMallocBlock = nullptr; // Never freed on purpose
 #endif
@@ -910,7 +953,7 @@ int mainMission(DataSourceT* src,
                 for (size_t i2 = pair.first; i2 < pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
                     // Enqueue null image
-                    processedImageQueue.enqueue(mat,
+                    tpEnqueueProcessedImage_enqueue(i2, mat,
                                             shared_keypoints_ptr(),
                                             std::shared_ptr<struct sift_keypoint_std>(),
                                             0,
@@ -1082,13 +1125,15 @@ int mainMission(DataSourceT* src,
                 static py::object my_or;
                 if (count > 0) {
                     // We have something to use
-                    IMUData& imu = subscaleDriverInterface_imu;
-                    *imu_ = imu;
+                    IMUData& imu__ = subscaleDriverInterface_imu;
+                    *imu_ = imu__;
+                    IMUData& imu = *imu_.get();
+                    subscaleDriverInterfaceMutex_imuData.unlock();
                     { out_guard();
                         std::cout << "Linear accel NED: " << imu.linearAccelNed << " (data rows read: " << count << ")" << std::endl; }
                     
                     // Use the IMU data:
-                    nonthrowing_python([](){
+                    nonthrowing_python([&imu](){
                         using namespace pybind11::literals; // to bring in the `_a` literal
                         
                         py::module_ np = py::module_::import("numpy");  // like 'import numpy as np'
@@ -1134,7 +1179,6 @@ int mainMission(DataSourceT* src,
                         }
                     });
                 }
-                subscaleDriverInterfaceMutex_imuData.unlock();
                 t.logElapsed("grabbing from subscale driver interface thread and running Precession.judge_image");
             }
             // //
@@ -1156,6 +1200,15 @@ int mainMission(DataSourceT* src,
                 // Don't push a function for this image or save it as a possible firstImage
                 goto skipImage;
             }
+            
+            // Prepare image by applying warp using IMU data
+//            if (imu_) {
+//                cv::Mat_ warp = cv::Mat_<float> A = (cv::Mat_<float>(3, 3) <<
+//                                cos(alpha)*cos(beta), cos(alpha)*sin(beta)*sin(gamma)-sin(alpha)*cos(gamma), cos(alpha)*sin(beta)*cos(gamma)+sin(alpha)*sin(gamma),
+//                sin(alpha)*cosine(beta), sin(alpha)*sin(beta)*sin(gamma)+cos(alpha)*cos(gamma), sin(alpha)*sin(beta)*cos(gamma)-cos(alpha)*sin(gamma),
+//                3, 9);
+//            }
+            
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
             tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale, std::shared_ptr<IMUData> imu_) {
@@ -1241,6 +1294,9 @@ int mainMission(DataSourceT* src,
                     if (isFirstSleep) {
                         { out_guard();
                             std::cout << "Thread " << id << ": Locked" << std::endl; }
+                    }
+                    { out_guard();
+                        std::cout << "@@@@@@@@@@@@@@@@Thread " << id << ": readPtr " << processedImageQueue.readPtr << ", i " << i << ", writePtr " << processedImageQueue.writePtr << std::endl;
                     }
                     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
                         || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
