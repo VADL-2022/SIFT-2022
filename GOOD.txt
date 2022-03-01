@@ -228,6 +228,24 @@ scp -r -p $files /Volumes/MyTestVolume/Projects/DataRocket/
 # /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4
 # /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_imuAndTemperatureOnly_fullscale1_Derived/Trunc_Fullscale1.csv
 
+./subscale_exe_release --extra-sift-exe-args '--verbose --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+
+Image 70: Blur detection: variance 0.004457; not blurry
+blur detection took 5 milliseconds
+grabbing from subscale driver interface thread...
+Linear accel NED: (8.92911; -11.1447; -14.4071) (data rows read: 1)
+judge_image: Python doesn't like this image
+arr: [-59.0806  61.9962 -46.2671]
+ffypr: [ 69.19365176 103.96088697  71.05956756]
+
+
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission-interactive
+
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission --skip-image-indices 2 2 --skip-image-indices --skip-image-indices 5 5 --skip-image-indices --skip-image-indices 7 7 --skip-image-indices 14 14 --skip-image-indices 17 19
+
+nasty matches
+15 -> 16 -> 17 -> 18
+         |      | <--INVERSION of matrix....
 
 2885
 2940.37-2867.58

@@ -48,3 +48,15 @@ void getScreenResolution(int &width, int &height);
 
 // For errors that a sigint could handle. Program execution must be able to continue normally after a call to this function, until a thread can teardown.
 void recoverableError(const char* msg);
+
+// https://www.cplusplus.com/reference/ctime/strftime/
+#include <time.h>       /* time_t, struct tm, time, localtime, strftime */
+#include <sys/stat.h> // https://pubs.opengroup.org/onlinepubs/009695299/functions/mkdir.html
+extern std::string cachedDataOutputFolderPath;
+const std::string& getDataOutputFolder();
+void saveMatrixGivenStr(const cv::Mat& M, std::string& name/*image name output*/,
+                        const cv::Ptr<cv::Formatted>& str /*matrix contents input*/);
+void matrixToString(const cv::Mat& M,
+                    cv::Ptr<cv::Formatted>& str /*matrix contents output*/);
+void saveMatrix(const cv::Mat& M, std::string& name/*image name output*/,
+                cv::Ptr<cv::Formatted>& str /*matrix contents output*/);

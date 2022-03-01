@@ -12,6 +12,7 @@
 #include "common.hpp"
 #include "opencv_xfeatures2d_common.hpp"
 #include "KeypointsAndMatching.hpp"
+#include "IMUData.hpp"
 
 struct CommandLineConfig;
 
@@ -98,6 +99,8 @@ struct ProcessedImage<SIFTAnatomy> {
     
     SIFTParams p;
     size_t i;
+
+    std::shared_ptr<IMUData> imu; // IMU data if any
 
 #ifdef USE_COMMAND_LINE_ARGS
     cv::Mat canvas;

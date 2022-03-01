@@ -176,3 +176,53 @@ void recoverableError(const char* msg) {
        throw msg;
     }
 }
+
+std::string cachedDataOutputFolderPath;
+const std::string& getDataOutputFolder() {
+    if (cachedDataOutputFolderPath.empty()) {
+        const std::string root = "dataOutput/";
+        
+        time_t rawtime;
+        struct tm * timeinfo;
+        time (&rawtime);
+        timeinfo = localtime (&rawtime);
+        
+        char buf[128];
+        if (strftime(buf, sizeof(buf), "%Y-%m-%d_%H_%M_%S_%Z", timeinfo) == 0) {
+            { out_guard();
+                std::cout << "Failed to compute strftime for getDataOutputFolder(). Will use the seconds since 00:00:00 UTC, January 1, 1970 instead." << std::endl; }
+            cachedDataOutputFolderPath = root + std::to_string(rawtime);
+        }
+        cachedDataOutputFolderPath = root + buf;
+        
+        // Make destination directory
+        if (mkdir(cachedDataOutputFolderPath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH /* default mkdir permissions are probably: user can read, write, execute; group and others can read and execute */ ) != 0) {
+            perror("mkdir failed");
+            puts("Exiting.");
+            exit(1);
+        }
+    }
+    return cachedDataOutputFolderPath;
+}
+void saveMatrixGivenStr(const cv::Mat& M, std::string& name/*image name output*/,
+                        const cv::Ptr<cv::Formatted>& str /*matrix contents input*/) {
+    name = M.empty() ? openFileWithUniqueName(getDataOutputFolder() + "/firstImage", ".png") : openFileWithUniqueName(getDataOutputFolder() + "/scaled", ".png");
+    if (!M.empty()) {
+        auto matName = openFileWithUniqueName(name + ".matrix", ".txt");
+        std::ofstream(matName.c_str()) << str << std::endl;
+    }
+}
+void matrixToString(const cv::Mat& M,
+                    cv::Ptr<cv::Formatted>& str /*matrix contents output*/) {
+    cv::Ptr<cv::Formatter> fmt = cv::Formatter::get(cv::Formatter::FMT_DEFAULT);
+//    fmt->set64fPrecision(4);
+//    fmt->set32fPrecision(4);
+    fmt->set64fPrecision(16);
+    fmt->set32fPrecision(8);
+    str = fmt->format(M);
+}
+void saveMatrix(const cv::Mat& M, std::string& name/*image name output*/,
+                cv::Ptr<cv::Formatted>& str /*matrix contents output*/) {
+    matrixToString(M, str);
+    saveMatrixGivenStr(M, name, str);
+}
