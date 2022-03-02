@@ -27,6 +27,12 @@
 		308B6C06275AA96D00FE86A9 /* mymalloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B6C05275AA96D00FE86A9 /* mymalloc.cpp */; };
 		308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */; };
 		308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */; };
+		30A92EBF27CECE0000852B08 /* siftMainCmdConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30A92EBD27CECE0000852B08 /* siftMainCmdConfig.cpp */; };
+		30A92EC227CF1C7F00852B08 /* siftMainInteractive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30A92EC027CF1C7F00852B08 /* siftMainInteractive.cpp */; };
+		30A92EC527CF1E8700852B08 /* siftMainMatcher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30A92EC327CF1E8700852B08 /* siftMainMatcher.cpp */; };
+		30A92EC827CF1F3400852B08 /* siftMainSIFT.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30A92EC627CF1F3400852B08 /* siftMainSIFT.cpp */; };
+		30A92ECB27CF207C00852B08 /* siftMainSignals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30A92EC927CF207C00852B08 /* siftMainSignals.cpp */; };
+		30A92ECE27CF23E200852B08 /* siftMainCmdLineParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30A92ECC27CF23E200852B08 /* siftMainCmdLineParser.cpp */; };
 		30C5F59E27B73831007D9BF5 /* SubscaleDriverInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30C5F59C27B73831007D9BF5 /* SubscaleDriverInterface.cpp */; };
 		30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBBE2731A01600473B25 /* DataSource.cpp */; };
 		30CBDBC92732EBF200473B25 /* DataOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30CBDBC72732EBF200473B25 /* DataOutput.cpp */; };
@@ -144,6 +150,18 @@
 		30A92EB927CB106A00852B08 /* opencv_xfeatures2d_common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = opencv_xfeatures2d_common.hpp; sourceTree = "<group>"; };
 		30A92EBB27CB114300852B08 /* vn_sensors_common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = vn_sensors_common.hpp; path = ../../vn_sensors_common.hpp; sourceTree = "<group>"; };
 		30A92EBC27CB2F5D00852B08 /* stdafx.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = stdafx.hpp; sourceTree = "<group>"; };
+		30A92EBD27CECE0000852B08 /* siftMainCmdConfig.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = siftMainCmdConfig.cpp; sourceTree = "<group>"; };
+		30A92EBE27CECE0000852B08 /* siftMainCmdConfig.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMainCmdConfig.hpp; sourceTree = "<group>"; };
+		30A92EC027CF1C7F00852B08 /* siftMainInteractive.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = siftMainInteractive.cpp; sourceTree = "<group>"; };
+		30A92EC127CF1C7F00852B08 /* siftMainInteractive.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMainInteractive.hpp; sourceTree = "<group>"; };
+		30A92EC327CF1E8700852B08 /* siftMainMatcher.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = siftMainMatcher.cpp; sourceTree = "<group>"; };
+		30A92EC427CF1E8700852B08 /* siftMainMatcher.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMainMatcher.hpp; sourceTree = "<group>"; };
+		30A92EC627CF1F3400852B08 /* siftMainSIFT.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = siftMainSIFT.cpp; sourceTree = "<group>"; };
+		30A92EC727CF1F3400852B08 /* siftMainSIFT.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMainSIFT.hpp; sourceTree = "<group>"; };
+		30A92EC927CF207C00852B08 /* siftMainSignals.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = siftMainSignals.cpp; sourceTree = "<group>"; };
+		30A92ECA27CF207C00852B08 /* siftMainSignals.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMainSignals.hpp; sourceTree = "<group>"; };
+		30A92ECC27CF23E200852B08 /* siftMainCmdLineParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = siftMainCmdLineParser.cpp; sourceTree = "<group>"; };
+		30A92ECD27CF23E200852B08 /* siftMainCmdLineParser.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMainCmdLineParser.hpp; sourceTree = "<group>"; };
 		30C5F59C27B73831007D9BF5 /* SubscaleDriverInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SubscaleDriverInterface.cpp; sourceTree = "<group>"; };
 		30C5F59D27B73831007D9BF5 /* SubscaleDriverInterface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = SubscaleDriverInterface.hpp; sourceTree = "<group>"; };
 		30C5F59F27B74599007D9BF5 /* siftMain.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = siftMain.hpp; sourceTree = "<group>"; };
@@ -408,6 +426,18 @@
 			children = (
 				30C5F59C27B73831007D9BF5 /* SubscaleDriverInterface.cpp */,
 				30C5F59D27B73831007D9BF5 /* SubscaleDriverInterface.hpp */,
+				30A92EBD27CECE0000852B08 /* siftMainCmdConfig.cpp */,
+				30A92EBE27CECE0000852B08 /* siftMainCmdConfig.hpp */,
+				30A92EC027CF1C7F00852B08 /* siftMainInteractive.cpp */,
+				30A92EC127CF1C7F00852B08 /* siftMainInteractive.hpp */,
+				30A92EC327CF1E8700852B08 /* siftMainMatcher.cpp */,
+				30A92EC427CF1E8700852B08 /* siftMainMatcher.hpp */,
+				30A92EC627CF1F3400852B08 /* siftMainSIFT.cpp */,
+				30A92EC727CF1F3400852B08 /* siftMainSIFT.hpp */,
+				30A92EC927CF207C00852B08 /* siftMainSignals.cpp */,
+				30A92ECA27CF207C00852B08 /* siftMainSignals.hpp */,
+				30A92ECC27CF23E200852B08 /* siftMainCmdLineParser.cpp */,
+				30A92ECD27CF23E200852B08 /* siftMainCmdLineParser.hpp */,
 			);
 			path = main;
 			sourceTree = "<group>";
@@ -585,10 +615,13 @@
 				30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */,
 				30F99A51278CF14000DBD9C8 /* SiftGPU.cpp in Sources */,
 				30F99A5C278E819C00DBD9C8 /* backtrace.cpp in Sources */,
+				30A92ECB27CF207C00852B08 /* siftMainSignals.cpp in Sources */,
 				30F99A4D278CF14000DBD9C8 /* SiftPyramid.cpp in Sources */,
 				30CE61F527238409001C987F /* common.cpp in Sources */,
 				30C5F59E27B73831007D9BF5 /* SubscaleDriverInterface.cpp in Sources */,
+				30A92EBF27CECE0000852B08 /* siftMainCmdConfig.cpp in Sources */,
 				30F99A54278CF14000DBD9C8 /* CLTexImage.cpp in Sources */,
+				30A92EC827CF1F3400852B08 /* siftMainSIFT.cpp in Sources */,
 				300EE49F27209F9400969C5F /* lib_sift.c in Sources */,
 				300EE49C27209F9400969C5F /* lib_matching.cpp in Sources */,
 				30F99A56278CF14000DBD9C8 /* SiftMatch.cpp in Sources */,
@@ -599,10 +632,12 @@
 				30F99A4F278CF14000DBD9C8 /* ProgramGLSL.cpp in Sources */,
 				300EE4B527209F9400969C5F /* siftMain.cpp in Sources */,
 				308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */,
+				30A92ECE27CF23E200852B08 /* siftMainCmdLineParser.cpp in Sources */,
 				30F99A4E278CF14000DBD9C8 /* PyramidGL.cpp in Sources */,
 				30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */,
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
 				303CB67827631A0200ABDBF1 /* _putchar.c in Sources */,
+				30A92EC527CF1E8700852B08 /* siftMainMatcher.cpp in Sources */,
 				300EE49527209F9400969C5F /* lib_keypoint.c in Sources */,
 				300EE4A427209F9400969C5F /* lib_description.c in Sources */,
 				30F0022B275D93F7000A3D25 /* malloc_override_osx.cpp in Sources */,
@@ -610,6 +645,7 @@
 				30ED93B527A1B2F0001D8655 /* pf_string.c in Sources */,
 				30F99A57278CF14000DBD9C8 /* ShaderMan.cpp in Sources */,
 				300EE4AA27209F9400969C5F /* lib_sift_anatomy.c in Sources */,
+				30A92EC227CF1C7F00852B08 /* siftMainInteractive.cpp in Sources */,
 				30F99A48278CF14000DBD9C8 /* GlobalUtil.cpp in Sources */,
 				300EE4B627209F9400969C5F /* Semaphore.cpp in Sources */,
 				30CE61F62723877B001C987F /* strnatcmp.cpp in Sources */,
