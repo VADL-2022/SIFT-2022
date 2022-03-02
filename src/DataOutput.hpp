@@ -21,11 +21,11 @@ struct DataOutputBase {
     virtual ~DataOutputBase() {}
     #endif
     
-    MaybeVirtual void showCanvas(std::string name, cv::Mat& canvas, bool flush, cv::Rect* crop) MaybePureVirtual;
+    MaybeVirtual void showCanvas(std::string name, cv::Mat& canvas, bool flush = false, cv::Rect* crop = nullptr) MaybePureVirtual;
     MaybeVirtual void release() {}
     
-protected:
-    int waitKey(int delay=0);
+//protected:
+    MaybeVirtual int waitKey(int delay=0) MaybePureVirtual;
 };
 
 struct PreviewWindowDataOutput : public DataOutputBase

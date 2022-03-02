@@ -1,3 +1,14 @@
+### Issues
+
+1. >1024 null images causes ```if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
+        || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
+        ) {``` to fail
+2. matcher needs to print when impossible happens, indicating something is wrong: when the i it is looking at in processedImageQueue peeks is greater than the previousI+1 (basically when the i incremented more than once between images in the queue). this indicates something is very wrong since an image of lower index than the current one in the queue was skipped (or comes later) in the processedImageQueue.
+
+### Low priority
+
+1. printf needs to be wrapped in out_guard()'s since it can print while out_guard() is held in the middle of some cout's on a different thread.
+
 ### Possible issues
 
 1. Possible --sleep-before-running 7000 issue for pipe: Try getting `Forking with bash command: XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine  --no-preview-window --main-mission --sift-params -C_edge 2 -delta_min 0.6 --sleep-before-running 7000 --subscale-driver-fd 13` to happen on a sift pi from `subscale_exe_release`. Maybe we need to make it grab from pipe sooner than the --sleep-before-running 7000?

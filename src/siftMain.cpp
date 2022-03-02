@@ -9,19 +9,17 @@
 // This file runs on the SIFT RPis. It can also run on your computer. You can optionally show a preview window for fine-grain control.
 
 #include "siftMain.hpp"
-
-#include "common.hpp"
+#include "main/siftMainCmdConfig.hpp"
+#include "main/siftMainInteractive.hpp"
+#include "main/siftMainSIFT.hpp"
+#include "main/siftMainSignals.hpp"
+#include "main/siftMainMatcher.hpp"
+#include "main/siftMainCmdLineParser.hpp"
 
 #include "KeypointsAndMatching.hpp"
-#include "compareKeypoints.hpp"
 #include "DataSource.hpp"
 #include "DataOutput.hpp"
 #include "utils.hpp"
-
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
 
 #include <fstream>
 #include <python3.7m/Python.h>
@@ -42,21 +40,9 @@ namespace backward {
 //#include "./optick/src/optick.h"
 #include "timers.hpp"
 
-#include "tools/printf.h"
 #include "IMUData.hpp"
 
 #include "Queue.hpp"
-thread_local SIFT_T sift;
-constexpr size_t processedImageQueueBufferSize = 1024 /*256*/ /*32*/;
-Queue<ProcessedImage<SIFT_T>, processedImageQueueBufferSize> processedImageQueue;
-cv::Mat lastImageToFirstImageTransformation; // "Message box" for the accumulated transformations so far
-std::mutex lastImageToFirstImageTransformationMutex;
-#ifdef USE_COMMAND_LINE_ARGS
-Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
-#endif
-int driverInput_fd = -1; // File descriptor for reading from the driver program, if any (else it is -1)
-int driverInput_fd_fcntl_flags = 0;
-FILE* driverInput_file = NULL;
 
 //// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
 //const int alpha_slider_max = 2;
@@ -87,20 +73,6 @@ using DataSourceT = CameraDataSource;
 using DataOutputT = PreviewWindowDataOutput;
 #endif
 // //
-
-#ifdef SIFTAnatomy_
-template <typename DataSourceT, typename DataOutputT>
-int mainInteractive(DataSourceT* src,
-                    SIFTState& s,
-                    SIFTParams& p,
-                    size_t skip,
-                    DataOutputT& o
-                    #ifdef USE_COMMAND_LINE_ARGS
-                      , FileDataOutput& o2,
-                      const CommandLineConfig& cfg
-                    #endif
-);
-#endif
 
 #include "tools/malloc_with_free_all.h"
 // https://gist.github.com/dgoguerra/7194777
@@ -149,11 +121,6 @@ int mainMission(DataSourceT* src,
                 #endif
                 );
 
-#ifdef USE_COMMAND_LINE_ARGS
-CommandLineConfig cfg;
-
-#include <type_traits>
-#endif
 int main(int argc, char **argv)
 {
     //namespace backward {
@@ -208,177 +175,10 @@ int main(int argc, char **argv)
     
     std::unique_ptr<DataSourceBase> src;
 
-    // Parse arguments
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--folder-data-source") == 0) { // Get from folder (path is specified with --folder-data-source-path, otherwise the default is used) instead of camera
-            src = std::make_unique<FolderDataSource>(argc, argv, skip); // Read folder determined by command-line arguments
-            cfg.folderDataSource = true;
-        }
-        if (strcmp(argv[i], "--video-file-data-source") == 0) { // Get from video file (path is specified with --video-file-data-source-path, otherwise the default is used) instead of camera
-            src = std::make_unique<VideoFileDataSource>(argc, argv); // Read file determined by command-line arguments
-            cfg.videoFileDataSource = true;
-        }
-        else if (strcmp(argv[i], "--camera-test-only") == 0) {
-            cfg.cameraTestOnly = true;
-        }
-        else if (strcmp(argv[i], "--image-capture-only") == 0) { // For not running SIFT
-            cfg.imageCaptureOnly = true;
-        }
-        else if (strcmp(argv[i], "--image-file-output") == 0) { // [mainInteractive() only] Outputs to video, usually also instead of preview window
-            cfg.imageFileOutput = true;
-        }
-        else if (strcmp(argv[i], "--sift-video-output") == 0) { // Outputs frames with SIFT keypoints, etc. rendered to video file
-            cfg.siftVideoOutput = true;
-        }
-        else if (i+2 < argc && strcmp(argv[i], "--skip-image-indices") == 0) { // Ignore images with this index. Usage: `--skip-image-indices 1 2` to skip images 1 and 2 (0-based indices, end index is exclusive)
-            cfg.skipImageIndices.push_back(std::make_pair(std::stoi(argv[i+1]), std::stoi(argv[i+2])));
-            i += 2;
-        }
-        else if (strcmp(argv[i], "--save-first-image") == 0) { // Save the first image SIFT encounters. Counts as a flush towards the start of SIFT.
-            cfg.saveFirstImage = true;
-        }
-        else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
-            cfg.noPreviewWindow = true;
-        }
-        else if (i+1 < argc && strcmp(argv[i], "--save-every-n-seconds") == 0) { // [mainMission() only] Save video and transformation matrices every n (given) seconds. Set to -1 to disable flushing until SIFT exits.
-            cfg.flushVideoOutputEveryNSeconds = std::stoi(argv[i+1]);
-            i++;
-        }
-        else if (strcmp(argv[i], "--main-mission") == 0) {
-            cfg.mainMission = true;
-        }
-        else if (strcmp(argv[i], "--main-mission-interactive") == 0) { // Is --main-mission, but waits forever after a frame is shown in the preview window
-            cfg.mainMission = true;
-            cfg.waitKeyForever = true;
-        }
-        else if (strcmp(argv[i], "--verbose") == 0) {
-            cfg.verbose = true;
-        }
-        else if (i+1 < argc && strcmp(argv[i], "--sleep-before-running") == 0) {
-            long long time = std::stoll(argv[i+1]); // Time in milliseconds
-            // Special value: -1 means sleep default time
-            if (time == -1) {
-                time = 30 * 1000;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(time));
-            i++;
-        }
-        else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
-            driverInput_fd = std::stoi(argv[i+1]);
-            printf("driverInput_fd set to: %d\n", driverInput_fd);
-            i++;
-        }
-        else if (strcmp(argv[i], "--debug-no-std-terminate") == 0) { // Disables the SIFT unhandled exception handler for C++ exceptions. Use for lldb purposes.
-            cfg.useSetTerminate = false;
-        }
-#ifdef SIFTAnatomy_
-        else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
-            for (int j = i+1; j < argc; j++) {
-#define LOG_PARAM(x) std::cout << "Set " #x << " to " << p.params->x << std::endl
-                if (j+1 < argc && strcmp(argv[j], "-n_oct") == 0) {
-                    p.params->n_oct = std::stoi(argv[j+1]);
-                    LOG_PARAM(n_oct);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-n_spo") == 0) {
-                    p.params->n_spo = std::stoi(argv[j+1]);
-                    LOG_PARAM(n_spo);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-sigma_min") == 0) {
-                    p.params->sigma_min = std::stof(argv[j+1]);
-                    LOG_PARAM(sigma_min);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-delta_min") == 0) {
-                    p.params->delta_min = std::stof(argv[j+1]);
-                    LOG_PARAM(delta_min);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-sigma_in") == 0) {
-                    p.params->sigma_in = std::stof(argv[j+1]);
-                    LOG_PARAM(sigma_min);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-C_DoG") == 0) {
-                    p.params->C_DoG = std::stof(argv[j+1]);
-                    LOG_PARAM(sigma_min);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-C_edge") == 0) {
-                    p.params->C_edge = std::stof(argv[j+1]);
-                    LOG_PARAM(C_edge);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-n_bins") == 0) {
-                    p.params->n_bins = std::stoi(argv[j+1]);
-                    LOG_PARAM(n_bins);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-lambda_ori") == 0) {
-                    p.params->lambda_ori = std::stof(argv[j+1]);
-                    LOG_PARAM(lambda_ori);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-t") == 0) {
-                    p.params->t = std::stof(argv[j+1]);
-                    LOG_PARAM(t);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-n_hist") == 0) {
-                    p.params->n_hist = std::stoi(argv[j+1]);
-                    LOG_PARAM(n_hist);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-n_ori") == 0) {
-                    p.params->n_ori = std::stoi(argv[j+1]);
-                    LOG_PARAM(n_ori);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-lambda_descr") == 0) {
-                    p.params->lambda_descr = std::stof(argv[j+1]);
-                    LOG_PARAM(lambda_descr);
-                }
-                else if (j+1 < argc && strcmp(argv[j], "-itermax") == 0) {
-                    p.params->itermax = std::stoi(argv[j+1]);
-                    LOG_PARAM(itermax);
-                }
-                else {
-                    // Continue with these parameters as the next arguments
-                    i = j-1; // It will increment next iteration, so -1.
-                    break;
-                }
-                j++; // Skip the number we parsed
-            }
-        }
-        else if (i+1 < argc && strcmp(argv[i], "--sift-params-func") == 0) {
-            if (SIFTParams::call_params_function(argv[i+1], p.params) < 0) {
-                printf("Invalid params function name given: %s. Value options are:", argv[i+1]);
-                SIFTParams::print_params_functions();
-                printf(". Exiting.\n");
-                exit(1);
-            }
-            else {
-                printf("Using params function %s\n", argv[i+1]);
-            }
-            i++;
-        }
-#endif
-        else {
-            // Whitelist: allow these to go through since they can be passed to DataSources, etc. //
-            if (strcmp(argv[i], "--video-file-data-source-path") == 0) {
-                i++; // Also go past the extra argument for this argument
-                continue;
-            }
-            else if (strcmp(argv[i], "--read-backwards") == 0) {
-                continue;
-            }
-            else if (strcmp(argv[i], "--crop-for-fisheye-camera") == 0) {
-                continue;
-            }
-            else if (strcmp(argv[i], "--fps") == 0) {
-                i++; // Also go past the extra argument for this argument
-                continue;
-            }
-            // //
-            
-            printf("Unrecognized command-line argument given: %s", argv[i]);
-            printf(" (command line was:\n");
-            for (int i = 0; i < argc; i++) {
-                printf("\t%s\n", argv[i]);
-            }
-            printf(")\n");
-            puts("Exiting.");
-            return 1;
-        }
+    // Parse arguments and set `cfg` variables
+    int ret = parseCommandLineArgs(argc, argv, s, p, skip, src);
+    if (ret != 0) {
+        return ret;
     }
     
     if (cfg.cameraTestOnly) {
@@ -437,108 +237,6 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-// Signal handling //
-std::atomic<bool> g_stop;
-void stopMain() {
-    g_stop = true;
-}
-bool stoppedMain() {
-    return g_stop;
-}
-
-// Prints a stacktrace
-//void logTrace() {
-//    using namespace backward;
-//    StackTrace st; st.load_here();
-//    Printer p;
-//    p.print(st, stderr);
-//}
-void ctrlC(int s, siginfo_t *si, void *arg){
-    printf_("Caught signal %d. Threads are stopping...\n",s); // Can't call printf because it might call malloc but the ctrlC might have happened in the middle of a malloc or free call, leaving data structures for it invalid. So we use `printf_` from https://github.com/mpaland/printf which is thread-safe and malloc-free but slow because it just write()'s all the characters one by one. Generally, "the signal handler code must not call non-reentrant functions that modify the global program data underneath the hood." ( https://www.delftstack.com/howto/c/sigint-in-c/ )
-    // Notes:
-    /* https://stackoverflow.com/questions/11487900/best-pratice-to-free-allocated-memory-on-sigint :
-     Handling SIGINT: I can think of four common ways to handle a SIGINT:
-
-     Use the default handler. Highly recommended, this requires the least amount of code and is unlikely to result in any abnormal program behavior. Your program will simply exit.
-
-     Use longjmp to exit immediately. This is for folk who like to ride fast motorcycles without helmets. It's like playing Russian roulette with library calls. Not recommended.
-
-     Set a flag, and interrupt the main loop's pselect/ppoll. This is a pain to get right, since you have to twiddle with signal masks. You want to interrupt pselect/ppoll only, and not non-reentrant functions like malloc or free, so you have to be very careful with things like signal masks. Not recommended. You have to use pselect/ppoll instead of select/poll, because the "p" versions can set the signal mask atomically. If you use select or poll, a signal can arrive after you check the flag but before you call select/poll, this is bad.
-
-     Create a pipe to communicate between the main thread and the signal handler. Always include this pipe in the call to select/poll. The signal handler simply writes one byte to the pipe, and if the main loop successfully reads one byte from the other end, then it exits cleanly. Highly recommended. You can also have the signal handler uninstall itself, so an impatient user can hit CTRL+C twice to get an immediate exit.
-     */
-    stopMain();
-    
-    // Print stack trace
-    //backward::sh->handleSignal(s, si, arg);
-}
-DataOutputBase* g_o2 = nullptr;
-#undef BACKTRACE_SET_TERMINATE
-#include "tools/backtrace/backtrace_on_terminate.hpp"
-void terminate_handler(bool backtrace) {
-    if (g_o2) {
-        // [!] Take a risk and do something that can't always succeed in a segfault handler: possible malloc and state mutation:
-        ((FileDataOutput*)g_o2)->release();
-    
-//        ((FileDataOutput*)g_o2)->writer.release(); // Save the file
-//                    std::cout << "Saved the video" << std::endl;
-    }
-    else {
-        // [!] Take a risk and do something that can't always succeed in a segfault handler: possible malloc and state mutation:
-        //std::cout << "No video to save" << std::endl;
-        printf_("No video to save\n");
-    }
-    
-    if (backtrace) {
-        backtrace_on_terminate();
-    }
-}
-void segfault_sigaction(int signal, siginfo_t *si, void *arg)
-{
-    printf_("Caught segfault (%s) at address %p. Running terminate_handler().\n", strsignal(signal), si->si_addr);
-    
-    terminate_handler(false);
-    
-    // Print stack trace
-    //backward::sh->handleSignal(signal, si, arg);
-    backtrace(std::cout);
-    
-    exit(5); // Probably doesn't call atexit since signal handlers don't.
-}
-// Installs signal handlers for the current thread.
-void installSignalHandlers() {
-    if (CMD_CONFIG(useSetTerminate)) {
-        // https://en.cppreference.com/w/cpp/error/set_terminate
-        std::set_terminate([](){
-            std::cout << "Unhandled exception detected by SIFT. Running terminate_handler()." << std::endl;
-            terminate_handler(true);
-            std::abort(); // https://en.cppreference.com/w/cpp/utility/program/abort
-        });
-    }
-    
-    // Install ctrl-c handler
-    // https://stackoverflow.com/questions/1641182/how-can-i-catch-a-ctrl-c-event
-    struct sigaction sigIntHandler;
-    sigIntHandler.sa_sigaction = ctrlC;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-    sigaction(SIGINT, &sigIntHandler, NULL);
-    
-    // Install segfault handler
-    // https://stackoverflow.com/questions/2350489/how-to-catch-segmentation-fault-in-linux
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(struct sigaction));
-    sigemptyset(&sa.sa_mask);
-    sa.sa_sigaction = segfault_sigaction;
-    sa.sa_flags   = SA_SIGINFO;
-    sigaction(SIGSEGV, &sa, NULL); // Segfault handler! Tries to save stuff ASAP, unlike sigIntHandler.
-    
-    // Install SIGBUS (?), SIGILL (illegal instruction), and EXC_BAD_ACCESS (similar to segfault but is for "A crash due to a memory access issue occurs when an app uses memory in an unexpected way. Memory access problems have numerous causes, such as dereferencing a pointer to an invalid memory address, writing to read-only memory, or jumping to an instruction at an invalid address. These crashes are most often identified by the EXC_BAD_ACCESS (SIGSEGV) or EXC_BAD_ACCESS (SIGBUS) exceptions" ( https://developer.apple.com/documentation/xcode/investigating-memory-access-crashes )) handlers
-    sigaction(SIGBUS, &sa, NULL);
-    sigaction(SIGILL, &sa, NULL);
-}
-// //
-
 // https://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
 template <
     class result_t   = std::chrono::milliseconds,
@@ -548,250 +246,6 @@ template <
 auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 {
     return std::chrono::duration_cast<result_t>(clock_t::now() - start);
-}
-
-#ifdef USE_COMMAND_LINE_ARGS
-DataSourceBase* g_src;
-#endif
-void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewWindow, bool useIdentityMatrix = false) {
-    { out_guard();
-        std::cout << "Matcher thread: finished matching" << std::endl; }
-    
-    // Accumulate homography
-    if (!useIdentityMatrix) {
-        cv::Mat M = img2.transformation.inv();
-        cv::Ptr<cv::Formatted> str;
-        matrixToString(M, str);
-        { out_guard();
-            std::cout << "Accumulating new matrix: " << str << std::endl; }
-        lastImageToFirstImageTransformationMutex.lock();
-        if (lastImageToFirstImageTransformation.empty()) {
-            lastImageToFirstImageTransformation = M;
-        }
-        else {
-            lastImageToFirstImageTransformation *= M;
-        }
-        lastImageToFirstImageTransformationMutex.unlock();
-    }
-    
-    if (showInPreviewWindow) {
-        if (CMD_CONFIG(showPreviewWindow())) {
-            #ifdef USE_COMMAND_LINE_ARGS
-            //assert(!img2.canvas.empty());
-            if (img2.canvas.empty()) {
-                std::cout << "Empty canvas image, avoiding showing it on canvasesReadyQueue\n";
-            }
-            else {
-                canvasesReadyQueue.enqueue(img2);
-            }
-            #endif
-        }
-    }
-}
-// Assumes processedImageQueue.mutex is locked already.
-void matcherWaitForNonPlaceHolderImageNoLockOnlyWait(bool seekInsteadOfDequeue, const int& currentIndex, const char* extraDescription="") {
-    while( processedImageQueue.count < 1 + (seekInsteadOfDequeue ? currentIndex : 0) ) // Wait until more images relative to the starting position (`currentIndex`) are in the queue. (Usually `currentCount` is 0 but if it is >= 1 then it is because we're peeking further.)
-    {
-//        if (stoppedMain()) {
-//            pthread_mutex_unlock( &processedImageQueue.mutex );
-//            // Stop matcher thread
-//            pthread_exit(0);
-//        }
-        pthread_cond_wait( &processedImageQueue.condition, &processedImageQueue.mutex );
-        { out_guard();
-            std::cout << "Matcher thread: Unlocking for matcherWaitForImageNoLock 2" << extraDescription << std::endl; }
-        pthread_mutex_unlock( &processedImageQueue.mutex );
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        { out_guard();
-            std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << extraDescription << std::endl; }
-        pthread_mutex_lock( &processedImageQueue.mutex );
-    }
-}
-// Assumes processedImageQueue.mutex is locked already.
-void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& currentIndex /*input and output*/) {
-    t.reset();
-    while (true) {
-        matcherWaitForNonPlaceHolderImageNoLockOnlyWait(seekInsteadOfDequeue, currentIndex);
-
-        // Dequeue placeholder/null or non-null images as needed
-        ProcessedImage<SIFT_T>& front = seekInsteadOfDequeue ? processedImageQueue.get(currentIndex) : processedImageQueue.front();
-        currentIndex++;
-        if (front.n < 4 /*"null" image*/) {
-            if (seekInsteadOfDequeue) {
-                // Peek is done already since we did currentIndex++, nothing to do here.
-                { out_guard();
-                    std::cout << "Matcher thread: Seeked to null image with index " << currentIndex-1 << std::endl; }
-            }
-            else {
-                { out_guard();
-                    std::cout << "Matcher thread: Dequeued null image with index " << currentIndex-1 << std::endl; }
-                // Dequeue (till non-null using the loop containing these statements)
-                ProcessedImage<SIFT_T> placeholder;
-                // Prevents waiting forever if last image we process is null //
-//                matcherWaitForNonPlaceHolderImageNoLockOnlyWait(seekInsteadOfDequeue, currentIndex, ": dequeue till non-null");
-                // //
-                processedImageQueue.dequeueNoLock(&placeholder);
-                if (CMD_CONFIG(showPreviewWindow()) && !seekInsteadOfDequeue) {
-                    #ifdef USE_COMMAND_LINE_ARGS
-                    assert(!placeholder.image.empty());
-                    pthread_mutex_unlock( &processedImageQueue.mutex ); // Don't be "greedy"
-                    canvasesReadyQueue.enqueueNoLock(placeholder);
-                    pthread_mutex_lock( &processedImageQueue.mutex );
-                    #endif
-                }
-            }
-        }
-        else {
-            { out_guard();
-                std::cout << "Matcher thread: Found non-null image with index " << currentIndex-1 << std::endl; }
-            // Dequeue and save the image outside this function, since we found it
-            break; // `currentIndex` now points to the image we found that is non-null
-        }
-    }
-    t.logElapsed("matcherWaitForNonPlaceholderImageNoLock");
-}
-int matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedImage<SIFT_T>* img2 /*output*/) {
-    { out_guard();
-        std::cout << "Matcher thread: Locking for 2x matcherWaitForImageNoLock" << std::endl; }
-    pthread_mutex_lock( &processedImageQueue.mutex );
-    int currentIndex = 0;
-    { out_guard();
-        std::cout << "matcherWaitForNonPlaceholderImageNoLock: first image" << std::endl; }
-    matcherWaitForNonPlaceholderImageNoLock(false, currentIndex); // Dequeue a bunch of null images
-    
-    // Save the image from `matcherWaitForNonPlaceholderImageNoLock`
-    processedImageQueue.dequeueNoLock(img1);
-    //*img = processedImageQueue.content[processedImageQueue.readPtr + iMin];
-    
-    currentIndex = 0;
-    std::cout << "matcherWaitForNonPlaceholderImageNoLock: second image\n";
-    matcherWaitForNonPlaceholderImageNoLock(false, currentIndex); // Dequeue a bunch of null images
-    
-    // Save the image from `matcherWaitForNonPlaceholderImageNoLock` but with a peek instead of dequeue since the next matching round requires img2 as its img1
-    processedImageQueue.peekNoLock(img2);
-    
-    pthread_mutex_unlock( &processedImageQueue.mutex );
-    { out_guard();
-        std::cout << "Matcher thread: Unlocked for 2x matcherWaitForImageNoLock" << std::endl; }
-    
-    return currentIndex;
-}
-void* matcherThreadFunc(void* arg) {
-    installSignalHandlers();
-    
-    #ifdef __APPLE__
-    // https://stackoverflow.com/questions/2369738/how-to-set-the-name-of-a-thread-in-linux-pthreads
-    // "Mac OS X: must be set from within the thread (can't specify thread ID)"
-    pthread_setname_np("matcherThread");
-    #endif
-    
-    SIFTState* s = (SIFTState*)arg;
-    
-    do {
-//        OPTICK_THREAD("Worker");
-        
-        ProcessedImage<SIFT_T> img1, img2;
-        int currentIndex = matcherWaitForTwoImages(&img1, &img2);
-        
-        // Setting current parameters for matching
-        img2.applyDefaultMatchingParams();
-
-        // Matching and homography
-        t.reset();
-        MatchResult enoughDescriptors = sift.findHomography(img1, img2, *s // Writes to img2.transformation
-#ifdef USE_COMMAND_LINE_ARGS
-                            , g_src, cfg
-#endif
-                            );
-        t.logElapsed("find homography for second image");
-        assert(enoughDescriptors != MatchResult::NotEnoughKeypoints); // This should be handled beforehand in the SIFT threads
-        // If not enough for second image, we can match with a third.
-        if (enoughDescriptors == MatchResult::NotEnoughMatchesForSecondImage) {
-            std::cout << "Matcher thread: Not enough descriptors for second image detected. Retrying on third image.\n";
-            
-            // Usually, SIFT threads can predict this by too low numbers of keypoints. 50 keypoints minimum, raises parameters over time beforehand.
-            // Retry matching with the next image that comes in. If this fails, discard the last two images and continue.
-            ProcessedImage<SIFT_T> img3;
-
-            { out_guard();
-                std::cout << "Matcher thread: Locking for peek third image" << std::endl; }
-            pthread_mutex_lock( &processedImageQueue.mutex );
-            matcherWaitForNonPlaceholderImageNoLock(true, currentIndex); // Peek a bunch of null images
-            pthread_mutex_unlock( &processedImageQueue.mutex );
-            { out_guard();
-                std::cout << "Matcher thread: Unlocking for peek third image" << std::endl; }
-
-            t.reset();
-            MatchResult enoughDescriptors2 = sift.findHomography(img1, img3, *s // Writes to img3.transformation
-            #ifdef USE_COMMAND_LINE_ARGS
-                                        , g_src, cfg
-            #endif
-                                );
-            t.logElapsed("find homography for third image");
-            
-            if (enoughDescriptors2 != MatchResult::Success) {
-                std::cout << "Not enough descriptors the second time around\n";
-            }
-            else if (enoughDescriptors2 != MatchResult::NotEnoughKeypoints) {
-                std::cout << "Got enough descriptors the second time around\n";
-            }
-
-            onMatcherFinishedMatching(img3, false, enoughDescriptors2 != MatchResult::Success);
-            
-            // Free memory and mark this as an unused ProcessedImage (optional):
-            img1.resetMatching();
-            img2.resetMatching();
-            img3.resetMatching();
-            
-            // Regardless of enoughDescriptors2, we still continue with next iteration.
-        }
-        else if (enoughDescriptors == MatchResult::NotEnoughMatchesForFirstImage) {
-            // Nothing we can do with the third image since this first image is the problem, so we skip this image
-            // (Use identity matrix for this transformation)
-            onMatcherFinishedMatching(img2, true, true);
-
-            // Free memory and mark this as an unused ProcessedImage (optional):
-            img1.resetMatching();
-            img2.resetMatching();
-        }
-        else {
-            // Save this good match
-            onMatcherFinishedMatching(img2, true, false);
-            
-            // Free memory and mark this as an unused ProcessedImage (optional):
-            img1.resetMatching();
-            img2.resetMatching();
-        }
-    } while (!stoppedMain());
-    return (void*)0;
-}
-
-cv::Mat prepareCanvas(ProcessedImage<SIFT_T>& img) {
-    cv::Mat c = img.canvas.empty() ? img.image : img.canvas;
-    if (CMD_CONFIG(showPreviewWindow())) {
-        // Draw the image index
-        // https://stackoverflow.com/questions/46500066/how-to-put-a-text-in-an-image-in-opencv-c/46500123
-        cv::putText(c, //target image
-                    std::to_string(img.i), //text
-                    cv::Point(10, 25), //top-left position
-                    //cv::Point(10, c.rows / 2), //center position
-                    cv::FONT_HERSHEY_DUPLEX,
-                    1.0,
-                    CV_RGB(118, 185, 0), //font color
-                    2);
-        
-        // IMU data, if any
-        if (img.imu) {
-            cv::putText(c,
-                        std::to_string(img.imu->yprNed.x) + "," + std::to_string(img.imu->yprNed.y) + "," + std::to_string(img.imu->yprNed.z),
-                        cv::Point(10, c.rows - 20),
-                        cv::FONT_HERSHEY_DUPLEX,
-                        1.0,
-                        CV_RGB(118, 185, 0), //font color
-                        2);
-        }
-    }
-    return c;
 }
 
 cv::Rect g_desktopSize;
@@ -818,30 +272,46 @@ void nonthrowing_python(F f) noexcept(true) {
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 //ctpl::thread_pool tp(4); // Number of threads in the pool
 //ctpl::thread_pool tp(8);
-ctpl::thread_pool tp(6); // Thread pool for SIFT threads
-std::queue<ProcessedImage<SIFT_T>> waitingToEnqueueProcessedImageQueue; // Queue for later enqueing "null" images when SIFT threads are finished. Shares a mutex with processedImageQueue.mutex.
+ctpl::thread_pool tp(6);
 // ^^ Note: "the destructor waits for all the functions in the queue to be finished" (or call .stop())
-size_t siftProcessingHighestIndex = 0; // Highest index of an image that a SIFT thread is currently processing. Guarded by the processedImageQueue.mutex.
-size_t siftProcessingHighestIndexBeforeNullImages = 0; // Highest index of an image that a SIFT thread is currently processing but for those SIFT threads before any null images in waitingToEnqueueProcessedImageQueue are not processed. Guarded by the processedImageQueue.mutex.
 template< class... Args >
-void waitingToEnqueueProcessedImageQueue_enqueue(size_t i, Args&&... args) {
+void processedImageQueue_enqueueIndirect(size_t i, Args&&... args) {
     // Check if we can enqueue now
-    { out_guard(); std::cout << "waitingToEnqueueProcessedImageQueue_enqueue: i=" << i << ": locking processedImageQueue" << std::endl; }
+    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ": locking processedImageQueue" << std::endl; }
     pthread_mutex_lock( &processedImageQueue.mutex );
-    if (i>0) {
-        siftProcessingHighestIndexBeforeNullImages = i-1;
-    }
     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
-        || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
+        || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
         ) {
         processedImageQueue.enqueueNoLock(args...);
         pthread_mutex_unlock( &processedImageQueue.mutex );
-        { out_guard(); std::cout << "waitingToEnqueueProcessedImageQueue_enqueue: i=" << i << ": unlocked processedImageQueue" << std::endl; }
+        { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ": unlocked processedImageQueue" << std::endl; }
     }
     else {
-        waitingToEnqueueProcessedImageQueue.emplace(args...);
         pthread_mutex_unlock( &processedImageQueue.mutex );
-        { out_guard(); std::cout << "waitingToEnqueueProcessedImageQueue_enqueue: enqueued into waiting images queue, i=" << i << ", " << waitingToEnqueueProcessedImageQueue.size() << " waiting image(s) queued : unlocked processedImageQueue" << std::endl; }
+        { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: need to wait for enqueue, i=" << i << ": unlocked processedImageQueue" << std::endl; }
+        
+        // https://stackoverflow.com/questions/47496358/c-lambdas-how-to-capture-variadic-parameter-pack-from-the-upper-scope
+        // NOTE: this is probably very inefficient and also allocates on the heap:
+        tpPush([args = std::make_tuple(std::forward<Args>(args) ...)](int id, size_t i)mutable {
+            return std::apply([id, i](auto&& ... args){
+                while (true) {
+                    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": locking processedImageQueue" << std::endl; }
+                    pthread_mutex_lock( &processedImageQueue.mutex );
+                    if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
+                        || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
+                    ) {
+                        { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": enqueueNoLock" << std::endl; }
+                        processedImageQueue.enqueueNoLock(args...);
+                        pthread_mutex_unlock( &processedImageQueue.mutex );
+                        { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": unlocked processedImageQueue 1" << std::endl; }
+                        break;
+                    }
+                    pthread_mutex_unlock( &processedImageQueue.mutex );
+                    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": unlocked processedImageQueue 2" << std::endl; }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20)); // Try again next time
+                }
+            }, std::move(args));
+        }, i);
     }
 }
 #ifdef USE_PTR_INC_MALLOC
@@ -933,8 +403,8 @@ int mainMission(DataSourceT* src,
                     std::cout << "Skipping to index: " << pair.second << std::endl; }
                 for (size_t i2 = pair.first; i2 < pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
-                    // Enqueue null image
-                    waitingToEnqueueProcessedImageQueue_enqueue(i2, mat,
+                    // Enqueue null image indirectly
+                    processedImageQueue_enqueueIndirect(i2, mat,
                                             shared_keypoints_ptr(),
                                             std::shared_ptr<struct sift_keypoint_std>(),
                                             0,
@@ -945,6 +415,11 @@ int mainMission(DataSourceT* src,
                                             p,
                                             i2,
                                             std::shared_ptr<IMUData>());
+                    
+                    // Show a bit (twice because with only one call to showAnImageUsingCanvasesReadyQueue() we may fill up the canvasesReadyQueue since it only dequeues once per call to showAnImageUsingCanvasesReadyQueue())
+                    showAnImageUsingCanvasesReadyQueue(src, o2);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                    showAnImageUsingCanvasesReadyQueue(src, o2);
                 }
                 i = pair.second; // -1 due to the i++
                 continue;
@@ -1081,14 +556,16 @@ int mainMission(DataSourceT* src,
             const double nearBlackImageVariance = 0.0007;
             double threshold = nearBlackImageVariance; //2900; // TODO: dynamically adjust threshold
 
-            printf("Image %zu: Blur detection: variance %f; ", i, variance);
-            if (variance <= threshold) {
-                // Blurry
-                puts("blurry");
-                discardImage = true;
-            } else {
-                // Not blurry
-                puts("not blurry");
+            { out_guard(); // Due to multiple prints in one logical "output"
+                printf("Image %zu: Blur detection: variance %f; ", i, variance);
+                if (variance <= threshold) {
+                    // Blurry
+                    puts("blurry");
+                    discardImage = true;
+                } else {
+                    // Not blurry
+                    puts("not blurry");
+                }
             }
             t.logElapsed("blur detection");
             
@@ -1165,37 +642,30 @@ int mainMission(DataSourceT* src,
             // //
             
             if (discardImage) {
-                // Enqueue null image
-                waitingToEnqueueProcessedImageQueue_enqueue(i, greyscale,
-                                        shared_keypoints_ptr(),
-                                        std::shared_ptr<struct sift_keypoint_std>(),
-                                        0,
-                                        shared_keypoints_ptr(),
-                                        shared_keypoints_ptr(),
-                                        shared_keypoints_ptr(),
-                                        cv::Mat(),
-                                        p,
-                                        i,
-                                        imu_);
+                // Enqueue null image indirectly
+                processedImageQueue_enqueueIndirect(i, greyscale,
+                                            shared_keypoints_ptr(),
+                                            std::shared_ptr<struct sift_keypoint_std>(),
+                                            0,
+                                            shared_keypoints_ptr(),
+                                            shared_keypoints_ptr(),
+                                            shared_keypoints_ptr(),
+                                            cv::Mat(),
+                                            p,
+                                            i,
+                                            imu_);
                 
                 // Don't push a function for this image or save it as a possible firstImage
                 goto skipImage;
             }
-            
+
             // Prepare image by applying warp using IMU data
-//            if (imu_) {
-//                cv::Mat_ warp = cv::Mat_<float> A = (cv::Mat_<float>(3, 3) <<
-//                                cos(alpha)*cos(beta), cos(alpha)*sin(beta)*sin(gamma)-sin(alpha)*cos(gamma), cos(alpha)*sin(beta)*cos(gamma)+sin(alpha)*sin(gamma),
-//                sin(alpha)*cosine(beta), sin(alpha)*sin(beta)*sin(gamma)+cos(alpha)*cos(gamma), sin(alpha)*sin(beta)*cos(gamma)-cos(alpha)*sin(gamma),
-//                3, 9);
-//            }
-            
-            // Prepare to run SIFT
-            { out_guard(); std::cout << "Main thread: locking processedImageQueue for setting siftProcessingHighestIndex to " << i << std::endl; }
-            pthread_mutex_lock( &processedImageQueue.mutex );
-            siftProcessingHighestIndex = i;
-            pthread_mutex_unlock( &processedImageQueue.mutex );
-            { out_guard(); std::cout << "Main thread: unlocked processedImageQueue for setting siftProcessingHighestIndex" << std::endl; }
+            //            if (imu_) {
+            //                cv::Mat_ warp = cv::Mat_<float> A = (cv::Mat_<float>(3, 3) <<
+            //                                cos(alpha)*cos(beta), cos(alpha)*sin(beta)*sin(gamma)-sin(alpha)*cos(gamma), cos(alpha)*sin(beta)*cos(gamma)+sin(alpha)*sin(gamma),
+            //                sin(alpha)*cosine(beta), sin(alpha)*sin(beta)*sin(gamma)+cos(alpha)*cos(gamma), sin(alpha)*sin(beta)*cos(gamma)-cos(alpha)*sin(gamma),
+            //                3, 9);
+            //            }
             
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
@@ -1284,10 +754,10 @@ int mainMission(DataSourceT* src,
                             std::cout << "Thread " << id << ": Locked" << std::endl; }
                     }
                     { out_guard();
-                        std::cout << "@@@@@@@@@@@@@@@@Thread " << id << ": readPtr " << processedImageQueue.readPtr << ", i " << i << ", writePtr " << processedImageQueue.writePtr << std::endl;
+                        std::cout << "@@@@@@@@@@@@@@@@Thread " << id << ": readPtr " << processedImageQueue.readPtr << ", i " << i << ", writePtr " << processedImageQueue.writePtr << ", processedImageQueue.count " << processedImageQueue.count << std::endl;
                     }
                     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
-                        || (processedImageQueue.readPtr == (i - 1) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
+                        || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
                         ) {
                         { out_guard();
                             std::cout << "Thread " << id << ": enqueue" << std::endl; }
@@ -1318,24 +788,6 @@ int mainMission(DataSourceT* src,
                         #else
                         #error "No known SIFT implementation"
                         #endif
-                        
-                        // Dequeue from all pending enqueues
-                        size_t counter = i;
-                        { out_guard();
-                            std::cout << "Thread " << id << ": i=" << i << ", waitingToEnqueueProcessedImageQueue.size()=" << waitingToEnqueueProcessedImageQueue.size() << ", siftProcessingHighestIndexBeforeNullImages=" << siftProcessingHighestIndexBeforeNullImages << "\n"; }
-                        if (siftProcessingHighestIndexBeforeNullImages > i) {
-                            while (!waitingToEnqueueProcessedImageQueue.empty() && counter++ < siftProcessingHighestIndex /*don't want to enqueue more than the current main thread limit*/) {
-                                { out_guard();
-                                    std::cout << "Thread " << id << ": draining waiting images (i=" << i << ") and enqueuing with min(" << waitingToEnqueueProcessedImageQueue.size() << "," << (siftProcessingHighestIndex-counter) << ") left\n"; }
-                                ProcessedImage<SIFT_T>& next = waitingToEnqueueProcessedImageQueue.front();
-                                processedImageQueue.enqueueNoLockWithRef(next);
-                                waitingToEnqueueProcessedImageQueue.pop();
-                            }
-                        }
-                        else {
-                            { out_guard();
-                                std::cout << "Thread " << id << ": i=" << i << ", siftProcessingHighestIndexBeforeNullImages=" << siftProcessingHighestIndexBeforeNullImages << "\n"; }
-                        }
                     }
                     else {
                         auto ms = 10;
@@ -1384,37 +836,8 @@ int mainMission(DataSourceT* src,
         }
         
         skipImage:
-#ifdef USE_COMMAND_LINE_ARGS
         // Show images if we have them and if we are showing a preview window
-        if (!canvasesReadyQueue.empty() && CMD_CONFIG(showPreviewWindow())) {
-            ProcessedImage<SIFT_T> img;
-            canvasesReadyQueue.dequeue(&img);
-            cv::Mat realCanvas = prepareCanvas(img);
-            commonUtils::imshow("", realCanvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
-            if (CMD_CONFIG(siftVideoOutput)) {
-                // Save frame with SIFT keypoints rendered on it to the video output file
-                cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
-                if (img.canvas.empty()) {
-                    std::cout << "Canvas has empty image, using original\n";
-                    o2.showCanvas("", img.image, false, rect.empty() ? nullptr : &rect);
-                }
-                else {
-                    o2.showCanvas("", img.canvas, false, rect.empty() ? nullptr : &rect);
-                }
-            }
-            //cv::waitKey(30);
-            auto size = canvasesReadyQueue.size();
-            { out_guard();
-                std::cout << "Showing image from canvasesReadyQueue with " << size << " images left" << std::endl; }
-            char c = cv::waitKey(CMD_CONFIG(waitKeyForever) ? 0 : (1 + 150.0 / (1 + size))); // Sleep less as more come in
-            if (c == 'q') {
-                // Quit
-                { out_guard();
-                    std::cout << "Exiting (q pressed)" << std::endl; }
-                stopMain();
-            }
-        }
-#endif
+        showAnImageUsingCanvasesReadyQueue(src, o2);
         
         showTimers("main");
     }
@@ -1551,122 +974,3 @@ int mainMission(DataSourceT* src,
     cv::imwrite(name, canvas);
     return 0;
 }
-
-#ifdef USE_COMMAND_LINE_ARGS
-#ifdef SIFTAnatomy_
-template <typename DataSourceT, typename DataOutputT>
-int mainInteractive(DataSourceT* src,
-                    SIFTState& s,
-                    SIFTParams& p,
-                    size_t skip,
-                    DataOutputT& o
-                    #ifdef USE_COMMAND_LINE_ARGS
-                      , FileDataOutput& o2,
-                      const CommandLineConfig& cfg
-                    #endif
-) {
-    cv::Mat canvas;
-    
-	//--- print the files sorted by filename
-    bool retryNeeded = false;
-    for (size_t i = src->currentIndex;; i++) {
-        std::cout << "i: " << i << std::endl;
-        cv::Mat mat = src->get(i);
-        if (mat.empty()) { printf("No more images left to process. Exiting.\n"); break; }
-        cv::Mat greyscale = src->siftImageForMat(i);
-        float* x = (float*)greyscale.data;
-        size_t w = mat.cols, h = mat.rows;
-        auto path = src->nameForIndex(i);
-
-        // Initialize canvas if needed
-        if (canvas.data == nullptr) {
-            puts("Init canvas");
-            canvas = cv::Mat(h, w, CV_32FC4);
-        }
-
-		// compute sift keypoints
-		int n; // Number of keypoints
-		struct sift_keypoints* keypoints;
-		struct sift_keypoint_std *k = nullptr;
-        if (!CMD_CONFIG(imageCaptureOnly)) {
-            if (s.loadedKeypoints == nullptr) {
-                t.reset();
-                k = my_sift_compute_features(p.params, x, w, h, &n, &keypoints);
-                printf("Number of keypoints: %d\n", n);
-                t.logElapsed("compute features");
-            }
-            else {
-                k = s.loadedK.release(); // "Releases the ownership of the managed object if any." ( https://en.cppreference.com/w/cpp/memory/unique_ptr/release )
-                keypoints = s.loadedKeypoints.release();
-                n = s.loadedKeypointsSize;
-            }
-        }
-
-        cv::Mat backtorgb = src->colorImageForMat(i);
-		if (i == skip) {
-			puts("Init firstImage");
-            s.firstImage = backtorgb;
-		}
-
-		// Draw keypoints on `o.canvas`
-        if (!CMD_CONFIG(imageCaptureOnly)) {
-            t.reset();
-        }
-        backtorgb.copyTo(canvas);
-        if (!CMD_CONFIG(imageCaptureOnly)) {
-            for(int i=0; i<n; i++){
-                drawSquare(canvas, cv::Point(k[i].x, k[i].y), k[i].scale, k[i].orientation, 1);
-                //break;
-                // fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
-                // for(int j=0; j<128; j++){
-                // 	fprintf(f, "%u ", k[i].descriptor[j]);
-                // }
-                // fprintf(f, "\n");
-            }
-            t.logElapsed("draw keypoints");
-        }
-
-		// Compare keypoints if we had some previously and render to canvas if needed
-        if (!CMD_CONFIG(imageCaptureOnly)) {
-            retryNeeded = compareKeypoints(canvas, s, p, keypoints, backtorgb COMPARE_KEYPOINTS_ADDITIONAL_ARGS);
-        }
-
-        bool exit;
-        if (CMD_CONFIG(imageFileOutput)) {
-            #ifdef USE_COMMAND_LINE_ARGS
-            exit = run(o2, canvas, *src, s, p, backtorgb, keypoints, retryNeeded, i, n);
-            #endif
-        }
-        else {
-            exit = run(o, canvas, *src, s, p, backtorgb, keypoints, retryNeeded, i, n);
-        }
-	
-		// write to standard output
-		//sift_write_to_file("/dev/stdout", k, n);
-
-		// cleanup
-        free(k);
-		
-		// Save keypoints
-        if (!retryNeeded) {
-            s.computedKeypoints.push_back(keypoints);
-        }
-        
-        if (exit) {
-            break;
-        }
-		
-		// Reset RNG so some colors coincide
-		resetRNG();
-	}
-    
-    if (CMD_CONFIG(imageFileOutput)) {
-        #ifdef USE_COMMAND_LINE_ARGS
-        o2.release(); // Save the file
-        #endif
-    }
-    
-    return 0;
-}
-#endif
-#endif // USE_COMMAND_LINE_ARGS
