@@ -277,14 +277,14 @@ ctpl::thread_pool tp(6);
 template< class... Args >
 void processedImageQueue_enqueueIndirect(size_t i, Args&&... args) {
     // Check if we can enqueue now
-    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ": locking processedImageQueue" << std::endl; }
+    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect called: i=" << i << ": locking processedImageQueue" << std::endl; }
     pthread_mutex_lock( &processedImageQueue.mutex );
     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
         || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
         ) {
         processedImageQueue.enqueueNoLock(args...);
         pthread_mutex_unlock( &processedImageQueue.mutex );
-        { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ": unlocked processedImageQueue" << std::endl; }
+        { out_guard(); std::cout << "processedImageQueue_enqueueIndirect fast path: i=" << i << ": unlocked processedImageQueue" << std::endl; }
     }
     else {
         pthread_mutex_unlock( &processedImageQueue.mutex );
@@ -297,6 +297,7 @@ void processedImageQueue_enqueueIndirect(size_t i, Args&&... args) {
                 while (true) {
                     { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": locking processedImageQueue" << std::endl; }
                     pthread_mutex_lock( &processedImageQueue.mutex );
+                    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: locked, i=" << i << ", id=" << id << ", readPtr=" << processedImageQueue.readPtr << ", writePtr=" << processedImageQueue.writePtr << ", count=" << processedImageQueue.count << " : locked processedImageQueue" << std::endl; }
                     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
                         || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
                     ) {

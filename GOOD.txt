@@ -251,5 +251,12 @@ nasty matches
 2940.37-2867.58
 
 
+
+./sift_exe_release_commandLine --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission-interactive --skip-image-indices 1 8 --skip-image-indices 14 15 --skip-image-indices 18 24 --skip-image-indices 25 29 --skip-image-indices 32 33 --skip-image-indices 35 37 --skip-image-indices 38 41 --skip-image-indices 42 50 --skip-image-indices 51 59 --skip-image-indices 60 67 --skip-image-indices 68 70 --skip-image-indices 71 75 --skip-image-indices 76 82 --skip-image-indices 83 85 --skip-image-indices 86 88 --skip-image-indices 89 92 --skip-image-indices 94 95 --skip-image-indices 96 97 --skip-image-indices 99 111 --skip-image-indices 112 117 --skip-image-indices 118 122 --skip-image-indices 123 125 --skip-image-indices 127 130 --skip-image-indices 132 136 --skip-image-indices 139 140 --skip-image-indices 141 142 --skip-image-indices 146 147
+
+inversions
+17-19
+35
+
 pi ip finder: nmap -p 22 10.16.137.0/24 | grep -i "tcp open" -B 4
 full build: git pull && git submodule update --init --recursive && make -j4 sift_exe_release_commandLine subscale_exe_release

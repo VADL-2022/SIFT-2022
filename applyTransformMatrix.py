@@ -21,7 +21,21 @@ M5=np.matrix([[9.762088597832031, -0.06470291995465242, -1035.481126733594],
               [2.30978168109985, 6.973031221831425, -1042.933476853166],
               [0.01188577582974148, -0.01071269415985704, 0.7631028038426273]]) # Apply to drone test footage first image
 droneTestFirstImage='/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_17_01_45_CST/firstImage0.png'
-M=M5
+
+M6=np.matrix([[460.1593113915993, -5.925398318608927, -143295.5350288748],
+              [-96.68889393599359, -71.37197210965851, 43526.01193106594],
+              [0, 0, 0.9999999999999983]]) # On git commit 7d743f75c4a2924a7bd3d3bea7184c6ddefb04ba: ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission --skip-image-indices 2 2 --skip-image-indices 5 5 --skip-image-indices 7 7 --skip-image-indices 14 14 --skip-image-indices 17 19  --skip-image-indices 21 24 --skip-image-indices 32 38 --skip-image-indices 55 64  --skip-image-indices 65 88 --skip-image-indices 89 91 --skip-image-indices 94 94 --skip-image-indices 100 108 --skip-image-indices 110 110 --skip-image-indices 111 121 --skip-image-indices 122 129 --skip-image-indices 141 141
+# Testing:
+"""
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission --skip-image-indices 2 2 --skip-image-indices 5 5 --skip-image-indices 7 7 --skip-image-indices 14 14 --skip-image-indices 17 19  --skip-image-indices 21 24 --skip-image-indices 32 38 --skip-image-indices 55 64  --skip-image-indices 65 88 --skip-image-indices 89 108 --skip-image-indices 110 110 --skip-image-indices 111 141
+""" # Gave:
+M7=np.matrix([[-243.3613235845537, 167.141896995625, 38588.78930223091],
+              [ 151.2045618626928, -109.7610614449212, -18512.55206900018],
+              [ 0, 0, 0.9999999999999987]])
+fullscale1FirstImage='/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-28_20_22_58_CST/firstImage0.png'
+
+M=M7
+imgPath=fullscale1FirstImage
 
 
 
@@ -35,8 +49,9 @@ inc=0.005/2
 def lerp(a, b, t):
     return a + (b-a) * t
 
-imgOrig = cv2.imread(droneTestFirstImage) #cv2.imread("/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_09_31_47_CST/firstImage0.png")
+#imgOrig = cv2.imread(droneTestFirstImage) #cv2.imread("/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-17_09_31_47_CST/firstImage0.png")
     #"Data/subscale2/PostFlightSIFTReRuns_derived/output.png")
+imgOrig = cv2.imread(imgPath)
 while True:
     print(imgOrig.shape[:2])
     img = cv2.warpPerspective(imgOrig, Mcurrent, imgOrig.shape[:2])
