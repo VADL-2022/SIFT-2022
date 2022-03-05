@@ -71,7 +71,7 @@ sleep_ () {
 
 commitThing="$1"
 if [ -z "$commitThing" ]; then
-    commitThing="subscale2"
+    commitThing="fullscale1"
 fi
 git checkout "$commitThing"
 # Checkout submodules from the above commit as well:
@@ -81,7 +81,7 @@ if [ "$mode" == "sift" ]; then
 fi
 #nix-shell --run "$compileSIFT make -j4 subscale_exe_release" # Problem: this doesn't set the exit code so set -e doesn't exit for it. Instead we use the below and check for nix-shell at the start of this script:
 #exe=subscale_exe_release
-exe=subscale_exe_debug
+exe=subscale_exe_release
 $compileSIFT ; make -j4 $exe
 # TODO: sha512 Checksum
 # if [ "$dontsleep" != "1" ]; then
@@ -106,7 +106,7 @@ quiet=1 # set to 0 for verbose
 #sudo pip3 install adafruit-blinka
 # #
 windTunnel="import sys; sys.path = list(filter(lambda x: '/nix/store/' not in x, sys.path)); import WindTunnel.run #That's all folks"
-if [ "$mode" == "sift" ]; then
+if [ "$mode" == "sift" -a "$hostname" == "sift1" ]; then # -a is "and"..
     echo "@@@@ Starting thermocouple temperature recording"
     /usr/bin/python3 -c "$windTunnel" 0 "$quiet" &
 else
@@ -121,27 +121,32 @@ fi
 # fi
 echo "@@@@ Starting driver for $mode"
 #realFlight="--sift-start-time 20000 --takeoff-g-force 5 --main-deployment-g-force 1 --backup-sift-stop-time $(($mainDeploymentToTouchDown-10000))"
-mainStabilizationTime=20000 # Time to allow rocket to stabilize after main deployment, then running SIFT.
-mainDeploymentToTouchDown=74000 # milliseconds
-siftAllowanceForStopping=10000 # Time to take away from mainDeploymentToTouchDown for stopping SIFT in backupSIFTStopTime. Larger values stop SIFT sooner.
-timeToMainDeployment=10000 # Originally we were going to start SIFT on main deployment. But we use this instead since unsure about IMU trigger on 1 g of main deployment, and there's a fallback via --backup-sift-start-time for this.
-backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))" # Originally we were going to stop SIFT on altitude data. But we're unsure about altitude data being reliable, so we don't use it to stop SIFT, and there's a fallback via backupSIFTStopTime.
+mainStabilizationTime=7000 # Time to allow rocket to stabilize after main deployment, then running SIFT.
+timeToMainDeployment=67500 # Originally we were going to start SIFT on main deployment. But we use this instead since unsure about IMU trigger on 1 g of main deployment, and there's a fallback via --backup-sift-start-time for this.
 if [ "$mode" == "sift" ]; then
-    asdasd="--takeoff-g-force 5"
+    asdasd="--takeoff-g-force 9"
+    mainDeploymentToTouchDown=28500 # Actual value: 28500 # milliseconds
+    siftAllowanceForStopping=0 # Time to take away from mainDeploymentToTouchDown for stopping SIFT in backupSIFTStopTime. Larger values stop SIFT sooner.
 else
-    asdasd="--takeoff-g-force 4"
+    asdasd="--takeoff-g-force 8"
+    mainDeploymentToTouchDown=60000 # Hacked value for drift, no landing detection on videocap for now
+    siftAllowanceForStopping=0 # Time to take away from mainDeploymentToTouchDown for stopping SIFT in backupSIFTStopTime. Larger values stop SIFT sooner.
 fi
+backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))" # Originally we were going to stop SIFT on altitude data. But we're unsure about altitude data being reliable, so we don't use it to stop SIFT, and there's a fallback via backupSIFTStopTime.
 gforce=
-realFlight="--sift-start-time $mainStabilizationTime $asdasd --main-deployment-g-force 999999999999 --backup-sift-stop-time $backupSIFTStopTime" # --main-deployment-g-force is unused, just using timing
-testing="--sift-start-time 0 --backup-sift-stop-time 20000"
-#extraArgs="$testing"
+realFlight="--sift-start-time $mainStabilizationTime $asdasd --main-deployment-g-force 2.5 --backup-sift-stop-time $backupSIFTStopTime --meco 2200 --landing-g-force 8 --emergency-main-deployment-g-force 16" # --main-deployment-g-force is unused, just using timing
+#testing="--sift-start-time 0 --backup-sift-stop-time 20000 --meco 5200 --emergency-main-deployment-g-force 1"
+testing2="--sift-start-time $mainStabilizationTime --backup-sift-stop-time $backupSIFTStopTime --meco 2200 --emergency-main-deployment-g-force 1"
+#extraArgs="$testing2"
 extraArgs="$realFlight"
 commonArgs="--backup-takeoff-time 0 --backup-sift-start-time $timeToMainDeployment"
 if [ "$mode" == "sift" ]; then
-    ./$exe --extra-sift-exe-args '--crop-for-fisheye-camera --no-preview-window' --sift-params '-C_edge 2 -delta_min 0.6' $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "subscale_driver/radio.py" 1)
+    crop=
+    #crop=--crop-for-fisheye-camera
+    ./$exe --extra-sift-exe-args "$crop --no-preview-window" --sift-params '-C_edge 2 -delta_min 0.6' $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "subscale_driver/radio.py" 1)
 else
     #./subscale_exe_release --video-capture --sift-start-time "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
-    ./$exe --video-capture --LIS331HH-imu-calibration-file "subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv" $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
+    ./$exe --time-to-apogee 17600 --video-capture --LIS331HH-imu-calibration-file "subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv" $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 fi
 set +e
 cleanup
