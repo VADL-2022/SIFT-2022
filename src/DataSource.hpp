@@ -41,6 +41,9 @@ struct DataSourceBase {
     
     size_t currentIndex; // Index to save into next
     bool _crop = false;
+    cv::Rect _cropRect; // Only used if _crop is true
+protected:
+    void initCrop(cv::Size sizeFrame);
 };
 
 struct FolderDataSource : public DataSourceBase
@@ -115,8 +118,8 @@ struct CameraDataSource : public OpenCVVideoCaptureDataSource
     
     using OpenCVVideoCaptureDataSource::get;
     
-protected:
     static const cv::Size default_sizeFrame;
+protected:
     void init(double fps, cv::Size sizeFrame);
 };
 

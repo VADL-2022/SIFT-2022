@@ -454,9 +454,25 @@ int mainMission(DataSourceT* src,
             std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl; }
         t.logElapsed("get image");
         if (mat.empty()) {
-            printf("No more images left to process. Exiting.\n");
-            stopMain();
-            break;
+            if (!CMD_CONFIG(finishRestOnOutOfImages)) {
+                printf("No more images left to process. Exiting.\n");
+                stopMain();
+                break;
+            }
+            else {
+                if ((tp.q.size() != 0 && tp.n_idle() != tp.size()) || processedImageQueue.size() > 0) {
+                //if (tp.n_idle() != tp.size()) {
+                    printf("No more images left to process, but SIFT threads remain. Waiting/showing images...\n");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    i--; // "Prevent" i from incrementing on for loop update
+                    goto skipImage; // Show images with canvas etc.
+                }
+                else {
+                    printf("No more images left to process, and no SIFT threads remain. Exiting.\n");
+                    stopMain();
+                    break;
+                }
+            }
         }
         // Possibly saving it:
         if (!CMD_CONFIG(siftVideoOutput)) {
@@ -910,7 +926,7 @@ int mainMission(DataSourceT* src,
     { out_guard();
         std::cout << "Stopping thread pool" << std::endl; }
     
-    tp.stop(!stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
+    tp.stop(CMD_CONFIG(finishRestAlways) || !stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
 
     { out_guard();
         std::cout << "Cancelling matcher thread" << std::endl; }

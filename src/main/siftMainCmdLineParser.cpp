@@ -35,7 +35,7 @@ int parseCommandLineArgs(int argc, char** argv,
             src = std::make_unique<FolderDataSource>(argc, argv, skip); // Read folder determined by command-line arguments
             cfg.folderDataSource = true;
         }
-        if (strcmp(argv[i], "--video-file-data-source") == 0) { // Get from video file (path is specified with --video-file-data-source-path, otherwise the default is used) instead of camera
+        else if (strcmp(argv[i], "--video-file-data-source") == 0) { // Get from video file (path is specified with --video-file-data-source-path, otherwise the default is used) instead of camera
             src = std::make_unique<VideoFileDataSource>(argc, argv); // Read file determined by command-line arguments
             cfg.videoFileDataSource = true;
         }
@@ -58,9 +58,17 @@ int parseCommandLineArgs(int argc, char** argv,
         else if (strcmp(argv[i], "--save-first-image") == 0) { // Save the first image SIFT encounters. Counts as a flush towards the start of SIFT.
             cfg.saveFirstImage = true;
         }
+        // Preview window/SIFT rendering options //
         else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
             cfg.noPreviewWindow = true;
         }
+        else if (strcmp(argv[i], "--no-lines") == 0) { // Doesn't show matching lines
+            cfg.noLines = true;
+        }
+        else if (strcmp(argv[i], "--no-dots") == 0) { // Doesn't show keypoints
+            cfg.noDots = true;
+        }
+        // //
         else if (i+1 < argc && strcmp(argv[i], "--save-every-n-seconds") == 0) { // [mainMission() only] Save video and transformation matrices every n (given) seconds. Set to -1 to disable flushing until SIFT exits.
             cfg.flushVideoOutputEveryNSeconds = std::stoi(argv[i+1]);
             i++;
@@ -74,6 +82,12 @@ int parseCommandLineArgs(int argc, char** argv,
         }
         else if (strcmp(argv[i], "--verbose") == 0) {
             cfg.verbose = true;
+        }
+        else if (strcmp(argv[i], "--finish-rest-always") == 0) { // Makes it so the dispatch queue is drained always, even after SIGINT is received, causing SIFT to finish processing all images that were gathered by the main thread instead of stopping short.  // Demo: `./sift_exe_release_commandLine --folder-data-source --folder-data-source-path Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated/ --main-mission --finish-rest-always`
+            cfg.finishRestAlways = true;
+        }
+        else if (strcmp(argv[i], "--finish-rest-on-out-of-images") == 0) { // Makes it so the dispatch queue is drained even after no images are left. Useful for a video file or folder data source.  // Demo: see above command but use `--finish-rest-on-out-of-images` instead. This is more useful than `--finish-rest-always` for a folder data source since they can finish being read from very early.
+            cfg.finishRestOnOutOfImages = true;
         }
         else if (i+1 < argc && strcmp(argv[i], "--sleep-before-running") == 0) {
             long long time = std::stoll(argv[i+1]); // Time in milliseconds
@@ -176,6 +190,10 @@ int parseCommandLineArgs(int argc, char** argv,
         else {
             // Whitelist: allow these to go through since they can be passed to DataSources, etc. //
             if (strcmp(argv[i], "--video-file-data-source-path") == 0) {
+                i++; // Also go past the extra argument for this argument
+                continue;
+            }
+            else if (strcmp(argv[i], "--folder-data-source-path") == 0) {
                 i++; // Also go past the extra argument for this argument
                 continue;
             }

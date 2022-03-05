@@ -173,19 +173,24 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
         backtorgb.copyTo(img2.canvas);
 
         auto xoff=0;//100;
-        auto yoff=0;//-100;
+        auto yoff=-100;
+        cv::Rect crop(0,0,backtorgb.cols,backtorgb.rows); // Initial value
         if (src->shouldCrop()) {
-            auto crop = src->crop();
-            xoff = crop.x;
-            yoff = crop.y;
+            crop = src->crop();
+            xoff += crop.x / 2;
+            yoff += crop.y / 2;
         }
         
         // Draw keypoints on `img2.canvas`
         struct sift_keypoint_std *k = img2.k.get();
         int n = img2.n;
         t.reset();
+        // Draw current crop
+        //drawRect(img2.canvas, {crop.x, crop.y}, crop.size(), 0);
         for(int i=0; i<n; i++){
-            drawSquare(img2.canvas, cv::Point(k[i].x+xoff, k[i].y+yoff), k[i].scale, k[i].orientation, 1);
+            if (!CMD_CONFIG(noDots)) {
+                drawSquare(img2.canvas, cv::Point(k[i].x+xoff, k[i].y+yoff), k[i].scale, k[i].orientation, 1);
+            }
             //break;
             // fprintf(f, "%f %f %f %f ", k[i].x, k[i].y, k[i].scale, k[i].orientation);
             // for(int j=0; j<128; j++){
@@ -211,9 +216,13 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
                 // fprintf_one_keypoint(f, k2A->list[i], dim, n_bins, 2);
                 // fprintf_one_keypoint(f, k2B->list[i], dim, n_bins, 2);
                 // fprintf(f, "\n");
-
-                drawSquare(img2.canvas, cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
-                cv::line(img2.canvas, cv::Point(s.out_k1->list[i]->x+xoff, s.out_k1->list[i]->y+yoff), cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), lastColor, 1);
+                
+                if (!CMD_CONFIG(noDots)) {
+                    drawSquare(img2.canvas, cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), s.out_k2A->list[i]->sigma /* need to choose something better here */, s.out_k2A->list[i]->theta, 2);
+                }
+                if (!CMD_CONFIG(noLines)) {
+                    cv::line(img2.canvas, cv::Point(s.out_k1->list[i]->x+xoff, s.out_k1->list[i]->y+yoff), cv::Point(s.out_k2A->list[i]->x+xoff, s.out_k2A->list[i]->y+yoff), lastColor, 1);
+                }
             }
         }
         t.logElapsed("draw matches");

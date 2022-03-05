@@ -33,17 +33,36 @@ M7=np.matrix([[-243.3613235845537, 167.141896995625, 38588.78930223091],
               [ 151.2045618626928, -109.7610614449212, -18512.55206900018],
               [ 0, 0, 0.9999999999999987]])
 fullscale1FirstImage='/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-02-28_20_22_58_CST/firstImage0.png'
-
-M=M7
+M8=np.matrix([[-4.123747055240452, 6.85419246591674, -886.9633044039938],
+              [ -13.2435252777686, 5.228203715333559, 1375.028279449747],
+               [0, 0, 0.9999999999999988]])
+M9=np.matrix([[41.1917516380786, -7.77848942663927, -3287.620132284611],
+               [-48.01547406853982, 16.46625658697471, 1380.5892588642],
+              [0, 0, 0.9999999999999991]])
+M10=np.matrix([[2.670736086272905, 0.7030058102099318, -924.8139413316903],
+               [-0.8835416184730005, 1.922214914131477, -82.96614850316857],
+               [0, 0, 0.9999999999999993]]) # "The good matrix"
+M11=np.matrix([[10.79171218627111, 0.7321998571250317, -2021.863408093771],
+ [              -12.61648918272472, 0.9959594705167039, 1845.892362057198],
+[ 0, 0, 0.9999999999999992]])
+M12=np.matrix([[41.1917516380786, -7.77848942663927, -3287.620132284611],
+               [-48.01547406853982, 16.46625658697471, 1380.5892588642],
+               [ 0, 0, 0.9999999999999991]])
+M13=np.matrix([[8.547295697767519, 0.2485540338071431, -1309.752223368877],
+               [-9.955630524461194, 1.349300720856145, 800.017392094951],
+               [ 0, 0, 0.9999999999999993]])
+M=M13
 imgPath=fullscale1FirstImage
 
 
 
-Mcurrent = np.matrix([[1.0, 0.0, 0.0],
-                      [0.0, 1.0, 0.0],
-                      [0.0, 0.0, 1.0]])
+idMat=np.matrix([[1.0, 0.0, 0.0],
+                 [0.0, 1.0, 0.0],
+                 [0.0, 0.0, 1.0]])
+Mcurrent = idMat.copy()
 #inc=0.005*2
 inc=0.005/2
+incOrig=inc
 
 # https://medium.com/swlh/youre-using-lerp-wrong-73579052a3c3
 def lerp(a, b, t):
@@ -54,13 +73,40 @@ def lerp(a, b, t):
 imgOrig = cv2.imread(imgPath)
 while True:
     print(imgOrig.shape[:2])
-    img = cv2.warpPerspective(imgOrig, Mcurrent, imgOrig.shape[:2])
+    widthAndHeight=np.array(imgOrig.shape[:2])
+    temp=widthAndHeight[0]
+    widthAndHeight[0] = widthAndHeight[1]
+    widthAndHeight[1]=temp
+    print(widthAndHeight)
+    img = cv2.warpPerspective(imgOrig, Mcurrent, widthAndHeight)
     cv2.imshow('',img)
+    cv2.resizeWindow('', widthAndHeight[0], widthAndHeight[1])
     for i in range(0, len(Mcurrent)):
         x = Mcurrent[i]
         for j in range(0, len(x)):
             y = x[j]
             Mcurrent[i][j] = lerp(y, M[i][j], inc)
             #inc*=1.5
-    if cv2.waitKey(0) & 0xFF == ord('q'): # https://stackoverflow.com/questions/20539497/python-opencv-waitkey0-does-not-respond
+    key = cv2.waitKey(0)
+    if key & 0xFF == ord('q'): # https://stackoverflow.com/questions/20539497/python-opencv-waitkey0-does-not-respond
         exit(0)
+    while True:
+        if key & 0xFF == ord('f'): # Faster
+            inc+=inc*0.1
+        elif key & 0xFF == ord('g'): # Faster
+            inc+=0.001
+        elif key & 0xFF == ord('s'): # Slower
+            inc-=0.001
+        elif key & 0xFF == ord('i'): # Identity
+            Mcurrent=idMat.copy()
+            inc = incOrig
+            img=imgOrig.copy()
+            break
+        elif key & 0xFF == ord('m'): # Use matrix
+            Mcurrent=M.copy()
+            break
+        else:
+            break
+        print(inc)
+        key = cv2.waitKey(0)
+    print(Mcurrent)
