@@ -17,6 +17,29 @@ namespace fs = std::filesystem;
 
 #include "common.hpp"
 
+cv::Rect cropForFisheyeCamera() {
+    //return cv::Rect(cv::Point(137,62), cv::Point(490,401));
+    int inset;
+    //inset = 60;
+    inset = 0;
+    return cv::Rect(cv::Point(137+inset,62+inset), cv::Point(490-inset,401-inset));
+}
+void DataSourceBase::initCrop(cv::Size sizeFrame) {
+    _cropRect = cropForFisheyeCamera(); // Only used if _crop is true
+    #ifdef SIFTAnatomy_
+    // SIFT Anatomy can only handle square images, so make a center crop if one wasn't done yet:
+    if (!_crop && sizeFrame.width > sizeFrame.height) {
+        int excess = sizeFrame.width - sizeFrame.height;
+        _cropRect.x = excess / 2;
+        _cropRect.width = sizeFrame.width - excess / 2;
+        _cropRect.y = 0;
+        _cropRect.height = sizeFrame.height;
+        std::cout << "Auto-cropping to centered square, crop is: " << _cropRect << std::endl;
+        _crop = true;
+    }
+    #endif
+}
+
 FolderDataSource::FolderDataSource(std::string folderPath, size_t skip_ = 0) {
     currentIndex = skip_;
     init(folderPath);
@@ -56,6 +79,7 @@ cv::Size getSizeFrame(char* arg1, char* arg2) {
 }
 FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
     currentIndex = skip;
+    sizeFrame = CameraDataSource::default_sizeFrame;
     
     // Set the default folder path
     std::string folderPath = "testFrames2_cropped"; //"testFrames1";
@@ -99,6 +123,8 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
 }
 
 void FolderDataSource::init(std::string folderPath) {
+    initCrop(sizeFrame);
+    
     // For each output image, loop through it
     // https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
     //--- filenames are unique so we can use a set
@@ -244,11 +270,7 @@ bool DataSourceBase::shouldCrop() const {
 }
 cv::Rect DataSourceBase::crop() const {
     if (shouldCrop()) {
-        //return cv::Rect(cv::Point(137,62), cv::Point(490,401));
-        int inset;
-        //inset = 60;
-        inset = 0;
-        return cv::Rect(cv::Point(137+inset,62+inset), cv::Point(490-inset,401-inset));
+        return _cropRect;
     }
     return cv::Rect();
 }
@@ -306,6 +328,7 @@ CameraDataSource::CameraDataSource(int argc, char** argv) {
 
 void CameraDataSource::init(double fps, cv::Size sizeFrame) {
     currentIndex = 0; // Index to save into next
+    initCrop(sizeFrame); // Possibly overrides the crop set above
     
     // NOTE: FPS of 1 will make the camera really dark! Don't use it!
     assert(fps > 1);
@@ -431,6 +454,11 @@ VideoFileDataSource::VideoFileDataSource(int argc, char** argv) {
 
 // https://stackoverflow.com/questions/11260042/reverse-video-playback-in-opencv
 void VideoFileDataSource::init(std::string filePath) {
+    double widthReported = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    double heightReported = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    cv::Size sizeFrame(widthReported, heightReported);
+    initCrop(sizeFrame);
+    
     // Instanciate the capture
     std::cout << "Opening " << filePath << std::endl;
     cap.open(filePath);
