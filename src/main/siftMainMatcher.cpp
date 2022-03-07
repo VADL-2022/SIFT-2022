@@ -15,6 +15,7 @@
 #include "../DataSource.hpp"
 #include "../DataOutput.hpp"
 #include "../utils.hpp"
+#include "../pthread_mutex_lock_.h"
 
 #ifdef USE_COMMAND_LINE_ARGS
 DataSourceBase* g_src;
@@ -71,7 +72,7 @@ void matcherWaitForNonPlaceHolderImageNoLockOnlyWait(bool seekInsteadOfDequeue, 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         { out_guard();
             std::cout << "Matcher thread: Locking for matcherWaitForImageNoLock 2" << extraDescription << std::endl; }
-        pthread_mutex_lock( &processedImageQueue.mutex );
+        pthread_mutex_lock_( &processedImageQueue.mutex );
     }
 }
 // Assumes processedImageQueue.mutex is locked already.
@@ -103,7 +104,7 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
                     assert(!placeholder.image.empty());
                     pthread_mutex_unlock( &processedImageQueue.mutex ); // Don't be "greedy"
                     canvasesReadyQueue.enqueueNoLock(placeholder);
-                    pthread_mutex_lock( &processedImageQueue.mutex );
+                    pthread_mutex_lock_( &processedImageQueue.mutex );
                     #endif
                 }
             }
@@ -120,7 +121,7 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
 int matcherWaitForTwoImages(ProcessedImage<SIFT_T>* img1 /*output*/, ProcessedImage<SIFT_T>* img2 /*output*/) {
     { out_guard();
         std::cout << "Matcher thread: Locking for 2x matcherWaitForImageNoLock" << std::endl; }
-    pthread_mutex_lock( &processedImageQueue.mutex );
+    pthread_mutex_lock_( &processedImageQueue.mutex );
     int currentIndex = 0;
     { out_guard();
         std::cout << "matcherWaitForNonPlaceholderImageNoLock: first image" << std::endl; }
@@ -182,7 +183,7 @@ void* matcherThreadFunc(void* arg) {
 
             { out_guard();
                 std::cout << "Matcher thread: Locking for peek third image" << std::endl; }
-            pthread_mutex_lock( &processedImageQueue.mutex );
+            pthread_mutex_lock_( &processedImageQueue.mutex );
             matcherWaitForNonPlaceholderImageNoLock(true, currentIndex); // Peek a bunch of null images
             pthread_mutex_unlock( &processedImageQueue.mutex );
             { out_guard();

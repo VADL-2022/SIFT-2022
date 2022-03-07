@@ -51,7 +51,11 @@ M12=np.matrix([[41.1917516380786, -7.77848942663927, -3287.620132284611],
 M13=np.matrix([[8.547295697767519, 0.2485540338071431, -1309.752223368877],
                [-9.955630524461194, 1.349300720856145, 800.017392094951],
                [ 0, 0, 0.9999999999999993]])
-M=M13
+M14=np.matrix([[41.61292051847861, -20.33492628578671, 6872.431092275944],
+               [-57.92623005240372, 46.95245080138437, -17192.79901791887],
+               [0, 0, 0.9999999999999992]]) # Command: lldb -o run -- ./sift_exe_debug_commandLine --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4 --main-mission --sift-video-output --finish-rest-always --skip-image-indices 2 3 --skip-image-indices 4 6 --skip-image-indices 7 8 --skip-image-indices 14 15 --skip-image-indices 18 21 --skip-image-indices 22 24 --skip-image-indices 25 29 --skip-image-indices 32 33 --skip-image-indices 35 37 --skip-image-indices 39 41 --skip-image-indices 42 43 --skip-image-indices 44 46 --skip-image-indices 47 50 --skip-image-indices 51 55 --skip-image-indices 56 57 --skip-image-indices 58 59 --skip-image-indices 60 61 --skip-image-indices 64 66 --skip-image-indices 67 70 --skip-image-indices 71 74 --skip-image-indices 75 80 --skip-image-indices 81 82 --skip-image-indices 83 85 --skip-image-indices 86 88 --skip-image-indices 89 92 --skip-image-indices 94 95 --skip-image-indices 96 97 --skip-image-indices 99 111 --skip-image-indices 112 117 --skip-image-indices 118 122 --skip-image-indices 123 125 --skip-image-indices 127 130 --skip-image-indices 132 136 --skip-image-indices 139 140 --skip-image-indices 141 142 #--skip-image-indices 146 14 --debug-mutex-deadlocks
+#M=M10
+M=M14
 imgPath=fullscale1FirstImage
 
 
