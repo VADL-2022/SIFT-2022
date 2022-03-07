@@ -3,10 +3,10 @@ on: [push]
 jobs:
  run-pi-tests:
    runs-on: ubuntu-latest
-   concurrency: staging_environment # prevents 2 from running at once
+   concurrency: staging_environment # prevents 2 from running at once 
    steps:
      - name: Run pi tests
-       run: sshpass -p $TUNNEL_PASS ssh -o "StrictHostKeyChecking no" -p $TUNNEL_PORT $TUNNEL_USER@$TUNNEL_ADDRESS "./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd \\\"${GITHUB_REF#refs/heads/}\\\"\"" 2>&1 | sed "s/^Warning.*(ECDSA) to the list of known hosts\.$//" ; test ${PIPESTATUS[0]} -eq 0
+       run: sshpass -p $TUNNEL_PASS ssh -o "StrictHostKeyChecking no" -p $TUNNEL_PORT $TUNNEL_USER@$TUNNEL_ADDRESS "pkill -u $TUNNEL_USER -f 'sshd:.$TUNNEL_USER\$' && sleep 10 && ./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd \\\"${GITHUB_REF#refs/heads/}\\\"\""
        env:
          TUNNEL_PASS: ${{secrets.TUNNEL_PASS}}
          TUNNEL_PORT: ${{secrets.TUNNEL_PORT}}
