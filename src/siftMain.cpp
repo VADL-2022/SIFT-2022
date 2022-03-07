@@ -20,6 +20,7 @@
 #include "DataSource.hpp"
 #include "DataOutput.hpp"
 #include "utils.hpp"
+#include "pthread_mutex_lock_.h"
 
 #include <fstream>
 #include <python3.7m/Python.h>
@@ -278,7 +279,7 @@ template< class... Args >
 void processedImageQueue_enqueueIndirect(size_t i, Args&&... args) {
     // Check if we can enqueue now
     { out_guard(); std::cout << "processedImageQueue_enqueueIndirect called: i=" << i << ": locking processedImageQueue" << std::endl; }
-    pthread_mutex_lock( &processedImageQueue.mutex );
+    pthread_mutex_lock_( &processedImageQueue.mutex );
     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
         || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
         ) {
@@ -295,9 +296,9 @@ void processedImageQueue_enqueueIndirect(size_t i, Args&&... args) {
         tpPush([args = std::make_tuple(std::forward<Args>(args) ...)](int id, size_t i)mutable {
             return std::apply([id, i](auto&& ... args){
                 while (true) {
-                    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": locking processedImageQueue" << std::endl; }
-                    pthread_mutex_lock( &processedImageQueue.mutex );
-                    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: locked, i=" << i << ", id=" << id << ", readPtr=" << processedImageQueue.readPtr << ", writePtr=" << processedImageQueue.writePtr << ", count=" << processedImageQueue.count << " : locked processedImageQueue" << std::endl; }
+                    if (CMD_CONFIG(verbose)) { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": locking processedImageQueue" << std::endl; }
+                    pthread_mutex_lock_( &processedImageQueue.mutex );
+                    if (CMD_CONFIG(verbose)) { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: locked, i=" << i << ", id=" << id << ", readPtr=" << processedImageQueue.readPtr << ", writePtr=" << processedImageQueue.writePtr << ", count=" << processedImageQueue.count << " : locked processedImageQueue" << std::endl; }
                     if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
                         || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
                     ) {
@@ -308,7 +309,7 @@ void processedImageQueue_enqueueIndirect(size_t i, Args&&... args) {
                         break;
                     }
                     pthread_mutex_unlock( &processedImageQueue.mutex );
-                    { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": unlocked processedImageQueue 2" << std::endl; }
+                    if (CMD_CONFIG(verbose)) { out_guard(); std::cout << "processedImageQueue_enqueueIndirect: i=" << i << ", id=" << id << ": unlocked processedImageQueue 2" << std::endl; }
                     std::this_thread::sleep_for(std::chrono::milliseconds(20)); // Try again next time
                 }
             }, std::move(args));
@@ -454,7 +455,7 @@ int mainMission(DataSourceT* src,
             std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl; }
         t.logElapsed("get image");
         if (mat.empty()) {
-            if (!CMD_CONFIG(finishRestOnOutOfImages)) {
+            if (!CMD_CONFIG(finishRestOnOutOfImages) && !CMD_CONFIG(finishRestAlways)) {
                 printf("No more images left to process. Exiting.\n");
                 stopMain();
                 break;
@@ -765,7 +766,7 @@ int mainMission(DataSourceT* src,
                         { out_guard();
                             std::cout << "Thread " << id << ": Locking" << std::endl; }
                     }
-                    pthread_mutex_lock( &processedImageQueue.mutex );
+                    pthread_mutex_lock_( &processedImageQueue.mutex );
                     if (isFirstSleep) {
                         { out_guard();
                             std::cout << "Thread " << id << ": Locked" << std::endl; }
@@ -926,7 +927,7 @@ int mainMission(DataSourceT* src,
     { out_guard();
         std::cout << "Stopping thread pool" << std::endl; }
     
-    tp.stop(CMD_CONFIG(finishRestAlways) || !stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
+    tp.stop(!stoppedMain() /*true to wait for queued functions as well*/); // Join thread pool's threads
 
     { out_guard();
         std::cout << "Cancelling matcher thread" << std::endl; }

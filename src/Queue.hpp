@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
+#include "pthread_mutex_lock_.h"
 
 // Buffer code from ex_buff.c //
 
@@ -100,7 +101,7 @@ struct Queue {
     // Adds to the buffer.
     template< class... Args >
     void enqueue(Args&&... args) {
-        pthread_mutex_lock( &mutex );
+        pthread_mutex_lock_( &mutex );
         enqueueNoLock(std::forward<Args>(args)...);
         // Unlock the mutex:
         pthread_mutex_unlock( &mutex );
@@ -117,14 +118,14 @@ struct Queue {
     }
     
     size_t size() {
-        pthread_mutex_lock( &mutex );
+        pthread_mutex_lock_( &mutex );
         auto ret = count;
         pthread_mutex_unlock(&mutex);
         return ret;
     }
     
     bool empty() {
-        pthread_mutex_lock( &mutex );
+        pthread_mutex_lock_( &mutex );
         bool ret = count == 0;
         pthread_mutex_unlock(&mutex);
         return ret;
@@ -148,7 +149,7 @@ struct Queue {
         
     // Removes from the buffer.
     void dequeue(T* output) {
-        pthread_mutex_lock( &mutex );
+        pthread_mutex_lock_( &mutex );
         while( count == 0 ) // Wait until not empty.
         {
            pthread_cond_wait( &condition, &mutex );
@@ -212,7 +213,7 @@ struct Queue {
     
     // Removes one item from the buffer but takes two items from the buffer (the previous one as well).
     void dequeueOnceOnTwoImages(T* output1, T* output2) {
-        pthread_mutex_lock( &mutex );
+        pthread_mutex_lock_( &mutex );
         while( count <= 1 ) // Wait until not empty and not one left.
         {
            pthread_cond_wait( &condition, &mutex );
@@ -254,7 +255,7 @@ struct Queue {
     
     // Dequeue with no output
     void dequeueTwice() {
-        pthread_mutex_lock( &mutex );
+        pthread_mutex_lock_( &mutex );
         while( count <= 1 ) // Wait until not empty and not one left.
         {
            pthread_cond_wait( &condition, &mutex );

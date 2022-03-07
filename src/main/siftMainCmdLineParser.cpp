@@ -86,7 +86,7 @@ int parseCommandLineArgs(int argc, char** argv,
         else if (strcmp(argv[i], "--finish-rest-always") == 0) { // Makes it so the dispatch queue is drained always, even after SIGINT is received, causing SIFT to finish processing all images that were gathered by the main thread instead of stopping short.  // Demo: `./sift_exe_release_commandLine --folder-data-source --folder-data-source-path Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated/ --main-mission --finish-rest-always`
             cfg.finishRestAlways = true;
         }
-        else if (strcmp(argv[i], "--finish-rest-on-out-of-images") == 0) { // Makes it so the dispatch queue is drained even after no images are left. Useful for a video file or folder data source.  // Demo: see above command but use `--finish-rest-on-out-of-images` instead. This is more useful than `--finish-rest-always` for a folder data source since they can finish being read from very early.
+        else if (strcmp(argv[i], "--finish-rest-on-out-of-images") == 0) { // Only for --folder-data-source. Makes it so the dispatch queue is drained even after no images are left.  // Demo: see above command but use `--finish-rest-on-out-of-images` instead. This is more useful than `--finish-rest-always` for a folder data source since they can finish being read from very early.
             cfg.finishRestOnOutOfImages = true;
         }
         else if (i+1 < argc && strcmp(argv[i], "--sleep-before-running") == 0) {
@@ -105,6 +105,13 @@ int parseCommandLineArgs(int argc, char** argv,
         }
         else if (strcmp(argv[i], "--debug-no-std-terminate") == 0) { // Disables the SIFT unhandled exception handler for C++ exceptions. Use for lldb purposes.
             cfg.useSetTerminate = false;
+        }
+        else if (strcmp(argv[i], "--debug-mutex-deadlocks") == 0) { // Makes pthread mutexes into polling loops that time how long they run for, reporting when they take a long time to lock. Use for debugging purposes.
+            cfg.debugMutexDeadlocks = true;
+        }
+        else if (strcmp(argv[i], "--debug-mutex-milliseconds") == 0) { // This takes a number of milliseconds and reports a lock attempt failing for more than the provided time. Without this argument, the default time that `--debug-mutex-deadlocks` waits is 5000 milliseconds. Use with `--debug-mutex-deadlocks`.
+            cfg.debugReportMutexLockAttemptsLongerThanNMilliseconds = std::stoi(argv[i+1]);
+            i++;
         }
 #ifdef SIFTAnatomy_
         else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {

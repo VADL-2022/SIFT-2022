@@ -12,6 +12,7 @@
 #include <fstream>
 #include <signal.h>
 #include "common.hpp"
+#include "main/siftMainCmdConfig.hpp"
 
 std::string mat_type2str(int type) {
   std::string r;
@@ -165,6 +166,11 @@ int main() {
 // //
 
 void recoverableError(const char* msg) {
+    if (CMD_CONFIG(finishRestAlways)) {
+        printf("%s, continuing due to CMD_CONFIG(finishRestAlways)\n", msg);
+        return;
+    }
+    
 //        throw msg; // Problem is that this generates segfault if no exception handler exists. Instead, we generate a sigint to stop the program:
     
     // https://www.tutorialspoint.com/c_standard_library/c_function_raise.htm

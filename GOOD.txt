@@ -262,5 +262,10 @@ inversions
 17-19
 35
 
+keep:
+55 57 61 62 63 66 74 80 
+
+make -j8 sift_exe_debug_commandLine && ./sift_exe_debug_commandLine --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4 --main-mission --sift-video-output --finish-rest-always --skip-image-indices 2 3 --skip-image-indices 4 6 --skip-image-indices 7 8 --skip-image-indices 14 15 --skip-image-indices 18 21 --skip-image-indices 22 24 --skip-image-indices 25 29 --skip-image-indices 32 33 --skip-image-indices 35 37 --skip-image-indices 39 41 --skip-image-indices 42 43 --skip-image-indices 44 46 --skip-image-indices 47 50 --skip-image-indices 51 55 --skip-image-indices 56 57 --skip-image-indices 58 59 --skip-image-indices 60 61 --skip-image-indices 64 66 --skip-image-indices 67 70 --skip-image-indices 71 74 --skip-image-indices 75 80 --skip-image-indices 81 82 --skip-image-indices 83 85 --skip-image-indices 86 88 --skip-image-indices 89 92 --skip-image-indices 94 95 --skip-image-indices 96 97 --skip-image-indices 99 102 --skip-image-indices 103 105 --skip-image-indices 106 111 --skip-image-indices 112 117 --skip-image-indices 118 122 --skip-image-indices 123 125 --skip-image-indices 128 130 --skip-image-indices 132 136 --skip-image-indices 139 140 --skip-image-indices 141 142 --debug-mutex-deadlocks
+
 pi ip finder: nmap -p 22 10.16.137.0/24 | grep -i "tcp open" -B 4
 full build: git pull && git submodule update --init --recursive && make -j4 sift_exe_release_commandLine subscale_exe_release
