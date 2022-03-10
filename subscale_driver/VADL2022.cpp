@@ -68,7 +68,7 @@ std::string TAKEOFF_G_FORCE_str;
 std::string LANDING_G_FORCE_str;
 #define USE_LIS331HH
 #ifdef USE_LIS331HH // Using the alternative IMU
-const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL};
+const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 #endif
 #ifdef USE_LIS331HH // Using the alternative IMU
 const char* LIS331HH_calibrationFile = nullptr;
@@ -1095,7 +1095,7 @@ VADL2022::VADL2022(int argc, char** argv)
       else {
         { out_guard();
           std::cout << "no lsm" << std::endl; }
-        lsm = "0"
+        lsm = "0";
       }
     }
     else {
