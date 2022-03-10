@@ -846,12 +846,12 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--verbose-sift-fd") == 0) {
       verboseSIFTFD = true;
     }
-    else if (strcmp(argv[i], "--sift-start-time") == 0) { // Time in milliseconds since main deployment
+    else if (strcmp(argv[i], "--time-for-main-stabilization") == 0) { // Time in milliseconds since main deployment for stabilizing
       if (i+1 < argc) {
 	timeAfterMainDeployment = argv[i+1];
       }
       else {
-	puts("Expected start time");
+	puts("Expected time for main stabilization");
 	exit(1);
       }
       i++;
@@ -863,7 +863,7 @@ VADL2022::VADL2022(int argc, char** argv)
 	std::cout << "Set main deployment g force to " << MAIN_DEPLOYMENT_G_FORCE << std::endl;
       }
       else {
-	puts("Expected g force");
+	puts("Expected main deployment g force");
 	exit(1);
       }
       i++;
@@ -875,7 +875,7 @@ VADL2022::VADL2022(int argc, char** argv)
 	std::cout << "Set emergency main deployment g force to " << MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE << std::endl;
       }
       else {
-	puts("Expected g force");
+	puts("Expected emergency main deployment g force");
 	exit(1);
       }
       i++;
@@ -887,7 +887,7 @@ VADL2022::VADL2022(int argc, char** argv)
 	std::cout << "Set takeoff g force to " << TAKEOFF_G_FORCE << std::endl;
       }
       else {
-	puts("Expected g force");
+	puts("Expected takeoff g force");
 	exit(1);
       }
       i++;
@@ -899,17 +899,17 @@ VADL2022::VADL2022(int argc, char** argv)
 	std::cout << "Set landing g force to " << LANDING_G_FORCE << std::endl;
       }
       else {
-	puts("Expected landing force");
+	puts("Expected landing g force");
 	exit(1);
       }
       i++;
     }
-    else if (strcmp(argv[i], "--meco") == 0) { // Time in milliseconds from takeoff to main engine cutoff. Prevents main deployment detection from firing accidentally due to takeoff g's lasting too long (beyond the takeoff callback finishing its duration)   // Used by LIS/videoCapture pi to not detect landing by accident
+    else if (strcmp(argv[i], "--time-to-meco") == 0) { // Time in milliseconds from takeoff to main engine cutoff. Prevents main deployment detection from firing accidentally due to takeoff g's lasting too long (beyond the takeoff callback finishing its duration)   // Used by LIS/videoCapture pi to not detect landing by accident
       if (i+1 < argc) {
 	mecoDuration = std::stoll(argv[i+1]); // Must be long long
       }
       else {
-	puts("Expected MECO");
+	puts("Expected time to MECO");
 	exit(1);
       }
       i++;
@@ -934,22 +934,22 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    else if (strcmp(argv[i], "--backup-sift-start-time") == 0) { // Time in milliseconds since launch at which to countdown up to --sift-start-time and then start SIFT, *only* used if the IMU fails        // Is the camera switching time too for the LIS
+    else if (strcmp(argv[i], "--time-to-main-deployment") == 0) { // Time in milliseconds since launch at which to countdown up to --time-for-main-stabilization and then start SIFT, *only* used if the IMU fails        // Is the camera switching time too for the LIS
       if (i+1 < argc) {
 	backupSIFTStartTime = std::stoll(argv[i+1]); // Must be long long
       }
       else {
-	puts("Expected start time");
+	puts("Expected time to main deployment");
 	exit(1);
       }
       i++;
     }
-    else if (strcmp(argv[i], "--backup-sift-stop-time") == 0) { // Time in milliseconds since main deployment at which to stop SIFT but as an upper bound (don't make it possibly too low, since time for descent varies a lot)
+    else if (strcmp(argv[i], "--main-descent-time") == 0) { // Time in milliseconds since main deployment at which to stop SIFT but as an upper bound (don't make it possibly too low, since time for descent varies a lot)
       if (i+1 < argc) {
 	backupSIFTStopTime = std::stoll(argv[i+1]); // Must be long long
       }
       else {
-	puts("Expected stop time");
+	puts("Expected main descent time");
 	exit(1);
       }
       i++;
@@ -1011,15 +1011,15 @@ VADL2022::VADL2022(int argc, char** argv)
   }
 
   if (timeAfterMainDeployment == nullptr && !videoCapture && !imuOnly) {
-    puts("Need to provide --sift-start-time");
+    puts("Need to provide --time-for-main-stabilization");
     exit(1);
   }
   if (backupSIFTStartTime == -1 && !videoCapture && !imuOnly) {
-    puts("Need to provide --backup-sift-start-time");
+    puts("Need to provide --time-to-main-deployment");
     exit(1);
   }
   if (backupSIFTStopTime == -1 && !videoCapture && !imuOnly) {
-    puts("Need to provide --backup-sift-stop-time");
+    puts("Need to provide --main-descent-time");
     exit(1);
   }
   if (backupTakeoffTime == -1 && !imuOnly) {
@@ -1027,7 +1027,7 @@ VADL2022::VADL2022(int argc, char** argv)
     exit(1);
   }
   if (mecoDuration == -1 && !imuOnly) {
-    puts("Need to provide --meco");
+    puts("Need to provide --time-to-meco");
     exit(1);
   }
   if (videoCapture && timeToApogee == -1 && !imuOnly) {
