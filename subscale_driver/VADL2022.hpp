@@ -33,11 +33,11 @@ private:
     const char* imuDataSourcePath = nullptr;
 
     void connect_GPIO(bool initCppGpio);
-public:
     void disconnect_GPIO();
-private:
     void connect_Python();
+public:
     static void disconnect_Python();
+private:
 
     //static void *GDSReleaseTimeoutThread(void *);
 };
