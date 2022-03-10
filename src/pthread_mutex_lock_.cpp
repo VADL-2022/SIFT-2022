@@ -8,7 +8,16 @@
 
 #include "pthread_mutex_lock_.h"
 
+#ifndef CMD_CONFIG
+// Subscale driver, etc.
+#define CMD_CONFIG(x) (false) // debugMutexDeadlocks is not supported from subscale driver for now
+#include <iostream>
+#include "tools/backtrace/backtrace.hpp"
+#include "../commonOutMutex.hpp"
+#else
+// SIFT
 #include "main/siftMainCmdConfig.hpp"
+#endif
 #include <thread>
 #include "tools/backtrace/backtrace.hpp"
 
