@@ -37,6 +37,7 @@ void stopMain(bool backtrace) {
       backtrace_on_terminate();
     }
     printf_("Exiting\n");
+    VADL2022::disconnect_Python();
     exit(1);
   }
   else {

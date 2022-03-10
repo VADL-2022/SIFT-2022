@@ -35,7 +35,7 @@ private:
     void connect_GPIO(bool initCppGpio);
     void disconnect_GPIO();
     void connect_Python();
-    void disconnect_Python();
+    static void disconnect_Python();
 
     //static void *GDSReleaseTimeoutThread(void *);
 };
