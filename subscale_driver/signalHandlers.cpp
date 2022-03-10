@@ -9,6 +9,7 @@
 #include <pigpio.h>
 #include "subscaleMain.hpp"
 #include "pyMainThreadInterface.hpp"
+#include "VADL2022.hpp"
 
 #undef BACKTRACE_SET_TERMINATE
 #include "../src/tools/backtrace/backtrace_on_terminate.hpp"
