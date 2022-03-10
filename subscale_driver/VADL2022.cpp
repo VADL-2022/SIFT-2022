@@ -1036,7 +1036,7 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   
   #ifdef USE_LIS331HH
-  std::string startPigpio = videoCapture ? "sudo pigpiod ; " // video capture needs to start pigpiod
+  std::string startPigpio = videoCapture ? "! sudo pgrep pigpiod && sudo pigpiod; " // video capture needs to start pigpiod if it's not already running ("!" negates the return code, and "&&" runs the next one only if return value of ! pgrep (not the return value of pgrep) is 0. pgrep returns 1 if not running. so not pgrep returns 0 if running!
     : "sudo pkill pigpiod ; " // SIFT pi needs to stop it in case it's running already
     ;
   #endif
