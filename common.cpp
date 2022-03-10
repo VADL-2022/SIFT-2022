@@ -30,6 +30,4 @@ print(sys.path)");
 
     cout << "Python: Connected" << endl;
   }
-  
-  std::mutex outMutex;
 } // namespace common
