@@ -29,10 +29,10 @@ Main dispatch queue waiting for next function...
 drop test commands:
 
 VIDEO CAPTURE:
-./subscale_exe_debug --video-capture  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 2000
+./subscale_exe_debug --video-capture  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --time-to-main-deployment 2000
 
 SIFT PI:
-./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0
+./subscale_exe_debug --time-for-main-stabilization 2000  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --time-to-main-deployment 0
 
 sift test:
 /sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission
@@ -70,12 +70,12 @@ final gzip: tar --use-compress-program='gzip -9' -cf ./subscale2_data.tar.gz ./f
 
 -- preparing for fullscale1: testing commands:
 
-./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 1.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000
+./subscale_exe_debug --time-for-main-stabilization 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 1.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --time-to-main-deployment 100000 --main-descent-time 10000 --verbose --imu-data-source-time-offset 374000
 
 subscale_driver/LIS331_loop.py 0 0.500000 10000 subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv 20000
 
 
-./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+./subscale_exe_debug --time-for-main-stabilization 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --time-to-main-deployment 100000 --main-descent-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
 
 work towards a feb 19th launch date.
 
@@ -84,14 +84,14 @@ make -j5 sift_exe_release_commandLine subscale_exe_release
 -- new drop test commands:
 
 SIFT PI:
-./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 10'
+./subscale_exe_debug --takeoff-g-force 0 --time-for-main-stabilization 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --time-to-main-deployment 0 --main-descent-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 10'
 
 
-./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 10000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30 --save-every-n-seconds -1'
+./subscale_exe_debug --takeoff-g-force 0 --time-for-main-stabilization 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --time-to-main-deployment 0 --main-descent-time 10000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30 --save-every-n-seconds -1'
 
-./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 10000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 6'
+./subscale_exe_debug --takeoff-g-force 0 --time-for-main-stabilization 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --time-to-main-deployment 0 --main-descent-time 10000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 6'
 
-./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 15000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 6 --save-every-n-seconds -1' 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
+./subscale_exe_debug --takeoff-g-force 0 --time-for-main-stabilization 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --time-to-main-deployment 0 --main-descent-time 15000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 6 --save-every-n-seconds -1' 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 start, then 4 second countdown: 4 3 2 1 throw
 
 ./subscale_exe_debug --imu-record-only
@@ -118,29 +118,29 @@ descent total: 38.5 seconds
 time to main deployment: 67.5
 
 LOOKUP TABLE
-+------------------------+-------------------------+-------------------------+
-|command-line arg        |Sebastian/Ethan-readable |Value in milliseconds    |
-|                        |                         |                         |
-+------------------------+-------------------------+-------------------------+
-|--sift-start-time       |Stabalization time after |10,000                   |
-|                        |main deployment          |                         |
-+------------------------+-------------------------+-------------------------+
-|--backup-sift-start-time|Time to main deployment  |67,500                   |
-|                        |                         |                         |
-+------------------------+-------------------------+-------------------------+
-|--backup-takeoff-time   |Time we sleep for when   |30,000                   |
-|                        |IMU fails on the pad or  |                         |
-|                        |right when takeoff       |                         |
-|                        |happens                  |                         |
-+------------------------+-------------------------+-------------------------+
-|--backup-sift-stop-time |This time is how long to |                         |
-|                        |run SIFT. We likely want |                         |
-|                        |to stop SIFT before it   |                         |
-|                        |hits the ground          |                         |
-+------------------------+-------------------------+-------------------------+
-|                        |                         |                         |
-|                        |                         |                         |
-+------------------------+-------------------------+-------------------------+
++-----------------------------+-------------------------+-------------------------+
+|command-line arg             |Sebastian/Ethan-readable |Value in milliseconds    |
+|                             |                         |                         |
++-----------------------------+-------------------------+-------------------------+
+|--time-for-main-stabilization|Stabalization time after |10,000                   |
+|                             |main deployment          |                         |
++-----------------------------+-------------------------+-------------------------+
+|--time-to-main-deployment    |Time to main deployment  |67,500                   |
+|                             |                         |                         |
++-----------------------------+-------------------------+-------------------------+
+|--backup-takeoff-time        |Time we sleep for when   |30,000                   |
+|                             |IMU fails on the pad or  |                         |
+|                             |right when takeoff       |                         |
+|                             |happens                  |                         |
++-----------------------------+-------------------------+-------------------------+
+|--main-descent-time 	      |This time is how long to |                         |
+|                             |run SIFT. We likely want |                         |
+|                             |to stop SIFT before it   |                         |
+|                             |hits the ground          |                         |
++-----------------------------+-------------------------+-------------------------+
+|                             |                         |                         |
+|                             |                         |                         |
++-----------------------------+-------------------------+-------------------------+
 
 
 pink in video = not connected to a pull down resistor
@@ -155,9 +155,9 @@ offsetInTime=$((18000-4000))
 mainStabilizationTime=0 #$((offsetInTime + 20000)) # Time to allow rocket to stabilize after main deployment, then running SIFT.
 mainDeploymentToTouchDown=74000 # milliseconds
 siftAllowanceForStopping=10000 # Time to take away from mainDeploymentToTouchDown for stopping SIFT in backupSIFTStopTime. Larger values stop SIFT sooner.
-timeToMainDeployment=10000 # Originally we were going to start SIFT on main deployment. But we use this instead since unsure about IMU trigger on 1 g of main deployment, and there's a fallback via --backup-sift-start-time for this.
+timeToMainDeployment=10000 # Originally we were going to start SIFT on main deployment. But we use this instead since unsure about IMU trigger on 1 g of main deployment, and there's a fallback via --time-to-main-deployment for this.
 backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))"
-./subscale_exe_release --sift-start-time $mainStabilizationTime --takeoff-g-force 0.5  --backup-takeoff-time 10000000  --main-deployment-g-force 1.2 --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 4000 --backup-sift-stop-time 3000 --imu-data-source-time-offset $(($offsetInTime + 359768)) --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/subscale2/SIFT/2022-01-30_01_50_07_CST/output.mp4' --meco 500 --landing-g-force 9999999
+./subscale_exe_release --time-for-main-stabilization $mainStabilizationTime --takeoff-g-force 0.5  --backup-takeoff-time 10000000  --main-deployment-g-force 1.2 --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --time-to-main-deployment 4000 --main-descent-time 3000 --imu-data-source-time-offset $(($offsetInTime + 359768)) --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/subscale2/SIFT/2022-01-30_01_50_07_CST/output.mp4' --time-to-meco 500 --landing-g-force 9999999
 # IMU data source offset location: https://github.com/VADL-2022/IMU_VV/blob/main/Data/Subscale2/VN/Subscale2_Truncated_014355.csv like 10th row
 # old sift args: --main-mission-interactive
 # --verbose
@@ -171,11 +171,11 @@ XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --video-file-data
 
 --- video capture testing @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-./subscale_exe_release --video-capture  --meco 1000 --time-to-apogee 5000 --backup-sift-stop-time 20000 --backup-takeoff-time 0
+./subscale_exe_release --video-capture  --time-to-meco 1000 --time-to-apogee 5000 --main-descent-time 20000 --backup-takeoff-time 0
 
 --- sift pi testing @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-./subscale_exe_release --meco 1000 --time-to-apogee 5000 --backup-sift-stop-time 20000 --backup-takeoff-time 0 --sift-start-time 2000 --backup-sift-start-time 2000 --extra-sift-exe-args '--fps 3' --sift-params '-C_edge 2 -delta_min 0.6'
+./subscale_exe_release --time-to-meco 1000 --time-to-apogee 5000 --main-descent-time 20000 --backup-takeoff-time 0 --time-for-main-stabilization 2000 --time-to-main-deployment 2000 --extra-sift-exe-args '--fps 3' --sift-params '-C_edge 2 -delta_min 0.6'
 
 
 ------ launch fullscale day
@@ -223,12 +223,12 @@ scp -r -p $files /Volumes/MyTestVolume/Projects/DataRocket/
 
 
 # Starts the SIFT ASAP at "main deployment" which is really blast charge, but 7 seconds extra due to sift start time
-./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --time-to-main-deployment 67500 --time-for-main-stabilization 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --main-descent-time 28500 --time-to-meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
 # Paths on my laptop:
 # /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4
 # /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_imuAndTemperatureOnly_fullscale1_Derived/Trunc_Fullscale1.csv
 
-./subscale_exe_release --extra-sift-exe-args '--verbose --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+./subscale_exe_release --extra-sift-exe-args '--verbose --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --time-to-main-deployment 67500 --time-for-main-stabilization 0 --takeoff-g-force 0 --main-deployment-g-force 0 --main-descent-time 28500 --time-to-meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
 
 Image 70: Blur detection: variance 0.004457; not blurry
 blur detection took 5 milliseconds

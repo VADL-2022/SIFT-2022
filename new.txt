@@ -4,7 +4,7 @@ cd VanderbiltRocketTeam
 nix-shell
 bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
 python3 ./subscale_driver/videoCapture.py &
-sudo ./subscale_exe_release --sift-start-time 26000 --imu-record-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").video_cap.log.txt"
+sudo ./subscale_exe_release --time-for-main-stabilization 26000 --imu-record-only 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").video_cap.log.txt"
 # Ctrl-C manually
 fg
 # Ctrl-C manally
