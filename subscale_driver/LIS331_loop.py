@@ -52,6 +52,10 @@ if not logOnly and stoppingTime is None:
     exit(1)
 stopper = None
 useLSM_IMU = (sys.argv[6] == '1') if len(sys.argv) > 6 else False
+landingGs = float(sys.argv[7]) if len(sys.argv) > 7 else None
+if not logOnly and landingGs is None:
+    print("Must provide landing g's")
+    exit(1)
 
 shouldStop=None
 import videoCapture
@@ -170,11 +174,18 @@ offsetX=0
 offsetY=0
 offsetZ=0
 
+switchedCameras = False
+
 def startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
+    global switchedCameras
+    if switchedCameras:
+        print("Switched cameras already")
+        time.sleep(90) # Total flight length is 90 seconds. NASA: >90 is points taken off so this is our upper bound.
+        return
+    switchedCameras = True
+    
     if my_accels is None:
-        print("Switcher using imu failed")
-    else:
-        print("Takeoff detected with magnitude", magnitude, " m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
+        print("Switcher switching in", switchCamerasTime, "second(s)")
     def thread_function2(name):
         global videoCaptureThread
         global shouldStop
@@ -202,17 +213,17 @@ def startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, 
     _2ndCamThread = thread_with_exception.thread_with_exception(name=name, target=thread_function2, args=("2ndCam",))
     _2ndCamThread.start()
 
-    def thread_function_stopper(name):
-        global shouldStop
-        logging.info("Thread %s: starting", name)
-        print("Waiting for stopping time...")
-        time.sleep(stoppingTime/1000.0)
-        print("Stopping")
-        shouldStop.incrementAndThenGet()
-        logging.info("Thread %s: finishing", name)
-        shouldStopMain.incrementAndThenGet()
-    stopper = thread_with_exception.thread_with_exception(name="Stopper", target=thread_function_stopper, args=("Stopper",))
-    stopper.start()
+    # def thread_function_stopper(name):
+    #     global shouldStop
+    #     logging.info("Thread %s: starting", name)
+    #     print("Waiting for stopping time...")
+    #     time.sleep(stoppingTime/1000.0)
+    #     print("Stopping")
+    #     shouldStop.incrementAndThenGet()
+    #     logging.info("Thread %s: finishing", name)
+    #     shouldStopMain.incrementAndThenGet()
+    # stopper = thread_with_exception.thread_with_exception(name="Stopper", target=thread_function_stopper, args=("Stopper",))
+    # stopper.start()
 
 def calibrate(file):
     global offsetX
@@ -338,12 +349,19 @@ def runOneIter(write_obj):
         print("Caught exception from IMU at 3:")
         traceback.print_exc()
         #shouldSleep = takeoffTime + timedelta(milliseconds=switchCamerasTime) < datetime.now()
-        destSleep = (takeoffTime + timedelta(milliseconds=switchCamerasTime) - datetime.now()).total_seconds() if takeoffTime is not None else (switchCamerasTime / 1000.0)
-        if destSleep > 0:
-            print("Using backup timing parameters: sleeping until switchCamerasTime:", destSleep,"seconds")
-            time.sleep(destSleep)
-            startSwitcher(0, None, None, None, None, None, shouldStop)
-            return False
+
+        # Swap cameras regardless of taking off, if needed
+        print("IMU failed, startSwitcher() now")
+        startSwitcher(0, None, None, None, None, None, shouldStop)
+        
+        # destSleep = (takeoffTime + timedelta(milliseconds=switchCamerasTime) - datetime.now()).total_seconds() if takeoffTime is not None else (switchCamerasTime / 1000.0)
+        # if destSleep > 0:
+        #     print("Using backup timing parameters: sleeping until switchCamerasTime:", destSleep,"seconds")
+        #     time.sleep(destSleep)
+        #     startSwitcher(0, None, None, None, None, None, shouldStop)
+        #     return False
+
+        return False # Don't bother retrying since we could have missed an event.
         
     rx=None
     ry=None
@@ -402,7 +420,16 @@ def runOneIter(write_obj):
         global stopper
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
+            print("Takeoff detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
             startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
+        # Check for landing
+        elif takeoffTime is not None and magnitude > landingGs*9.81:
+            print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
+
+            print("Stopping")
+            shouldStop.set(1)
+            shouldStopMain.set(1)
+            
 
     return True
 
@@ -416,7 +443,10 @@ try:
             if runOneIter(write_obj) == False:
                 # IMU failed
                 # Wait forever..
-                stopper.join()
+                while stopper is None or shouldStopMain.get() == 0:
+                    time.sleep(0.2)
+                if stopper is not None:
+                    stopper.join()
 except KeyboardInterrupt:
     print("Stopping threads due to keyboard interrupt")
     if shouldStop is not None:

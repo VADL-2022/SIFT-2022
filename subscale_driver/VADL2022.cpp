@@ -65,6 +65,7 @@ auto takeoffTime = std::chrono::steady_clock::now();
 long long backupSIFTStartTime = -1; // Also used as the projected SIFT start time if IMU fails
 std::string backupSIFTStartTime_str;
 std::string TAKEOFF_G_FORCE_str;
+std::string LANDING_G_FORCE_str;
 #define USE_LIS331HH
 #ifdef USE_LIS331HH // Using the alternative IMU
 const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL};
@@ -1068,6 +1069,7 @@ VADL2022::VADL2022(int argc, char** argv)
     timeToApogee_str = std::to_string(timeToApogee);
     TAKEOFF_G_FORCE_str = std::to_string(TAKEOFF_G_FORCE);
     backupSIFTStopTime_str = std::to_string(backupSIFTStopTime);
+    LANDING_G_FORCE_str = std::to_string(LANDING_G_FORCE);
     LIS331HH_videoCapArgs[0] = "0";
     LIS331HH_videoCapArgs[1] = TAKEOFF_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[2] = timeToApogee_str.c_str(); //backupSIFTStartTime_str.c_str();
@@ -1079,6 +1081,29 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     LIS331HH_videoCapArgs[3] = LIS331HH_calibrationFile;
     LIS331HH_videoCapArgs[4] = backupSIFTStopTime_str.c_str();
+
+    //fore2 has lsm
+    const char* lsm;
+    char hostname[HOST_NAME_MAX + 1];
+    if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+      printf("hostname: %s\n", hostname);
+      if (std::string(hostname) == "fore2") {
+        { out_guard();
+          std::cout << "has lsm" << std::endl; }
+        lsm = "1";
+      }
+      else {
+        { out_guard();
+          std::cout << "no lsm" << std::endl; }
+        lsm = "0"
+      }
+    }
+    else {
+      puts("gethostname() errored out");
+    }
+
+    LIS331HH_videoCapArgs[5] = lsm; // 0=don't use lsm
+    LIS331HH_videoCapArgs[6] = LANDING_G_FORCE_str.c_str();
     pyRunFile("subscale_driver/LIS331_loop.py", 5, (char **)LIS331HH_videoCapArgs);
 
     // Then send on radio afterwards (into dispatch queue)
