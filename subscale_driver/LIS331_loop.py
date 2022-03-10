@@ -189,7 +189,7 @@ def startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, 
         shouldStop.set(0)
         print("GPIO changing...")
         pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
-pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
+        pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
         print("GPIO sleep...")
         time.sleep(100.0 / 1000.0)
 
