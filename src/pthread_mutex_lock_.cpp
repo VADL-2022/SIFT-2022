@@ -21,7 +21,7 @@
 #include <thread>
 #include "tools/backtrace/backtrace.hpp"
 
-int pthread_mutex_lock_(pthread_mutex_t *mutex) {
+extern "C" int pthread_mutex_lock_(pthread_mutex_t *mutex) {
     if (CMD_CONFIG(debugMutexDeadlocks)) {
         // Try to lock for a bit with a timer
         std::chrono::time_point<std::chrono::steady_clock> startTries; // https://en.cppreference.com/w/cpp/chrono/time_point
