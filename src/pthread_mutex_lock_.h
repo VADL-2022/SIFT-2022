@@ -11,6 +11,14 @@
 
 #include <pthread.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern int pthread_mutex_lock_(pthread_mutex_t *mutex);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* pthread_mutex_lock__h */

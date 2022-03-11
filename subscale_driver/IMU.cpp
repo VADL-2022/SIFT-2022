@@ -2,6 +2,7 @@
 #include <pigpio.h>
 #include "config.hpp"
 #include "IMU.hpp"
+#include "../commonOutMutex.hpp"
 
 using namespace std;
 using namespace vn::protocol::uart;
