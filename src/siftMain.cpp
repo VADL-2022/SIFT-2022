@@ -10,6 +10,7 @@
 
 #include "siftMain.hpp"
 #include "main/siftMainCmdConfig.hpp"
+#include "main/siftMainCanvasShower.hpp"
 #include "main/siftMainInteractive.hpp"
 #include "main/siftMainSIFT.hpp"
 #include "main/siftMainSignals.hpp"
