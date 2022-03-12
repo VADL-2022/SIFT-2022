@@ -8,6 +8,7 @@
 
 #include "siftMainMatcher.hpp"
 #include "siftMainCmdConfig.hpp"
+#include "siftMainCanvasShower.hpp"
 #include "siftMainSIFT.hpp"
 #include "siftMainSignals.hpp"
 #include "../siftMain.hpp"

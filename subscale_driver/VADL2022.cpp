@@ -1083,7 +1083,7 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[4] = backupSIFTStopTime_str.c_str();
 
     //fore2 has lsm
-    const char* lsm;
+    const char* lsm = "0";
     char hostname[HOST_NAME_MAX + 1];
     if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
       printf("hostname: %s\n", hostname);
@@ -1095,7 +1095,6 @@ VADL2022::VADL2022(int argc, char** argv)
       else {
         { out_guard();
           std::cout << "no lsm" << std::endl; }
-        lsm = "0";
       }
     }
     else {
