@@ -22,6 +22,7 @@
 #ifdef SIFTAnatomy_
 
 ProcessedImage<SIFTAnatomy>::ProcessedImage(cv::Mat& image_,
+py::array_t<float> image_python_,
 shared_keypoints_ptr_t computedKeypoints_,
 std::shared_ptr<struct sift_keypoint_std> k_,
 int n_, // Number of keypoints in `k`
@@ -33,6 +34,7 @@ SIFTParams p_,
 size_t i_,
 std::shared_ptr<IMUData> imu_) :
 image(image_),
+image_python(image_python_),
 computedKeypoints(computedKeypoints_),
 k(k_),
 n(n_),

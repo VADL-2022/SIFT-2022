@@ -43,6 +43,7 @@ namespace backward {
 #include "timers.hpp"
 
 #include "IMUData.hpp"
+#include "python/mat_wrapper.hpp"
 
 #include "Queue.hpp"
 
@@ -363,10 +364,14 @@ int mainMission(DataSourceT* src,
     }
     
     common::connect_Python();
-    // Warm up python (seems to take ~1 second)
+    // Warm up python and Precession.py (seems to take ~1 second)
     t.reset();
     S_RunFile("src/python/Precession.py", 0, nullptr);
     t.logElapsed("Precession.py warmup");
+    // Warm up General.py
+    t.reset();
+    py::module_ general = py::module_::import("src.python.General");
+    t.logElapsed("General.py warmup");
     
     // SIFT
     cv::Mat firstImage;
@@ -407,7 +412,7 @@ int mainMission(DataSourceT* src,
                 for (size_t i2 = pair.first; i2 < pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
                     // Enqueue null image indirectly
-                    processedImageQueue_enqueueIndirect(i2, mat,
+                    processedImageQueue_enqueueIndirect(i2, mat, py::array_t<float>(),
                                             shared_keypoints_ptr(),
                                             std::shared_ptr<struct sift_keypoint_std>(),
                                             0,
@@ -555,7 +560,16 @@ int mainMission(DataSourceT* src,
         t.reset();
         if (!CMD_CONFIG(imageCaptureOnly)) {
             cv::Mat greyscale = src->siftImageForMat(i);
+            py::array_t<float> greyscale_;
             t.logElapsed("siftImageForMat");
+            t.reset();
+            nonthrowing_python([&greyscale, &greyscale_](){
+                // Undistort fisheye
+                py::module_ general = py::module_::import("src.python.General");
+                greyscale_ = (py::array_t<float>) general.attr("undisortImage")(cv_mat_float32_1c_to_numpy(greyscale));
+                greyscale = numpy_float32_1c_to_cv_mat(greyscale_);
+            });
+            t.logElapsed("General.py undisortImage");
             //auto path = src->nameForIndex(i);
             
             // Apply filters to possibly discard the image //
@@ -590,6 +604,13 @@ int mainMission(DataSourceT* src,
             
             // IMU
             std::shared_ptr<IMUData> imu_;
+            #ifdef NDEBUG
+            if (discardImage) {
+                t.logElapsed("blur detection");
+                std::cout << "Early return 1 in blur detection\n";
+                goto discardImage_label;
+            }
+            #endif
             if (driverInput_fd != -1) { //driverInput_file) {
                 imu_ = std::make_shared<IMUData>();
                 // NOTE: this blocks until the fd gets data.
@@ -639,6 +660,10 @@ int mainMission(DataSourceT* src,
                         else {
                             std::cout << "judge_image: Python doesn't like this image\n";
                             discardImage = true;
+#ifdef NDEBUG
+                            std::cout << "Early return 1 in nonthrowing_python\n";
+                            return;
+#endif
                         }
                         
                         // compare_to_NED
@@ -653,16 +678,36 @@ int mainMission(DataSourceT* src,
                         else {
                             std::cout << "compare_to_NED: Python doesn't like this image\n";
                             discardImage = true;
+#ifdef NDEBUG
+                            std::cout << "Early return 2 in nonthrowing_python\n";
+                            return;
+#endif
                         }
                     });
                 }
                 t.logElapsed("grabbing from subscale driver interface thread and running Precession.judge_image");
             }
+
+            t.reset();
+            nonthrowing_python([&greyscale](){
+                // General stuff
+                py::module_ general = py::module_::import("src.python.General");
+                py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(greyscale));
+                if (discardImage_ == false) {
+                    std::cout << "general: Python likes this image\n";
+                }
+                else {
+                    std::cout << "general: Python doesn't like this image\n";
+                    discardImage = true;
+                }
+            });
+            t.logElapsed("General.py shouldDiscardImage");
             // //
             
+            discardImage_label:
             if (discardImage) {
                 // Enqueue null image indirectly
-                processedImageQueue_enqueueIndirect(i, greyscale,
+                processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
                                             shared_keypoints_ptr(),
                                             std::shared_ptr<struct sift_keypoint_std>(),
                                             0,
@@ -688,7 +733,8 @@ int mainMission(DataSourceT* src,
             
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
-            tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale, std::shared_ptr<IMUData> imu_) {
+            tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale,
+            py::array_t<float> greyscale_, std::shared_ptr<IMUData> imu_) {
     //            OPTICK_EVENT();
                 { out_guard();
                     std::cout << "hello from " << id << std::endl; }
@@ -781,7 +827,7 @@ int mainMission(DataSourceT* src,
                         { out_guard();
                             std::cout << "Thread " << id << ": enqueue" << std::endl; }
                         #ifdef SIFTAnatomy_
-                        processedImageQueue.enqueueNoLock(greyscale,
+                        processedImageQueue.enqueueNoLock(greyscale, greyscale_,
                                                 shared_keypoints_ptr(keypoints),
                                                 std::shared_ptr<struct sift_keypoint_std>(k),
                                                 n,
@@ -838,7 +884,7 @@ int mainMission(DataSourceT* src,
                 // cleanup: nothing to do
                 // Log malloc, etc. timers and reset them
                 showTimers(std::string("SIFT ") + std::to_string(id));
-            }, /*extra args:*/ i /*- offset*/, greyscale, imu_);
+            }, /*extra args:*/ i /*- offset*/, greyscale, greyscale_, imu_);
         }
         
         // Save this image for next iteration

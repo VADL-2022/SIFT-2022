@@ -36,13 +36,14 @@ let
 in
 mkShell {
   buildInputs = [ #my-python-packages
-                ] ++ (lib.optional (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
-  ++ (lib.optional (stdenv.hostPlatform.isLinux && useGtk) [ (python37Packages.opencv4.override { enableGtk2 = true; })
-                                                                 opencvGtk
-                                                               ]) ++ [
+                # ] ++ (lib.optionals (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
+  # ++ (lib.optionals (stdenv.hostPlatform.isLinux && useGtk) [
+  #   #(python37Packages.opencv4.override { enableGtk2 = true; })
+  #   opencvGtk
+  # ]) ++ [
     clang_12 # Need >= clang 10 to fix fast-math bug (when using -Ofast) ( https://bugzilla.redhat.com/show_bug.cgi?id=1803203 )
     pkgconfig libpng
-    ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ lldb x11 ]) ++ [
+    ] ++ (lib.optionals (stdenv.hostPlatform.isLinux) [ lldb x11 ]) ++ [
 
       #] ++ (builtins.exec ["bash" "-c", "xcrun --show-sdk-version"] >= 11.3 [] # no jemalloc for Latif due to newer macOS SDK impurity causing jemalloc build to fail..
       #else: [
@@ -59,18 +60,18 @@ mkShell {
     ] ++ (lib.optional (stdenv.hostPlatform.isMacOS) libunwind_modded) ++ (lib.optional (stdenv.hostPlatform.isLinux) libunwind) ++ [
     # #
     
-      # VADL2022 "library" #
-      coreutils
-    (python37m.withPackages (p: with p; [
+    # VADL2022 "library" #
+    coreutils
+    (python37m.withPackages (p: with p; ([
       (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
-      opencv4
+      #opencv4
       #numpy
       
       # For Python interop #
       pybind11
       # #
       
-      (lib.optional stdenv.hostPlatform.isMacOS opencv4)
+    ] ++ (lib.optionals stdenv.hostPlatform.isMacOS [ opencv4 ]) ++ [
       (lib.optional useGtk (toPythonModule (pkgs.opencv4.override { enableGTK2 = true; enablePython = true; pythonPackages = python37Packages; }))) # Temp hack
       numpy
       #matplotlib
@@ -84,7 +85,7 @@ mkShell {
         (callPackage ./nix/gpiozero.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
         (callPackage ./nix/colorzero.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
         (callPackage ./nix/pigpio_python.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;}) ]) ++ [
-    ]))
+    ])))
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {}) ]) ++ [
     #] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;}) ]) ++ [
     libusb1
