@@ -44,6 +44,7 @@ while cap.isOpened() if useCam else True:
         except StopIteration:
             break
         img = cv2.imread(fname)
+    #img = cv2.resize(img, (640, 480))
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     # Find the chess board corners
     # If desired number of corners are found in the image then ret = true

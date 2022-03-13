@@ -180,7 +180,10 @@ def startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, 
     global switchedCameras
     if switchedCameras:
         print("Switched cameras already")
-        time.sleep(90) # Total flight length is 90 seconds. NASA: >90 is points taken off so this is our upper bound.
+        if my_accels is None:
+            print("Sleeping for 90 seconds (total flight length)")
+            sys.stdout.flush()
+            time.sleep(90) # Total flight length is 90 seconds. NASA: >90 is points taken off so this is our upper bound.
         return
     switchedCameras = True
     
@@ -195,7 +198,7 @@ def startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, 
 
         print("Switching cameras")
 
-        shouldStop.incrementAndThenGet() #videoCaptureThread.raise_exception() # Stop existing video capture
+        shouldStop.set(1) #shouldStop.incrementAndThenGet() #videoCaptureThread.raise_exception() # Stop existing video capture
         videoCaptureThread.join()
         shouldStop.set(0)
         print("GPIO changing...")
@@ -450,7 +453,7 @@ try:
 except KeyboardInterrupt:
     print("Stopping threads due to keyboard interrupt")
     if shouldStop is not None:
-        shouldStop.incrementAndThenGet()
+        shouldStop.set(1)
     if videoCaptureThread is not None:
         videoCaptureThread.join()
     if stopper is not None:

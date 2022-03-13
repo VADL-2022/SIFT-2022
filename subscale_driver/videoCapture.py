@@ -162,7 +162,7 @@ def run(shouldStop # AtomicInt
         if out is not None:
             print("main thread final flush: out.release() took", timeit.timeit(lambda: out.release(), number=1), "seconds")
         
-        shouldStop.incrementAndThenGet() # Stop threads in case it wasn't done already
+        shouldStop.set(1) #shouldStop.incrementAndThenGet() # Stop threads in case it wasn't done already
         
         #dispatchQueue.join()       # block until all tasks are done
 

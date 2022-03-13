@@ -16,8 +16,19 @@ img = cv.imread('images/Fri 11 Mar 15_01_52 EST 2022.jpg')
 h, w = img.shape[:2]
 newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
 
-# Prepare reusable undistort mapping thing
-mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
+useFullImageInsteadOfROI = sys.argv[2] == '1' if len(sys.argv) > 2 else True
+k=mtx
+if useFullImageInsteadOfROI:
+    # https://stackoverflow.com/questions/34316306/opencv-fisheye-calibration-cuts-too-much-of-the-resulting-image
+    nk = k.copy()
+    nk[0,0]=k[0,0]/2
+    nk[1,1]=k[1,1]/2
+    print(w,h)
+    # Notice the cv.fisheye.initUndistortRectifyMap being used instead of cv.initUndistortRectifyMap!:
+    mapx, mapy = cv.fisheye.initUndistortRectifyMap(mtx, dist[:-1], None, nk, (w,h), cv2.CV_16SC2)
+else:
+    # Prepare reusable undistort mapping thing
+    mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
 
 useCam = sys.argv[1] == '1' if len(sys.argv) > 1 else False
 if useCam:
@@ -40,10 +51,15 @@ while cap.isOpened() if useCam else True:
         img = cv.imread(fname)
     
     # undistort
-    dst = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
+    if useFullImageInsteadOfROI:
+        dst = cv.remap(img, mapx, mapy, cv.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    else:
+        dst = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
     # crop the image
-    #x, y, w, h = roi
-    #dst = dst[y:y+h, x:x+w]
+    if not useFullImageInsteadOfROI:
+        x, y, w, h = roi
+        print("roi:", roi)
+        dst = dst[y:y+h, x:x+w]
     cv.imshow('calibresult.png', dst)
     #cv.imwrite('calibresult.png', dst)
     cv.waitKey(0)
