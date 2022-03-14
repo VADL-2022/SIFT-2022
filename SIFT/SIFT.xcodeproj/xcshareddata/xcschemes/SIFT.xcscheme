@@ -31,7 +31,7 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       enableAddressSanitizer = "YES"
@@ -59,18 +59,6 @@
          <CommandLineArgument
             argument = "50"
             isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--skip-image-indices"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "3"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "10"
-            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--no-preview-window"
@@ -114,14 +102,6 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--video-file-data-source-path"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "Data/subscale2/Derived/SIFT/output.mp4"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Volumes/MyTestVolume/Projects/DataRocket/Derived/output.mp4"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument

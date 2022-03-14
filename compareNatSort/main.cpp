@@ -18,17 +18,8 @@ int main(int argc, char **argv) {
   //   std::cout << "1" << std::endl;
   // }
 
-  if (argc < 2) {
-    std::cout << "This command prints all files matching a certain extension in a directory given. It does this printing in a \"natural\"/\"human-readable\" way with respect to numbers in that it prints numbers contained in filenames in increasing order instead of lexicographically, while also printing the filenames as alphabetically sorted.\n\tUsage: " << argv[0] << " <folder path> [optional extensions to match, else .mp4 is matched]\n\tExample: " << argv[0] << " folder . ''      (to match all extensions)" << std::endl;
-    exit(1);
-  }
-
   std::vector<std::string> files;
   std::string folderPath = argv[1];
-  std::string extMatch = ".mp4";
-  if (argc >= 3) {
-    extMatch = argv[2];
-  }
   for (const auto &entry : fs::directory_iterator(folderPath)) {
     // Ignore files we treat specially:
     // if (entry.is_directory() || endsWith(entry.path().string(),
@@ -36,7 +27,7 @@ int main(int argc, char **argv) {
     // entry.path().filename().string() == ".DS_Store") {
     //     continue;
     // }
-    if (!endsWith(entry.path().string(), extMatch)) {
+    if (!endsWith(entry.path().string(), ".mp4")) {
       continue;
     }
     files.push_back(entry.path().string());

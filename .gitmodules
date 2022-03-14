@@ -7,12 +7,3 @@
 [submodule "SiftGPU"]
 	path = SiftGPU
 	url = https://github.com/sbond75/SiftGPU.git
-[submodule "src/python/IMU_VV"]
-	path = src/python/IMU_VV
-	url = https://github.com/VADL-2022/IMU_VV.git
-[submodule "WindTunnel"]
-	path = WindTunnel
-	url = https://github.com/VADL-2022/WindTunnel.git
-[submodule "Data"]
-	path = Data
-	url = https://github.com/VADL-2022/Data.git
