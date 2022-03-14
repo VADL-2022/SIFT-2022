@@ -11,6 +11,9 @@ https://www.sparkfun.com/datasheets/Sensors/Accelerometer/LIS331HH.pdf
 
 """
 
+busNum1 = 20
+busNum2 = 21
+
 try:
     import smbus
 except:
@@ -90,7 +93,7 @@ with open(my_log, 'w', newline='') as file:
 
 try:
     if useLSM_IMU:
-        bus = smbus.SMBus(1)
+        bus = smbus.SMBus(busNum1) # 1)
         address = 0x6B
 
         # SET THE DATA RATE
@@ -101,7 +104,7 @@ try:
         bus.write_byte_data(address, 0x11, 0x52)
     else:
         # Get I2C bus
-        bus = smbus.SMBus(1)
+        bus = smbus.SMBus(busNum1) # 1)
 except:
     import traceback
     print("Caught exception from IMU at 1:")
@@ -111,7 +114,7 @@ except:
 try:
     # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
     # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
-    L3G_bus = smbus.SMBus(2)
+    L3G_bus = smbus.SMBus(busNum2) # 2)
 except: # Don't let a gyroscope bring down the whole video capture
     import traceback
     print("Caught exception from L3G at 1:")
