@@ -72,7 +72,7 @@ mkShell {
       # #
       
     ] ++ (lib.optionals stdenv.hostPlatform.isMacOS [ opencv4 ]) ++
-    (lib.optionals (useGtk && stdenv.hostPlatform.isLinux) [ (pkgs.opencv4.override { enableGtk2 = true; enablePython = true; pythonPackages = python37Packages; }) ]) ++ [ # Temp hack
+    (lib.optionals (useGtk && stdenv.hostPlatform.isLinux) [ (opencv4.override { enableGtk2 = true; enablePython = true; pythonPackages = python37Packages; }) ]) ++ [ # Temp hack
       numpy
       #matplotlib
 
