@@ -64,7 +64,11 @@ if not logOnly and timeToMECO is None:
 shouldStop=None
 import videoCapture
 shouldStopMain = videoCapture.AtomicInt(0)
-if not logOnly:
+videoCaptureThread = None
+name=None
+def startVideoCapture():
+    global videoCaptureThread
+    global name
     shouldStop=videoCapture.AtomicInt(0)
     def thread_function(name):
         global shouldStop
@@ -74,9 +78,6 @@ if not logOnly:
     name="videoCapture"
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
     videoCaptureThread.start()
-else:
-    videoCaptureThread = None
-    name=None
 
 def append_list_as_row(write_obj, list_of_elem):
         # Create a writer object from csv module
@@ -183,7 +184,9 @@ offsetZ=0
 
 switchedCameras = False
 
-def startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
+def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
+    startVideoCapture()
+    
     global switchedCameras
     if switchedCameras:
         print("Switched cameras already")
@@ -362,14 +365,14 @@ def runOneIter(write_obj):
         #shouldSleep = takeoffTime + timedelta(milliseconds=switchCamerasTime) < datetime.now()
 
         # Swap cameras regardless of taking off, if needed
-        print("IMU failed, startSwitcher() now")
-        startSwitcher(0, None, None, None, None, None, shouldStop)
+        print("IMU failed, startMissionSequence() now")
+        startMissionSequence(0, None, None, None, None, None, shouldStop)
         
         # destSleep = (takeoffTime + timedelta(milliseconds=switchCamerasTime) - datetime.now()).total_seconds() if takeoffTime is not None else (switchCamerasTime / 1000.0)
         # if destSleep > 0:
         #     print("Using backup timing parameters: sleeping until switchCamerasTime:", destSleep,"seconds")
         #     time.sleep(destSleep)
-        #     startSwitcher(0, None, None, None, None, None, shouldStop)
+        #     startMissionSequence(0, None, None, None, None, None, shouldStop)
         #     return False
 
         return False # Don't bother retrying since we could have missed an event.
@@ -435,7 +438,7 @@ def runOneIter(write_obj):
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
             print("Takeoff detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
-            startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
+            startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
         # Check for landing
         elif takeoffTime is not None and magnitude > landingGs*9.81:
             delt = datetime.now() - takeoffTime
