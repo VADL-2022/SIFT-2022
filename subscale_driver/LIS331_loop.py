@@ -63,8 +63,8 @@ if not logOnly and timeToMECO is None:
 
 shouldStop=None
 if not logOnly:
+    import videoCapture
     shouldStop=videoCapture.AtomicInt(0)
-import videoCapture
 shouldStopMain = videoCapture.AtomicInt(0)
 videoCaptureThread = None
 name=None
