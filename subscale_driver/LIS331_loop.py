@@ -112,7 +112,7 @@ try:
     # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
     # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
     # L3G_bus = smbus.SMBus(2) # if you want to use 2
-    
+
     L3G_bus = smbus.SMBus(0)
 except: # Don't let a gyroscope bring down the whole video capture
     import traceback
@@ -120,6 +120,7 @@ except: # Don't let a gyroscope bring down the whole video capture
     traceback.print_exc()
     
     L3G_bus = None
+printed_L3G_FailedAt3 = False
 
 try:
     if not useLSM_IMU:
@@ -393,9 +394,12 @@ def runOneIter(write_obj):
             if rz > 32767:
                 rz -= 65536
     except: # Don't let a gyroscope bring down the whole video capture
-        import traceback
-        print("Caught exception from L3G at 3:")
-        traceback.print_exc()
+        if not printed_L3G_FailedAt3:
+            import traceback
+            print("Caught exception from L3G at 3:")
+            traceback.print_exc()
+            printed_L3G_FailedAt3 = True
+        
 
     # LOG TO CSV
     ###############################################################################
