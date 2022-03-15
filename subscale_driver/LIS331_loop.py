@@ -111,7 +111,9 @@ except:
 try:
     # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
     # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
-    L3G_bus = smbus.SMBus(2)
+    # L3G_bus = smbus.SMBus(2) # if you want to use 2
+    
+    L3G_bus = smbus.SMBus(0)
 except: # Don't let a gyroscope bring down the whole video capture
     import traceback
     print("Caught exception from L3G at 1:")
