@@ -68,16 +68,16 @@ if not logOnly:
 shouldStopMain = videoCapture.AtomicInt(0)
 videoCaptureThread = None
 name=None
+def videoCaptureThreadFunction(name):
+    global shouldStop
+    logging.info("Thread %s: starting", name)
+    videoCapture.run(shouldStop)
+    logging.info("Thread %s: finishing", name)
 def startVideoCapture():
     global videoCaptureThread
     global name
-    def thread_function(name):
-        global shouldStop
-        logging.info("Thread %s: starting", name)
-        videoCapture.run(shouldStop)
-        logging.info("Thread %s: finishing", name)
     name="videoCapture"
-    videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
+    videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
     videoCaptureThread.start()
 
 def append_list_as_row(write_obj, list_of_elem):
@@ -221,7 +221,7 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         print("Switched cameras")
         print("Starting 2nd camera")
         # Start new video capture
-        videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
+        videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
         videoCaptureThread.start()
         logging.info("Thread %s: finishing", name)
     _2ndCamThread = thread_with_exception.thread_with_exception(name=name, target=thread_function2, args=("2ndCam",))
