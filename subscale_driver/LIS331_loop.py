@@ -62,6 +62,8 @@ if not logOnly and timeToMECO is None:
     exit(1)
 
 shouldStop=None
+if not logOnly:
+    shouldStop=videoCapture.AtomicInt(0)
 import videoCapture
 shouldStopMain = videoCapture.AtomicInt(0)
 videoCaptureThread = None
@@ -69,7 +71,6 @@ name=None
 def startVideoCapture():
     global videoCaptureThread
     global name
-    shouldStop=videoCapture.AtomicInt(0)
     def thread_function(name):
         global shouldStop
         logging.info("Thread %s: starting", name)
