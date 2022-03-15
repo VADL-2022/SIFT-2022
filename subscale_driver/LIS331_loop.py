@@ -249,6 +249,7 @@ def runOneIter(write_obj):
     global avgZ
     global counter
     global shouldStop
+    global printed_L3G_FailedAt3
     
     '''Do I ever need to sleep here? Or will the while take care of it?'''
 
