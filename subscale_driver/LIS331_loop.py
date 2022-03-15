@@ -56,6 +56,10 @@ landingGs = float(sys.argv[7]) if len(sys.argv) > 7 else None
 if not logOnly and landingGs is None:
     print("Must provide landing g's")
     exit(1)
+timeToMECO = float(sys.argv[8]) if len(sys.argv) > 8 else None
+if not logOnly and timeToMECO is None:
+    print("Must provide time to MECO in milliseconds")
+    exit(1)
 
 shouldStop=None
 import videoCapture
@@ -434,11 +438,15 @@ def runOneIter(write_obj):
             startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
         # Check for landing
         elif takeoffTime is not None and magnitude > landingGs*9.81:
-            print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
+            delt = datetime.now() - takeoffTime
+            if delt > timedelta(milliseconds=timeToMECO):
+                print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
 
-            print("Stopping")
-            shouldStop.set(1)
-            shouldStopMain.set(1)
+                print("Stopping")
+                shouldStop.set(1)
+                shouldStopMain.set(1)
+            else:
+                print("Cooldown before landing detection with", delt.total_seconds(), "second(s) left")
             
 
     return True
