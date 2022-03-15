@@ -70,12 +70,18 @@ videoCaptureThread = None
 name=None
 def videoCaptureThreadFunction(name):
     global shouldStop
+    if shouldStop.get() != 0:
+        print("videoCaptureThreadFunction(): Video capture is already running, not starting again")
+        return
     logging.info("Thread %s: starting", name)
     videoCapture.run(shouldStop)
     logging.info("Thread %s: finishing", name)
 def startVideoCapture():
     global videoCaptureThread
     global name
+    if shouldStop.get() != 0:
+        print("startVideoCapture(): Video capture is already running, not starting again")
+        return
     name="videoCapture"
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
     videoCaptureThread.start()
