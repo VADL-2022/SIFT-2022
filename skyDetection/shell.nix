@@ -22,9 +22,16 @@ in
 mkShell {
   buildInputs = [
     (python37m.withPackages (p: with p; [
-      imutils
+      (callPackage ./nix/imutils.nix {}) #imutils <-- original one depends on opencv3 but we use 4
       opencv4
-      scikitimage
+      numpy
+      
+      # Fails on python37m:
+      # scikitimage
+      # pyroma
+      # Build for these fails on python37m, but was attempted to fix the above packages failing:
+      (callPackage ./nix/scikitimage.nix {Cocoa=pkgs.darwin.apple_sdk.frameworks.Cocoa;}) #scikitimage
+      (callPackage ./nix/pyroma.nix {})
     ]))
   ];
 }
