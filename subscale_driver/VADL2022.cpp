@@ -55,6 +55,7 @@ float IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS = LANDING_G_FORCE * 9.81 /*is se
 
 // Command Line Args
 bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false;
+const char* lsm = "1";
 
 // Sift params initialization
 const char* siftParams = nullptr;
@@ -979,6 +980,9 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--video-capture") == 0) { // Run video saving from camera only
       videoCapture = true;
     }
+    else if (strcmp(argv[i], "--use-LIS") == 0) { // Use the LIS accelerometer on the fore pies instead of the LSM IMU
+      lsm = "0";
+    }
     #ifdef USE_LIS331HH // Using the alternative IMU
     else if (strcmp(argv[i], "--LIS331HH-imu-calibration-file") == 0) {
       if (i+1 < argc) {
@@ -1084,23 +1088,23 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[4] = backupSIFTStopTime_str.c_str();
 
     //fore2 has lsm
-    const char* lsm = "0";
-    char hostname[HOST_NAME_MAX + 1];
-    if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
-      printf("hostname: %s\n", hostname);
-      if (std::string(hostname) == "fore2") {
-        { out_guard();
-          std::cout << "has lsm" << std::endl; }
-        lsm = "1";
-      }
-      else {
-        { out_guard();
-          std::cout << "no lsm" << std::endl; }
-      }
-    }
-    else {
-      puts("gethostname() errored out");
-    }
+    // const char* lsm = "0";
+    // char hostname[HOST_NAME_MAX + 1];
+    // if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+    //   printf("hostname: %s\n", hostname);
+    //   if (std::string(hostname) == "fore2") {
+    //     { out_guard();
+    //       std::cout << "has lsm" << std::endl; }
+    //     lsm = "1";
+    //   }
+    //   else {
+    //     { out_guard();
+    //       std::cout << "no lsm" << std::endl; }
+    //   }
+    // }
+    // else {
+    //   puts("gethostname() errored out");
+    // }
 
     LIS331HH_videoCapArgs[5] = lsm; // 0=don't use lsm
     LIS331HH_videoCapArgs[6] = LANDING_G_FORCE_str.c_str();
