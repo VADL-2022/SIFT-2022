@@ -49,7 +49,8 @@ def run():
         image=cv2.imread(imgName)
         hOrig, wOrig = image.shape[:2]
         cv2.imshow("Original", image)
-        image = cv2.resize(image, (2592, 1944))
+        if args["undistort"]:
+            image = cv2.resize(image, (2592, 1944))
 
         if mapx is None:
             h, w = image.shape[:2]
@@ -132,6 +133,7 @@ def run():
                     cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
         # show the output image
+        cv2.imshow("Multiple bright spots: mask",mask)
         cv2.imshow("Multiple bright spots", image)
         #cv2.waitKey(0)
         # #
