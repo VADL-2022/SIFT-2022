@@ -3,12 +3,12 @@ import time
 import serial
 
 ser = serial.Serial(
-        port='/dev/ttyAM0', 
+        port='/dev/ttyAMA0', 
         baudrate = 9600,
         parity=serial.PARITY_NONE,
         stopbits=serial.STOPBITS_ONE,
         bytesize=serial.EIGHTBITS,
-        timeout=1
+        timeout=2
 )
 
 
@@ -20,6 +20,6 @@ file_name=my_log
 with open(my_log, 'w', newline='') as file:
     for i in range(0,2):
         x=ser.readline()
-        print(x)
-        file.write (x)
+        print(str(x))
+        file.write (str(x))
         file.write("\n")
