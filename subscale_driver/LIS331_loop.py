@@ -56,23 +56,35 @@ landingGs = float(sys.argv[7]) if len(sys.argv) > 7 else None
 if not logOnly and landingGs is None:
     print("Must provide landing g's")
     exit(1)
+timeToMECO = float(sys.argv[8]) if len(sys.argv) > 8 else None
+if not logOnly and timeToMECO is None:
+    print("Must provide time to MECO in milliseconds")
+    exit(1)
 
 shouldStop=None
-import videoCapture
-shouldStopMain = videoCapture.AtomicInt(0)
 if not logOnly:
+    import videoCapture
     shouldStop=videoCapture.AtomicInt(0)
-    def thread_function(name):
-        global shouldStop
-        logging.info("Thread %s: starting", name)
-        videoCapture.run(shouldStop)
-        logging.info("Thread %s: finishing", name)
+shouldStopMain = videoCapture.AtomicInt(0)
+videoCaptureThread = None
+name=None
+def videoCaptureThreadFunction(name):
+    global shouldStop
+    if shouldStop.get() != 0:
+        print("videoCaptureThreadFunction(): Video capture is already running, not starting again")
+        return
+    logging.info("Thread %s: starting", name)
+    videoCapture.run(shouldStop)
+    logging.info("Thread %s: finishing", name)
+def startVideoCapture():
+    global videoCaptureThread
+    global name
+    if shouldStop.get() != 0:
+        print("startVideoCapture(): Video capture is already running, not starting again")
+        return
     name="videoCapture"
-    videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
+    videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
     videoCaptureThread.start()
-else:
-    videoCaptureThread = None
-    name=None
 
 def append_list_as_row(write_obj, list_of_elem):
         # Create a writer object from csv module
@@ -111,13 +123,16 @@ except:
 try:
     # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
     # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
-    L3G_bus = smbus.SMBus(2)
+    # L3G_bus = smbus.SMBus(2) # if you want to use 2
+
+    L3G_bus = smbus.SMBus(0)
 except: # Don't let a gyroscope bring down the whole video capture
     import traceback
     print("Caught exception from L3G at 1:")
     traceback.print_exc()
     
     L3G_bus = None
+printed_L3G_FailedAt3 = False
 
 try:
     if not useLSM_IMU:
@@ -176,7 +191,9 @@ offsetZ=0
 
 switchedCameras = False
 
-def startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
+def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
+    startVideoCapture()
+    
     global switchedCameras
     if switchedCameras:
         print("Switched cameras already")
@@ -210,7 +227,7 @@ def startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, 
         print("Switched cameras")
         print("Starting 2nd camera")
         # Start new video capture
-        videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=thread_function, args=(name,))
+        videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
         videoCaptureThread.start()
         logging.info("Thread %s: finishing", name)
     _2ndCamThread = thread_with_exception.thread_with_exception(name=name, target=thread_function2, args=("2ndCam",))
@@ -246,6 +263,7 @@ def runOneIter(write_obj):
     global avgZ
     global counter
     global shouldStop
+    global printed_L3G_FailedAt3
     
     '''Do I ever need to sleep here? Or will the while take care of it?'''
 
@@ -354,14 +372,14 @@ def runOneIter(write_obj):
         #shouldSleep = takeoffTime + timedelta(milliseconds=switchCamerasTime) < datetime.now()
 
         # Swap cameras regardless of taking off, if needed
-        print("IMU failed, startSwitcher() now")
-        startSwitcher(0, None, None, None, None, None, shouldStop)
+        print("IMU failed, startMissionSequence() now")
+        startMissionSequence(0, None, None, None, None, None, shouldStop)
         
         # destSleep = (takeoffTime + timedelta(milliseconds=switchCamerasTime) - datetime.now()).total_seconds() if takeoffTime is not None else (switchCamerasTime / 1000.0)
         # if destSleep > 0:
         #     print("Using backup timing parameters: sleeping until switchCamerasTime:", destSleep,"seconds")
         #     time.sleep(destSleep)
-        #     startSwitcher(0, None, None, None, None, None, shouldStop)
+        #     startMissionSequence(0, None, None, None, None, None, shouldStop)
         #     return False
 
         return False # Don't bother retrying since we could have missed an event.
@@ -391,9 +409,12 @@ def runOneIter(write_obj):
             if rz > 32767:
                 rz -= 65536
     except: # Don't let a gyroscope bring down the whole video capture
-        import traceback
-        print("Caught exception from L3G at 3:")
-        traceback.print_exc()
+        if not printed_L3G_FailedAt3:
+            import traceback
+            print("Caught exception from L3G at 3:")
+            traceback.print_exc()
+            printed_L3G_FailedAt3 = True
+        
 
     # LOG TO CSV
     ###############################################################################
@@ -424,14 +445,18 @@ def runOneIter(write_obj):
         if magnitude > takeoffGs*9.81 and takeoffTime is None:
             takeoffTime = datetime.now()
             print("Takeoff detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
-            startSwitcher(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
+            startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
         # Check for landing
         elif takeoffTime is not None and magnitude > landingGs*9.81:
-            print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
+            delt = datetime.now() - takeoffTime
+            if delt > timedelta(milliseconds=timeToMECO):
+                print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
 
-            print("Stopping")
-            shouldStop.set(1)
-            shouldStopMain.set(1)
+                print("Stopping")
+                shouldStop.set(1)
+                shouldStopMain.set(1)
+            else:
+                print("Cooldown before landing detection with", delt.total_seconds(), "second(s) left")
             
 
     return True
