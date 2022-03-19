@@ -84,7 +84,8 @@ mkShell {
         (callPackage ./nix/rpi_gpio.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
         (callPackage ./nix/gpiozero.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
         (callPackage ./nix/colorzero.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
-        (callPackage ./nix/pigpio_python.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;}) ]) ++ [
+        (callPackage ./nix/pigpio_python.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
+        (callPackage ./nix/adafruit-circuitpython-gps.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;}) ]) ++ [
     ])))
     ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {}) ]) ++ [
     #] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ (callPackage ./nix/pigpio.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;}) ]) ++ [
