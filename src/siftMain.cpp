@@ -562,14 +562,6 @@ int mainMission(DataSourceT* src,
             cv::Mat greyscale = src->siftImageForMat(i);
             py::array_t<float> greyscale_;
             t.logElapsed("siftImageForMat");
-//            t.reset();
-//            nonthrowing_python([&greyscale, &greyscale_](){
-//                // Undistort fisheye
-//                py::module_ general = py::module_::import("src.python.General");
-//                greyscale_ = (py::array_t<float>) general.attr("undisortImage")(cv_mat_float32_1c_to_numpy(greyscale));
-//                greyscale = numpy_float32_1c_to_cv_mat(greyscale_);
-//            });
-//            t.logElapsed("General.py undisortImage");
             //auto path = src->nameForIndex(i);
             
             // Apply filters to possibly discard the image //
@@ -732,6 +724,18 @@ int mainMission(DataSourceT* src,
             //                sin(alpha)*cosine(beta), sin(alpha)*sin(beta)*sin(gamma)+cos(alpha)*cos(gamma), sin(alpha)*sin(beta)*cos(gamma)-cos(alpha)*sin(gamma),
             //                3, 9);
             //            }
+            
+            // *Modifies `greyscale`*
+            if (CMD_CONFIG(undistortFisheye)) {
+                t.reset();
+                nonthrowing_python([&greyscale, &greyscale_](){
+                    // Undistort fisheye
+                    py::module_ general = py::module_::import("src.python.General");
+                    greyscale_ = (py::array_t<float>) general.attr("undisortImage")(cv_mat_float32_1c_to_numpy(greyscale));
+                    greyscale = numpy_float32_1c_to_cv_mat(greyscale_);
+                });
+                t.logElapsed("General.py undisortImage");
+            }
             
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }

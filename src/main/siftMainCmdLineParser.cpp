@@ -58,6 +58,9 @@ int parseCommandLineArgs(int argc, char** argv,
         else if (strcmp(argv[i], "--save-first-image") == 0) { // Save the first image SIFT encounters. Counts as a flush towards the start of SIFT.
             cfg.saveFirstImage = true;
         }
+        else if (strcmp(argv[i], "--undistort") == 0) { // Perform fisheye undistortion.
+            cfg.undistortFisheye = true;
+        }
         // Preview window/SIFT rendering options //
         else if (strcmp(argv[i], "--no-preview-window") == 0) { // Explicitly disable preview window
             cfg.noPreviewWindow = true;
