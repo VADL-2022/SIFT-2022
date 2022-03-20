@@ -75,6 +75,7 @@ struct FolderDataSource : public DataSourceBase
     std::vector<std::string> files;
 private:
     cv::Size sizeFrame;
+    bool inittedCrop = false;
     
     void init(std::string folderPath);
 };

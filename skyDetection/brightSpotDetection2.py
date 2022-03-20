@@ -265,6 +265,7 @@ def run():
                                # minRadius=1, maxRadius=30)
         weightedCenterOfMass = None
         radiusSum = 0
+        prev = None # Becomes a "new mega hough circle"
         if circles is not None:
             weightedCenterOfMass = [0.0,0.0]
             circles = np.uint16(np.around(circles))
@@ -275,7 +276,6 @@ def run():
             #     if largestRadius is None or radius > largestRadius:
             #         largestRadius = radius
             largestRadius=None
-            prev = None # Becomes a "new mega hough circle"
             for i in circles[0, :]:
                 center = (i[0], i[1])
                 # circle center
