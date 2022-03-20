@@ -6,7 +6,7 @@ jobs:
    concurrency: staging_environment # prevents 2 from running at once 
    steps:
      - name: Run pi tests
-       run: sshpass -p $TUNNEL_PASS ssh -o "StrictHostKeyChecking no" -p $TUNNEL_PORT $TUNNEL_USER@$TUNNEL_ADDRESS "pkill -u $TUNNEL_USER -f 'sshd:.$TUNNEL_USER\$' && sleep 10 && ./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd \\\"${GITHUB_REF#refs/heads/}\\\"\""
+       run: sshpass -p $TUNNEL_PASS ssh -o "StrictHostKeyChecking no" -p $TUNNEL_PORT $TUNNEL_USER@$TUNNEL_ADDRESS "pkill -u $TUNNEL_USER -f \"(^)sshd:\ $TUNNEL_USER( \\[priv\\])?\\$\" && sleep 10 && ./sshpass -p $RASPI_PASS ssh -p $RASPI_PORT pi@localhost \"set +o history; source .profile; ci_cmd \\\"${GITHUB_REF#refs/heads/}\\\"\""
        env:
          TUNNEL_PASS: ${{secrets.TUNNEL_PASS}}
          TUNNEL_PORT: ${{secrets.TUNNEL_PORT}}
