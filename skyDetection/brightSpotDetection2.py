@@ -227,17 +227,44 @@ def run():
                                    minRadius=minRadius, maxRadius=maxRadius)
                                # param1=100, param2=30,
                                # minRadius=1, maxRadius=30)
+        weightedCenterOfMass = None
+        radiusSum = 0
         if circles is not None:
+            weightedCenterOfMass = [0.0,0.0]
             circles = np.uint16(np.around(circles))
+            # # Find largest radius
+            # largestRadius=None
+            # for i in circles[0, :]:
+            #     radius = i[2]
+            #     if largestRadius is None or radius > largestRadius:
+            #         largestRadius = radius
+            largestRadius=None
             for i in circles[0, :]:
                 center = (i[0], i[1])
                 # circle center
-                cv2.circle(image, center, 1, (0, 100, 100), 3)
+                cv2.circle(image, center, 1, (0, 100, 100), 1)#3)
                 cv2.putText(image, "hough circle", (int(center[0]), int(center[1]) - 15),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.95, (0, 0, 255), 3)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.35,#0.95,
+                            (255, 0, 255), 1)#3)
                 # circle outline
                 radius = i[2]
-                cv2.circle(image, center, radius, (255, 0, 255), 3)
+                cv2.circle(image, center, radius, (255, 0, 255), 1)#3)
+
+                # Weighted "center of mass".. more like weighted average
+                weightedCenterOfMass[0] += center[0] * radius # Weight by radius
+                weightedCenterOfMass[1] += center[1] * radius
+                radiusSum += radius
+                if largestRadius is None or radius > largestRadius:
+                    largestRadius = radius
+            # Finish off the weighted average by dividing by the sum of the weights used:
+            weightedCenterOfMass[0] /= radiusSum
+            weightedCenterOfMass[1] /= radiusSum
+
+            #avgRadius = radiusSum / len(circles)
+            cv2.putText(image, "mega hough circle", (int(weightedCenterOfMass[0]), int(weightedCenterOfMass[1]) - 15),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.95,
+                        (255, 0, 255), 3)
+            cv2.circle(image, list(map(int,weightedCenterOfMass)), largestRadius, (255, 0, 255), 3)
         else:
             print("no hough circles")
         
