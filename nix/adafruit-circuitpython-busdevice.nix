@@ -23,6 +23,7 @@ buildPythonPackage rec {
                             (callPackage ./Adafruit-Blinka.nix {})
                             (callPackage ./Adafruit-PlatformDetect.nix {})
                             (callPackage ./Adafruit-PureIO.nix {})
+                            (callPackage ./pyftdi.nix {})
                           ];
 
   doCheck = false;
