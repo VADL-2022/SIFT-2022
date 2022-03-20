@@ -25,7 +25,7 @@ public:
     template <typename ThreadInfoT /* can be threadID or thread name */>
     static void logNanos(ThreadInfoT threadInfo, const char* name, std::chrono::nanoseconds::rep nanos) {
         { out_guard();
-            std::cout << "Thread " << threadInfo << ": " << name << " took " << nanos / 1000.0 << " milliseconds" << std::endl; }
+            std::cout << "Thread " << threadInfo << ": " << name << " took " << nanos / 1'000'000.0 << " milliseconds" << std::endl; }
     }
 private:
     typedef std::chrono::high_resolution_clock clock_;
