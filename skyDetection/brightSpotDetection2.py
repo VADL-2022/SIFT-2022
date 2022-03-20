@@ -39,6 +39,42 @@ def getCenterOfMass(thresh, # the binary image
     center = [cX, cY]
     return center
 
+# Based on this C# code from https://stackoverflow.com/questions/2084695/finding-the-smallest-circle-that-encompasses-other-circles :
+# public static Circle MinimalEnclosingCircle(Circle A, Circle B) {
+#             double angle = Math.Atan2(B.Y - A.Y, B.X - A.X);
+#             Point a = new Point((int)(B.X + Math.Cos(angle) * B.Radius), (int)(B.Y + Math.Sin(angle) * B.Radius));
+#             angle += Math.PI;
+#             Point b = new Point((int)(A.X + Math.Cos(angle) * A.Radius), (int)(A.Y + Math.Sin(angle) * A.Radius));
+#             int rad = (int)Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2)) / 2;
+#             if (rad < A.Radius) {
+#                 return A;
+#             } else if (rad < B.Radius) {
+#                 return B;
+#             } else {
+#                 return new Circle((int)((a.X + b.X) / 2), (int)((a.Y + b.Y) / 2), rad);
+#             }
+#         }
+# "Circle is defined by the X, Y of it's center and a Radius, all are ints. There's a constructor that is Circle(int X, int Y, int Radius). After breaking out some old trig concepts, I figured the best way was to find the 2 points on the circles that are farthest apart. Once I have that, the midpoint would be the center and half the distance would be the radius and thus I have enough to define a new circle. If I want to encompass 3 or more circles, I first run this on 2 circles, then I run this on the resulting encompassing circle and another circle and so on until the last circle is encompassed. There may be a more efficient way to do this, but right now it works and I'm happy with that."
+import math # Import math Library
+# a and b are of the following form (a list): [x, y, radius]
+# NOTE: THIS FUNCTION MAY BE BUGGY. Circles from ../Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0028.png give a bad resulting circle. So to compensate, we use `bad` value < some amount as an upper bound requirement as well..
+def minimalEnclosingCircle(a, b):
+    angle = math.atan2(b[1] - a[1], b[0] - a[0])
+    cos_angle = math.cos(angle)
+    sin_angle = math.sin(angle)
+    a_ = [(b[0] + cos_angle * b[2]), (b[1] + sin_angle * b[2])]
+    angle += math.pi
+    cos_angle = math.cos(angle)
+    sin_angle = math.sin(angle)
+    b_ = [(a[0] + cos_angle * a[2]), (a[1] + sin_angle * a[2])]
+    rad = (math.sqrt(math.pow(a_[0] - b_[0], 2) + math.pow(a_[1] - b_[1], 2)) / 2)
+    if rad < a[2]:
+        return a
+    elif rad < b[2]:
+        return b
+    else:
+        return [((a_[0] + b_[0]) / 2), ((a_[1] + b_[1]) / 2), rad]
+
 def run():
     global askedOnce
     
@@ -239,6 +275,7 @@ def run():
             #     if largestRadius is None or radius > largestRadius:
             #         largestRadius = radius
             largestRadius=None
+            prev = None # Becomes a "new mega hough circle"
             for i in circles[0, :]:
                 center = (i[0], i[1])
                 # circle center
@@ -256,17 +293,40 @@ def run():
                 radiusSum += radius
                 if largestRadius is None or radius > largestRadius:
                     largestRadius = radius
+
+                # "New mega hough circle":
+                if prev is not None:
+                    prev = minimalEnclosingCircle(i, prev)
+                else:
+                    prev = i
             # Finish off the weighted average by dividing by the sum of the weights used:
             weightedCenterOfMass[0] /= radiusSum
             weightedCenterOfMass[1] /= radiusSum
 
             #avgRadius = radiusSum / len(circles)
-            cv2.putText(image, "mega hough circle", (int(weightedCenterOfMass[0]), int(weightedCenterOfMass[1]) - 15),
+            cv2.putText(image, "old mega hough circle", (int(weightedCenterOfMass[0]), int(weightedCenterOfMass[1]) - 15),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55,#0.95,
+                        (255, 255, 255), 2)#3)
+            cv2.circle(image, list(map(int,weightedCenterOfMass)), largestRadius, (255, 255, 255), 2)#3)
+            # "New mega hough circle":
+            cv2.putText(image, "mega hough circle", (int(prev[0]), int(prev[1]) - 15),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.95,
                         (255, 0, 255), 3)
-            cv2.circle(image, list(map(int,weightedCenterOfMass)), largestRadius, (255, 0, 255), 3)
+            cv2.circle(image, list(map(int,prev[:2])), 3, (255, 0, 255), 5)
+            cv2.circle(image, list(map(int,prev[:2])), int(prev[2]), (255, 0, 255), 3)
+            # mega hough circle should be:
+            # - close to center
+            # - [nvm, doesn't work in later images:] smaller than image width in diameter
+            # - old mega hough circle radius should be < new mega hough circle radius
         else:
             print("no hough circles")
+
+        # Decide whether we accept this image
+        megaHoughCircleDistFromCenterThreshold = 0.2
+        if bad <= 3 and circles is not None and abs(prev[0] - realCenter[0]) < megaHoughCircleDistFromCenterThreshold*width and abs(prev[1] - realCenter[1]) < megaHoughCircleDistFromCenterThreshold*height:
+            print("GOOD IMAGE")
+        else:
+            print("BAD IMAGE:", bad <= 3, circles is not None, abs(prev[0] - realCenter[0]) < megaHoughCircleDistFromCenterThreshold*width if prev is not None else False, abs(prev[1] - realCenter[1]) < megaHoughCircleDistFromCenterThreshold*height if prev is not None else False)
         
         showContours = True
         if showContours:
