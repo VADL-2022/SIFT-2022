@@ -747,7 +747,8 @@ int mainMission(DataSourceT* src,
                 installSignalHandlers();
 
     #ifdef USE_PTR_INC_MALLOC
-                bigMallocBlock = beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */, bigMallocBlock); // 8 is 8 bytes to align to a reasonable block size malloc might be using
+                // TODO: implement so it doesn't crash
+                //bigMallocBlock = beginMallocWithFreeAll(8*1024*1024*32 /* About 268 MB */, bigMallocBlock); // 8 is 8 bytes to align to a reasonable block size malloc might be using
     #endif
                 SIFTParams p(pOrig); // New version of the params we can modify (separately from the other threads)
                 // Overrides for the params of `pOrig` (into `p`) go below:

@@ -14,7 +14,7 @@ buildPythonPackage rec {
     inherit pname version;
   };
   
-  buildInputs = [ tomli packaging ];
+  propagatedBuildInputs = [ tomli packaging ];
 
   doCheck = false;
 }
