@@ -23,6 +23,22 @@ dist = np.matrix([[-0.25496947,  0.07321429, -0.00104747,  0.00103111, -0.009593
 
 askedOnce = False
 
+def getCenterOfMass(thresh, # the binary image
+                    name):
+    #if name:
+    #    cv2.imshow('crop: ' + str(name),thresh)
+    #cv2.waitKey(0)
+    # calculate moments of binary image
+    M = cv2.moments(thresh)
+    # calculate x,y coordinate of center
+    try:
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+    except ZeroDivisionError:
+        return None
+    center = [cX, cY]
+    return center
+
 def run():
     global askedOnce
     
@@ -126,26 +142,104 @@ def run():
         # cent_x = np.average(mass_x)
         # cent_y = np.average(mass_y)
         # center = [cent_x, cent_y]
-
-        # calculate moments of binary image
-        M = cv2.moments(thresh)
-        # calculate x,y coordinate of center
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
-        center = [cX, cY]
         
         height,width=image.shape[:2]
         realCenter=[width / 2.0, height / 2.0]
-        print("center:", center, "realCenter:", realCenter)
-        dist_=np.linalg.norm(np.array(center) - np.array(realCenter))
-        print("distance from center:", dist_)
-        cv2.circle(image, (int(center[0]), int(center[1])), int(2),
-                   (0, 0, 255), 4)
+        print("realCenter:", realCenter)
         cv2.circle(image, (int(realCenter[0]), int(realCenter[1])), int(2),
                    (255, 0, 0), 2)
-        cv2.putText(image, "CM", (int(center[0]), int(center[1]) - 15),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
-        cv2.line(image, (int(realCenter[0]), int(realCenter[1])), (int(center[0]), int(center[1])), (255, 0, 0), 2)
+        
+        # Get "center of mass" of each of the 4 quadrants of the image so we can do sky detection
+        # Demo of cropping: https://stackoverflow.com/questions/15589517/how-to-crop-an-image-in-opencv-using-python :
+        #     top=514
+        #     right=430
+        #     height= 40
+        #     width=100
+        #     croped_image = image[top : (top + height) , right: (right + width)]
+        #     plt.imshow(croped_image, cmap="gray")
+        #     plt.show()
+        names = ['top left',
+                 'top right',
+                 'bottom left',
+                 'bottom right']
+        tl = getCenterOfMass(thresh[0:int(height/2), 0:int(width/2)], names[0]) # top left
+        tr = getCenterOfMass(thresh[0:int(height/2), int(width/2):], names[1]) # top right
+        bl = getCenterOfMass(thresh[int(height/2):, 0:int(width/2)], names[2]) # bottom left
+        br = getCenterOfMass(thresh[int(height/2):, int(width/2):], names[3]) # bottom right
+        cms = [tl, tr, bl, br] # Centers of mass
+        offsets = [[0, 0], # top left
+                   [int(width/2), 0], # top right
+                   [0, int(height/2)], # bottom left
+                   [int(width/2), int(height/2)] # bottom right
+                   ]
+        bad = 0
+        distanceThreshold = 0.433385 # Lower means less discards
+        distanceRequired = distanceThreshold * width
+        for i in range(len(cms)):
+            cm = cms[i]
+            name = names[i]
+            if cm is None:
+                print("center for", name, "was None")
+                bad += 0.5
+                continue
+            center = np.array(cm) + np.array(offsets[i])
+            print("center for", name, ":", center)
+            dist_=np.linalg.norm(np.array(center) - np.array(realCenter))
+            print("distance from center:", dist_)
+            if dist_ < distanceRequired:
+                print("  bad += 1")
+                bad += 1
+            cv2.circle(image, (int(center[0]), int(center[1])), int(2),
+                       (0, 0, 255), 4)
+            cv2.putText(image, "CM: " + name, (int(center[0]), int(center[1]) - 15),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
+            cv2.line(image, (int(realCenter[0]), int(realCenter[1])), (int(center[0]), int(center[1])), (255, 0, 0), 2)
+        # Show badness
+        #<2.5 is good?
+        cv2.putText(image, "badness: " + str(bad), (int(30), int(30)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
+        # Show min enclosing circle (it is a circle of minimum size that encloses all white pixels (except we only do one white pixel object/cluster/group: the largest one (sorted by contourArea manually below))
+        # https://stackoverflow.com/questions/59099931/how-to-find-different-centers-of-various-arcs-in-a-almost-circular-hole-using-op -> https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=minenclosingcircle#minenclosingcircle
+        # "Next we find the circumcircle of an object using the function cv.minEnclosingCircle(). It is a circle which completely covers the object with minimum area." ( https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html )
+        cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+        cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+        center, radius = cv2.minEnclosingCircle(cnts[0])
+        cv2.circle(image, (int(center[0]), int(center[1])), int(radius),
+                   (0, 0, 255), 4)
+        cv2.putText(image, "minEnclosingCircle", (int(center[0]), int(center[1]) - 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
+
+        # Show hough circle detection
+        # https://docs.opencv.org/3.4/d4/d70/tutorial_hough_circle.html
+        gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
+        # GaussianBlur documentation: https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#gaabe8c836e97159a9193fb0b11ac52cf1
+        gray = cv2.GaussianBlur(gray, (9, 9), 2, None, 2) #cv2.medianBlur(gray, 5)
+        rows = gray.shape[0]
+        cannyThreshold = 50 # 100
+        accumulatorThreshold = 50
+        minRadius = 0#int(width/2)
+        maxRadius = 0#int(width)
+        # Parameters documentation: https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, rows / 8,
+                                   param1=cannyThreshold, param2=accumulatorThreshold,
+                                   minRadius=minRadius, maxRadius=maxRadius)
+                               # param1=100, param2=30,
+                               # minRadius=1, maxRadius=30)
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+                center = (i[0], i[1])
+                # circle center
+                cv2.circle(image, center, 1, (0, 100, 100), 3)
+                cv2.putText(image, "hough circle", (int(center[0]), int(center[1]) - 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.95, (0, 0, 255), 3)
+                # circle outline
+                radius = i[2]
+                cv2.circle(image, center, radius, (255, 0, 255), 3)
+        else:
+            print("no hough circles")
         
         showContours = True
         if showContours:
