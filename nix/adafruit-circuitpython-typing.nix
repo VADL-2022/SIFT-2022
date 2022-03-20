@@ -24,12 +24,12 @@ buildPythonPackage rec {
                             (callPackage ./adafruit-circuitpython-busdevice.nix {}) # CYCLIC DEPENDENCY!!!!!!!!!!! infinite loop in nix!!!!
                           ];
 
-  patchPhase = ''
-    substituteInPlace requirements.txt \
-      --replace "" "'${pkgs.libGL}/lib/libGL${ext}'" \
-      --replace "'GLU'" "'${pkgs.libGLU}/lib/libGLU${ext}'" \
-      --replace "'glut'" "'${pkgs.freeglut}/lib/libglut${ext}'"
-  '';
+  # patchPhase = ''
+  #   substituteInPlace requirements.txt \
+  #     --replace "" "'${pkgs.libGL}/lib/libGL${ext}'" \
+  #     --replace "'GLU'" "'${pkgs.libGLU}/lib/libGLU${ext}'" \
+  #     --replace "'glut'" "'${pkgs.freeglut}/lib/libglut${ext}'"
+  # '';
 
   doCheck = false;
 }
