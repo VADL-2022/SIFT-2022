@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-# Disabled unless needed again
-"""
+# Camera undistortion code #
+
 # The calibration data #
 mtx = np.matrix([[7.35329235e+02, 0.00000000e+00, 1.28117269e+03],
                 [0.00000000e+00, 7.40147960e+02, 9.90415290e+02],
@@ -21,8 +21,16 @@ mapy = None
 w, h = (2592, 1944)
 #h, w = image.shape[:2]
 # Notice the cv.fisheye.initUndistortRectifyMap being used instead of cv.initUndistortRectifyMap!:
-mapx, mapy = cv2.fisheye.initUndistortRectifyMap(mtx, dist[:-1], None, nk, (w,h), cv2.CV_16SC2)
-"""
+#mapx, mapy = cv2.fisheye.initUndistortRectifyMap(mtx, dist[:-1], None, nk, (w,h), cv2.CV_16SC2)
+
+wUndistorted = None
+hUndistorted = None
+roi = None
+
+# Configurable:
+useFullImageInsteadOfROI = False
+
+# End of undistort code #
 
 # Helper functions copied from `../../skyDetection/brightSpotDetection2.py` (replace with new copies if needed) : #
 
@@ -197,12 +205,36 @@ def shouldDiscardImage(greyscaleImage):
         return True
 
 
-# Disabled unless needed again
-"""
-def undisortImage(image):
-    hOrig, wOrig = image.shape[:2]
-    image = cv2.resize(image, (w,h))
-    image = cv2.remap(image, mapx, mapy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    image = cv2.resize(image, (wOrig,hOrig))
-    return image
-"""
+# Note: This is untested:
+# def undisortImage(image):
+#     global mapx
+#     global mapy
+#     global wUndistorted
+#     global hUndistorted
+#     global roi
+#     hOrig, wOrig = image.shape[:2]
+#     if wOrig != wUndistorted or hOrig != hUndistorted: # If image changed dimensions from our cached matrix, recompute it:
+#         print("Computing new undistortion map using getOptimalNewCameraMatrix")
+#         newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (wOrig,hOrig) # <--the "new size" ( https://docs.opencv.org/3.4/d9/d0c/group__calib3d.html#ga7a6c4e032c97f03ba747966e6ad862b1 )
+#                                                           ) # Note: "getOptimalNewCameraMatrix is used to use different resolutions from the same camera with the same calibration." ( https://stackoverflow.com/questions/39432322/what-does-the-getoptimalnewcameramatrix-do-in-opencv )
+#         # Notice the cv.fisheye.initUndistortRectifyMap being used instead of cv.initUndistortRectifyMap!:
+#         mapx, mapy = cv2.fisheye.initUndistortRectifyMap(mtx, dist[:-1], None, newcameramtx, (wOrig,hOrig), cv2.CV_16SC2)
+#         wUndistorted = wOrig
+#         hUndistorted = hOrig
+#     #image = cv2.resize(image, (w,h))
+#     image = cv2.remap(image, mapx, mapy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+#     #image = cv2.resize(image, (wOrig,hOrig))
+    
+#     if not useFullImageInsteadOfROI:
+#         x, y, w_, h_ = roi
+#         #print("roi:", roi)
+#         image = image[y:y+h_, x:x+w_]
+    
+#     return image
+
+# def undisortImage(image):
+#     hOrig, wOrig = image.shape[:2]
+#     image = cv2.resize(image, (w,h))
+#     image = cv2.remap(image, mapx, mapy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+#     image = cv2.resize(image, (wOrig,hOrig))
+#     return image
