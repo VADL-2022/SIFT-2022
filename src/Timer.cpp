@@ -21,9 +21,8 @@ return std::chrono::duration_cast<std::chrono::nanoseconds>
         (clock_::now() - beg_).count(); }
 void Timer::logElapsed(const char* name) const {
     { out_guard();
-        std::cout << name << " took " << elapsed() << " milliseconds" << std::endl; }
+        std::cout << name << " took " << elapsedNanos() / 1'000'000.0 << " milliseconds" << std::endl; }
 }
 void Timer::logElapsed(int threadID, const char* name) const {
-    { out_guard();
-        std::cout << "Thread " << threadID << ": " << name << " took " << elapsed() << " milliseconds" << std::endl; }
+    logNanos(threadID, name, elapsedNanos());
 }

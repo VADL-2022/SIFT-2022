@@ -562,14 +562,14 @@ int mainMission(DataSourceT* src,
             cv::Mat greyscale = src->siftImageForMat(i);
             py::array_t<float> greyscale_;
             t.logElapsed("siftImageForMat");
-            t.reset();
-            nonthrowing_python([&greyscale, &greyscale_](){
-                // Undistort fisheye
-                py::module_ general = py::module_::import("src.python.General");
-                greyscale_ = (py::array_t<float>) general.attr("undisortImage")(cv_mat_float32_1c_to_numpy(greyscale));
-                greyscale = numpy_float32_1c_to_cv_mat(greyscale_);
-            });
-            t.logElapsed("General.py undisortImage");
+//            t.reset();
+//            nonthrowing_python([&greyscale, &greyscale_](){
+//                // Undistort fisheye
+//                py::module_ general = py::module_::import("src.python.General");
+//                greyscale_ = (py::array_t<float>) general.attr("undisortImage")(cv_mat_float32_1c_to_numpy(greyscale));
+//                greyscale = numpy_float32_1c_to_cv_mat(greyscale_);
+//            });
+//            t.logElapsed("General.py undisortImage");
             //auto path = src->nameForIndex(i);
             
             // Apply filters to possibly discard the image //
