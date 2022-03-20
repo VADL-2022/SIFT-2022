@@ -63,7 +63,7 @@ mkShell {
     # VADL2022 "library" #
     coreutils
     (python37m.withPackages (p: with p; ([
-      (callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
+      pyserial #(callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
       #opencv4
       #numpy
       
