@@ -22,6 +22,7 @@ buildPythonPackage rec {
                             (callPackage ./adafruit-circuitpython-typing.nix {})
                             (callPackage ./Adafruit-Blinka.nix {})
                             (callPackage ./Adafruit-PlatformDetect.nix {})
+                            (callPackage ./Adafruit-PureIO.nix {})
                           ];
 
   doCheck = false;
