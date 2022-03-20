@@ -21,6 +21,7 @@ buildPythonPackage rec {
                             tomli
                             (callPackage ./adafruit-circuitpython-typing.nix {})
                             (callPackage ./Adafruit-Blinka.nix {})
+                            (callPackage ./Adafruit-PlatformDetect.nix {})
                           ];
 
   doCheck = false;
