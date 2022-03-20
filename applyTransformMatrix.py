@@ -54,10 +54,19 @@ M13=np.matrix([[8.547295697767519, 0.2485540338071431, -1309.752223368877],
 M14=np.matrix([[41.61292051847861, -20.33492628578671, 6872.431092275944],
                [-57.92623005240372, 46.95245080138437, -17192.79901791887],
                [0, 0, 0.9999999999999992]]) # Command: lldb -o run -- ./sift_exe_debug_commandLine --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4 --main-mission --sift-video-output --finish-rest-always --skip-image-indices 2 3 --skip-image-indices 4 6 --skip-image-indices 7 8 --skip-image-indices 14 15 --skip-image-indices 18 21 --skip-image-indices 22 24 --skip-image-indices 25 29 --skip-image-indices 32 33 --skip-image-indices 35 37 --skip-image-indices 39 41 --skip-image-indices 42 43 --skip-image-indices 44 46 --skip-image-indices 47 50 --skip-image-indices 51 55 --skip-image-indices 56 57 --skip-image-indices 58 59 --skip-image-indices 60 61 --skip-image-indices 64 66 --skip-image-indices 67 70 --skip-image-indices 71 74 --skip-image-indices 75 80 --skip-image-indices 81 82 --skip-image-indices 83 85 --skip-image-indices 86 88 --skip-image-indices 89 92 --skip-image-indices 94 95 --skip-image-indices 96 97 --skip-image-indices 99 111 --skip-image-indices 112 117 --skip-image-indices 118 122 --skip-image-indices 123 125 --skip-image-indices 127 130 --skip-image-indices 132 136 --skip-image-indices 139 140 --skip-image-indices 141 142 #--skip-image-indices 146 14 --debug-mutex-deadlocks
+M15=np.matrix([[39.94850471770674, -116.5479015650005, 28957.58515670232],
+                [25.80858786100335, -208.3688259967057, 54460.57806560803],
+               [ 0, 0, 0.9999999999999991]])
+M16=np.matrix([[-10.79361828440029, 30.02665863387952, -5796.683949147701],
+               [-14.24970743128583, -24.28169240383916, 6492.762115021626],
+               [0, 0, 0.9999999999999994]])
+M17=np.matrix([[4.948867896701391, -0.7664984793150436, -505.8483297718342],
+               [ -1.455364274725157, 3.438942450270565, -41.62095821273624],
+               [ 0, 0, 0.9999999999999996]]) # /Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-03-20_00_37_21_CDT/scaled22.png.matrix0.txt
 #M=M10
-M=M14
-imgPath=fullscale1FirstImage
-
+M=M17
+#imgPath=fullscale1FirstImage
+imgPath='/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-03-20_00_19_34_CDT/firstImage0.png'
 
 
 idMat=np.matrix([[1.0, 0.0, 0.0],
@@ -101,6 +110,8 @@ while True:
             inc+=0.001
         elif key & 0xFF == ord('s'): # Slower
             inc-=0.001
+        elif key & 0xFF == ord('x'): # Slower
+            inc-=inc*0.1
         elif key & 0xFF == ord('i'): # Identity
             Mcurrent=idMat.copy()
             inc = incOrig

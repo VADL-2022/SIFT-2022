@@ -123,8 +123,6 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
 }
 
 void FolderDataSource::init(std::string folderPath) {
-    initCrop(sizeFrame);
-    
     // For each output image, loop through it
     // https://stackoverflow.com/questions/62409409/how-to-make-stdfilesystemdirectory-iterator-to-list-filenames-in-order
     //--- filenames are unique so we can use a set
@@ -167,6 +165,14 @@ cv::Mat FolderDataSource::get(size_t index) {
     std::cout << path << std::endl;
     
     auto it = cache.find(i);
+    if (!inittedCrop) {
+        // Ensure we init crop
+        inittedCrop = true;
+        cv::Mat res = get(0);
+        sizeFrame.width = res.cols;
+        sizeFrame.height = res.rows;
+        initCrop(sizeFrame);
+    }
     if (it != cache.end()) {
         return it->second;
     }
@@ -454,14 +460,14 @@ VideoFileDataSource::VideoFileDataSource(int argc, char** argv) {
 
 // https://stackoverflow.com/questions/11260042/reverse-video-playback-in-opencv
 void VideoFileDataSource::init(std::string filePath) {
+    // Instanciate the capture
+    std::cout << "Opening " << filePath << std::endl;
+    cap.open(filePath);
+    
     double widthReported = cap.get(cv::CAP_PROP_FRAME_WIDTH);
     double heightReported = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
     cv::Size sizeFrame(widthReported, heightReported);
     initCrop(sizeFrame);
-    
-    // Instanciate the capture
-    std::cout << "Opening " << filePath << std::endl;
-    cap.open(filePath);
 
     if (!cap.isOpened()) { // check if we succeeded
       std::cout << "Unable to open capture on given file: " << filePath << std::endl;

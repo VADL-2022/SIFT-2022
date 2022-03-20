@@ -500,7 +500,7 @@ int mainMission(DataSourceT* src,
                     
                     // Flush the matrix too //
                     lastImageToFirstImageTransformationMutex.lock();
-                    if (!lastImageToFirstImageTransformation.empty() || CMD_CONFIG(saveFirstImage)) {
+                    if (!lastImageToFirstImageTransformation.empty() || (CMD_CONFIG(saveFirstImage) && !firstImage.empty())) {
                         // Print the intermediate homography matrix
                         cv::Mat& M = lastImageToFirstImageTransformation;
                         cv::Ptr<cv::Formatted> str;
@@ -523,7 +523,7 @@ int mainMission(DataSourceT* src,
                         bool crop;
                         crop = src->shouldCrop();
                         //crop = false; // Hardcode, since it is weird when you scale the cropped image?
-                        cv::Mat& firstImage_ = CMD_CONFIG(saveFirstImage) ? mat : firstImage; // firstImage is empty on first frame grab since it is set *after* running SIFT on it
+                        cv::Mat& firstImage_ = firstImage; //!CMD_CONFIG(saveFirstImage) ? mat : firstImage; // firstImage is empty on first frame grab since it is set *after* running SIFT on it
                         cv::Mat img = crop ? firstImage_(src->crop()) : firstImage_;
                         if (!CMD_CONFIG(saveFirstImage)) {
                             cv::warpPerspective(img, canvas /* <-- destination */, M, img.size());
@@ -692,7 +692,9 @@ int mainMission(DataSourceT* src,
             nonthrowing_python([&greyscale](){
                 // General stuff
                 py::module_ general = py::module_::import("src.python.General");
-                py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(greyscale));
+                cv::Mat image;
+                greyscale.convertTo(image, CV_8UC1, 255.0); // Convert to CV_8U (based on https://stackoverflow.com/questions/46260601/convert-image-from-cv-64f-to-cv-8u )
+                py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image));
                 if (discardImage_ == false) {
                     std::cout << "general: Python likes this image\n";
                 }
@@ -897,6 +899,8 @@ int mainMission(DataSourceT* src,
         
         if (firstImage.empty() && !mat.empty()) { // This is the first iteration.
             // Save firstImage once
+            { out_guard();
+                std::cout << "Noted firstImage: " << i << std::endl; }
             firstImage = mat;
         }
         
