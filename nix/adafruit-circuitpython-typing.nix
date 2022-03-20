@@ -21,12 +21,14 @@ buildPythonPackage rec {
                             packaging
                             tomli
                             typing-extensions
-                            #(callPackage ./adafruit-circuitpython-busdevice.nix {}) # CYCLIC DEPENDENCY!!!!!!!!!!! infinite loop in nix!!!!
+                            #(callPackage ./adafruit-circuitpython-busdevice.nix {}) # CYCLIC DEPENDENCY! infinite loop in nix!!
                           ];
 
   patchPhase = ''
     substituteInPlace requirements.txt \
       --replace "adafruit-circuitpython-busdevice" ""
+    substituteInPlace setup.py \
+      --replace "\"adafruit-circuitpython-busdevice\"," ""
   '';
 
   doCheck = false;
