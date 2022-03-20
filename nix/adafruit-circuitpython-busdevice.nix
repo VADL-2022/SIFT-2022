@@ -20,6 +20,7 @@ buildPythonPackage rec {
                             packaging
                             tomli
                             (callPackage ./adafruit-circuitpython-typing.nix {})
+                            (callPackage ./Adafruit-Blinka.nix {})
                           ];
 
   doCheck = false;
