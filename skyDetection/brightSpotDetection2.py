@@ -90,6 +90,7 @@ def run():
 
         # perform a series of erosions and dilations to remove
         # any small blobs of noise from the thresholded image
+        #thresh = cv2.erode(thresh, None, iterations=15)
         thresh = cv2.erode(thresh, None, iterations=2)
         thresh = cv2.dilate(thresh, None, iterations=4)
 
@@ -113,25 +114,63 @@ def run():
                 if numPixels > 300:
                         mask = cv2.add(mask, labelMask)
 
+        # Find "center of mass" of the binary image:
+        # https://stackoverflow.com/questions/65304623/calculating-the-center-of-mass-of-a-binary-image-opencv-python
+        # Idea: as it gets *closer* to the center, worse orientation (not looking down).
+        #center = [ np.average(indices) for indices in np.where(mask >= 255) ] # x and y
+        # # Same as the above:
+        # # Find indices where we have mass
+        # mass_x, mass_y = np.where(mask >= 255)
+        # # mass_x and mass_y are the list of x indices and y indices of mass pixels
+
+        # cent_x = np.average(mass_x)
+        # cent_y = np.average(mass_y)
+        # center = [cent_x, cent_y]
+
+        # calculate moments of binary image
+        M = cv2.moments(thresh)
+        # calculate x,y coordinate of center
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        center = [cX, cY]
+        
+        height,width=image.shape[:2]
+        realCenter=[width / 2.0, height / 2.0]
+        print("center:", center, "realCenter:", realCenter)
+        dist_=np.linalg.norm(np.array(center) - np.array(realCenter))
+        print("distance from center:", dist_)
+        cv2.circle(image, (int(center[0]), int(center[1])), int(2),
+                   (0, 0, 255), 4)
+        cv2.circle(image, (int(realCenter[0]), int(realCenter[1])), int(2),
+                   (255, 0, 0), 2)
+        cv2.putText(image, "CM", (int(center[0]), int(center[1]) - 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
+        cv2.line(image, (int(realCenter[0]), int(realCenter[1])), (int(center[0]), int(center[1])), (255, 0, 0), 2)
+        
         showContours = True
         if showContours:
             from imutils import contours
             import imutils
-            # find the contours in the mask, then sort them from left to
-            # right
-            cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-                    cv2.CHAIN_APPROX_SIMPLE)
-            cnts = imutils.grab_contours(cnts)
-            cnts = contours.sort_contours(cnts)[0]
-            # loop over the contours
-            for (i, c) in enumerate(cnts):
-                    # draw the bright spot on the image
-                    (x, y, w, h) = cv2.boundingRect(c)
-                    ((cX, cY), radius) = cv2.minEnclosingCircle(c)
-                    cv2.circle(image, (int(cX), int(cY)), int(radius),
-                            (0, 0, 255), 3)
-                    cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+            try:
+                # find the contours in the mask, then sort them from left to
+                # right
+                cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+                        cv2.CHAIN_APPROX_SIMPLE)
+                cnts = imutils.grab_contours(cnts)
+                cnts = contours.sort_contours(cnts)[0]
+                # loop over the contours
+                for (i, c) in enumerate(cnts):
+                        # draw the bright spot on the image
+                        (x, y, w, h) = cv2.boundingRect(c)
+                        ((cX, cY), radius) = cv2.minEnclosingCircle(c)
+                        cv2.circle(image, (int(cX), int(cY)), int(radius),
+                                   (0, 0, 255), 1)
+                        cv2.circle(image, (int(cX), int(cY)), int(1),
+                                   (0, 0, 255), 2)
+                        cv2.putText(image, "#{}".format(i + 1), (x, y - 15),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
+            except ValueError:
+                pass
         # show the output image
         cv2.imshow("Multiple bright spots: mask",mask)
         cv2.imshow("Multiple bright spots", image)
