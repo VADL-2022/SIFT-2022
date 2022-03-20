@@ -24,6 +24,7 @@ buildPythonPackage rec {
                             #(callPackage ./adafruit-circuitpython-busdevice.nix {}) # CYCLIC DEPENDENCY! infinite loop in nix!!
                           ];
 
+  # Hack to fix infinite loop. It still actually depends on `adafruit-circuitpython-busdevice` but we remove it from the list:
   patchPhase = ''
     substituteInPlace requirements.txt \
       --replace "adafruit-circuitpython-busdevice" ""
