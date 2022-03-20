@@ -20,7 +20,8 @@ buildPythonPackage rec {
                             packaging
                             tomli
                             (callPackage ./Adafruit-Blinka.nix {})
-                            pyserial
+                            #pyserial
+                            (callPackage ./pyserial.nix {})
                             (callPackage ./adafruit-circuitpython-busdevice.nix {})
                           ];
 
