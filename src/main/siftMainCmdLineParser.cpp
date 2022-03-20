@@ -76,6 +76,10 @@ int parseCommandLineArgs(int argc, char** argv,
             cfg.flushVideoOutputEveryNSeconds = std::stoi(argv[i+1]);
             i++;
         }
+        else if (i+1 < argc && strcmp(argv[i], "--max-sift-fps") == 0) { // Provide this to limit the amount of frames passed to SIFT per second. This is useful when you know a lot of images will be discarded, so you bump up the `--fps`, but at the same time you don't want to fall behind when looking at a bunch of good images in a row since the `--fps` is higher.
+            cfg.maxSiftFps = std::stof(argv[i+1]);
+            i++;
+        }
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
         }
