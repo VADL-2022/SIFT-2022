@@ -39,6 +39,7 @@ struct CommandLineConfig {
     std::vector<std::pair<int /*Starting index*/, int /*Ending index, exclusive*/>> skipImageIndices;
     int flushVideoOutputEveryNSeconds = 2; // Default is to flush after every 2 seconds
     int debugReportMutexLockAttemptsLongerThanNMilliseconds = 5000; // Only used if debugMutexDeadlocks is true
+    float maxSiftFps = -1.0f;
     
     bool showPreviewWindow() const {
         return !noPreviewWindow;
@@ -50,6 +51,15 @@ struct CommandLineConfig {
     
     bool shouldFlushVideoOutputEveryNSeconds() const {
         return flushVideoOutputEveryNSeconds != -1;
+    }
+    
+    bool hasMaxSiftFps() const {
+        return maxSiftFps != -1.0f;
+    }
+    
+    // Milliseconds
+    long long maxSiftFrametime() const {
+        return (1.0f / maxSiftFps) * 1000LL;
     }
 };
 #endif

@@ -394,6 +394,7 @@ int mainMission(DataSourceT* src,
     auto start = std::chrono::steady_clock::now();
     auto last = std::chrono::steady_clock::now();
     auto timeSinceLastFlush = std::chrono::steady_clock::now();
+    auto timeSinceLastSIFTFrame = std::chrono::steady_clock::now();
     auto fps = src->fps();
     const long long timeBetweenFrames_milliseconds = 1/fps * 1000;
     { out_guard();
@@ -737,6 +738,19 @@ int mainMission(DataSourceT* src,
                 t.logElapsed("General.py undisortImage");
             }
             
+            auto now = std::chrono::steady_clock::now();
+            if (CMD_CONFIG(hasMaxSiftFps())) {
+                long long milliseconds;
+                while ((milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now - timeSinceLastSIFTFrame).count()) < CMD_CONFIG(maxSiftFrametime())) {
+                    // Too fast for SIFT
+                    long long left = CMD_CONFIG(maxSiftFrametime()) - milliseconds;
+                    { out_guard();
+                        std::cout << "Max SIFT FPS limiting with " << left << " milliseconds left" << std::endl; }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(left));
+                    now = std::chrono::steady_clock::now();
+                }
+            }
+            timeSinceLastSIFTFrame = now;
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
             tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale,
