@@ -3,6 +3,8 @@
 , fetchPypi
 , callPackage
 , packaging
+, tomli
+, pyserial
 }:
 
 buildPythonPackage rec {
@@ -14,7 +16,13 @@ buildPythonPackage rec {
     inherit pname version;
   };
   
-  buildInputs = [ (callPackage ./setuptools-scm.nix {}) packaging ];
+  propagatedBuildInputs = [ (callPackage ./setuptools-scm.nix {})
+                            packaging
+                            tomli
+                            (callPackage ./Adafruit-Blinka.nix {})
+                            pyserial
+                            (callPackage ./adafruit-circuitpython-busdevice.nix {})
+                          ];
 
   doCheck = false;
 }

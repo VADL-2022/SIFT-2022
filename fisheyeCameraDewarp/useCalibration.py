@@ -14,9 +14,11 @@ dist = np.matrix([[-0.25496947,  0.07321429, -0.00104747,  0.00103111, -0.009593
 # https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
 img = cv.imread('images/Fri 11 Mar 15_01_52 EST 2022.jpg')
 h, w = img.shape[:2]
-newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h)) # Note: "getOptimalNewCameraMatrix is used to use different resolutions from the same camera with the same calibration." ( https://stackoverflow.com/questions/39432322/what-does-the-getoptimalnewcameramatrix-do-in-opencv )
 
 useFullImageInsteadOfROI = sys.argv[2] == '1' if len(sys.argv) > 2 else True
+useFisheyeThing = sys.argv[3] == '1' if len(sys.argv) > 3 else False
+useROI = sys.argv[4] == '1' if len(sys.argv) > 4 else True
 k=mtx
 if useFullImageInsteadOfROI:
     # https://stackoverflow.com/questions/34316306/opencv-fisheye-calibration-cuts-too-much-of-the-resulting-image
@@ -28,7 +30,10 @@ if useFullImageInsteadOfROI:
     mapx, mapy = cv.fisheye.initUndistortRectifyMap(mtx, dist[:-1], None, nk, (w,h), cv2.CV_16SC2)
 else:
     # Prepare reusable undistort mapping thing
-    mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
+    if useFisheyeThing:
+        mapx, mapy = cv.fisheye.initUndistortRectifyMap(mtx, dist[:-1], None, newcameramtx, (w,h), 5)
+    else:
+        mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
 
 useCam = sys.argv[1] == '1' if len(sys.argv) > 1 else False
 if useCam:
@@ -56,7 +61,7 @@ while cap.isOpened() if useCam else True:
     else:
         dst = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
     # crop the image
-    if not useFullImageInsteadOfROI:
+    if not useFullImageInsteadOfROI and useROI:
         x, y, w, h = roi
         print("roi:", roi)
         dst = dst[y:y+h, x:x+w]

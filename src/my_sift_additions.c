@@ -175,6 +175,7 @@ void my_fprintf_matching_parameters(FILE* file,
     fprintf(file, "%d %a\n", meth_flag, thresh);
 }
 
+void fprintf_keypoints(FILE* f, const struct sift_keypoints* keys, int flag);
 void my_sift_write_to_file(const char *filename, const struct sift_keypoints *keypoints, struct sift_parameters* params, int n)
 {
     FILE* file = fopen(filename,"w");
