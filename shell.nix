@@ -33,8 +33,21 @@ let
     #enableOptimizations = true; # If enabled: longer build time but 10% faster performance.. but the build is no longer reproducible 100% apparently (source: "15.21.2.2. Optimizations" of https://nixos.org/manual/nixpkgs/stable/ )
   };
   # #
+  #pyroma_ = (callPackage ./skyDetection/nix/pyroma.nix {});
+  #pillow_ = (callPackage ./skyDetection/nix/pillow.nix {pyroma=pyroma_;});
+  #pillow_ = (callPackage ./skyDetection/nix/pillow.nix {});
+  #matplotlib_ = (callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa; fetchPypi=python37m.fetchPypi; buildPythonPackage=python37m.buildPythonPackage; isPy3k=python37m.isPy3k;});
+  #matplotlib_ = (callPackage python37Packages.matplotlib {pyroma=pyroma_; pillow=pillow_;});
 in
 mkShell {
+  # propagatedBuildInputs = [
+  #   (callPackage ./skyDetection/nix/pyroma.nix {})
+  #   (callPackage ./skyDetection/nix/pillow.nix {})
+    
+  #   # keras-preprocessing.override (old : {
+      
+  #   # })
+  # ];
   buildInputs = [ #my-python-packages
                 # ] ++ (lib.optionals (stdenv.hostPlatform.isMacOS || !useGtk) [ opencv4 ])
   # ++ (lib.optionals (stdenv.hostPlatform.isLinux && useGtk) [
@@ -74,7 +87,17 @@ mkShell {
     ] ++ (lib.optionals stdenv.hostPlatform.isMacOS [ opencv4 ]) ++
     (lib.optionals (useGtk && stdenv.hostPlatform.isLinux) [ (opencv4.override { enableGtk2 = true; enablePython = true; pythonPackages = python37Packages; }) ]) ++ [ # Temp hack
       numpy
-      #matplotlib
+
+      # For https://github.com/yzhq97/cnn-registration #
+      scipy
+      #matplotlib_
+      (callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;})
+      #(callPackage ./skyDetection/nix/matplotlib.nix {})
+      #(callPackage tensorflow {matplotlib=matplotlib_; pyroma=pyroma_;})
+      #tensorflow #tensorflow.override (old : {nativeBuildInputs.matplotlib=(callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;}); nativeBuildInputs.pyroma=pyroma_;}) # nix show-derivation /nix/store/95jcq26lvz2fijxndja6yp2dpq4mi293-python3.7-tensorflow-2.4.2.drv
+      (callPackage ./nix/tensorflow.nix {keras=Keras; protobuf-python=protobuf; flatbuffers-python=flatbuffers; flatbuffers-core=flatbuffers; lmdb-core=lmdb; protobuf-core=protobuf; Foundation=darwin.apple_sdk.frameworks.Foundation; Security=darwin.apple_sdk.frameworks.Security; cctools=darwin.cctools;})
+      (callPackage ./nix/lap.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
+      # #
 
       #scipy
 
