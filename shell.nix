@@ -19,6 +19,7 @@ let
     python37 = super.python37.override {
       packageOverrides = self: super: {
         pyroma = self.pkgs.python37Packages.callPackage ./skyDetection/nix/pyroma.nix {};
+        pillow = self.pkgs.python37Packages.callPackage ./skyDetection/nix/pillow.nix {};
       };
     };
   }); # this is two lambdas (curried + nested)
