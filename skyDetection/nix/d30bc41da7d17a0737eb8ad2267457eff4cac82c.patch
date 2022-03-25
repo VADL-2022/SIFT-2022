@@ -1,0 +1,36 @@
+From d30bc41da7d17a0737eb8ad2267457eff4cac82c Mon Sep 17 00:00:00 2001
+From: "Robert T. McGibbon" <rmcgibbo@gmail.com>
+Date: Tue, 7 Sep 2021 17:41:19 -0400
+Subject: [PATCH] tests: Fix infinite recursion in __getattr__
+
+---
+ HISTORY.txt     | 2 +-
+ pyroma/tests.py | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/HISTORY.txt b/HISTORY.txt
+index 1f461a2..ea3b93b 100644
+--- a/HISTORY.txt
++++ b/HISTORY.txt
+@@ -4,7 +4,7 @@ Changelog
+ 3.3 (unreleased)
+ ----------------
+ 
+-- Nothing changed yet.
++- Fixed __getattr__-related crash in tests with python3.7 [Robert T. McGibbon]
+ 
+ 
+ 3.2 (2021-06-22)
+diff --git a/pyroma/tests.py b/pyroma/tests.py
+index c62bae3..456d851 100644
+--- a/pyroma/tests.py
++++ b/pyroma/tests.py
+@@ -88,6 +88,8 @@ def _proxy_method(*args, **kw):
+         return _proxy_method
+ 
+     def __getattr__(self, attr):
++        if attr in ("_data", "_make_proxy", "_make_unknown_proxy"):
++            raise AttributeError("Break infinite recursion chain")
+         if attr in self._data:
+             return self._make_proxy(attr)
+         return self._make_unknown_proxy(attr)
