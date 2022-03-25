@@ -269,6 +269,12 @@ def runOneIter(write_obj):
 
     try:
         if useLSM_IMU:
+            # CONVERSION FACTOR TO M/S^2:
+            ac_conv_factor = 0.00482283
+            # CONVERSION FACTOR TO DEG:
+            g_conv_factor = 0.00072
+            # ^^Both were empirically determined
+
             wxL = bus.read_byte_data(address, 0x22)
             wxH = bus.read_byte_data(address, 0x23)
             wx = wxH * 256 + wxL
@@ -315,10 +321,10 @@ def runOneIter(write_obj):
             time_ = time3 * 65536 + time2 * 256 + time1
 
             #my_vals = [ax, ay, az, wx, wy, wz, time] # w = angular rate
-            my_vals = [wx, wy, wz, time_] # w = angular rate
-            xAccl = ax
-            yAccl = ay
-            zAccl = az
+            my_vals = [wx, wy, wz, time_] * g_conv_factor # w = angular rate
+            xAccl = ax * ac_conv_factor
+            yAccl = ay * ac_conv_factor
+            zAccl = az * ac_conv_factor
         else:
             # X AXIS
             ###############################################################################
