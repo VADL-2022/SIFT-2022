@@ -20,6 +20,7 @@ let
       packageOverrides = self: super: {
         pyroma = self.pkgs.python37Packages.callPackage ./skyDetection/nix/pyroma.nix {};
         pillow = self.pkgs.python37Packages.callPackage ./skyDetection/nix/pillow.nix {};
+        matplotlib = self.pkgs.python37Packages.callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;}
       };
     };
   }); # this is two lambdas (curried + nested)
@@ -112,8 +113,8 @@ mkShell {
 
       # For https://github.com/yzhq97/cnn-registration #
       scipy
-      matplotlib_
-      #(callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;})
+      #matplotlib_
+      (callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;})
       #(callPackage ./skyDetection/nix/matplotlib.nix {})
       #(callPackage tensorflow {matplotlib=matplotlib_; pyroma=pyroma_;})
       #tensorflow #tensorflow.override (old : {nativeBuildInputs.matplotlib=(callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;}); nativeBuildInputs.pyroma=pyroma_;}) # nix show-derivation /nix/store/95jcq26lvz2fijxndja6yp2dpq4mi293-python3.7-tensorflow-2.4.2.drv
