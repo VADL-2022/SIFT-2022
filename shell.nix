@@ -20,7 +20,7 @@ let
       packageOverrides = self: super: {
         pyroma = self.pkgs.python37Packages.callPackage ./skyDetection/nix/pyroma.nix {};
         pillow = self.pkgs.python37Packages.callPackage ./skyDetection/nix/pillow.nix {};
-        matplotlib = self.pkgs.python37Packages.callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;}
+        matplotlib = self.pkgs.python37Packages.callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;};
       };
     };
   }); # this is two lambdas (curried + nested)
