@@ -97,7 +97,7 @@ let
       setuptools
       six
       tblib
-      tensorflow-estimator
+      (callPackage ./tensorflow-estimator.nix {}) #tensorflow-estimator
       tensorflow-tensorboard
       termcolor
       typing-extensions
@@ -467,7 +467,7 @@ in buildPythonPackage {
     protobuf-python
     six
     tblib
-    tensorflow-estimator
+    (callPackage ./tensorflow-estimator.nix {}) #tensorflow-estimator
     termcolor
     typing-extensions
     wrapt
