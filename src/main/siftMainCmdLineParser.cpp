@@ -80,6 +80,10 @@ int parseCommandLineArgs(int argc, char** argv,
             cfg.maxSiftFps = std::stof(argv[i+1]);
             i++;
         }
+        else if (i+1 < argc && strcmp(argv[i], "--frameskip") == 0) { // Provide this to skip the given number of frames between each image to process with SIFT.
+            cfg.frameskip = std::stoi(argv[i+1]);
+            i++;
+        }
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
         }
@@ -90,10 +94,14 @@ int parseCommandLineArgs(int argc, char** argv,
         else if (strcmp(argv[i], "--verbose") == 0) {
             cfg.verbose = true;
         }
-        else if (strcmp(argv[i], "--finish-rest-always") == 0) { // Makes it so the dispatch queue is drained always, even after SIGINT is received, causing SIFT to finish processing all images that were gathered by the main thread instead of stopping short.  // Demo: `./sift_exe_release_commandLine --folder-data-source --folder-data-source-path Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated/ --main-mission --finish-rest-always`
-            cfg.finishRestAlways = true;
+        else if (strcmp(argv[i], "--finish-rest-always") == 0) { // Makes it so the dispatch queue is drained always, even after SIGINT is received or the data source is drained, causing SIFT to finish processing all images that were gathered by the main thread instead of stopping short.  // Demo: `./sift_exe_release_commandLine --folder-data-source --folder-data-source-path Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated/ --main-mission --finish-rest-always`
+            cfg.finishRestOnSigInt = true;
+            cfg.finishRestOnOutOfImages = true;
         }
-        else if (strcmp(argv[i], "--finish-rest-on-out-of-images") == 0) { // Only for --folder-data-source. Makes it so the dispatch queue is drained even after no images are left.  // Demo: see above command but use `--finish-rest-on-out-of-images` instead. This is more useful than `--finish-rest-always` for a folder data source since they can finish being read from very early.
+        else if (strcmp(argv[i], "--finish-rest-on-sigint") == 0) { // Makes it so the dispatch queue is drained after SIGINT is received, causing SIFT to finish processing all images that were gathered by the main thread instead of stopping short.
+            cfg.finishRestOnSigInt = true;
+        }
+        else if (strcmp(argv[i], "--finish-rest-on-out-of-images") == 0) { // Only for --folder-data-source. Makes it so the dispatch queue is drained even after no images are left in the data source.  // Demo: see above command but use `--finish-rest-on-out-of-images` instead. This is more useful than `--finish-rest-always` for a folder data source since they can finish being read from very early.
             cfg.finishRestOnOutOfImages = true;
         }
         else if (i+1 < argc && strcmp(argv[i], "--sleep-before-running") == 0) {

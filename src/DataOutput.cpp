@@ -43,25 +43,35 @@ void FileDataOutput::run(cv::Mat frame, bool flush, cv::Rect* crop) {
 
     // Resize/convert, then write to video writer
     cv::Mat newFrame;
-    cv::Mat* newFramePtr;
+    cv::Mat* newFramePtr = &frame;
     { out_guard();
         std::cout << "frame.data: " << (void*)frame.data << std::endl; }
-    if (frame.cols != sizeFrame.width || frame.rows != sizeFrame.height) {
+    if (crop && frame.cols > crop->width && frame.rows > crop->height) { // Crop only if not done so already..
+        newFrame = (*newFramePtr)(*crop);
+        newFramePtr = &newFrame;
+    }
+    if (newFramePtr->cols != sizeFrame.width || newFramePtr->rows != sizeFrame.height) {
         t.reset();
-        cv::resize(frame, newFrame, sizeFrame);
+        cv::resize(*newFramePtr, newFrame, sizeFrame);
         newFramePtr = &newFrame;
         t.logElapsed("resize frame for video writer");
     }
-    else {
-        newFramePtr = &frame;
-    }
-    if (newFramePtr->type() != CV_8UC4 || newFramePtr->type() != CV_8UC3) {
+    if (newFramePtr->type() != CV_8UC4 && newFramePtr->type() != CV_8UC3 && newFramePtr->type() != CV_8UC2 && newFramePtr->type() != CV_8UC1) {
         t.reset();
-        newFramePtr->convertTo(newFrame, CV_8U);//, 255); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values up to char's range of 0-255
+        newFramePtr->convertTo(newFrame, CV_8U, 255); // https://stackoverflow.com/questions/22174002/why-does-opencvs-convertto-function-not-work : need to scale the values up to char's range of 0-255
         newFramePtr = &newFrame;
         t.logElapsed("convert frame for video writer part 1");
     }
-    if (newFramePtr->type() == CV_8UC4) {
+    if (newFramePtr->type() == CV_8UC1) {
+        t.reset();
+        { out_guard();
+            std::cout << "Converting from " << mat_type2str(newFramePtr->type()) << std::endl; }
+        // https://answers.opencv.org/question/66545/problems-with-the-video-writer-in-opencv-300/
+        cv::cvtColor(*newFramePtr, newFrame, cv::COLOR_GRAY2BGR);
+        newFramePtr = &newFrame;
+        t.logElapsed("convert frame for video writer part 1.1");
+    }
+    else if (newFramePtr->type() == CV_8UC4) {
         t.reset();
         { out_guard();
             std::cout << "Converting from " << mat_type2str(newFramePtr->type()) << std::endl; }
@@ -73,9 +83,9 @@ void FileDataOutput::run(cv::Mat frame, bool flush, cv::Rect* crop) {
     t.reset();
     { out_guard();
         std::cout << "newFrame.data: " << (void*)newFrame.data << "\n";
-        std::cout << "Writing frame with type " << mat_type2str(newFrame.type()) << std::endl; }
+        std::cout << "Writing frame with type " << mat_type2str(newFramePtr->type()) << std::endl; }
     writerMutex.lock();
-    writer.write(crop ? newFrame(*crop) : newFrame);
+    writer.write(*newFramePtr);
     if (flush) {
         { out_guard();
             std::cout << "Flushing the video" << std::endl; }

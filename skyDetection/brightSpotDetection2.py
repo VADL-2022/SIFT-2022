@@ -6,6 +6,10 @@ import numpy as np
 import argparse
 import cv2
 from skimage import measure
+import timeit
+import sys
+sys.path.append('..')
+from src.python.General import *
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", help = "path to the image file",default=None)
@@ -59,6 +63,8 @@ import math # Import math Library
 # a and b are of the following form (a list): [x, y, radius]
 # NOTE: THIS FUNCTION MAY BE BUGGY. Circles from ../Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0028.png give a bad resulting circle. So to compensate, we use `bad` value < some amount as an upper bound requirement as well..
 def minimalEnclosingCircle(a, b):
+    a=np.array(a, dtype=np.float64) # To fix "RuntimeWarning: overflow encountered in ushort_scalars" ( https://stackoverflow.com/questions/7559595/python-runtimewarning-overflow-encountered-in-long-scalars )
+    b=np.array(b, dtype=np.float64)
     angle = math.atan2(b[1] - a[1], b[0] - a[0])
     cos_angle = math.cos(angle)
     sin_angle = math.sin(angle)
@@ -88,7 +94,12 @@ def run():
     
     if args["image"] is None:
         import subprocess
-        p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
+        #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
+        p=subprocess.run(["../compareNatSort/compareNatSort",
+                          # "../Data/fullscale1/Derived/SIFT/ExtractedFrames"
+                          # '/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_19_02_14_CDT'
+                          '/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_18_47_47_CDT'
+                          , ".png"], capture_output=True)
         imgs=p.stdout.split(b'\n')
     else:
         imgs=[args["image"]] # i.e., `multi_bright_regions_input_01.jpg`
@@ -250,19 +261,25 @@ def run():
         # Show hough circle detection
         # https://docs.opencv.org/3.4/d4/d70/tutorial_hough_circle.html
         gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
+        gray = cv2.resize(gray, (int(width / 2), int(height /2)))
         # GaussianBlur documentation: https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#gaabe8c836e97159a9193fb0b11ac52cf1
         gray = cv2.GaussianBlur(gray, (9, 9), 2, None, 2) #cv2.medianBlur(gray, 5)
         rows = gray.shape[0]
         cannyThreshold = 50 # 100
         accumulatorThreshold = 50
         minRadius = 0#int(width/2)
-        maxRadius = 0#int(width)
-        # Parameters documentation: https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
-        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, rows / 8,
-                                   param1=cannyThreshold, param2=accumulatorThreshold,
-                                   minRadius=minRadius, maxRadius=maxRadius)
-                               # param1=100, param2=30,
-                               # minRadius=1, maxRadius=30)
+        maxRadius = 0#int(width)        
+        circles = None
+        def circleFinder():
+            nonlocal circles
+            # Parameters documentation: https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
+            minDistBetweenCircles = rows / 4
+            circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, minDistBetweenCircles,
+                                       param1=cannyThreshold, param2=accumulatorThreshold,
+                                       minRadius=minRadius, maxRadius=maxRadius)
+                                   # param1=100, param2=30,
+                                   # minRadius=1, maxRadius=30)
+        print("cv2.HoughCircles took", timeit.timeit(circleFinder, number=1), "seconds")
         weightedCenterOfMass = None
         radiusSum = 0
         prev = None # Becomes a "new mega hough circle"
@@ -276,6 +293,7 @@ def run():
             #     if largestRadius is None or radius > largestRadius:
             #         largestRadius = radius
             largestRadius=None
+            print("Number of Hough circles:", len(circles[0, :]))
             for i in circles[0, :]:
                 center = (i[0], i[1])
                 # circle center
@@ -374,5 +392,30 @@ def run():
             # Go to next image
             continue
 
+def runGeneral():
 
-run()
+    if args["image"] is None:
+        import subprocess
+        #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
+        p=subprocess.run(["../compareNatSort/compareNatSort",
+                          "../Data/fullscale1/Derived/SIFT/ExtractedFrames"
+                          #'/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_19_02_14_CDT'
+                          #'/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_18_47_47_CDT'
+                          , ".png"], capture_output=True)
+        imgs=p.stdout.split(b'\n')
+    else:
+        imgs=[args["image"]] # i.e., `multi_bright_regions_input_01.jpg`
+
+    for imgName in imgs:
+        if isinstance(imgName, bytes):
+            imgName=imgName.decode('utf-8')
+        print(imgName)
+        # load the image and convert it to grayscale
+        image=cv2.imread(imgName)
+        if image is None:
+            print("Image was None")
+            return
+        shouldDiscardImage(image, True, None, None)
+        cv2.waitKey(0)
+#run()
+runGeneral()

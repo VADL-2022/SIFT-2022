@@ -11,7 +11,7 @@
 
 #include <atomic>
 
-extern std::atomic<bool> g_stop;
+extern std::atomic<bool> g_stop, g_stopAndFinishRest;
 
 struct DataOutputBase;
 extern DataOutputBase* g_o2;

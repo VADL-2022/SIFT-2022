@@ -63,10 +63,30 @@ M16=np.matrix([[-10.79361828440029, 30.02665863387952, -5796.683949147701],
 M17=np.matrix([[4.948867896701391, -0.7664984793150436, -505.8483297718342],
                [ -1.455364274725157, 3.438942450270565, -41.62095821273624],
                [ 0, 0, 0.9999999999999996]]) # /Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-03-20_00_37_21_CDT/scaled22.png.matrix0.txt
+M18=np.matrix([[-10.79359596483711, 30.02668391290028, -5796.690114744679],
+                [-14.24970021812051, -24.28168244897473, 6492.75965100948],
+               [ 0, 0, 0.9999999999999983]]) # /Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-03-21_20_28_38_CDT/scaled24.png.matrix0.txt
+M19=np.matrix([[-7.358829936999757, 0.4458605496549488, 1202.281605050607],
+                [3.044976635288903, -5.176762232475779, 1383.299566049264],
+               [ 0, 0, 0.9999999999999983]]) # Above path but scaled23
+M20=np.matrix([[4.948866934808521, -0.7665021383241637, -505.8467930832974],
+                [-1.455362581834069, 3.438940877216415, -41.62067199944477],
+               [ 0, 0, 0.9999999999999983]]) # Above path but scaled22
+M21=np.matrix([[-31.02402024451111, -49.3581219102329, 11410.23072043034],
+                [8.524030088006501, -18.84732994063886, 3489.920124551115],
+               [ 0, 0, 0.9999999999999991]]) # Tweaked sift params using `make -j8 sift_exe_release_commandLine && ./sift_exe_release_commandLine --sift-params -delta_min 0.5 -C_edge 10 -n_bins 64 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission  --debug-no-std-terminate --max-sift-fps 1110.1  --save-first-image` and the result seems worse..
+M22=np.matrix([[-8.598188966435277, -32.24337832018222, 8034.839685493387],
+                [16.08928208912381, -7.72816909372123, 1499.933313722439],
+               [ 0, 0, 0.9999999999999991]]) # /Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-03-21_21_22_56_CDT/scaled23.png.matrix0.txt     # make -j8 sift_exe_release_commandLine && ./sift_exe_release_commandLine --sift-params -delta_min 0.5 -C_edge 10 -n_bins 16 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission  --debug-no-std-terminate --max-sift-fps 1110.1  --save-first-image         #(scaled22 is better for this one)
+# Goes off to the black for longer, and fixated on the top of the image: `make -j8 sift_exe_release_commandLine && ./sift_exe_release_commandLine --sift-params -delta_min 0.7 -C_edge 2 -n_bins 16 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission  --debug-no-std-terminate --max-sift-fps 1110.1  --save-first-image`
+# Experimental.. and stops early since runs through whole video, and sift hangs forever!!... yikes: make -j8 sift_exe_release_commandLine && ./sift_exe_release_commandLine --sift-params -delta_min 0.3 -C_edge 10 -n_bins 16 -n_hist 5 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission  --debug-no-std-terminate --max-sift-fps 1110.1  --save-first-image
+#^^Adding `--finish-rest-always` fixes this stopping above/deadlock gets fixed. the result is bad though. here it is: `make -j8 sift_exe_release_commandLine && ./sift_exe_release_commandLine --sift-params -delta_min 0.3 -C_edge 10 -n_bins 16 -n_hist 5 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission  --debug-no-std-terminate --max-sift-fps 1110.1  --save-first-image --finish-rest-always`
+
 #M=M10
-M=M17
+M=M22
 #imgPath=fullscale1FirstImage
-imgPath='/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-03-20_00_19_34_CDT/firstImage0.png'
+#imgPath='/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-03-20_00_19_34_CDT/firstImage0.png'
+imgPath='/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/dataOutput/2022-03-21_20_33_49_CDT/firstImage0.png' # For M18 thru 20 (and command was: `make -j8 sift_exe_release_commandLine && ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission  --debug-no-std-terminate --max-sift-fps 1110.1  --save-first-image`).            Is also for M21 (but command is different for that one)
 
 
 idMat=np.matrix([[1.0, 0.0, 0.0],

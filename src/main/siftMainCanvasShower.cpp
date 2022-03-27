@@ -11,6 +11,7 @@
 #include "../siftMain.hpp"
 #include "../common.hpp"
 #include "../DataOutput.hpp"
+#include "../utils.hpp"
 
 #ifdef USE_COMMAND_LINE_ARGS
 Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
@@ -39,6 +40,51 @@ cv::Mat prepareCanvas(ProcessedImage<SIFT_T>& img) {
                         CV_RGB(118, 185, 0), //font color
                         2);
         }
+        
+        // Show transformation
+        // Transform the four corner points of the rect:
+        
+        cv::Mat& img_object = img.image, &img_matches = c;
+        cv::Mat H = img.transformation; //cv::Mat::eye(3, 3, CV_64F); //img.transformation;
+        if (H.empty()) return c;
+        H = H.inv();
+        
+//        cv::Ptr<cv::Formatted> str;
+//        matrixToString(H, str);
+//        { out_guard();
+//            std::cout << "H: " << str << std::endl; }
+        
+        // https://docs.opencv.org/2.4/doc/tutorials/features2d/feature_homography/feature_homography.html
+        //-- Get the corners from the image_1 ( the object to be "detected" )
+        std::vector<cv::Point2f> obj_corners(4);
+        obj_corners[0] = cv::Point2f(0,0); obj_corners[1] = cv::Point2f( img_object.cols, 0 );
+        obj_corners[2] = cv::Point2f( img_object.cols, img_object.rows ); obj_corners[3] = cv::Point2f( 0, img_object.rows );
+        std::vector<cv::Point2f> scene_corners(4);
+        
+        //cv::perspectiveTransform(obj_corners, scene_corners, H.inv());
+
+        //-- Draw lines between the corners (the mapped object in the scene - image_2 )
+        cv::line( img_matches, scene_corners[0] + cv::Point2f( img_object.cols, 0), scene_corners[1] + cv::Point2f( img_object.cols, 0), cv::Scalar(0, 255, 0), 4 );
+        cv::line( img_matches, scene_corners[1] + cv::Point2f( img_object.cols, 0), scene_corners[2] + cv::Point2f( img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+        cv::line( img_matches, scene_corners[2] + cv::Point2f( img_object.cols, 0), scene_corners[3] + cv::Point2f( img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+        cv::line( img_matches, scene_corners[3] + cv::Point2f( img_object.cols, 0), scene_corners[0] + cv::Point2f( img_object.cols, 0), cv::Scalar( 0, 255, 0), 4 );
+        
+        // Draw inner lines to help tell the true orientation of the box
+        float INSET = 10.0f;
+        scene_corners[0].x += INSET;
+        scene_corners[0].y -= INSET;
+        scene_corners[1].x += INSET;
+        scene_corners[1].y -= INSET;
+        scene_corners[2].x += INSET;
+        scene_corners[2].y -= INSET;
+        scene_corners[3].x += INSET;
+        scene_corners[3].y -= INSET;
+        cv::line( img_matches, scene_corners[0] + cv::Point2f( img_object.cols, 0), scene_corners[1] + cv::Point2f( img_object.cols, 0), cv::Scalar(255, 100, 0), 2 );
+        cv::line( img_matches, scene_corners[1] + cv::Point2f( img_object.cols, 0), scene_corners[2] + cv::Point2f( img_object.cols, 0), cv::Scalar( 255, 100, 0), 2 );
+        cv::line( img_matches, scene_corners[2] + cv::Point2f( img_object.cols, 0), scene_corners[3] + cv::Point2f( img_object.cols, 0), cv::Scalar( 255, 100, 0), 2 );
+        cv::line( img_matches, scene_corners[3] + cv::Point2f( img_object.cols, 0), scene_corners[0] + cv::Point2f( img_object.cols, 0), cv::Scalar( 255, 100, 0), 2 );
+        
+        //drawRect(c, {0,0}, {c.cols, c.rows}, <#float orientation_degrees#>)
     }
     return c;
 }

@@ -400,12 +400,37 @@ int mainMission(DataSourceT* src,
     { out_guard();
         std::cout << "Target fps: " << fps << std::endl; }
     //std::atomic<size_t> offset = 0; // Moves back the indices shown to SIFT threads
-    for (size_t i = src->currentIndex; !stoppedMain(); i++) {
+    for (size_t i = src->currentIndex; !stoppedMain() && !stoppedMainAndFinishRest(); i++) {
 //        OPTICK_FRAME("MainThread"); // https://github.com/bombomby/optick
         
         { out_guard();
             std::cout << "i: " << i << std::endl; }
         #ifdef USE_COMMAND_LINE_ARGS
+        // Frameskip
+        size_t i2;
+        for (i2 = i; i2 < i + cfg.frameskip; i2++) {
+            cv::Mat mat = src->get(i2); // Consume images
+            
+            // Enqueue null image indirectly
+            processedImageQueue_enqueueIndirect(i2, mat, py::array_t<float>(),
+                                    shared_keypoints_ptr(),
+                                    std::shared_ptr<struct sift_keypoint_std>(),
+                                    0,
+                                    shared_keypoints_ptr(),
+                                    shared_keypoints_ptr(),
+                                    shared_keypoints_ptr(),
+                                    cv::Mat(),
+                                    p,
+                                    i2,
+                                    std::shared_ptr<IMUData>());
+            
+            // Show a bit (twice because with only one call to showAnImageUsingCanvasesReadyQueue() we may fill up the canvasesReadyQueue since it only dequeues once per call to showAnImageUsingCanvasesReadyQueue())
+            showAnImageUsingCanvasesReadyQueue(src, o2);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            showAnImageUsingCanvasesReadyQueue(src, o2);
+        }
+        i = i2;
+        // Skip specific indices
         for (auto& pair : cfg.skipImageIndices) {
             if (pair.first == i) {
                 { out_guard();
@@ -462,7 +487,7 @@ int mainMission(DataSourceT* src,
             std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl; }
         t.logElapsed("get image");
         if (mat.empty()) {
-            if (!CMD_CONFIG(finishRestOnOutOfImages) && !CMD_CONFIG(finishRestAlways)) {
+            if (!CMD_CONFIG(finishRestOnOutOfImages) && !CMD_CONFIG(finishRestAlways())) {
                 printf("No more images left to process. Exiting.\n");
                 stopMain();
                 break;
@@ -682,12 +707,24 @@ int mainMission(DataSourceT* src,
             }
 
             t.reset();
-            nonthrowing_python([&greyscale](){
+            nonthrowing_python([&greyscale, &cfg, src](){
                 // General stuff
                 py::module_ general = py::module_::import("src.python.General");
                 cv::Mat image;
                 greyscale.convertTo(image, CV_8UC1, 255.0); // Convert to CV_8U (based on https://stackoverflow.com/questions/46260601/convert-image-from-cv-64f-to-cv-8u )
-                py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image));
+                //static py::str path = py::bool_(false); //pybind11::cast<pybind11::none>(Py_None); //py::none();
+                static py::object path = py::none();
+                static bool isNone = true; // Hack since path.is_none() always seems to be false..
+                if (CMD_CONFIG(siftVideoOutput) && path.is_none()) { //&& isNone) { //&& path.is_none()) {
+                    path = py::str( openFileWithUniqueName(getDataOutputFolder() + "/python_live", ".mp4"));
+                    atexit([](){
+                        puts("Saving python_live video writer");
+                        py::module_ general = py::module_::import("src.python.General");
+                        general.attr("saveVideoWriter")();
+                    });
+                    isNone = false;
+                }
+                py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image), CMD_CONFIG(showPreviewWindow()), path, src->fps());
                 if (discardImage_ == false) {
                     std::cout << "general: Python likes this image\n";
                 }

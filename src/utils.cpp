@@ -166,8 +166,8 @@ int main() {
 // //
 
 void recoverableError(const char* msg) {
-    if (CMD_CONFIG(finishRestAlways)) {
-        printf("%s, continuing due to CMD_CONFIG(finishRestAlways)\n", msg);
+    if (CMD_CONFIG(finishRestAlways())) {
+        printf("%s, continuing due to CMD_CONFIG(finishRestAlways())\n", msg);
         return;
     }
     
