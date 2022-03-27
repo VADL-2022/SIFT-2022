@@ -122,27 +122,27 @@ May be necessary if something doesn't work above:
 
 ## Mission sequence
 
-![Driver Script](/documentation/architecture/Mission%20sequence-Page-2.drawio.png?raw=true | width=200)
-![Video Capture System Script](/documentation/architecture/Mission%20sequence-Page-4.drawio.png?raw=true | width=200)
+![Driver Script](/documentation/architecture/Mission%20sequence-Page-2.drawio.png?raw=true)
+![Video Capture System Script](/documentation/architecture/Mission%20sequence-Page-4.drawio.png?raw=true)
 
-![VADL Data Processing System (VDPS)](/documentation/architecture/Mission%20sequence2-Page-1.drawio.png?raw=true | width=200)
+![VADL Data Processing System (VDPS)](/documentation/architecture/Mission%20sequence2-Page-1.drawio.png?raw=true)
 
 - [VDPS](/src/siftMain.cpp) (same as VLS under [Modules](##Modules))
 
-![Primary Mission System](/documentation/architecture/Mission%20sequence2-Page-3.drawio.png?raw=true | width=200)
+![Primary Mission System](/documentation/architecture/Mission%20sequence2-Page-3.drawio.png?raw=true)
 
 ## Modules
 
-![Driver](/documentation/architecture/Modular%20Software%20Architecture2-Page-1.drawio.png?raw=true | width=200)
+![Driver](/documentation/architecture/Modular%20Software%20Architecture2-Page-1.drawio.png?raw=true)
 
-- [Temperature Measurement and Recording System](/WindTunnel/run.py | width=200)
+- [Temperature Measurement and Recording System](/WindTunnel/run.py)
 - [Driver Script](/subscale.sh) (NOTE: it is called subscale but is actually for fullscale)
 
-![General-Purpose Video Capture System](/documentation/architecture/Modular%20Software%20Architecture2-Page-2.drawio.png?raw=true | width=200)
+![General-Purpose Video Capture System](/documentation/architecture/Modular%20Software%20Architecture2-Page-2.drawio.png?raw=true)
 
 - [General-Purpose Video Capture System](/subscale_driver/videoCapture.py)
 
-![VLS and VMS](/documentation/architecture/Modular%20Software%20Architecture2-Page-3.drawio.png?raw=true | width=200)
+![VLS and VMS](/documentation/architecture/Modular%20Software%20Architecture2-Page-3.drawio.png?raw=true)
 
 - [VLS](/src/siftMain.cpp)
 - [VMS](/subscale_driver/subscaleMain.cpp)
