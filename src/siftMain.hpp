@@ -22,5 +22,7 @@ extern cv::Rect g_desktopSize;
 
 void stopMain();
 bool stoppedMain();
+void stopMainAndFinishRest();
+bool stoppedMainAndFinishRest();
 
 #endif /* siftMain_h */

@@ -19,12 +19,18 @@
 #include "../DataOutput.hpp"
 
 // Signal handling //
-std::atomic<bool> g_stop;
+std::atomic<bool> g_stop, g_stopAndFinishRest;
 void stopMain() {
     g_stop = true;
 }
 bool stoppedMain() {
     return g_stop;
+}
+void stopMainAndFinishRest() {
+    g_stopAndFinishRest = true;
+}
+bool stoppedMainAndFinishRest() {
+    return g_stopAndFinishRest;
 }
 
 // Prints a stacktrace
@@ -35,6 +41,12 @@ bool stoppedMain() {
 //    p.print(st, stderr);
 //}
 void ctrlC(int s, siginfo_t *si, void *arg){
+    if (CMD_CONFIG(finishRestOnSigInt)) {
+        printf_("Caught signal %d. Stopping after draining dispatch queue...\n",s);
+        stopMainAndFinishRest();
+        return;
+    }
+    
     printf_("Caught signal %d. Threads are stopping...\n",s); // Can't call printf because it might call malloc but the ctrlC might have happened in the middle of a malloc or free call, leaving data structures for it invalid. So we use `printf_` from https://github.com/mpaland/printf which is thread-safe and malloc-free but slow because it just write()'s all the characters one by one. Generally, "the signal handler code must not call non-reentrant functions that modify the global program data underneath the hood." ( https://www.delftstack.com/howto/c/sigint-in-c/ )
     // Notes:
     /* https://stackoverflow.com/questions/11487900/best-pratice-to-free-allocated-memory-on-sigint :

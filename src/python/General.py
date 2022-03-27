@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import timeit
 
 # Camera undistortion code #
 
@@ -31,6 +32,10 @@ roi = None
 useFullImageInsteadOfROI = False
 
 # End of undistort code #
+
+# https://stackoverflow.com/questions/31648729/round-a-float-up-to-next-odd-integer
+def round_up_to_odd(f):
+    return int(np.ceil(f)) // 2 * 2 + 1
 
 # Helper functions copied from `../../skyDetection/brightSpotDetection2.py` (replace with new copies if needed) : #
 
@@ -70,6 +75,8 @@ import math # Import math Library
 # a and b are of the following form (a list): [x, y, radius]
 # NOTE: THIS FUNCTION MAY BE BUGGY. Circles from ../Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0028.png give a bad resulting circle. So to compensate, we use `bad` value < some amount as an upper bound requirement as well..
 def minimalEnclosingCircle(a, b):
+    a=np.array(a, dtype=np.float64) # To fix "RuntimeWarning: overflow encountered in ushort_scalars" ( https://stackoverflow.com/questions/7559595/python-runtimewarning-overflow-encountered-in-long-scalars )
+    b=np.array(b, dtype=np.float64)
     angle = math.atan2(b[1] - a[1], b[0] - a[0])
     cos_angle = math.cos(angle)
     sin_angle = math.sin(angle)
@@ -88,28 +95,64 @@ def minimalEnclosingCircle(a, b):
 
 # End of copied helper functions #
 
-def shouldDiscardImage(greyscaleImage):
+videoWriter = None
+
+def shouldDiscardImage(greyscaleImage, showPreviewWindow=False, siftVideoOutputPath=None #False #Should be None but had to do a hack
+                       , siftVideoOutputFPS=None):
+    global videoWriter
+    height,width=greyscaleImage.shape[:2]
+    #print("BBBBBBBB",type(siftVideoOutputPath), siftVideoOutputPath)
+    if siftVideoOutputPath is not None: #if not(isinstance(siftVideoOutputPath, bool) and siftVideoOutputPath == False): # Note: `if siftVideoOutputPath is not None:` and `if siftVideoOutputPath:` doesn't work if used here.. it thinks it is not None even though it is, maybe because it somehow has type 'str' printed in the print statement above. so we do a hack here.
+        if videoWriter is None:
+           # https://stackoverflow.com/questions/30103077/what-is-the-codec-for-mp4-videos-in-python-opencv
+            format=cv2.VideoWriter_fourcc(*'h264')#cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+            fps=siftVideoOutputFPS
+            print("Python opening video writer with params:", siftVideoOutputPath, format, fps, (width * 2, height), True)
+            videoWriter = cv2.VideoWriter(siftVideoOutputPath, format, fps, (width * 2, height), True # True for writing color frames
+                                          )
     #cv2.imshow('a', greyscaleImage)
+    if showPreviewWindow:
+        channels = greyscaleImage.shape[-1] if greyscaleImage.ndim == 3 else 1 # https://stackoverflow.com/questions/19062875/how-to-get-the-number-of-channels-from-an-image-in-opencv-2
+        isGreyscale = channels == 1      # NVM: len(greyscaleImage.shape)<2 # NVM: `len(greyscaleImage.shape)<2` is true if the image is greyscale
+        if isGreyscale:
+            image = cv2.cvtColor(greyscaleImage, cv2.COLOR_GRAY2BGR)
+        else:
+            image = greyscaleImage
+            greyscaleImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Shrink for speed up
+    scaleX = 0.5
+    #scaleX = 1
+    scaleY = scaleX
+    scaledWidth = int(width * scaleX)
+    scaledHeight = int(height * scaleY)
+    greyscaleImage = cv2.resize(greyscaleImage, (scaledWidth, scaledHeight))
     
     #return False # temp
-    blurred = cv2.GaussianBlur(greyscaleImage, (11, 11), 0)
-    thresh = cv2.threshold(blurred, 200, 255, cv2.THRESH_BINARY)[1]
-    thresh = cv2.erode(thresh, None, iterations=2)
-    thresh = cv2.dilate(thresh, None, iterations=4)
+    blurred = cv2.GaussianBlur(greyscaleImage, (round_up_to_odd(11 * scaleX), round_up_to_odd(11 * scaleY)), 0)
+    #blurred = cv2.GaussianBlur(greyscaleImage, (round_up_to_odd(7 * scaleX), round_up_to_odd(7 * scaleY)), 2, None, 2)
+    #imageBrightnessThreshold = 200
+    imageBrightnessThreshold = 180
+    thresh = cv2.threshold(blurred, imageBrightnessThreshold, 255, cv2.THRESH_BINARY)[1]
+    #thresh = cv2.erode(thresh, None, thresh, iterations=2)
+    thresh = cv2.erode(thresh, None, thresh, iterations=4)
+    thresh = cv2.dilate(thresh, None, thresh, iterations=4)
     
-    height,width=greyscaleImage.shape[:2]
     realCenter=[width / 2.0, height / 2.0]
     print("realCenter:", realCenter)
+    if showPreviewWindow:
+        cv2.circle(image, (int(realCenter[0]), int(realCenter[1])), int(2),
+                   (255, 0, 0), 2)
     
     # Get "center of mass" of each of the 4 quadrants of the image so we can do sky detection
     names = ['top left',
              'top right',
              'bottom left',
              'bottom right']
-    tl = getCenterOfMass(thresh[0:int(height/2), 0:int(width/2)]) # top left
-    tr = getCenterOfMass(thresh[0:int(height/2), int(width/2):]) # top right
-    bl = getCenterOfMass(thresh[int(height/2):, 0:int(width/2)]) # bottom left
-    br = getCenterOfMass(thresh[int(height/2):, int(width/2):]) # bottom right
+    tl = getCenterOfMass(thresh[0:int(scaledHeight/2), 0:int(scaledWidth/2)]) # top left
+    tr = getCenterOfMass(thresh[0:int(scaledHeight/2), int(scaledWidth/2):]) # top right
+    bl = getCenterOfMass(thresh[int(scaledHeight/2):, 0:int(scaledWidth/2)]) # bottom left
+    br = getCenterOfMass(thresh[int(scaledHeight/2):, int(scaledWidth/2):]) # bottom right
     cms = [tl, tr, bl, br] # Centers of mass
     offsets = [[0, 0], # top left
                [int(width/2), 0], # top right
@@ -119,38 +162,74 @@ def shouldDiscardImage(greyscaleImage):
     bad = 0
     distanceThreshold = 0.433385 # Lower means less discards
     distanceRequired = distanceThreshold * width
+    noneCenters = 0
+    badIncs = 0
     for i in range(len(cms)):
         cm = cms[i]
         name = names[i]
         if cm is None:
             print("center for", name, "was None")
-            bad += 0.5
+            noneCenters += 1
             continue
-        center = np.array(cm) + np.array(offsets[i])
+        center = np.array(cm) / np.array([scaleX, scaleY]) + np.array(offsets[i])
         print("center for", name, ":", center)
         dist_=np.linalg.norm(np.array(center) - np.array(realCenter))
         print("distance from center:", dist_)
         if dist_ < distanceRequired:
-            print("  bad += 1")
-            bad += 1
-    # Show badness
-    #<2.5 is good?
-    print("badness: " + str(bad))
+            diff = distanceRequired - dist_
+            #factor = 10
+            factor = 0.1
+            badInc = (diff * diff) / width * factor
+            print("  bad +=", badInc)
+            badIncs += 1
+            bad += badInc
+        if showPreviewWindow:
+            cv2.circle(image, (int(center[0]), int(center[1])), int(2),
+                       (0, 0, 255), 4)
+            cv2.putText(image, "CM: " + name, (int(center[0]), int(center[1]) - 15),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
+            cv2.line(image, (int(realCenter[0]), int(realCenter[1])), (int(center[0]), int(center[1])), (255, 0, 0), 2)
+    if noneCenters > 0:
+        badInc = (noneCenters*2) / (badIncs + 1)
+        print("noneCenters:\n  bad +=", badInc)
+        bad += badInc
+    if showPreviewWindow:
+        cv2.putText(image, "badness: " + str(bad), (int(30), int(30)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
+        # Show min enclosing circle (it is a circle of minimum size that encloses all white pixels (except we only do one white pixel object/cluster/group: the largest one (sorted by contourArea manually below))
+        # https://stackoverflow.com/questions/59099931/how-to-find-different-centers-of-various-arcs-in-a-almost-circular-hole-using-op -> https://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=minenclosingcircle#minenclosingcircle
+        # "Next we find the circumcircle of an object using the function cv.minEnclosingCircle(). It is a circle which completely covers the object with minimum area." ( https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html )
+        cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+        cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+        center, radius = cv2.minEnclosingCircle(cnts[0])
+        cv2.circle(image, (int(center[0]), int(center[1])), int(radius),
+                   (0, 0, 255), 4)
+        cv2.putText(image, "minEnclosingCircle", (int(center[0]), int(center[1]) - 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
     
     # Show hough circle detection
     # https://docs.opencv.org/3.4/d4/d70/tutorial_hough_circle.html
-    gray = cv2.GaussianBlur(greyscaleImage, (9, 9), 2, None, 2) #cv2.medianBlur(gray, 5)
+    #gray = cv2.GaussianBlur(greyscaleImage, (round_up_to_odd(9 * scaleX), round_up_to_odd(9 * scaleY)), 2, None, 2) #cv2.medianBlur(gray, 5)
+    gray = cv2.GaussianBlur(greyscaleImage, (round_up_to_odd(7 * scaleX), round_up_to_odd(7 * scaleY)), 2, None, 2)
+    #gray = blurred
     rows = gray.shape[0]
     cannyThreshold = 50 # 100
     accumulatorThreshold = 50
     minRadius = 0#int(width/2)
     maxRadius = 0#int(width)
-    # Parameters documentation: https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, rows / 8,
-                               param1=cannyThreshold, param2=accumulatorThreshold,
-                               minRadius=minRadius, maxRadius=maxRadius)
-                           # param1=100, param2=30,
-                           # minRadius=1, maxRadius=30)
+    circles = None
+    def circleFinder():
+        nonlocal circles
+        # Parameters documentation: https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d
+        minDistBetweenCircles = rows / 8
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, minDistBetweenCircles,
+                                   param1=cannyThreshold, param2=accumulatorThreshold,
+                                   minRadius=minRadius, maxRadius=maxRadius)
+                               # param1=100, param2=30,
+                               # minRadius=1, maxRadius=30)
+    print("cv2.HoughCircles took", timeit.timeit(circleFinder, number=1) * 1000, "milliseconds")
     weightedCenterOfMass = None
     radiusSum = 0
     prev = None # Becomes a "new mega hough circle"
@@ -164,13 +243,26 @@ def shouldDiscardImage(greyscaleImage):
         #     if largestRadius is None or radius > largestRadius:
         #         largestRadius = radius
         largestRadius=None
-        for i in circles[0, :]:
-            center = (i[0], i[1])
-            radius = i[2]
+        circles_ = circles[0, :]
+        print("Number of Hough circles:", len(circles_))
+        for i in circles_:
+            i = (i[0] / scaleX, i[1] / scaleY, i[2] / scaleX)
+            center = (int(i[0]), int(i[1]))
+            radius = int(i[2])
+
+            if showPreviewWindow:
+                # circle center
+                cv2.circle(image, center, 1, (0, 100, 100), 1)#3)
+                cv2.putText(image, "hough circle", (int(center[0]), int(center[1]) - 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.35,#0.95,
+                            (255, 0, 255), 1)#3)
+                # circle outline
+                cv2.circle(image, center, radius, (255, 0, 255), 1)#3)
             
-            # Weighted "center of mass".. more like weighted average
-            weightedCenterOfMass[0] += center[0] * radius # Weight by radius
-            weightedCenterOfMass[1] += center[1] * radius
+            # Weighted "center of mass".. more like weighted average.
+            # `float()` is used to fix "RuntimeWarning: overflow encountered in ushort_scalars"
+            weightedCenterOfMass[0] += float(center[0]) * radius # Weight by radius
+            weightedCenterOfMass[1] += float(center[1]) * radius
             radiusSum += radius
             if largestRadius is None or radius > largestRadius:
                 largestRadius = radius
@@ -184,6 +276,18 @@ def shouldDiscardImage(greyscaleImage):
         weightedCenterOfMass[0] /= radiusSum
         weightedCenterOfMass[1] /= radiusSum
 
+        if showPreviewWindow:
+            cv2.putText(image, "old mega hough circle", (int(weightedCenterOfMass[0]), int(weightedCenterOfMass[1]) - 15),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55,#0.95,
+                        (255, 255, 255), 2)#3)
+            cv2.circle(image, list(map(int,weightedCenterOfMass)), largestRadius, (255, 255, 255), 2)#3)
+            # "New mega hough circle":
+            cv2.putText(image, "mega hough circle", (int(prev[0]), int(prev[1]) - 15),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.95,
+                        (255, 0, 255), 3)
+            cv2.circle(image, list(map(int,prev[:2])), 3, (255, 0, 255), 5)
+            cv2.circle(image, list(map(int,prev[:2])), int(prev[2]), (255, 0, 255), 3)
+
         #avgRadius = radiusSum / len(circles)
         print("old mega hough circle", weightedCenterOfMass, largestRadius)
         # "New mega hough circle":
@@ -192,18 +296,43 @@ def shouldDiscardImage(greyscaleImage):
         # - close to center
         # - [nvm, doesn't work in later images:] smaller than image width in diameter
         # - old mega hough circle radius should be < new mega hough circle radius
+        
+        badInc = np.mean([abs(prev[0] - realCenter[0]), abs(prev[1] - realCenter[1])]) / 100
+        badInc *= badInc * badInc * badInc
+        print("megaHoughCircleDistFromCenter:\n  bad +=", badInc)
+        bad += badInc
     else:
         print("no hough circles")
-
+        
+    # Show badness
+    #<2.5 is good?
+    print("badness: " + str(bad))
+        
     # Decide whether we accept this image
     megaHoughCircleDistFromCenterThreshold = 0.2
-    if bad <= 3 and circles is not None and abs(prev[0] - realCenter[0]) < megaHoughCircleDistFromCenterThreshold*width and abs(prev[1] - realCenter[1]) < megaHoughCircleDistFromCenterThreshold*height:
+    #megaHoughCircleDistFromCenterThreshold = 0.1
+    #thresholdForBad = 3
+    #thresholdForBad = 2.5
+    thresholdForBad = 2
+    if bad <= thresholdForBad and circles is not None and abs(prev[0] - realCenter[0]) < megaHoughCircleDistFromCenterThreshold*width and abs(prev[1] - realCenter[1]) < megaHoughCircleDistFromCenterThreshold*height:
         print("shouldDiscardImage(): GOOD IMAGE")
-        return False
+        retval = False
     else:
-        print("shouldDiscardImage(): BAD IMAGE:", bad <= 3, circles is not None, abs(prev[0] - realCenter[0]) < megaHoughCircleDistFromCenterThreshold*width if prev is not None else False, abs(prev[1] - realCenter[1]) < megaHoughCircleDistFromCenterThreshold*height if prev is not None else False)
-        return True
+        print("shouldDiscardImage(): BAD IMAGE:", bad <= thresholdForBad, circles is not None, abs(prev[0] - realCenter[0]) < megaHoughCircleDistFromCenterThreshold*width if prev is not None else False, abs(prev[1] - realCenter[1]) < megaHoughCircleDistFromCenterThreshold*height if prev is not None else False)
+        retval = True
+    if showPreviewWindow:
+        cv2.putText(image, "bad image" if retval else "good image", (int(30), int(60)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255) if retval else (0, 255, 0), 2)
+        cv2.imshow("Sky detection", image)
+        cv2.imshow("Sky detection mask", thresh)
+    if videoWriter is not None:
+        # https://answers.opencv.org/question/202376/can-anyone-know-the-code-of-python-to-put-two-frames-in-a-single-window-output-specifically-to-use-it-in-opencv/
+        concatenated = np.hstack((image, cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR))) # Put the two images side by side
+        videoWriter.write(concatenated)
+    return retval
 
+def saveVideoWriter():
+    videoWriter.release()
 
 # Note: This is untested:
 # def undisortImage(image):
