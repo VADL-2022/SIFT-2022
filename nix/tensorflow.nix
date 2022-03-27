@@ -439,6 +439,7 @@ in buildPythonPackage {
       -e "/'libclang[^']*',/d" \
       -e "/'keras[^']*',/d" \
       -e "/'tensorflow-io-gcs-filesystem[^']*',/d"
+      -e "/'tensorflow_estimator[^']*',/d"
   '';
 
   # Upstream has a pip hack that results in bin/tensorboard being in both tensorflow
