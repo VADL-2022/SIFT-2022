@@ -122,7 +122,7 @@ May be necessary if something doesn't work above:
 
 ## To add a data source
 
-- See [Adding a Data Source](/documentation/architecture/SIFT%20Software%20Architecture%20Documentation.pdf)
+- See [SIFT Software Architecture Documentation](/documentation/architecture/SIFT%20Software%20Architecture%20Documentation.pdf)
 
 ## Mission sequence
 
