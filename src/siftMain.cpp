@@ -366,7 +366,8 @@ int mainMission(DataSourceT* src,
     common::connect_Python();
     // Warm up python and Precession.py (seems to take ~1 second)
     t.reset();
-    S_RunFile("src/python/Precession.py", 0, nullptr);
+    //S_RunFile("src/python/Precession.py", 0, nullptr);
+    py::module_ precession = py::module_::import("src.python.Precession");
     t.logElapsed("Precession.py warmup");
     // Warm up General.py
     t.reset();
