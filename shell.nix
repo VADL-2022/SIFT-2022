@@ -23,6 +23,10 @@ let
         matplotlib = self.pkgs.python37Packages.callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=self.pkgs.darwin.apple_sdk.frameworks.Cocoa;};
       };
     };
+    # export NIXPKGS_ALLOW_UNFREE=1
+    # opencv4 = super.opencv4.override {
+    #   enableUnfree = true;
+    # };
   }); # this is two lambdas (curried + nested)
   nixpkgs = import pkgs {};
   finalPkgs = import pkgs {
