@@ -438,7 +438,7 @@ in buildPythonPackage {
       -e "s/'gast[^']*',/'gast',/" \
       -e "/'libclang[^']*',/d" \
       -e "/'keras[^']*',/d" \
-      -e "/'tensorflow-io-gcs-filesystem[^']*',/d"
+      -e "/'tensorflow-io-gcs-filesystem[^']*',/d" \
       -e "/'tensorflow_estimator[^']*',/d"
   '';
 
