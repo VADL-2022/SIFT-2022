@@ -3,7 +3,7 @@ This is an implementation of the VADL Data Processing System (VDPS) and the driv
 # Running for the mission (USE THIS for launch)
 
 1. Set your iPhone's name to "PiRescue" under Settings -> General -> About -> Name. This allows the Pi's to find and conncet to the hotspot on your phone after you enable it in the step below. (After the mission, you can change it back to what it was before.)
-2. Enable personal hotspot on your iPhone under Settings -> Personal Hotspot. If it doesn't show up, you don't have that service enabled from your cellular service provider, so use someone else's phone.
+2. Enable personal hotspot on your iPhone under Settings -> Personal Hotspot and then set the password to "test1234". If it doesn't show up, you don't have that service enabled from your cellular service provider, so use someone else's phone.
 3. Connect to that hotspot on your computer.
 4. For all 4 of the Raspberry Pi's on the rocket, SSH into each one by using their host name. In other words: `ssh pi@fore1.local` to connect to the first Pi in the fore section; then do `ssh pi@fore2.local`, `ssh pi@sift1.local`, and finally `ssh pi@sift2.local`. And for each pi run: `tmux`, then `cd VanderbiltRocketTeam`, then `nix-shell`; then, to start the mission sequence, run (and this works for fullscale despite the name!): `bash ./subscale.sh`. The Pi will then wait idly on the pad until takeoff is detected. Press *Ctrl-b* and then *d* to detach from tmux, then *Ctrl-d* to exit that SSH connection to the pi (this leaves tmux running in the background on the Pi). To reconnect, do the same SSH command as used previously and then run `tmux a` to attach to it. If needed, at any point while attached, press *Ctrl-c* multiple times (press it you see a command-line `$` prompt again) to stop the script/mission.
 
@@ -32,7 +32,7 @@ Not supported unless you manually install OpenCV and a compiler that supports Ma
 # Setting up a new Raspberry Pi
 
 - OS to use: `2021-10-30-raspios-bullseye-arm64.img` from [here](https://downloads.raspberrypi.org/raspios_full_armhf/images/raspios_full_armhf-2021-11-08/)
-  - For reference, the sha512sum for 2021-10-30-raspios-bullseye-arm64.img is: 5e8c888d0396eba18684ad7c487dbd873c3491d6215079099f386a42f3e9ab2bdf3ad9c7089fbe82a24fd24a9dd6993401a025caf7200b2ca15db76705458afa
+  - For reference, the sha512sum for `2021-10-30-raspios-bullseye-arm64.img` is: `5e8c888d0396eba18684ad7c487dbd873c3491d6215079099f386a42f3e9ab2bdf3ad9c7089fbe82a24fd24a9dd6993401a025caf7200b2ca15db76705458afa`
   - After flashing, create a new file called `ssh` in the `boot` partition of the SD card. On macOS, you can do this as follows:
   
 ```
@@ -100,7 +100,7 @@ To get VNC working (not sure if all of these are needed or not) :
   - fore2: EEPROM for pins GPIO 0 and GPIO 1 to prevent voltage from randomly changing on the pins ( https://raspberrypi.stackexchange.com/questions/111312/more-information-about-gpio0-and-gpio1 ):
 `sudo echo -e "\n""#EEPROM for pins GPIO 0 and GPIO 1""\n""force_eeprom_read=0" >> /boot/config.txt`
 - Enable all of the following in `sudo raspi-config` except for Interface->Serial Port->no for login shell, yes for serial port hardware:
-![\[enable all these in sudo raspi-config\] Screen Shot 2022-03-14 at 7.25.31 PM](/documentation/\[enable all these in sudo raspi-config\] Screen Shot 2022-03-14 at 7.25.31 PM)
+![\[enable all these in sudo raspi\-config\] Screen Shot 2022\-03\-14 at 7\.25\.31 PM](/documentation/\[enable all these in sudo raspi\-config\] Screen Shot 2022\-03\-14 at 7\.25\.31 PM)
 - Enable display: replace `# uncomment to force a specific HDMI mode (this will force VGA)` and the hdmi_group and hdmi_mode areas with this stuff in `/boot/config.txt`:
 ```
 # uncomment to force a specific HDMI mode (this will force VGA)
