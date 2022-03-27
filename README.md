@@ -41,7 +41,7 @@ touch ssh # "If this file exists, ssh will be enabled when the pi is booted." ( 
 ```
 
 - If you have a keyboard and monitor with mini HDMI cable for the pi: Plug the Raspberry Pi into ethernet and a monitor and keyboard. On the keyboard, press `Ctrl-Alt-t` to open a terminal.
-  - Otherwise: see [this](/documentation/Setup WiFi on a Pi Manually using wpa_supplicant.conf - Raspberry Pi Spy.html)
+  - Otherwise: see [this](/documentation/Setup%20WiFi%20on%20a%20Pi%20Manually%20using%20wpa_supplicant.conf%20-%20Raspberry%20Pi%20Spy.html)
 - Run these:
 ```
 # For WindTunnel repo:
@@ -122,27 +122,27 @@ May be necessary if something doesn't work above:
 
 ## Mission sequence
 
-![Driver Script](/documentation/architecture/Mission%20sequence-Page-2.drawio.png?raw=true)
-![Video Capture System Script](/documentation/architecture/Mission%20sequence-Page-4.drawio.png?raw=true)
+![Driver Script](/documentation/architecture/Mission%20sequence-Page-2.drawio.png?raw=true | width=200)
+![Video Capture System Script](/documentation/architecture/Mission%20sequence-Page-4.drawio.png?raw=true | width=200)
 
-![VADL Data Processing System (VDPS)](/documentation/architecture/Mission%20sequence2-Page-1.drawio.png?raw=true)
+![VADL Data Processing System (VDPS)](/documentation/architecture/Mission%20sequence2-Page-1.drawio.png?raw=true | width=200)
 
 - [VDPS](/src/siftMain.cpp) (same as VLS under [Modules](##Modules))
 
-![Primary Mission System](/documentation/architecture/Mission%20sequence2-Page-3.drawio.png?raw=true)
+![Primary Mission System](/documentation/architecture/Mission%20sequence2-Page-3.drawio.png?raw=true | width=200)
 
 ## Modules
 
-![Driver](/documentation/architecture/Modular%20Software%20Architecture2-Page-1.drawio.png?raw=true)
+![Driver](/documentation/architecture/Modular%20Software%20Architecture2-Page-1.drawio.png?raw=true | width=200)
 
-- [Temperature Measurement and Recording System](/WindTunnel/run.py)
+- [Temperature Measurement and Recording System](/WindTunnel/run.py | width=200)
 - [Driver Script](/subscale.sh) (NOTE: it is called subscale but is actually for fullscale)
 
-![General-Purpose Video Capture System](/documentation/architecture/Modular%20Software%20Architecture2-Page-2.drawio.png?raw=true)
+![General-Purpose Video Capture System](/documentation/architecture/Modular%20Software%20Architecture2-Page-2.drawio.png?raw=true | width=200)
 
 - [General-Purpose Video Capture System](/subscale_driver/videoCapture.py)
 
-![VLS and VMS](/documentation/architecture/Modular%20Software%20Architecture2-Page-3.drawio.png?raw=true)
+![VLS and VMS](/documentation/architecture/Modular%20Software%20Architecture2-Page-3.drawio.png?raw=true | width=200)
 
 - [VLS](/src/siftMain.cpp)
 - [VMS](/subscale_driver/subscaleMain.cpp)
