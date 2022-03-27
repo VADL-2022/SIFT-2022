@@ -100,7 +100,7 @@ To get VNC working (not sure if all of these are needed or not) :
   - fore2: EEPROM for pins GPIO 0 and GPIO 1 to prevent voltage from randomly changing on the pins ( https://raspberrypi.stackexchange.com/questions/111312/more-information-about-gpio0-and-gpio1 ):
 `sudo echo -e "\n""#EEPROM for pins GPIO 0 and GPIO 1""\n""force_eeprom_read=0" >> /boot/config.txt`
 - Enable all of the following in `sudo raspi-config` except for Interface->Serial Port->no for login shell, yes for serial port hardware:
-![\[enable all these in sudo raspi\-config\] Screen Shot 2022\-03\-14 at 7\.25\.31 PM](/documentation/\[enable%20all%20these%20in%20sudo%20raspi\-config\]%20Screen%20Shot%202022\-03\-14%20at%207\.25\.31%20PM?raw=true)
+![\[enable all these in sudo raspi\-config\] Screen Shot 2022\-03\-14 at 7\.25\.31 PM](/documentation/\[enable all these in sudo raspi\-config\] Screen Shot 2022\-03\-14 at 7\.25\.31 PM.png?raw=true)
 - Enable display: replace `# uncomment to force a specific HDMI mode (this will force VGA)` and the hdmi_group and hdmi_mode areas with this stuff in `/boot/config.txt`:
 ```
 # uncomment to force a specific HDMI mode (this will force VGA)
