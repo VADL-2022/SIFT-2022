@@ -5,7 +5,6 @@
 import numpy as np
 import argparse
 import cv2
-from skimage import measure
 import timeit
 import sys
 sys.path.append('..')
@@ -83,6 +82,7 @@ def minimalEnclosingCircle(a, b):
 
 def run():
     global askedOnce
+    from skimage import measure
     
     k=mtx
     # https://stackoverflow.com/questions/34316306/opencv-fisheye-calibration-cuts-too-much-of-the-resulting-image
