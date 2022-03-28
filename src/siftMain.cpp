@@ -253,24 +253,6 @@ auto since(std::chrono::time_point<clock_t, duration_t> const& start)
 
 cv::Rect g_desktopSize;
 
-// This is a wrapper for calling Python using pybind11. Use it when you don't want unhandled Python exceptions to stop the entirety of SIFT (basically always use it).
-// https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html : "Any noexcept function should have a try-catch block that traps class:error_already_set (or any other exception that can occur). Note that pybind11 wrappers around Python exceptions such as pybind11::value_error are not Python exceptions; they are C++ exceptions that pybind11 catches and converts to Python exceptions. Noexcept functions cannot propagate these exceptions either. A useful approach is to convert them to Python exceptions and then discard_as_unraisable as shown below."
-template <typename F>
-void nonthrowing_python(F f) noexcept(true) {
-    try {
-        f();
-    } catch (py::error_already_set &eas) {
-        // Discard the Python error using Python APIs, using the C++ magic
-        // variable __func__. Python already knows the type and value and of the
-        // exception object.
-        eas.discard_as_unraisable(__func__);
-    } catch (const std::exception &e) {
-        // Log and discard C++ exceptions.
-        { out_guard();
-            std::cout << "C++ exception from python: " << e.what() << std::endl; }
-    }
-}
-
 #define tpPush(x, ...) tp.push(x, __VA_ARGS__)
 //#define tpPush(x, ...) x(-1, __VA_ARGS__) // Single-threaded hack to get exceptions to show! Somehow std::future can report exceptions but something needs to be done and I don't know what; see https://www.ibm.com/docs/en/i/7.4?topic=ssw_ibm_i_74/apis/concep30.htm and https://stackoverflow.com/questions/15189750/catching-exceptions-with-pthreads and `ctpl_stl.hpp`'s strange `auto push(F && f) ->std::future<decltype(f(0))>` function
 //ctpl::thread_pool tp(4); // Number of threads in the pool
@@ -373,6 +355,11 @@ int mainMission(DataSourceT* src,
     t.reset();
     py::module_ general = py::module_::import("src.python.General");
     t.logElapsed("General.py warmup");
+    
+    // Release the interpreter so that nonthrowing_python() can lock it.
+    /* Release the thread. No Python API allowed beyond this point. */
+    static thread_local PyGILState_STATE gstate;
+    PyGILState_Release(gstate);
     
     // SIFT
     cv::Mat firstImage;
@@ -587,7 +574,7 @@ int mainMission(DataSourceT* src,
         t.reset();
         if (!CMD_CONFIG(imageCaptureOnly)) {
             cv::Mat greyscale = src->siftImageForMat(i);
-            py::array_t<float> greyscale_;
+            std::optional<py::array_t<float>> greyscale_;
             t.logElapsed("siftImageForMat");
             //auto path = src->nameForIndex(i);
             
@@ -706,51 +693,24 @@ int mainMission(DataSourceT* src,
                 }
                 t.logElapsed("grabbing from subscale driver interface thread and running Precession.judge_image");
             }
-
-            t.reset();
-            nonthrowing_python([&greyscale, &cfg, src](){
-                // General stuff
-                py::module_ general = py::module_::import("src.python.General");
-                cv::Mat image;
-                greyscale.convertTo(image, CV_8UC1, 255.0); // Convert to CV_8U (based on https://stackoverflow.com/questions/46260601/convert-image-from-cv-64f-to-cv-8u )
-                //static py::str path = py::bool_(false); //pybind11::cast<pybind11::none>(Py_None); //py::none();
-                static py::object path = py::none();
-                static bool isNone = true; // Hack since path.is_none() always seems to be false..
-                if (CMD_CONFIG(siftVideoOutput) && path.is_none()) { //&& isNone) { //&& path.is_none()) {
-                    path = py::str( openFileWithUniqueName(getDataOutputFolder() + "/python_live", ".mp4"));
-                    atexit([](){
-                        puts("Saving python_live video writer");
-                        py::module_ general = py::module_::import("src.python.General");
-                        general.attr("saveVideoWriter")();
-                    });
-                    isNone = false;
-                }
-                py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image), CMD_CONFIG(showPreviewWindow()), path, src->fps());
-                if (discardImage_ == false) {
-                    std::cout << "general: Python likes this image\n";
-                }
-                else {
-                    std::cout << "general: Python doesn't like this image\n";
-                    discardImage = true;
-                }
-            });
-            t.logElapsed("General.py shouldDiscardImage");
             // //
             
             discardImage_label:
             if (discardImage) {
                 // Enqueue null image indirectly
-                processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
-                                            shared_keypoints_ptr(),
-                                            std::shared_ptr<struct sift_keypoint_std>(),
-                                            0,
-                                            shared_keypoints_ptr(),
-                                            shared_keypoints_ptr(),
-                                            shared_keypoints_ptr(),
-                                            cv::Mat(),
-                                            p,
-                                            i,
-                                            imu_);
+                nonthrowing_python([&](){ // <-- Lock the interpreter GIL lock to access greyscale_ copy ctor
+                    processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
+                                                shared_keypoints_ptr(),
+                                                std::shared_ptr<struct sift_keypoint_std>(),
+                                                0,
+                                                shared_keypoints_ptr(),
+                                                shared_keypoints_ptr(),
+                                                shared_keypoints_ptr(),
+                                                cv::Mat(),
+                                                p,
+                                                i,
+                                                imu_);
+                });
                 
                 // Don't push a function for this image or save it as a possible firstImage
                 goto skipImage;
@@ -771,7 +731,7 @@ int mainMission(DataSourceT* src,
                     // Undistort fisheye
                     py::module_ general = py::module_::import("src.python.General");
                     greyscale_ = (py::array_t<float>) general.attr("undisortImage")(cv_mat_float32_1c_to_numpy(greyscale));
-                    greyscale = numpy_float32_1c_to_cv_mat(greyscale_);
+                    greyscale = numpy_float32_1c_to_cv_mat(*greyscale_);
                 });
                 t.logElapsed("General.py undisortImage");
             }
@@ -791,12 +751,65 @@ int mainMission(DataSourceT* src,
             timeSinceLastSIFTFrame = now;
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
-            tpPush([&pOrig=p](int id, /*extra args:*/ size_t i, cv::Mat greyscale,
-            py::array_t<float> greyscale_, std::shared_ptr<IMUData> imu_) {
+            tpPush([&pOrig=p, &cfg](int id, /*extra args:*/ size_t i, cv::Mat greyscale,
+            std::optional<py::array_t<float>> greyscale_, std::shared_ptr<IMUData> imu_) {
     //            OPTICK_EVENT();
                 { out_guard();
                     std::cout << "hello from " << id << std::endl; }
                 installSignalHandlers();
+                
+                // Check for sky detection //
+                t.reset();
+                bool discardImage = false;
+                nonthrowing_python([&discardImage, &greyscale, &cfg](){
+                    // General stuff
+                    py::module_ general = py::module_::import("src.python.General");
+                    cv::Mat image;
+                    if (greyscale.type() == CV_32FC1) {
+                        greyscale.convertTo(image, CV_8UC1, 255.0); // Convert to CV_8U (based on https://stackoverflow.com/questions/46260601/convert-image-from-cv-64f-to-cv-8u )
+                    }
+                    else {
+                        image = greyscale;
+                    }
+                    //static py::str path = py::bool_(false); //pybind11::cast<pybind11::none>(Py_None); //py::none();
+                    static py::object path = py::none();
+                    static bool isNone = true; // Hack since path.is_none() always seems to be false..
+                    if (CMD_CONFIG(siftVideoOutput) && path.is_none()) { //&& isNone) { //&& path.is_none()) {
+                        path = py::str( openFileWithUniqueName(getDataOutputFolder() + "/python_live", ".mp4"));
+                        atexit([](){
+                            puts("Saving python_live video writer");
+                            py::module_ general = py::module_::import("src.python.General");
+                            general.attr("saveVideoWriter")();
+                        });
+                        isNone = false;
+                    }
+                    py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image), CMD_CONFIG(showPreviewWindow()), path, g_src->fps());
+                    if (discardImage_ == false) {
+                        std::cout << "general: Python likes this image\n";
+                    }
+                    else {
+                        std::cout << "general: Python doesn't like this image\n";
+                        discardImage = true;
+                    }
+                });
+                t.logElapsed(id, "General.py shouldDiscardImage");
+                // //
+                
+                if (discardImage) {
+                    // Enqueue null image indirectly
+                    processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
+                                                shared_keypoints_ptr(),
+                                                std::shared_ptr<struct sift_keypoint_std>(),
+                                                0,
+                                                shared_keypoints_ptr(),
+                                                shared_keypoints_ptr(),
+                                                shared_keypoints_ptr(),
+                                                cv::Mat(),
+                                                pOrig,
+                                                i,
+                                                imu_);
+                    return;
+                }
 
     #ifdef USE_PTR_INC_MALLOC
                 // TODO: implement so it doesn't crash
