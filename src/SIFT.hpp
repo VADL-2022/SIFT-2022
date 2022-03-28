@@ -43,7 +43,7 @@ template <>
 struct ProcessedImage<SIFTAnatomy> {
     ProcessedImage() = default;
     ProcessedImage(cv::Mat& image,
-                   py::array_t<float> image_python /*Use `py::array_t<float>`'s default ctor to not use this*/,
+                   PythonLocked<std::optional<py::array_t<float>>> image_python /*Use `py::array_t<float>`'s default ctor to not use this*/,
                    shared_keypoints_ptr_t computedKeypoints,
                    std::shared_ptr<struct sift_keypoint_std> k,
                    int n, // Number of keypoints in `k`
@@ -91,7 +91,7 @@ struct ProcessedImage<SIFTAnatomy> {
 //    }
     
     cv::Mat image;
-    std::optional<py::array_t<float>> image_python; // std::optional is used to prevent default ctor from being called before Python is initialized
+    PythonLocked<std::optional<py::array_t<float>>> image_python; // std::optional is used to prevent default ctor from being called before Python is initialized
     
     shared_keypoints_ptr_t computedKeypoints;
     std::shared_ptr<struct sift_keypoint_std> k;
