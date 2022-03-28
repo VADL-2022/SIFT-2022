@@ -1,0 +1,2000 @@
+df
+df -h
+raspistill
+raspivid
+sudo raspi-config
+sudo raspi-config --expand-rootfs
+sudo reboot
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+cd VanderbiltRocketTeam/
+nix-env -iA nixpkgs.libcamera
+df -h
+fg
+htop
+fg
+printenv | grep -i nix
+cam
+which cam
+
+cam --file test
+echo $?
+dmesg
+ls 
+git status
+cam
+cam --camera 0
+cam --camera 1
+./sift_exe_release_commandLine --camera-test-only
+sudo poweroff
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+dmegs
+dmesg
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+cam --camera 0
+cam --list
+dmesg
+./sift_exe_release_commandLine --camera-test-only
+cd ..
+ls
+cd v4l2Test/
+ls
+./a.out 
+ls -la 
+git init
+git add run.sh v4l2grab.c 
+git commit -m "wip"
+vim v4l2grab.c 
+emacs v4l2grab.c 
+cat run.sh 
+bash ./run.sh
+./a.out 
+ls -la /dev
+ls -la /dev/video*
+sudo reboot
+ls -la /dev/video*
+cd v4l2Test
+ls
+vim v4l2grab.c 
+bash run.sh 
+./a.out 
+bash run.sh 
+vim v4l2grab.c 
+sudo poweroff
+ls -la /dev/video*
+dmesg
+sudo vim /boot/config.txt
+vim /boot/config.txt
+sudo poweroff
+make -j4 sift_exe_release_commandLin
+make -j4 sift_exe_release_commandLine
+rm sift_exe_release_commandLine
+make -j4 sift_exe_release_commandLine
+git log
+git pull
+rm sift_exe_release_commandLine
+git pull
+make -j4 sift_exe_release_commandLine
+sudo reboot
+cd VanderbiltRocketTeam/
+git pull && git submodule update --init --recursive 
+make -j4 sift_exe_release_commandLine
+nix-shell
+cd VanderbiltRocketTeam/
+nix-shell
+ls -la /boot/edid.dat
+xxd /boot/edid.dat
+rm /boot/edid.dat
+sudo rm /boot/edid.dat
+sudo reboot
+sudo scp pi@10.16.137.131:/boot/config.txt /boot/config.txt
+sudo reboot
+sudo scp pi@10.16.137.131:/boot/config.txt /boot/config.txt
+cp -a /boot/config.txt /boot/config.txt.backup2
+sudo cp -a /boot/config.txt /boot/config.txt.backup2
+sudo poweroff
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+sudo reboot
+cd VanderbiltRocketTeam/
+ls
+git pull
+git rm -f sift_exe_release_commandLine
+git pull
+make -j5 sift_exe_release_commandLine 
+nix-shell
+cd VanderbiltRocketTeam/
+git pull
+nix-shell
+cd VanderbiltRocketTeam/
+nix-shell
+git diff subscale subscale2 -- subscale_driver/subscaleMain.cpp
+git log
+git diff subscale subscale2:subscale_driver/subscaleMain.cpp
+git diff subscale subscale2 -- subscale_driver/subscaleMain.cpp
+git show subscale:subscale_driver/subscaleMain.cpp 
+git diff subscale subscale2 -- subscale_driver/VADL2022.cpp
+git checkout subscale
+git stats
+git status
+git checkout subscale
+git diff
+git add compareNatSort/compile.sh
+git commit -m "perms"
+git push
+git pull
+git log
+git checkout subscale
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git checkout subscale2
+make -j4 subscale_exe_release
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+tmux
+tmux a
+cd VanderbiltRocketTeam/
+nix-shell
+git log
+git bisect start
+git bisect bad ec4edd1f30aa6c8e9665ab70e9f33a08bba023f4
+git log
+git bisect good c9adf72ba0cdbfe02d8176754debdb852ce262b2
+git log
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git bisect good
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git bisect good
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git bisect good
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git bisect good
+git checkout src/Queue.hpp
+git bisect good
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git bisect bad
+git checkout subscale_driver/pyMainThreadInterface.hpp
+git bisect bad
+make -j4 subscale_exe_release 
+make clean
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git bisect bad
+git checkout subscale_driver/pyMainThreadInterface.hpp
+git bisect bad
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git bisect good
+git log
+git log subscale2
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git diff HEAD 87c5f8c18bef2cec0990a7a195f2b96d89dfe5b2
+git checkout subscale2
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git status
+git add subscale_driver/ && git commit -m "S_RunFile needs existing file, else it gives weird argv error" --edit
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git status
+git add subscale_driver/
+git commit -m "Corrupt stack return address it seems.."
+git commit --amend
+git log
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_release 
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_release 
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_release 
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+git add subscale_driver/ && git commit -m "Queue.hpp:75 and/or 78 may be causing the segfault. If you comment them out in this commit, it works.."
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+ps aux | grep -i subscal
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+sudo reboot
+emacs
+cd VanderbiltRocketTeam/
+tmux
+sudo poweroff
+cd VanderbiltRocketTeam/
+tmux a
+nix-shell
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+b enqueue
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make clean
+make -j4 subscale_exe_release 
+sudo `which lldb` -- ./subscale_exe_release --sift-start-time 0 --gpio-test-only
+make -j4 subscale_exe_debug
+sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 --gpio-test-only
+tmux
+cd VanderbiltRocketTeam/
+git status
+sudo raspi-config
+cd VanderbiltRocketTeam/
+nix-shell
+sudo poweroff
+tmux
+make -j4 sift_exe_release_commandLine
+tmux a
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+nix-shell
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+./sift_exe_release_commandLine --camera-test-only
+ps aux | grep -i sift
+cd VanderbiltRocketTeam/
+ls
+nix-shell
+emacs
+tmux a
+sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 --gpio-test-only
+sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 
+git pull
+make -j4 subscale_exe_debug && sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 
+git pull && make -j4 subscale_exe_debug && sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 
+ps aux | grep -i sift
+kill 1874
+ps aux | grep -i sift
+sudo kill 1874
+ps aux | grep -i sift
+git pull && make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 
+ls
+man bash
+git pull && make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+sudo poweroff
+cd VanderbiltRocketTeam/
+tmux
+cd VanderbiltRocketTeam/
+nix-shell
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+vcgencmd
+vcgencmd get_camera
+libcamera
+./sift_exe_release_commandLine --camera-test-only
+sudo ./subscale_exe_release --sift-start-time 100
+sudo reboot
+sudo ./subscale_exe_release --sift-start-time 100
+cd VanderbiltRocketTeam/
+sudo ./subscale_exe_release --sift-start-time 100
+sudo poweroff
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+cd VanderbiltRocketTeam/
+sudo ./subscale_exe_release --sift-start-time 100
+sudo reboot
+cd VanderbiltRocketTeam/
+git pull
+tmux a
+tmux
+make -j4 subscale_exe_release 
+make -j4 sift_exe_release_commandLine
+make -j5 subscale_exe_release
+make -j4 sift_exe_release_commandLine
+sudo ./subscale_exe_release --sift-start-time 100
+sudo ./subscale_exe_release --video-capture
+sudo ./subscale_exe_release --sift-start-time 100
+sudo ./subscale_exe_release --video-capture
+printenv | grep -i opencv
+ls -la /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/bin
+ls -la /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/
+ls -la /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/share/
+ls -la /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/share/opencv4/
+ls -la /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib/
+echo $LD_LIBRARY_PATH
+nix-env -q
+man nix-env
+libcamera
+ /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib/
+macs
+emacs
+LD_LIBRARY_PATH=/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib/ sudo ./subscale_exe_release --video-capture
+ls -la /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib
+git pull
+make -j5 subscale_exe_release
+git pull && make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+RUN_LD_PATH=/nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib/ sudo ./subscale_exe_release --video-capture
+ps aux | grep -i sift
+ps aux | grep -i subsca
+ps aux | grep -i pytho
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+git status
+git diff
+git checkout subscale_driver/VADL2022.cpp
+git status
+git pull
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+python3
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+git pull
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+ls -la /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib/libopencv_hdf.so.3.2
+which python2
+which python3
+git pull
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+printenv | grep -i python
+pkg-config --list-all | grep -i python
+pkg-config python-3.7
+pkg-config --cflags python-3.7
+python3.7
+python3.7m
+git pull
+cd VanderbiltRocketTeam/
+tmux a
+tmux -a -t 1
+tmux -a t 1
+tmux -t 1
+tmux a -t 1
+nix-shell
+python3
+git pull
+tmux a -t 1
+cd VanderbiltRocketTeam/
+nix-shell
+tmux a -t 1
+tmux a
+tmux
+cd VanderbiltRocketTeam/
+nix-shell
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+git pull
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+git pull
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+git pull
+git pull && make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 
+git pull && make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0
+git pull
+make -j5 sift_exe_release_commandLine 
+git pull
+make -j5 sift_exe_release_commandLine 
+sudo poweroff
+make -j5 sift_exe_release_commandLine 
+git pull && make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0
+git pull
+make -j5 sift_exe_release_commandLine 
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+./subscale_exe_debug --video-capture
+sudo ./subscale_exe_debug --video-capture
+rm subscale_driver/subscaleMain_debug.o 
+make -j4 subscale_exe_debug
+pkg-config --libs opencv4 libpng python-3.7m jemalloc
+cat /proc/sys/fs/file-max
+pkg-config --cflags opencv4 libpng python-3.7m jemalloc
+ls /nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/include/python3.7m
+less /nix/store/xsvipsgllvyg9ys19pm2pz9qpgfhzmp9-python3-3.7.11/include/python3.7m/pyconfig.h 
+python3.7m
+make clean
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture
+sudo ./subscale_exe_debug --video-capture
+make clean
+make -j4 subscale_exe_debug
+sudo ./subscale_exe_debug --video-capture
+/usr/bin/sudo ./subscale_exe_debug --video-capture
+git pull
+sudo ./subscale_exe_debug --video-capture
+printenv | grep -i python3
+ls /nix/store/vvird2i7lakg2awpwd360l77bbrwbwx0-opencv-4.5.2/lib
+python3
+which python3
+python3.7m
+python3.7m-config
+python3.7m-config --includes
+python3.7m-config --libs
+python3.7m-config --ldflags
+pkg-config --cflags python-3.7m
+pkg-config --ldflags python-3.7m
+pkg-config --lflags python-3.7m
+pkg-config --libs python-3.7m
+pkg-config --cflags python-3.7m
+otool
+python3.7m
+ls -la /nix/store/yc5ilbccacp9npyjr6dayq904w9p49mc-opencv-4.5.2/lib
+git pull
+make -j4 subscale_exe_debug
+sudo ./subscale_exe_debug --video-capture
+which sudo
+echo $PYTHONPATH
+vim Makefile
+make clean
+make -j4 subscale_exe_debug
+sudo ./subscale_exe_debug --video-capture
+git pull
+git status
+git checkout Makefile
+make clean
+make -j4 subscale_exe_debug
+sudo ./subscale_exe_debug --video-capture
+cat subscale_driver/videoCapture.py 
+ls -la /usr/lib | grep -i libopencv_hdf.so.3.2
+ls -la /usr/lib 
+ls -la /lib
+ls -la /usr/local/lib | grep -i opencv
+ls -la /usr/local/li
+ls -la /usr/local/lib/
+ls -la /usr/local/lib/python3.7/
+ls -la /usr/local/lib/python3.7/dist-packages/
+ls -la /usr/lib/python3.7/
+ls -la /usr/lib/python3.7/ | grep -i libopencv_hdf.so.3.2
+ls -la /usr/local/lib 
+ls -la /usr/local/lib/python3.7/
+cd VanderbiltRocketTeam/
+tmux
+ps aux | grep -i subsca
+htop
+pkill -SIGINT subscal
+pkill -SIGINT subscale
+macs
+emacs
+nix-shel
+nix-shell
+git pull
+make -j4 subscale_exe_debug
+sudo ./subscale_exe_debug --video-capture
+ls -la  /sys/class/gpio
+useradd -G gpio pi
+usermod -a -G gpio pi
+sudo usermod -a -G gpio pi
+./subscale_exe_debug --video-capture
+cat /sys/class/gpio/unexport 
+sudo pigpiod
+./subscale_exe_debug --video-capture
+ps aux | grep -i pigpi
+git pull
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture
+kill %1
+make -j4 subscale_exe_debug; sudo `which lldb` -- ./subscale_exe_debug --video-capture
+make -j4 subscale_exe_debug; `which lldb` -- ./subscale_exe_debug --video-capture
+git status
+sudo usermod -a -G i2c pi
+make -j4 subscale_exe_debug; `which lldb` -- ./subscale_exe_debug --video-capture
+sudo adduser pi gpio
+sudo chown root.gpio /dev/mem
+make -j4 subscale_exe_debug; `which lldb` -- ./subscale_exe_debug --video-capture
+sudo chown root:gpio /dev/mem
+ls -la /dev/mem
+sudo chmod g+w /dev/mem
+ls -la /dev/mem
+make -j4 subscale_exe_debug; `which lldb` -- ./subscale_exe_debug --video-capture
+ls -la /dev/mem
+man open
+cd ../gpioTest/
+gcc main.c 
+./a.out 
+sudo ./a.out 
+sudo setcap cap_sys_rawio+ep a.out 
+./a.out 
+cd ../VanderbiltRocketTeam/
+ls
+sudo usermod -a -G i2c pi
+useradd -G gpio pi
+whoami
+if [[ $(whoami) -ne pi ]]; then    echo "This script must be run as the pi user" ; fi
+git pull
+make -j4 subscale_exe_debug; `which lldb` -- ./subscale_exe_debug --video-capture
+make -j4 subscale_exe_debug
+rm subscale_exe_debug 
+make -j4 subscale_exe_debug
+rm subscale_exe_debug 
+make -j4 subscale_exe_debug
+rm subscale_exe_debug 
+make -j4 subscale_exe_debug
+git pull
+git checkout Makefile
+git pull
+make -j4 subscale_exe_debug
+rm subscale_exe_debug 
+make -j4 subscale_exe_debug
+make -j4 subscale_exe_debug; `which lldb` -- ./subscale_exe_debug --video-capture
+./subscale_exe_debug --video-capture
+kill %1
+make -j4 subscale_exe_debug; sudo `which lldb` -- sudo -H -u pi bash -c './subscale_exe_debug --video-capture'
+kill %1
+sudo kill %1
+ps aux | grep -i subcsa
+ps aux | grep -i sift
+make -j4 subscale_exe_debug; sudo `which lldb` -- sudo -H -u pi bash -c './subscale_exe_debug --video-capture'
+sudo kill %1
+jobs
+kill %1
+jobs
+sudo kill %1
+sudo kill 3283
+jobs
+sudo kill 3283
+jobs
+make -j4 subscale_exe_debug; sudo `which lldb` -- sudo -H -u pi bash -c './subscale_exe_debug --video-capture'
+kill %1
+sudo kill 3283
+jobs
+kill %1
+sudo kill 3372
+jobs
+sudo kill 3372
+jobs
+sudo kill -9 3372
+jobs
+./subscale_exe_debug --video-capture
+sudo ./subscale_exe_debug --video-capture
+kill %1
+sudo kill %1
+kill 3456
+sudo kill 3456
+sudo kill -9 3456
+sudo reboot
+tmux a
+cd VanderbiltRocketTeam/
+sudo ./subscale_exe_debug --video-capture
+./subscale_exe_debug --video-capture
+kill %1
+sudo setcap cap_sys_rawio+ep subscale_exe_debug 
+./subscale_exe_debug --video-capture
+kill %1
+make -j4 subscale_exe_debug; sudo `which lldb` -- sudo -H -u pi bash -c './subscale_exe_debug --video-capture'
+kill %1
+make clean
+make -j4 subscale_exe_debug;
+nix-shell
+tmux
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture
+sudo kill %1
+ls -la /dev/mem
+git status
+git pull
+rm subscale_driver/subscaleMain_debug.o 
+make -j4 subscale_exe_debug
+ls -la /dev/mem
+./subscale_exe_debug --video-capture
+kill %1
+sudo killall pigpiod
+./subscale_exe_debug --video-capture
+kill %1
+sudo setcap cap_sys_rawio+ep a.out 
+sudo setcap cap_sys_rawio+ep subscale_exe_debug 
+./subscale_exe_debug --video-capture
+hed /dev/mem
+head /dev/mem
+less /dev/mem
+xxd /dev/mem
+ls -la /dev/mem
+sudo reboot
+ls -la  /var/run/pigpio.pid
+ls -la  /var/run
+ls -la  /var/run/
+tmux
+cd VanderbiltRocketTeam/
+git pull
+tmux a
+ls -la  /var/run/
+cd VanderbiltRocketTeam/
+git pull
+nix-shell
+rm subscale_driver/subscaleMain_debug.o 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture
+kill %1
+ls -la /var/run/
+git pull
+rm subscale_driver/subscaleMain_debug.o 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture
+make -j4 subscale_exe_debug
+git log
+git pull
+make -j4 subscale_exe_debug
+git pull 
+make -j4 subscale_exe_debug
+git pull 
+make -j4 subscale_exe_debug
+git pull 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture
+git pull 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture
+./subscale_exe_debug --video-capture --force-no-imu
+git pull 
+make -j4 subscale_exe_debug
+rm subscale_driver/subscaleMain_debug.o 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture --force-no-imu
+git pull 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture --force-no-imu
+kill %1
+jobs
+git pull 
+make -j4 subscale_exe_debug
+git pull 
+make -j4 subscale_exe_debug
+git pull 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture --force-no-imu
+git pull 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture --force-no-imu
+lldb -o run -- ./subscale_exe_debug --video-capture --force-no-imu
+kill %1
+git pull 
+jobs
+make -j4 subscale_exe_debug
+git pull 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --video-capture --force-no-imu
+./subscale_exe_debug --sift-start-time 0 --force-no-imu
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time --force-no-imu
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu
+make -j5 sift_exe_release_commandLine 
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu
+git pull 
+make -j5 sift_exe_release_commandLine 
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu
+a
+git pull 
+make -j5 sift_exe_release_commandLine 
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu
+git pull 
+make -j5 sift_exe_release_commandLine 
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu
+git pull 
+make -j4 subscale_exe_debug
+git log
+rm subscale_driver/subscaleMain_debug.o 
+make -j4 subscale_exe_debug
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu
+vim subscale_driver/VADL2022.cpp 
+git log
+gits tatus
+git pull
+make -j4 subscale_exe_debug
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu | grep -i linear
+./subscale_exe_debug --sift-start-time 0 --backup-sift-start-time 0 --force-no-imu
+sudo poweroff
+git pull
+./sift_exe_release_commandLine --camera-test-only
+sudo poweroff
+cd VanderbiltRocketTeam/
+nix-shell
+cd VanderbiltRocketTeam/
+nix-shell
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+./sift_exe_release_commandLine --camera-test-only
+sudo poweroff
+./subscale_exe_release --sift-start-time 100
+sudo ./subscale_exe_release --sift-start-time 100
+ls
+sudo poweroff
+cd VanderbiltRocketTeam/
+nix-shell
+ps aux | grep -i vcgen
+pkill vcgen
+echo $?
+pkill -9 vcgen
+echo $?
+ps aux | grep -i vcgen
+dmesg
+vim v4l2-reload.sh
+tmux
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+./sift_exe_release_commandLine --camera-test-only
+ls -la /sys/class/gpio/gpio2/value
+ls -la /sys/class/gpio/gpio2
+ls -la /sys/class/gpio/
+an modprobe
+man modprobe
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+./sift_exe_release_commandLine --camera-test-only
+ls -la /dev/video*
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+./sift_exe_release_commandLine --camera-test-only
+mesg
+dmesg
+mesg
+which mesg
+man mesg
+mesg -v
+man mesg
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+ls -la /dev/video*
+mesg
+dmesg
+vcgencmd get_mem gpu
+sh v4l2-reload.sh 
+modprobe -rf v4l2_mem2mem
+/usr/bin/sudo /bin/umount -f -a -t cifs
+echo $?
+dmesg
+/usr/bin/sudo /bin/umount -f -l -a -t cifs
+dmes
+dmesg
+sleep 5
+/usr/bin/sudo /sbin/modprobe -r -f cifs
+pkill nautilus
+echo $?
+sh v4l2-reload.sh 
+modprobe -rf bcm2835_mmal_vchiq
+lsmod | grep -i vidio
+lsmod | grep -i vid
+rmmod bcm2835_mmal_vchiq
+rmmod bcm2835_codec
+sudo rmmod bcm2835_codec
+sudo rmmod bcm2835_v4l2
+sudo rmmod bcm2835_isp
+modprobe -rf bcm2835_mmal_vchiq
+sudo modprobe -rf bcm2835_mmal_vchiq
+sh v4l2-reload.sh 
+sudo rmmod videobuf2_v4l2
+sudo rmmod v4l2_mem2mem
+sh v4l2-reload.sh 
+sudo modprobe bcm2835_codec bcm2835_v4l2 bcm2835_isp
+sudo poweroff
+mesg
+dmesg
+sh v4l2-reload.sh 
+lsmod
+emacs
+./subscale_exe_release --imu-only
+./subscale_exe_release --imu-record-only
+./subscale_exe_release --sift-start-time 10 --imu-record-only
+sudo ./subscale_exe_release --sift-start-time 10 --imu-record-only
+sudo ./subscale_exe_release --sift-start-time 10
+./subscale_exe_release --sift-start-time 10
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+./subscale_exe_release --sift-start-time 10
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10
+cd VanderbiltRocketTeam/
+nix-shell
+sudo poweroff
+cd VanderbiltRocketTeam/
+git log
+git pull
+make -j4 subscale_exe_debug
+tmux
+sudo poweroff
+make -j4 subscale_exe_debug
+make -j4 subscale_exe_exe
+make -j4 subscale_exe_release
+make -j5 sift_exe_release_commandLine 
+echo $(whoami)
+hostname
+hostname -s
+sudo raspi-config
+hostname
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+ls
+chmod u+x subscale.sh 
+./subscale.sh 
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0
+git pull
+make -j4 subscale_exe_release
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0
+git pull
+make -j4 subscale_exe_release
+git diff origin/subscale2_pythonFix
+git diff origin/subscale2_pythonFix:subscale_driver/subcsaleMain.cpp
+git diff origin/subscale2_dropTest_NVM:subscale_driver/subcsaleMain.cpp
+git diff origin/subscale2:subscale_driver/subcsaleMain.cpp
+ls subscale_driver/subscaleMain.cpp 
+git diff subscale_driver/subscaleMain.cpp 
+git diff origin/subscale2_THE_PYTHON_FIX:subscale_driver/subscaleMain.cpp 
+git diff -- origin/subscale2_THE_PYTHON_FIX:subscale_driver/subscaleMain.cpp 
+git diff origin/subscale2_pythonFix:subscale_driver/subscaleMain.cpp 
+git diff -- origin/subscale2_pythonFix:subscale_driver/subscaleMain.cpp 
+git rev-list --all | xargs git grep --fixed-strings "pid+t"
+git rev-list --all | xargs git grep --fixed-strings "pid_t"
+git rev-list --all | head
+git rev-list --all | head | xargs git grep --fixed-strings "pid_t"
+git grep --fixed-strings "pid_t" 
+git rev-list --all | hea
+git rev-list --all | head
+git grep --fixed-strings "pid_t" e434f7660509762211e2a327498f02e3c20ae89a
+git log
+git diff subscale2_THE_PYTHON_FIX
+git diff origin/subscale2_THE_PYTHON_FIX
+git diff origin/subscale2_*
+git diff origin/subscale2_nixHacks
+git diff origin/subscale2_pythonFix
+git status
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+make -j4 subscale_exe_releaseu
+git pull
+make -j4 subscale_exe_releaseu
+make -j4 subscale_exe_release
+make clean
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0
+git pull
+make -j4 subscale_exe_release
+make -j4 subscale_exe_release --verbose
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0 --verbose
+git pull
+make -j4 subscale_exe_release --verbose
+make -j4 subscale_exe_release
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0 --verbose
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0 --verbose
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0 --verbose --backup-sift-stop-time 4000
+git pull
+make -j4 subscale_exe_release
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0 --backup-sift-stop-time 4000
+git pull
+make -j4 subscale_exe_release
+./subscale_exe_release --sift-start-time 10 --backup-sift-start-time 10 --backup-takeoff-time 0 --backup-sift-stop-time 4000
+nix-shell
+ls
+ls WindTunnel/
+git submodule update --init --recursive 
+python3 WindTunnel/run.py 
+ls -la WindTunnel/
+cat WindTunnel/README.md 
+cd WindTunnel/
+git branch -a
+git log
+ls
+python3 run.py 
+vim run.py 
+sudo pip3 install adafruit-blinka
+git diff noThermocouple master
+git diff noThermocouple master -
+git log
+git branch -a
+git diff origin/noThermocouple master
+git diff master:run.py noThermocouple:run.py
+git diff master noThermocouple -- run.py
+git diff master origin/noThermocouple -- run.py
+vim impurities.txt
+sudo pip3 install adafruit-circuitpython-max31855
+python3 run.py 
+sudo raspi-config
+sudo pip3 install adafruit-circuitpython-max31855
+vim impurities.txt
+python3 run.py 
+cd ..
+emacs
+pip install gpiozero
+tmux
+tmux a
+tmux
+cd VanderbiltRocketTeam/
+git pull
+make -j4 subscale_exe_release
+nix-shell
+dmesg
+python3 subscale_driver/radio.py 
+python3 subscale_driver/radio.py 1
+sudo reboot
+cd VanderbiltRocketTeam/
+tmux
+git pull
+./subscale.sh 
+git pull
+./subscale.sh 
+XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission --sift-params -C_edge 2 -delta_min 0.6 --sleep-before-running 20000 --no-preview-window
+git pull
+./subscale.sh 
+git pull
+./subscale.sh 
+git pull
+./subscale.sh 
+git pull
+./subscale.sh 
+pee
+git pull
+./subscale.sh 
+git pull
+./subscale.sh 
+git pull
+./subscale.sh 
+python3 "subscale_driver/radio.py" 1
+XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission --sift-params -C_edge 2 -delta_min 0.6 --sleep-before-running 20000 --no-preview-window --camera-test-only
+XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission --sift-params -C_edge 2 -delta_min 0.6 --no-preview-window --camera-test-only
+sudo reboot
+cd VanderbiltRocketTeam/
+tmux
+nix-shell
+tmux
+cd VanderbiltRocketTeam/
+XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine --main-mission --sift-params -C_edge 2 -delta_min 0.6 --no-preview-window --camera-test-only
+sudo poweroff
+./subscale.sh 
+/usr/bin/python3 WindTunnel/run.py 1 1
+/usr/bin/python3 WindTunnel/run.py 1 0
+/usr/bin/python3 WindTunnel/run.py 0 0
+man pkill
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+make clean
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+git pull
+make -j4 subscale_exe_release
+./subscale.sh 
+kill %1
+jobs
+cd VanderbiltRocketTeam/
+python3 "subscale_driver/radio.py" 1
+python3 "subscale_driver/radio.py" 
+python3 "subscale_driver/radio.py"
+nix-shell
+cd VanderbiltRocketTeam/
+tmux
+export TMUX=
+tmux
+nix-shell
+htop
+ps aux | grep sift
+ps aux | grep subsca
+sudo poweroff
+git pull
+./subscale.sh subscale2_goodMostly
+pip install RPi.GPIO
+echo $PYTHON_PATH
+/usr/bin/python3 WindTunnel/run.py 0 "$quiet"
+/usr/bin/python3
+python3 WindTunnel/run.py 0 "$quiet"
+git pull
+cd VanderbiltRocketTeam/
+nix-shell
+pip install RPi.GPIO
+pip3 install RPi.GPIO
+cat WindTunnel/impurities.txt 
+sudo pip3 install RPi.GPIO
+sudo pip3 install adafruit-circuitpython-max31855
+sudo pip3 install adafruit-blinka
+nix-shell
+nix-shellul
+git pull
+nix-shellul
+nix-shell
+git pull
+nix-shell
+nix-shellul
+git pull
+nix-shell
+nix-shellul
+git pull
+nix-shell
+git pull
+./subscale.sh 
+nix-shell
+git pull
+nix-shell
+sudo poweroff
+./subscale.sh subscale2_goodMostly
+python3 WindTunnel/run.py 0 "$quiet"
+git pull
+python3 WindTunnel/run.py 0 "$quiet"
+/usr/bin/python3 WindTunnel/run.py 0 "$quiet"
+/usr/bin/python3 W
+/usr/bin/python3 
+man python3
+git pull
+windTunnel="import sys; sys.path = list(filter(lambda x: '/nix/store/' not in x, sys.path)); import WindTunnel.run #That's all folks"
+./subscale.sh subscale2_goodMostly
+git pull
+./subscale.sh subscale2_goodMostly
+git pull
+kill %1
+python3 subscale_driver/radio.py 
+sudo poweroff
+python3 subscale_driver/radio.py 
+./subscale.sh subscale2_goodMostly
+sudo poweroff
+cd VanderbiltRocketTeam/
+nix-shell
+cd VanderbiltRocketTeam/
+nix-shell
+python3 subscale_driver/radio.py 
+sudo poweroff
+python3 subscale_driver/radio.py 
+./subscale.sh subscale2_goodMostly
+python3 subscale_driver/radio.py 
+vcgencmd measure_volts 
+cd VanderbiltRocketTeam/
+nix-shell
+cd VanderbiltRocketTeam/
+nix-shell
+sudo poweroff
+cd VanderbiltRocketTeam/
+git log
+nix-shell
+tmux
+tmux a
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+tmux a
+nix-shell
+emacs
+cd dataOutput/
+ls -t | head -n 26 | xargs tar --xattrs --acls --preserve-permissions -H posix --use-compress-program='gzip' -cf "../files_subscale2_sift1.gzip" && echo $?
+ls -t | head -n 26 | xargs -i{} -n 1 find {} -exec stat {} \; > ../ctimes_subscale2_sift1.txt
+cd ..
+git status
+git add -A
+git commit -m "After subscale2 flight on sift1 pi"
+git pull
+git push
+sudo poweroff
+date
+cd VanderbiltRocketTeam/
+nix-shell
+cd VanderbiltRocketTeam/
+git log
+ifconfig
+./mergeVideosInDataOutput.sh dataOutput/2022-01-30_01_50_07_CST
+sudo reboot
+cd VanderbiltRocketTeam/
+git pull
+make -j5 sift_exe_release_commandLine 
+git checkout fullscale1
+git fetch
+git checkout fullscale1
+git checkout origin/fullscale1
+git branch -a
+git checkout fullscale1
+git pull
+git checkout fullscale1
+make -j5 sift_exe_release_commandLine 
+tmux
+tmux a
+cd VanderbiltRocketTeam/
+tmux
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4 --sift-video-output --main-mission
+git log
+make -j4 sift_exe_release_commandLine
+tmux a
+cd VanderbiltRocketTeam/
+nix-shell
+tmux a
+tmux
+cd VanderbiltRocketTeam/
+nix-shell
+tmux a
+man make
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 1.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000
+ls Data/
+git submodule update --init --recursive
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 1.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 1.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make clean
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+make -j4 sift_exe_release_commandLine subscale_exe_debugul
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+jobs
+ps aux | grep subsca
+pkill 6189
+ps aux | grep subsca
+pkill -9 6189
+ps aux | grep subsca
+pkill -9 6189
+kill -9 6189
+ps aux | grep subsca
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+pkill -9 6189
+pkill -9 subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+ps aux | grep subsca
+pkill -9 sift_exe
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+cd VanderbiltRocketTeam/
+git log
+git push
+git checkout fullscale1
+git pull
+make -j4 sift_exe_release_commandLine
+nix-shell
+tmux a
+tmux 
+tmux a
+emacs
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+ps aux | grep subsca
+ps aux | grep sift
+git pull
+make -j4 sift_exe_release_commandLine
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+make -j4 sift_exe_release_commandLine subscale_exe_debugul
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+emcas
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+jobs
+ps aux | grep sift
+ps aux | grep subs
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 10.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+git diff
+git stash
+git status
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git log
+git diff HEAD~1
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git diff HEAD~1
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 10.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+jobs
+ps aux | grep -i sift
+ps aux | grep -i subsc
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 10.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+jobs
+ps aux | grep -i subsc
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+make -j4 sift_exe_release_commandLine subscale_exe_debug
+make -j4 sift_exe_release_commandLine subscale_exe_debugul
+git pull
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+cd VanderbiltRocketTeam/
+nix-shell
+tmux 
+tmux a
+cd VanderbiltRocketTeam/
+git pull
+git log
+tmux
+htop
+make -j5 sift_exe_release_commandLine subscale_exe_release
+nix-shell
+make -j5 sift_exe_release_commandLine subscale_exe_release
+ls -lat /src| head
+ls -lat src | head
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 10'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 15'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30' --save-every-n-seconds 0
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30 --save-every-n-seconds 0'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30 --save-every-n-seconds -1'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 10 --save-every-n-seconds -1'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 999999999999 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 6 --save-every-n-seconds -1'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 3000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30 --save-every-n-seconds -1'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 99993000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30 --save-every-n-seconds -1'
+a
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 15000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 30 --save-every-n-seconds -1'
+pkill -9 vlc
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 15000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 15 --save-every-n-seconds -1'
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 15000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps '
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 10000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 6'
+./mergeVideosInDataOutput.sh dataOutput/2022-02-13_14_22_11_CST
+./subscale_exe_debug --takeoff-g-force 0 --sift-start-time 0  --backup-takeoff-time 0  --main-deployment-g-force 1.5 --backup-sift-start-time 0 --backup-sift-stop-time 10000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--fps 6 --save-every-n-seconds -1'
+sudo poweroff
+cd VanderbiltRocketTeam/
+tmux
+tmux a
+tmux a
+vcgencmd measure_volta
+vcgencmd measure_volts
+pkill -9 vlc
+vim subscale_driver/videoCapture.py 
+nix-shell
+exit
+sudo nano /boot/config.txt
+watch -n 1 vcgencmd measure_clock arm
+stress -j4
+stress --help
+stress -c 4
+tmux
+stress -c4
+stress -c 4
+vcgencmd measure_voltage
+vcgencmd commands
+vcgencmd measure_volts
+watch -n 1 vcgencmd measure_volts
+exit
+watch -n 1 vcgencmd measure_clock arm
+exit
+cd VanderbiltRocketTeam/
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 100000 --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+exit
+pkill subscale_exe_re 
+exit
+pkill subscale_exe_re 
+exit
+tmux
+sudo raspi-config
+sudo reboot
+sudo poweroff
+ls
+ifconfig
+sudo apt install gparted
+gparted
+tmux a
+ls
+vi sshTunnel.sh
+vi sshTunnel.service
+sudo cp sshTunnel.service /lib/systemd/system
+sudo systemctl enable sshTunnel
+make -j5 sift_exe_release_commandLine
+ls
+git clone https://github.com/VADL-2022/UnitTests
+ls
+cd UnitTests/
+ls
+cd ..
+mkdir .bin
+vi .bin/ci_cmd
+chmod +x .bin/ci_cmd 
+vi .profile 
+ls bin
+mv .bin bin
+ci_cmd
+source .profile
+ci_cmd
+git clone https://github.com/VADL-2022/SIFT.git
+ls
+df -h
+gparted
+nix-shell -p gparted
+git clone https://github.com/VADL-2022/SIFT.git
+ci_cmd
+vi UnitTests/tests.sh 
+ci_cmd
+ci_cmd fullscale1
+cat bin/ci_cmd 
+vi ci_cmd
+vi bin/ci_cmd 
+ci_cmd fullscale1
+ci_cmd fullscale1 | less
+ci_cmd fullscale1 2>>otp
+vi otp
+vi UnitTests/tests.sh 
+cd SIFT/
+git reset --hard HEAD
+git checkout fullscale1 
+git reset --hard HEAD
+git checkout fullscale1 
+git checkout fullscale1 -f
+cd ..
+vi UnitTests/tests.sh 
+ci_cmd
+ls
+sudo systemctl status sshTunnel
+sudo systemctl start sshTunnel
+sudo systemctl status sshTunnel
+sudo systemctl restart sshTunnel
+sudo systemctl status sshTunnel
+vi sshTunnel.sh
+sudo systemctl restart sshTunnel
+sudo systemctl status sshTunnel
+vi sshTunnel.sh
+ci_cmd
+vi UnitTests/tests.sh 
+cat te
+cat UnitTests/tests.sh 
+cd SIFT/
+nix-shell
+ci_cmd
+cd ..
+ci_cmd
+vi UnitTests/tests.sh 
+ci_cmd
+ls
+chmod +x sshTunnel.s
+chmod +x sshTunnel.sh
+./sshTunnel.sh 
+vi sshTunnel.s
+vi sshTunnel.sh
+sudo systemctl restart sshTunnel
+sudo systemctl status sshTunnel
+sudo apt install sshpass
+sudo systemctl restart sshTunnel
+sudo systemctl status sshTunnel
+vi sshTunnel.s
+vi sshTunnel.sh
+sudo systemctl restart sshTunnel.service 
+sudo systemctl status sshTunnel.service 
+sudo systemctl stop sshTunnel.service 
+sudo systemctl enable sshTunnel.service 
+sudo reboot
+ls
+sudo systemctl status sshTunnel
+sudo systemctl stop sshTunnel
+./sshTunnel.sh 
+cat sshTunnel.s
+cat sshTunnel.sh
+ssh -o ConnectTimeout=5 -N -p 26917 -R 19998:localhost:22 sshtunnel@bondtechsolutions.sytes.net'
+ssh -o ConnectTimeout=5 -N -p 26917 -R 19998:localhost:22 sshtunnel@bondtechsolutions.sytes.net
+vi sshTunnel.sh
+sudo systemctl restart sshTunnel
+sudo nano /boot/config.txt
+sudo reboot
+stress -c 4
+exit
+vcgencmd measure_clock arm
+exit
+tmux
+cd UnitTests/
+ls
+git stash
+git pull
+ls
+cd ..
+cat bin/ci_cmd 
+cd UnitTests/
+ls
+git pull
+cd ..
+ls
+UnitTests/
+cd UnitTests/
+git pull
+ls
+ls /lib/systemd/system
+ls /lib/systemd/system/sshTunnel.service 
+l
+ls
+ci_cmd
+ls
+ci_cmd
+tmux a
+sudo poweroff
+sudo lsof -i -P -n | grep -i 199
+ls /lib/systemd/system/sshTunnel.service 
+cat /lib/systemd/system/sshTunnel.service 
+cat /home/pi/sshTunnel.sh
+/home/pi/sshTunnel.sh
+sudo systemctl status sshTunnel.service 
+ls .
+sudo systemctl status sshTunnel.service 
+cat sshTunnel.s
+cat sshTunnel.sh 
+sudo systemctl stop sshTunnel
+sudo systemctl status sshTunnel.service 
+./sshTunnel.sh 
+bg
+fg
+sudo systemctl start sshTunnel.service 
+sudo systemctl status sshTunnel.service 
+sudo reboot
+vim sshTunnel.sh
+tmux
+vim sshTunnel.sh
+nix-env --version
+ls
+ls SIFT/
+cd SIFT/
+git log
+cd ..
+cd VanderbiltRocketTeam/
+git log
+git remote -v
+cd ..
+cd SIFT/
+git log
+git remote -v
+which git
+vcgencmd measure_temp
+python3.7m
+nix-shell -p scipy
+nix-shell -p python37Packages.scipy
+vim shell.nix
+tmux
+cd UnitTests/
+git pull
+cd ..
+cd UnitTests/
+git pull
+cd ..
+cd UnitTests/
+./tests.sh 
+nix-shell ../SIFT
+git pull
+./tests.sh 
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_debug
+git pull
+./tests.sh 
+man nix-shell
+cd ../VanderbiltRocketTeam/
+nix-shell
+cd ../UN
+cd ../UnitTests/
+git pull
+./tests.sh 
+git pull
+./tests.sh 
+./tests.sh ul
+git pull
+./tests.sh ul
+./tests.sh pass fullscale1 
+git pull
+./tests.sh pass fullscale1 
+git pull
+./tests.sh pass fullscale1 
+./tests.sh pass fullscale1 ul
+git pull
+./tests.sh pass fullscale1 
+echo $?
+history | tail
+./tests.sh pass fullscale1 
+echo $?
+cat "dataOutput/2022-02-17_16_45_11_CST/scaled0.png" | sed -E "s/(;)/],/g" | awk -v RS='^$' '{ print "["$NF"]" }'
+cat "../SIFT/dataOutput/2022-02-17_16_45_11_CST/scaled0.png" | sed -E "s/(;)/],/g" | awk -v RS='^$' '{ print "["$NF"]" }'
+cat "../SIFT/dataOutput/2022-02-17_16_45_11_CST/scaled0.png.matrix0.txt" | sed -E "s/(;)/],/g" | awk -v RS='^$' '{ print "["$NF"]" }'
+outputFile="../SIFT/dataOutput/2022-02-17_16_45_11_CST/scaled0.png.matrix0.txt" 
+grep -o --perl-regexp 'Saving to \K(.*\.png)' "$outputFile" | tail -n 1
+grep -o --perl-regexp 'Saving to \K(.*\.png)' "$outputFile"
+echo $outputFile
+ls $outputFile
+cat "$outputFile" | grep -o --perl-regexp 'Saving to \K(.*\.png)'
+ls -la ../SIFT/dataOutput/
+ls ../SIFT/dataOutput/2022_02_17_04_45_10_PM.log.txt
+outputFile=../SIFT/dataOutput/2022_02_17_04_45_10_PM.log.txt
+cat "$outputFile" | grep -o --perl-regexp 'Saving to \K(.*\.png)'
+cat "$outputFile" | grep -o --perl-regexp 'Saving to \K(.*\.png)' | tail -n 1
+vim pypy.
+vim py.py
+python3 py.py 
+vim py.py
+python3 py.py 
+vim py.py
+python3 py.py 
+vim py.py
+python3 py.py 
+vim py.py
+cd ..
+cd SIFT/
+python3 applyTransformMatrix.py 
+vim applyTransformMatrix.py 
+python3
+nix-shell
+git status
+git checkout shell.nix
+git pull
+cd ../UnitTests/
+git pull
+./tests.sh 
+ls
+cat password 
+rm password 
+git pull
+./tests.sh 
+ls -la 
+rm password
+man rm
+rm -f password
+echo $?
+jobs
+kill %1
+ls -la 
+rm -f password
+echo $
+echo $?
+ls
+man bash
+git pull
+./tests.sh 
+kill %1
+jobs
+ps aux | grep -i sift
+ps aux | grep -i subscal
+kill 15460
+ps aux | grep -i subscal
+ps aux | grep -i sift
+cd UnitTests/
+git pull
+sudo systemctl status sshTunnel.service 
+htop
+ps aux | grep -i sift
+ps aux | grep -i tes
+ps aux | grep -i nix-s
+ps aux | grep -i nix-
+ps aux | grep -i make
+ps aux | grep -i nix-s
+ping google.com
+cd VanderbiltRocketTeam/
+nix-shell
+sudo reboot
+ps aux | grep -i nix-s
+sudo poweroff
+ping google.com
+ls
+cd SIFT/
+git pull
+cd ..
+ls
+cat bin/ci_cmd 
+cd SIFT/
+git pull
+git submodule update --init --recursive
+git reset --hard HEAD
+git submodule update --init --recursive
+git submodule update --recursive
+git clean -n
+git submodule update --recursive
+git reset --hard HEAD
+cd -
+git clean -n
+cd SIFT/
+git submodule foreach --recursive git clean -xfd
+git submodule update --recursive --init
+dmesg
+git submodule update --recursive --init
+git submodule update --recursive 
+ping google.com
+git submodule update --recursive 
+ping github.com
+git pull
+ls
+git submodules list
+git submodule list
+cat .gitmodules 
+cd sift_anatomy_20141201
+git reset --hard HEAD
+cd ..
+cd src/op
+cd src/optick
+ls
+ls src
+cat .gitmodules
+cd SiftGPU/
+git reset --hard HEAD
+cd ..
+cd src/python/IMU_VV/
+git reset --hard HEAD
+cd ..
+cd Data
+cd ..
+cd Data/
+git reset --hard HEAD
+cd ..
+cd WindTunnel/
+git reset --hard HEAD
+cd ..
+git submodule update --init --resursive
+git reset --hard master
+rm -r Data/
+rm -r SiftGPU/
+rm -r WindTunnel/
+rm -r src/python/IMU_VV/
+git status
+git reset --hard master
+git status
+git checkout master
+git status
+git reset --hard HEAD
+git status
+rm -r sift_anatomy_20141201/
+git status
+git reset --hard HEAD
+git status
+git checkout fullscale1
+git submodule update --init --recursive
+cd ..
+sudo raspi-config
+raspi-config nonint get_i2c | grep 0
+echo $?
+cd SIFT
+git reset --hard HEAD
+echo $?
+git fetch
+git config user.name
+git config user.email
+export GIT_ASKPASS="../UnitTests/password"
+git fetch
+export GIT_ASKPASS=""
+git fetch
+echo $?
+git checkout fullscale1 -f
+echo $?
+git pull
+echo $?
+git submodule update --init --recursive
+git submodule
+git submodule sync
+git submodule update --init --recursive
+git submodule foreach rm -rf
+git submodule update --init --recursive
+rm -rf Data/
+git submodule update --init --recursive
+rm -rf Data/
+rm -rf SiftGPU/
+rm -rf WindTunnel/
+rm -rf sift_anatomy_20141201/
+rm -rf src/python/IMU_VV/
+git submodule update --init --recursive
+git clean -xfd
+git submodule foreach --recursive git clean -xfd
+git reset --hard
+git submodule foreach --recursive git reset --hard
+git submodule update --init --recursive
+git status
+cd ..
+cd SIFT/
+git status
+git reset --hard HEAD
+git status
+rm -rf sift_anatomy_20141201/
+git reset --hard HEAD
+git status
+git submodule -init --recursive
+git submodule update --init --recursive
+git status
+cd ..
+cd SIFT/
+git submodule update --init --recursive
+date
+tmux a
+git pull
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_debug
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4' --meco 5000
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
+./subscale_exe_debug --sift-start-time 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --backup-sift-start-time 100000 --backup-sift-stop-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4' --meco 5000
+tmux
+ls -la /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST
+cd VanderbiltRocketTeam/
+git pull
+nix-shell
+tmux
+emacs
+cd VanderbiltRocketTeam/
+nix-shell
+cd VanderbiltRocketTeam/
+./sift_exe_release_commandLine --camera-test-only
+dmesg
+sudo poweroff
+cd VanderbiltRocketTeam/
+git log
+git pull
+ls Data/
+mkdir Data/fullscale1
+mkdir Data/fullscale1/Derived
+ls -la Data/subscale2/
+ls -la Data/subscale2/SIFT/
+ls -la Data/subscale2/Derived/
+cd Data/fullscale1/
+ls
+mkdir sift1
+mv Derived/ sift2
+mv sift2 sift1/Derived
+ls -la 
+ls -la sift1/
+cd ../..
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_release
+nix-shell
+cd VanderbiltRocketTeam/
+nix-shell
+cd VanderbiltRocketTeam/
+sudo reboot
+ls -la VanderbiltRocketTeam/src/stdafx.hpp.gch
+cd VanderbiltRocketTeam/src/
+ls -la stdafx.hpp.gch
+less stdafx.hpp.gch
+less stdafx_sift_release_commandLine.hpp.gch
+ls -la
+cd ..
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_release
+git log
+git pull
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_release
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+jobs
+ps aux | grep -i subsca
+ps aux | grep -i sift
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+pkill vlc
+pkill -9 vlc
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 --skip-image-indices 2 10000000
+./subscale_exe_release --extra-sift-exe-args '--skip-image-indices 2 10000000 --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 
+./subscale_exe_release --extra-sift-exe-args '--skip-image-indices 2 100 --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 
+jobs
+ps aux | grep -i sift
+kill -9 5347
+./subscale_exe_release --extra-sift-exe-args '--skip-image-indices 2 100 --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 
+./subscale_exe_release --extra-sift-exe-args '--verbose --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 
+./subscale_exe_release --extra-sift-exe-args '--verbose --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+vcgencmd measure_temp
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 --verbose
+jobs
+ps aux | grep -i sift
+ps aux | grep -i subs
+./subscale_exe_release --extra-sift-exe-args '--main-mission-interactive --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 --verbose
+./subscale_exe_release --extra-sift-exe-args '--skip-image-indices 70 --main-mission-interactive --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 --verbose
+./subscale_exe_release --extra-sift-exe-args '--skip-image-indices 0 70 --main-mission-interactive --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420 --verbose
+tmux
+cd VanderbiltRocketTeam/
+ls -la Data/fullscale1/
+stat Data/fullscale1/output.mp4 
+cd Data/
+ls -la fullscale1/sift1/Derived/
+rm fullscale1/output.mp4 
+cd ..
+./subscale_exe_release --extra-sift-exe-args '--main-mission-interacti e --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+./subscale_exe_release --extra-sift-exe-args '--main-mission-interactive --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+git log
+git status
+git branch "videoCaptureTesting"
+git checkout videoCaptureTesting
+git log
+git add -A
+git status
+git commit -m "videoCapture testing"
+git push
+git push --set-upstream origin videoCaptureTesting
+git checkout fullscale2
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_release
+nix-shell
+tmux a
+git pull
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_release
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+jobs
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_release
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 0 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+jobs
+ps aux | grep -i nix-s
+tail GOOD.txt
+tail GOOD.txt -n10
+tail GOOD.txt -n2"
+0"
+tail GOOD.txt -n20
+git pull
+git pull && make -j4 sift_exe_release_commandLine subscale_exe_release
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --backup-sift-start-time 67500 --sift-start-time 7000 --takeoff-g-force 0 --main-deployment-g-force 0 --backup-sift-stop-time 28500 --meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+nix-shell
+ls
+sudo systemctl status sshTunnel
+sudo systemctl stop sshTunnel
+./sshTunnel.sh 
+sudo reboot
+ls
+sudo systemctl status sshTunnel
+ls
+sudo systemctl status sshTunnel
+sudo systemctl stop sshTunnel
+ls
+./sshTunnel.sh 
+vi sshTunnel.sh
+./sshTunnel.sh 
+cat sshTunnel.sh
+vi sshTunnel.sh
+./sshTunnel.sh 
+vi sshTunnel.sh
+cp sshTunnel.sh sshTunnel2.sh
+vi sshTunnel2.sh 
+vi sshTunnel.sh 
+pwd
+vi sshTunnel.sh 
+sudo systemctl start sshTunnel.service 
+sudo systemctl status sshTunnel.service 
+ls
+cat sshTunnel.sh
+cat sshTunnel2.sh 
+ls
+ls UnitTests/
+cat UnitTests/tests.sh 
+vi UnitTests/tests.sh 
+ssh pi@10.16.137.43
+make -j4 sift_exe_release_commandLine subscale_exe_release
+python3
+python3.7m
+tmux a
+tmux
+sudo systemctl status sshTunnel.service 
+cat /home/pi/sshTunnel2.sh
+cat /home/pi/sshTunnel.sh
+ps aux | grep -i bash
+sudo systemctl status sshTunnel.service 
+sudo lsof -i -P -n | grep -i 199
+ssh -p 19999 pi@localhost
+ps aux | grep -i ssh
+kill 7421
+vim sshTunnel.sh
+vim sshTunnel2.sh
+vim sshTunnel.sh
+ps aux | grep -i ssh
+ps aux | grep -i 'ssh -o'
+sudo systemctl restart sshTunnel
+ps aux | grep -i 'ssh -o'
+vim sshTunnel.sh
+sudo reboot
+tmux a
+ls
+sudo lsof -i -P -n | grep -i 199
+ps aux | grep -i 'ssh -o'
+tmux a
+ps aux | grep -i 'ssh -o'
+sudo systemctl status sshTunnel.service 
+sudo systemctl restart sshTunnel.service
+ps aux | grep -i 'ssh -o'

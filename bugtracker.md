@@ -4,6 +4,7 @@
 
 ### Issues
 
+1. No python output when using tee on sift exe
 1. >1024 null images causes ```if ((i == 0 && processedImageQueue.count == 0) // Edge case for first image
         || (processedImageQueue.writePtr == (i) % processedImageQueueBufferSize) // If we're writing right after the last element, can enqueue our sequentially ordered image
         ) {``` to fail
