@@ -16,3 +16,6 @@
 [submodule "Data"]
 	path = Data
 	url = https://github.com/VADL-2022/Data.git
+[submodule "cnn-registration"]
+	path = cnn-registration
+	url = https://github.com/sbond75/cnn-registration.git
