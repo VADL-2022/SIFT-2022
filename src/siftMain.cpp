@@ -975,8 +975,8 @@ int mainMission(DataSourceT* src,
         #ifdef USE_COMMAND_LINE_ARGS
         std::cout << "Showing the rest of the images\n";
         // Show images
-        auto waitKey = [](int t = 30){
-            char c = cv::waitKey(t);
+        auto waitKey = [&cfg](int t = 30){
+            char c = cv::waitKey(CMD_CONFIG(waitKeyForever) ? 0 : t);
             if (c == 'q') {
                 // Quit
                 { out_guard();

@@ -269,3 +269,38 @@ make -j8 sift_exe_debug_commandLine && ./sift_exe_debug_commandLine --video-file
 
 pi ip finder: nmap -p 22 10.16.137.0/24 | grep -i "tcp open" -B 4
 full build: git pull && git submodule update --init --recursive && make -j4 sift_exe_release_commandLine subscale_exe_release
+
+
+
+
+
+
+-- drone test 3-21-2022:
+
+./subscale_exe_release --imu-record-only &
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission
+
+-- innovation ideas
+
+sift struggles most closer to ground (maybe 100 feet? or maybe whenever main deployed in fullscale1 (late)). so:
+- TRY: ONLY RUN 1.)ROI UNDISTORT WHEN CLOSE TO THE GROUND since it'll prevent latching onto trees etc. -- and then use gyro to unrotate maybe, only if it is improved when using the unrotated manually imageset you have!  and 2.) make sift params BUMPED UP A TON so they grab LOTS of keypoints when closer to the ground -- the features seem worse and transform a lot more when closer to ground and 3.) BUMP UP FPS when close to the ground for the same reason: less good features so maybe closer keypoints are easier to match?
+
+
+frame index 122 onwards bad
+
+# BAD:
+(sleep 30; ./subscale_exe_release --imu-record-only ) & ; sleep 30 ; ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --fps 30 --finish-rest-always | tee logasd.txt
+
+# TESTING:
+(sleep 2; echo ./subscale_exe_release --imu-record-only ) & (sleep 2 ; echo ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --fps 30 --finish-rest-always | tee logasd.txt)
+
+# USE:
+time=60; output="log_$(hostname)_$(date "+%Y-%m-%d_%H_%M_%S_%Z").txt"; (sleep $time; ./subscale_exe_release --imu-record-only ) & (sleep $time ; ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --fps 10 --save-first-image --finish-rest-always 2>&1 | tee "$output")
+
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-03-27_15_36_35_CDT/output.mp4 --finish-rest-always
+
+time=30; output="log_$(hostname)_$(date "+%Y-%m-%d_%H_%M_%S_%Z").txt"; (sleep $time; ./subscale_exe_release --imu-record-only ) & (sleep $time ; ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --fps 5 --save-first-image --finish-rest-always 2>&1 | tee "$output")
+
+
+--- hough circle detection tuning practice on partial drone test footage
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission-interactive --video-file-data-source --video-file-data-source-path Data/DroneTests/2022-03-21_19_02_14_CDT/output.mp4  --finish-rest-always
