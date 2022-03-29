@@ -304,3 +304,19 @@ time=30; output="log_$(hostname)_$(date "+%Y-%m-%d_%H_%M_%S_%Z").txt"; (sleep $t
 
 --- hough circle detection tuning practice on partial drone test footage
 ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission-interactive --video-file-data-source --video-file-data-source-path Data/DroneTests/2022-03-21_19_02_14_CDT/output.mp4  --finish-rest-always
+
+---
+
+time=30; output="log_$(hostname)_$(date "+%Y-%m-%d_%H_%M_%S_%Z").txt"; (sleep $time; ./subscale_exe_release --imu-record-only ) & (sleep $time ; ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --fps 5 --save-first-image --finish-rest-always --no-preview-window 2>&1 > >(trap '' INT; tee "$output"))
+
+/home/pi/VanderbiltRocketTeam/dataOutput/2022-03-28_18_34_07_CDT was at 300feet
+
+dataOutput/2022-03-28_18_39_25_CDT/scaled34.png was 700 feet
+
+2022-03-28_18_46_26_CDT was 500 feet
+
+dataOutput/2022-03-28_18_50_08_CDT was 500ft
+
+dataOutput/2022-03-28_18_54_34_CDT was 450ft
+
+`time=55; output="log_$(hostname)_$(date "+%Y-%m-%d_%H_%M_%S_%Z").txt"; (sleep $time; ./subscale_exe_release --imu-record-only ) & (sleep $time ; ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --fps 15 --save-first-image --finish-rest-always --no-preview-window 2>&1 > >(trap '' INT; tee "$output"))` was 500ft
