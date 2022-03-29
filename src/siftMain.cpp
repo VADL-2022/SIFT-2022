@@ -33,6 +33,8 @@
 #include <pybind11/numpy.h> // for py::array_t
 namespace py = pybind11;
 
+#include "PythonLockedOptional.hpp"
+
 // For stack traces on segfault, etc.
 //#include <backward.hpp> // https://github.com/bombela/backward-cpp
 namespace backward {
@@ -574,7 +576,7 @@ int mainMission(DataSourceT* src,
         t.reset();
         if (!CMD_CONFIG(imageCaptureOnly)) {
             cv::Mat greyscale = src->siftImageForMat(i);
-            std::optional<py::array_t<float>> greyscale_;
+            PythonLockedOptional<py::array_t<float>> greyscale_;
             t.logElapsed("siftImageForMat");
             //auto path = src->nameForIndex(i);
             
@@ -698,19 +700,17 @@ int mainMission(DataSourceT* src,
             discardImage_label:
             if (discardImage) {
                 // Enqueue null image indirectly
-                nonthrowing_python([&](){ // <-- Lock the interpreter GIL lock to access greyscale_ copy ctor
-                    processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
-                                                shared_keypoints_ptr(),
-                                                std::shared_ptr<struct sift_keypoint_std>(),
-                                                0,
-                                                shared_keypoints_ptr(),
-                                                shared_keypoints_ptr(),
-                                                shared_keypoints_ptr(),
-                                                cv::Mat(),
-                                                p,
-                                                i,
-                                                imu_);
-                });
+                processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
+                                            shared_keypoints_ptr(),
+                                            std::shared_ptr<struct sift_keypoint_std>(),
+                                            0,
+                                            shared_keypoints_ptr(),
+                                            shared_keypoints_ptr(),
+                                            shared_keypoints_ptr(),
+                                            cv::Mat(),
+                                            p,
+                                            i,
+                                            imu_);
                 
                 // Don't push a function for this image or save it as a possible firstImage
                 goto skipImage;
@@ -752,7 +752,7 @@ int mainMission(DataSourceT* src,
             { out_guard();
                 std::cout << "Pushing function to thread pool, currently has " << tp.n_idle() << " idle thread(s) and " << tp.q.size() << " function(s) queued" << std::endl; }
             tpPush([&pOrig=p, &cfg](int id, /*extra args:*/ size_t i, cv::Mat greyscale,
-            std::optional<py::array_t<float>> greyscale_, std::shared_ptr<IMUData> imu_) {
+            PythonLockedOptional<py::array_t<float>> greyscale_, std::shared_ptr<IMUData> imu_) {
     //            OPTICK_EVENT();
                 { out_guard();
                     std::cout << "hello from " << id << std::endl; }

@@ -189,7 +189,12 @@ def shouldDiscardImage(greyscaleImage, showPreviewWindow=False, siftVideoOutputP
             cv2.putText(image, "CM: " + name, (int(center[0]), int(center[1]) - 15),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
             cv2.line(image, (int(realCenter[0]), int(realCenter[1])), (int(center[0]), int(center[1])), (255, 0, 0), 2)
-    if noneCenters > 0:
+    if noneCenters >= 4:
+        # All were bad, so no sky detected. This is ok at lower altitudes, so compensate by *subtracting* from badness:
+        badInc = 2
+        print("noneCenters:\n  bad -=", badInc)
+        bad -= badInc
+    elif noneCenters > 0:
         badInc = (noneCenters*2) / (badIncs + 1)
         print("noneCenters:\n  bad +=", badInc)
         bad += badInc
