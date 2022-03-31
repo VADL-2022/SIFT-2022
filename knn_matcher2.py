@@ -146,7 +146,7 @@ def run():
         kp2, des2 = sift.detectAndCompute(img2,mask = test_mask) # Returns keypoints and descriptors
 
         # Find matches
-        matches = bf.knnMatch(des1,des2, k=2)
+        matches = bf.knnMatch(des2,des1, k=2) # Swap order of des1,des2 because want to find first image in the second
 
         # Apply ratio test
         good = []
@@ -161,7 +161,7 @@ def run():
                 #img3 = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good,img3,flags=2)
         good_old = good
         
-        good, transformation_matrix, transformation_rigid_matrix = find_homography(kp1, kp2, good_flatList)
+        good, transformation_matrix, transformation_rigid_matrix = find_homography(kp2, kp1, good_flatList) # Swap order of kp1, kp2 because want to find first image in the second
         if transformation_matrix is None:
             print("transformation_matrix was None")
             cv2.waitKey(0)
@@ -181,7 +181,7 @@ def run():
         cv2.imshow('matching',img3);
         tr = cv2.warpPerspective(img1, transformation_matrix, (wOrig, hOrig))
         cv2.imshow('current transformation',tr)
-        tr = cv2.warpPerspective(firstImage, acc, (wOrig, hOrig))
+        tr = cv2.warpPerspective(firstImage, np.linalg.pinv(acc), (wOrig, hOrig))
         cv2.imshow('acc',tr);
         waitForInput()
         #plt.imshow(img3),plt.show()
