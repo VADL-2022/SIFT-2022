@@ -224,12 +224,13 @@ def shouldDiscardImage(greyscaleImage, imageIndex, showPreviewWindow=False, sift
         cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cnts = cnts[0] if len(cnts) == 2 else cnts[1]
         cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
-        center, radius = cv2.minEnclosingCircle(cnts[0])
-        cv2.circle(image, (int(center[0]), int(center[1])), int(radius),
-                   (0, 0, 255), 4)
-        cv2.putText(image, "minEnclosingCircle", (int(center[0]), int(center[1]) - 15),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
-    
+        if len(cnts) > 0:
+            center, radius = cv2.minEnclosingCircle(cnts[0])
+            cv2.circle(image, (int(center[0]), int(center[1])), int(radius),
+                       (0, 0, 255), 4)
+            cv2.putText(image, "minEnclosingCircle", (int(center[0]), int(center[1]) - 15),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
+
     # Show hough circle detection
     # https://docs.opencv.org/3.4/d4/d70/tutorial_hough_circle.html
     #gray = cv2.GaussianBlur(greyscaleImage, (round_up_to_odd(9 * scaleX), round_up_to_odd(9 * scaleY)), 2, None, 2) #cv2.medianBlur(gray, 5)
