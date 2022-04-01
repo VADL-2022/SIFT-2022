@@ -14,13 +14,15 @@ dist = np.matrix([[-0.25496947,  0.07321429, -0.00104747,  0.00103111, -0.009593
 k=mtx
 # https://stackoverflow.com/questions/34316306/opencv-fisheye-calibration-cuts-too-much-of-the-resulting-image
 nk = k.copy()
-nk[0,0]=k[0,0]/2
-nk[1,1]=k[1,1]/2
+#nk[0,0]=k[0,0]/2
+#nk[1,1]=k[1,1]/2
 mapx = None
 mapy = None
 
 w, h = (2592, 1944)
 #h, w = image.shape[:2]
+newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
 # Notice the cv.fisheye.initUndistortRectifyMap being used instead of cv.initUndistortRectifyMap!:
 #mapx, mapy = cv2.fisheye.initUndistortRectifyMap(mtx, dist[:-1], None, nk, (w,h), cv2.CV_16SC2)
 
@@ -189,7 +191,12 @@ def shouldDiscardImage(greyscaleImage, showPreviewWindow=False, siftVideoOutputP
             cv2.putText(image, "CM: " + name, (int(center[0]), int(center[1]) - 15),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
             cv2.line(image, (int(realCenter[0]), int(realCenter[1])), (int(center[0]), int(center[1])), (255, 0, 0), 2)
-    if noneCenters > 0:
+    if noneCenters >= 4:
+        # All were bad, so no sky detected. This is ok at lower altitudes, so compensate by *subtracting* from badness:
+        badInc = 2
+        print("noneCenters:\n  bad -=", badInc)
+        bad -= badInc
+    elif noneCenters > 0:
         badInc = (noneCenters*2) / (badIncs + 1)
         print("noneCenters:\n  bad +=", badInc)
         bad += badInc
@@ -305,6 +312,7 @@ def shouldDiscardImage(greyscaleImage, showPreviewWindow=False, siftVideoOutputP
         bad += badInc
     else:
         print("no hough circles")
+        prev = realCenter
         
     # Show badness
     #<2.5 is good?
@@ -315,8 +323,9 @@ def shouldDiscardImage(greyscaleImage, showPreviewWindow=False, siftVideoOutputP
     #megaHoughCircleDistFromCenterThreshold = 0.1
     #thresholdForBad = 3
     #thresholdForBad = 2.5
-    thresholdForBad = 2
-    if bad <= thresholdForBad and circles is not None and abs(prev[0] - realCenter[0]) < megaHoughCircleDistFromCenterThreshold*width and abs(prev[1] - realCenter[1]) < megaHoughCircleDistFromCenterThreshold*height:
+    thresholdForBad = 2.075
+    if (bad <= thresholdForBad and #circles is not None and
+        abs(prev[0] - realCenter[0]) < megaHoughCircleDistFromCenterThreshold*width and abs(prev[1] - realCenter[1]) < megaHoughCircleDistFromCenterThreshold*height):
         print("shouldDiscardImage(): GOOD IMAGE")
         retval = False
     else:
@@ -363,9 +372,24 @@ def saveVideoWriter():
     
 #     return image
 
-# def undisortImage(image):
-#     hOrig, wOrig = image.shape[:2]
-#     image = cv2.resize(image, (w,h))
-#     image = cv2.remap(image, mapx, mapy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-#     image = cv2.resize(image, (wOrig,hOrig))
-#     return image
+def undisortImage(image):
+    hOrig, wOrig = image.shape[:2]
+    image = cv2.resize(image, (w,h))
+    image = cv2.remap(image, mapx, mapy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    if not useFullImageInsteadOfROI:
+        roiInsetX = 500
+        roiInsetY = int(roiInsetX * 0.6)
+        roi=(int(roiInsetX*1.5), 129+roiInsetY, 2591-roiInsetX*3, 1717-roiInsetY*2)
+        x, y, w_, h_ = roi
+        image = image[y:y+h_, x:x+w_]
+
+        start_point = (x,y)
+        end_point = (x+w_,y+h_)
+        color = (0, 0, 0)
+        thickness = 10
+        #image = cv2.rectangle(image, start_point, end_point, color, thickness)
+        
+        # cv2.imshow('IMAGE',image)
+        # cv2.waitKey(0)
+    image = cv2.resize(image, (wOrig,hOrig))
+    return image
