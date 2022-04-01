@@ -218,18 +218,18 @@ struct SIFTAnatomy : public SIFTBase {
 #elif defined(SIFTOpenCV_)
 struct SIFTOpenCV : public SIFTBase {
     // Defaults //
-//    int     nfeatures = 0;
-//    int     nOctaveLayers = 3;
-//    double     contrastThreshold = 0.04;
-//    double     edgeThreshold = 10;
-//    double     sigma = 1.6;
+    int     nfeatures = 0;
+    int     nOctaveLayers = 3;
+    double     contrastThreshold = 0.04;
+    double     edgeThreshold = 10;
+    double     sigma = 1.6;
     // //
     // Testing //
-    int     nfeatures = 200;
-    int     nOctaveLayers = 5;
-    double     contrastThreshold = 0.03;
-    double     edgeThreshold = 12;
-    double     sigma = 1.2;
+//    int     nfeatures = 200;
+//    int     nOctaveLayers = 5;
+//    double     contrastThreshold = 0.03;
+//    double     edgeThreshold = 12;
+//    double     sigma = 1.2;
     // //
     
     // https://github.com/opencv/opencv/blob/17234f82d025e3bbfbf611089637e5aa2038e7b8/modules/features2d/test/test_sift.cpp
