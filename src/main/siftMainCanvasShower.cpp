@@ -96,8 +96,10 @@ void showAnImageUsingCanvasesReadyQueue(DataSourceBase* src, DataOutputBase& o2)
             canvasesReadyQueue.dequeue(&img);
             cv::Mat realCanvas = prepareCanvas(img);
             commonUtils::imshow("", realCanvas); // Canvas can be empty if no matches were done on the image, hence nothing was rendered. // TODO: There may be some keypoints but we don't show them..
-            py::module_ general = py::module_::import("src.python.General");
-            general.attr("drainPreviewWindowQueue")(); // Show some Python stuff too
+            nonthrowing_python([](){
+                py::module_ general = py::module_::import("src.python.General");
+                general.attr("drainPreviewWindowQueue")(); // Show some Python stuff too
+            });
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();

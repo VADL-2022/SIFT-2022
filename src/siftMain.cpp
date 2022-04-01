@@ -1015,7 +1015,9 @@ int mainMission(DataSourceT* src,
             canvasesReadyQueue.dequeue(&img);
             cv::Mat realCanvas = prepareCanvas(img);
             commonUtils::imshow("", realCanvas);
-            general.attr("drainPreviewWindowQueue")(); // Show some Python stuff too
+            nonthrowing_python([&general](){
+                general.attr("drainPreviewWindowQueue")(); // Show some Python stuff too
+            });
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
