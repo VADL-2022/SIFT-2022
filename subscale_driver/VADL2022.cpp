@@ -71,6 +71,8 @@ std::string LANDING_G_FORCE_str;
 #ifdef USE_LIS331HH // Using the alternative IMU
 const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 #endif
+std::string outputAcc;
+const char *sendOnRadioScriptArgs[] = {NULL, NULL, NULL};
 #ifdef USE_LIS331HH // Using the alternative IMU
 const char* LIS331HH_calibrationFile = nullptr;
 #endif
@@ -81,7 +83,7 @@ bool verbose = false, verboseSIFTFD = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
 auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not actually `now`
 long long imuDataSourceOffset = 0; // For --imu-data-source-path only
-long long mecoDuration = -1, timeToApogee = -1;
+long long mecoDuration = -1, timeToApogee = -1, mainDeploymentAltitude = -1;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -134,7 +136,61 @@ bool sendOnRadio() {
       // do radio
       { out_guard();
         std::cout << "sendOnRadio" << std::endl; }
-      return pyRunFile("subscale_driver/radio.py", 0, nullptr);
+
+      if (!outputAcc.empty()) {
+        { out_guard();
+          std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
+        return false;
+      }
+      // Check for any SIFT output to send by getting the last modified directory (note: this is blocking)
+      // The below command is gotten based on https://stackoverflow.com/questions/9275964/get-the-newest-directory-to-a-variable-in-bash -- note: hack: "Despite being accepted and much-upvoted there are several problems with this solution. It doesn't work if the newest item in the directory is not a directory. It doesn't work if the newest subdirectory has a name that begins with '.'. It doesn't work if the newest subdirectory has a name that contains a newline. Shellcheck complains about the use of ls. See ParsingLs - Greg's Wiki for a detailed explanation of the dangers of processing the output of ls."
+      //const char* args[] = {"bash", "-c", "BACKUPDIR=$(ls -td /backups/*/ | head -1)", "bash",
+        "", NULL};
+      // https://stackoverflow.com/questions/646241/c-run-a-system-command-and-get-output
+      FILE *fp;
+      char path[1035]; // Note: hack, but names won't be longer than a known amount anyway
+      /* Open the command for reading. */
+      fp = popen("ls -td dataOutput/*/ | head -1", "r");
+      if (fp == NULL) {
+        printf("Failed to run ls command. Sending test values on radio.\n" );
+        pyRunFile("subscale_driver/radio.py", 0, nullptr);
+        return false;
+      }
+      /* Read the output a line at a time. */
+      std::string outputAcc2 = "";
+      while (fgets(path, sizeof(path), fp) != NULL) {
+        outputAcc2 += path;
+      }
+      /* close */
+      pclose(fp);
+      
+      { out_guard();
+        std::cout << "Directory: " << outputAcc2 << std::endl; }
+
+      // Merge videos in the directory (note: this is blocking)
+      std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2 + "'"; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
+      fp = popen(cmd.c_str(), "r");
+      if (fp == NULL) {
+        printf("Failed to run merge command. Sending test values on radio.\n" );
+        pyRunFile("subscale_driver/radio.py", 0, nullptr);
+        return false;
+      }
+      /* Read the output a line at a time. */
+      //outputAcc.clear();
+      while (fgets(path, sizeof(path), fp) != NULL) {
+        // Grab until last line (do nothing)
+      }
+      outputAcc = path; // Get last line
+      /* close */
+      pclose(fp);
+      
+      { out_guard();
+        std::cout << "Video file: " << outputAcc << std::endl; }
+      
+      sendOnRadioScriptArgs[0] = "0";
+      sendOnRadioScriptArgs[1] = "";
+      sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
+      return pyRunFile("subscale_driver/radio.py", 3, (char **)sendOnRadioScriptArgs);
     }
     else {
       // do gps
@@ -563,7 +619,7 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
 // Callback for waiting on main parachute deployment
 template<typename LOG_T>
 void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
-  updateRelativeAltitude(log, false);
+  double altitudeFeet = updateRelativeAltitude(log, false);
   
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
@@ -577,7 +633,13 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
   if (backupSIFTStartTime + TIME_FOR_IMU_TO_CATCH_UP < millisSinceTakeoff) { // Past our backup time, force trigger
     auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
     { out_guard();
-      std::cout << "Too much time elapsed without main deployment. Forcing trigger." << std::endl; }
+  #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
+      #warning "Fundamentally flawed due to blast charge for drogue which likely triggers it although due to polling nature of the IMU, parachute deployment forces can be missed since they don't always last longer than 1/40th of a second for IMU polling rate, etc. (takeoff and landing are reliable g's though)"
+      std::cout << "Too much time elapsed without main deployment. Forcing trigger." << std::endl;
+  #else
+      std::cout << "Too much time elapsed without altitude trigger. Forcing trigger." << std::endl;
+  #endif
+    }
     magnitude = FLT_MAX; force = true;
     reportStatus(Status::TooMuchTimeElapsedWithoutMainDeployment_ThereforeForcingTrigger);
   }
@@ -597,15 +659,41 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
     magnitude = FLT_MAX; force=true; // Hack to force next if statement to succeed
   }
   //Check for emergency main parachute deployment with no drogue
-  if (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS) {
+  if (g_state == STATE_WaitingForMainParachuteDeployment &&
+      #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
+      #warning "Fundamentally flawed due to blast charge for drogue which likely triggers it although due to polling nature of the IMU, parachute deployment forces can be missed since they don't always last longer than 1/40th of a second for IMU polling rate, etc. (takeoff and landing are reliable g's though)"
+      millisSinceTakeoff > mecoDuration &&
+      magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS
+      #else
+      millisSinceTakeoff > timeToApogee &&
+      altitudeFeet < mainDeploymentAltitude
+      #endif
+      ) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds, false /*no drogue can't force IMU not detected*/, true); 
   }
-  else if (force || (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS) || forceSkipNonSIFTCallbacks) {
+  else if (force
+           #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
+           #warning "Fundamentally flawed due to blast charge for drogue which likely triggers it although due to polling nature of the IMU, parachute deployment forces can be missed since they don't always last longer than 1/40th of a second for IMU polling rate, etc. (takeoff and landing are reliable g's though)"
+           || (millisSinceTakeoff > mecoDuration && g_state == STATE_WaitingForMainParachuteDeployment && magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS)
+           #endif
+           || forceSkipNonSIFTCallbacks) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds, force, false);
   }
   else {
-    if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS && millisSinceTakeoff <= mecoDuration) {
+    if (
+        #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
+        #warning "Fundamentally flawed due to blast charge for drogue which likely triggers it although due to polling nature of the IMU, parachute deployment forces can be missed since they don't always last longer than 1/40th of a second for IMU polling rate, etc. (takeoff and landing are reliable g's though)"
+        magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS && millisSinceTakeoff <= mecoDuration
+        #else
+        millisSinceTakeoff <= timeToApogee
+        #endif
+        ) {
+      #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
+      #warning "Fundamentally flawed due to blast charge for drogue which likely triggers it although due to polling nature of the IMU, parachute deployment forces can be missed since they don't always last longer than 1/40th of a second for IMU polling rate, etc. (takeoff and landing are reliable g's though)"
       printf("Still need %lld milliseconds until main deployment g duration can be recorded\n", mecoDuration - millisSinceTakeoff);
+      #else
+      printf("Still need %lld milliseconds until altitude-based main deployment time can be triggered\n", timeToApogee - millisSinceTakeoff);
+      #endif
       reportStatus(Status::WaitingForMECOButExceededDesiredAccelInMainDeploymentCallback);
     }
       

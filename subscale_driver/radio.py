@@ -22,13 +22,18 @@ def test():
         i+=1
 
 useStdin = (sys.argv[1] == '1') if len(sys.argv) > 1 else False
-sendThisValue = (sys.argv[2]) if len(sys.argv) > 2 else None
+sendThisString = (sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2] != '' else None
+sendBytesOfThisFilename = (sys.argv[3]) if len(sys.argv) > 3 else None
 
 #if __name__ == '__main__':
 if True:
-    if sendThisValue is not None:
-        res = str(sendThisValue).encode('utf-8')
-        print("Sending on radio:",res)
+    if sendThisString is not None:
+        res = str(sendThisString).encode('utf-8')
+        print("Sending string on radio:",res)
+        ser.write(res)
+    elif sendBytesOfThisFilename is not None:
+        res = open(sendBytesOfThisFilename, 'rb').read()
+        print("Sending bytes on radio:",res)
         ser.write(res)
     elif useStdin:
         line = input()
