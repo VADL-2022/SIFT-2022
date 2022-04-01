@@ -145,7 +145,7 @@ bool sendOnRadio() {
       // Check for any SIFT output to send by getting the last modified directory (note: this is blocking)
       // The below command is gotten based on https://stackoverflow.com/questions/9275964/get-the-newest-directory-to-a-variable-in-bash -- note: hack: "Despite being accepted and much-upvoted there are several problems with this solution. It doesn't work if the newest item in the directory is not a directory. It doesn't work if the newest subdirectory has a name that begins with '.'. It doesn't work if the newest subdirectory has a name that contains a newline. Shellcheck complains about the use of ls. See ParsingLs - Greg's Wiki for a detailed explanation of the dangers of processing the output of ls."
       //const char* args[] = {"bash", "-c", "BACKUPDIR=$(ls -td /backups/*/ | head -1)", "bash",
-        "", NULL};
+      // "", NULL};
       // https://stackoverflow.com/questions/646241/c-run-a-system-command-and-get-output
       FILE *fp;
       char path[1035]; // Note: hack, but names won't be longer than a known amount anyway
