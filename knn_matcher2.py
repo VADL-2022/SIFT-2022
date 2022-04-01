@@ -4,7 +4,8 @@ from __future__ import annotations
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
-from src.python.General import shouldDiscardImage
+from src.python.General import shouldDiscardImage, undisortImage
+import sys
 
 #img1 = cv2.imread('box.png',0)          # queryImage
 #img2 = cv2.imread('box_in_scene.png',0) # trainImage
@@ -17,14 +18,20 @@ bf = cv2.BFMatcher()
 
 # Config #
 mode = 1
-grabMode=1 # 1 for video, 0 for photos
+grabMode=int(sys.argv[1]) if len(sys.argv) > 1 else 2 # 1 for video, 0 for photos, 2 for provide list of images manually
+shouldRunSkyDetection=sys.argv[2] == '1' if len(sys.argv) > 2 else True
+shouldRunUndistort=sys.argv[3] == '1' if len(sys.argv) > 3 else False
+skip=int(sys.argv[4]) if len(sys.argv) > 4 else 0
+imgs=None
 if grabMode==1:
     reader=cv2.VideoCapture(
         # Good drone tests:
-        '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_46_26_CDT/output.mp4'
+        #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_46_26_CDT/output.mp4' #<--!!!!!!!!!!!!!!! WOAH! shockingly accurate result
         #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4'
+        #'quadcopterFlight/live2--.mp4' # our old standby
+        '/Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/Derived/live18_downwards_test/output.mp4'
     )
-else:
+elif grabMode==0:
     import subprocess
     #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
     p=subprocess.run(["compareNatSort/compareNatSort",
@@ -32,6 +39,12 @@ else:
                       # '/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_19_02_14_CDT'
                       #'/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_18_47_47_CDT'
                       , ".png"], capture_output=True)
+elif grabMode==2:
+    imgs=[
+        '/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/cnn-registration/img/Screen Shot 2022-03-29 at 2.13.17 PM.png',
+        #'/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/Data/fullscale1/Derived/SIFT/ExtractedFrames_undistorted/thumb0127.png',
+        '/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0127.png',
+    ]
 # End Config #
 
 # This function is from https://www.programcreek.com/python/example/110698/cv2.estimateAffinePartial2D
@@ -82,23 +95,90 @@ def grabImage(imgName):
     frame = grabInternal(imgName)
     if frame is None:
         return None, False, None
+    if shouldRunUndistort:
+        frame = undisortImage(frame)
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if shouldDiscardImage(greyscale):
+    if shouldRunSkyDetection and shouldDiscardImage(greyscale):
         return None, True, greyscale
     else:
         return frame, False, greyscale
 
+
+# https://medium.com/swlh/youre-using-lerp-wrong-73579052a3c3
+def lerp(a, b, t):
+    return a + (b-a) * t
+
+def showLerpController(firstImage, M, key_):
+    img2=firstImage
+    idMat=np.matrix([[1.0, 0.0, 0.0],
+                     [0.0, 1.0, 0.0],
+                     [0.0, 0.0, 1.0]])
+    Mcurrent = idMat.copy()
+    #inc=0.005*2
+    inc=0.005/2
+    incOrig=inc
+    while True:
+        imgOrig=img2
+        print(imgOrig.shape[:2])
+        widthAndHeight=np.array(imgOrig.shape[:2])
+        temp=widthAndHeight[0]
+        widthAndHeight[0] = widthAndHeight[1]
+        widthAndHeight[1]=temp
+        print(widthAndHeight)
+        img = cv2.warpPerspective(imgOrig, np.linalg.pinv(Mcurrent), widthAndHeight)
+        cv2.imshow('lerp controller',img)
+        cv2.resizeWindow('', widthAndHeight[0], widthAndHeight[1])
+        for i in range(0, len(Mcurrent)):
+            x = Mcurrent[i]
+            for j in range(0, len(x)):
+                y = x[j]
+                Mcurrent[i][j] = lerp(y, M[i][j], inc)
+                #inc*=1.5
+        key = cv2.waitKey(0)
+        if key & 0xFF == ord('q'):
+            exit(0)
+        elif key & 0xFF == ord(key_):
+            continue
+        elif key & 0xFF == ord('f'): # Faster
+            inc+=inc*0.1
+        elif key & 0xFF == ord('g'): # Faster
+            inc+=0.001
+        elif key & 0xFF == ord('s'): # Slower
+            inc-=0.001*2
+        elif key & 0xFF == ord('x'): # Slower
+            inc-=inc*0.1
+        elif key & 0xFF == ord('i'): # Identity
+            Mcurrent=idMat.copy()
+            inc = incOrig
+            img=imgOrig.copy()
+        elif key & 0xFF == ord('m'): # Use matrix
+            Mcurrent=M.copy()
+        else:
+            break
+    
 def run():
+    global imgs
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
         imgs = [None]*totalFrames
-    else:
+    elif grabMode == 0:
         imgs=p.stdout.split(b'\n')
     i = 0
     img1 = None
     discarded = True # Assume True to start with
     greyscale = None
+    
+    imgs_iter = iter(imgs)
+    next(imgs_iter) # Skip first image
+    
     if len(imgs) > 0:
+        # Skip images
+        for j in range(0, skip):
+            i += 1
+            #print('skip')
+            next(imgs_iter)
+        #exit(0)
+
         while img1 is None and discarded:
             img1, discarded, greyscale = grabImage(imgs[i])
             i+=1
@@ -117,19 +197,23 @@ def run():
     else:
         print("No images")
 
-    imgs_iter = iter(imgs)
-    next(imgs_iter) # Skip first image
     #acc = np.matrix([[1,0,0],[0,1,0],[0,0,1]])
     acc = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
     #i = 1 # (Skipped first image)
+    # For each image, run SIFT and match with previous image:
     for imgName in imgs_iter:
-        def waitForInput():
+        def waitForInput(img2=None):
             waitAmount = 1 if i < len(imgs) - 20 else 0
             if waitAmount == 0:
                 print("Press a key to continue")
                 if i == len(imgs) - 1:
                     print("(Last image)")
-            cv2.waitKey(waitAmount)
+            k=cv2.waitKey(waitAmount)
+            applyMatKey='a'
+            if k & 0xFF == ord('q'):
+                exit(0)
+            elif k & 0xFF == ord(applyMatKey) and img2 is not None: # Apply matrix with lerp
+                showLerpController(firstImage, acc, applyMatKey)
         
         img2, discarded, greyscale = grabImage(imgName)
         if img2 is None and not discarded:
@@ -139,7 +223,7 @@ def run():
         if img2 is None and discarded:
             waitForInput()
             i += 1
-            continue
+            continue # Keep img1 as the previous image so we can match it next time
         hOrig, wOrig = img2.shape[:2]
 
         # find the keypoints and descriptors with SIFT
@@ -160,12 +244,23 @@ def run():
                 #img3 = None
                 #img3 = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good,img3,flags=2)
         good_old = good
+
+        try:
+            good, transformation_matrix, transformation_rigid_matrix = find_homography(kp2, kp1, good_flatList) # Swap order of kp1, kp2 because want to find first image in the second
+        except cv2.error:
+            print("Error in find_homography, probably not enough keypoints:", sys.exc_info()[1])
+            cv2.imshow('bad',img2);
+            waitForInput()
+            i+=1
+            continue  # Keep img1 as the previous image so we can match it next time
         
-        good, transformation_matrix, transformation_rigid_matrix = find_homography(kp2, kp1, good_flatList) # Swap order of kp1, kp2 because want to find first image in the second
         if transformation_matrix is None:
             print("transformation_matrix was None")
-            cv2.waitKey(0)
-            break
+            waitForInput()
+            i+=1
+            continue # Keep img1 as the previous image so we can match it next time
+            # cv2.waitKey(0)
+            # break
         acc *= transformation_matrix
         accOld = acc.copy()
         # #print(acc[0])
@@ -177,13 +272,13 @@ def run():
         print("acc:", accOld, acc)
 
         img3 = None
-        img3 = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good_old if mode==0 else list(map(lambda x: [x], good)),outImg=img3,flags=2)
+        img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,good_old if mode==0 else list(map(lambda x: [x], good)),outImg=img3,flags=2)
         cv2.imshow('matching',img3);
         tr = cv2.warpPerspective(img1, transformation_matrix, (wOrig, hOrig))
         cv2.imshow('current transformation',tr)
         tr = cv2.warpPerspective(firstImage, np.linalg.pinv(acc), (wOrig, hOrig))
         cv2.imshow('acc',tr);
-        waitForInput()
+        waitForInput(img2)
         #plt.imshow(img3),plt.show()
         
         # Save current keypoints as {the prev keypoints for next iteration}
