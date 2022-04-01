@@ -134,7 +134,7 @@ else
 fi
 backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))" # Originally we were going to stop SIFT on altitude data. But we're unsure about altitude data being reliable, so we don't use it to stop SIFT, and there's a fallback via backupSIFTStopTime.
 gforce=
-realFlight="--time-for-main-stabilization $mainStabilizationTime $asdasd --main-deployment-g-force 2.5 --main-descent-time $backupSIFTStopTime --time-to-meco 2200 --landing-g-force 8 --emergency-main-deployment-g-force 16" # --main-deployment-g-force is unused, just using timing
+realFlight="--time-for-main-stabilization $mainStabilizationTime $asdasd --main-deployment-g-force 2.5 --main-descent-time $backupSIFTStopTime --time-to-meco 2200 --landing-g-force 8 --emergency-main-deployment-g-force 16 --main-deployment-altitude 750" # --main-deployment-g-force is unused, just using timing
 #testing="--time-for-main-stabilization 0 --main-descent-time 20000 --time-to-meco 5200 --emergency-main-deployment-g-force 1"
 testing2="--time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --time-to-meco 2200 --emergency-main-deployment-g-force 1"
 #extraArgs="$testing2"
