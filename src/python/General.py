@@ -2,6 +2,20 @@ import cv2
 import numpy as np
 import timeit
 
+# For preview window #
+# https://docs.python.org/3/library/queue.html
+import threading, queue
+previewWindowQueue = queue.PriorityQueue() # https://www.educative.io/edpresso/what-is-the-python-priority-queue  # Priority based on image index (we should probably do this in matcher's queue too...)
+
+def drainPreviewWindowQueue():
+    if not previewWindowQueue.empty():
+        item = previewWindowQueue.get()
+        print(f'drainPreviewWindowQueue(): Starting {item}')
+        item[1]()
+        print(f'drainPreviewWindowQueue(): Finished {item}')
+        previewWindowQueue.task_done()
+# #
+
 # Camera undistortion code #
 
 # The calibration data #
@@ -99,7 +113,7 @@ def minimalEnclosingCircle(a, b):
 
 videoWriter = None
 
-def shouldDiscardImage(greyscaleImage, showPreviewWindow=False, siftVideoOutputPath=None #False #Should be None but had to do a hack
+def shouldDiscardImage(greyscaleImage, imageIndex, showPreviewWindow=False, siftVideoOutputPath=None #False #Should be None but had to do a hack
                        , siftVideoOutputFPS=None):
     global videoWriter
     height,width=greyscaleImage.shape[:2]
@@ -334,8 +348,10 @@ def shouldDiscardImage(greyscaleImage, showPreviewWindow=False, siftVideoOutputP
     if showPreviewWindow:
         cv2.putText(image, "bad image" if retval else "good image", (int(30), int(60)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255) if retval else (0, 255, 0), 2)
-        cv2.imshow("Sky detection", image)
-        cv2.imshow("Sky detection mask", thresh)
+        def show():
+            cv2.imshow("Sky detection", image)
+            cv2.imshow("Sky detection mask", thresh)
+        previewWindowQueue.put((imageIndex, show))
     if videoWriter is not None:
         # https://answers.opencv.org/question/202376/can-anyone-know-the-code-of-python-to-put-two-frames-in-a-single-window-output-specifically-to-use-it-in-opencv/
         concatenated = np.hstack((image, cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR))) # Put the two images side by side

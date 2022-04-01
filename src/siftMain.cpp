@@ -761,7 +761,7 @@ int mainMission(DataSourceT* src,
                 // Check for sky detection //
                 t.reset();
                 bool discardImage = false;
-                nonthrowing_python([&discardImage, &greyscale, &cfg](){
+                nonthrowing_python([&discardImage, &greyscale, &cfg, i](){
                     // General stuff
                     py::module_ general = py::module_::import("src.python.General");
                     cv::Mat image;
@@ -783,7 +783,7 @@ int mainMission(DataSourceT* src,
                         });
                         isNone = false;
                     }
-                    py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image), CMD_CONFIG(showPreviewWindow()), path, g_src->fps());
+                    py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image), i, CMD_CONFIG(showPreviewWindow()), path, g_src->fps());
                     if (discardImage_ == false) {
                         std::cout << "general: Python likes this image\n";
                     }
@@ -1015,6 +1015,7 @@ int mainMission(DataSourceT* src,
             canvasesReadyQueue.dequeue(&img);
             cv::Mat realCanvas = prepareCanvas(img);
             commonUtils::imshow("", realCanvas);
+            general.attr("drainPreviewWindowQueue")(); // Show some Python stuff too
             if (CMD_CONFIG(siftVideoOutput)) {
                 // Save frame with SIFT keypoints rendered on it to the video output file
                 cv::Rect rect = src->shouldCrop() ? src->crop() : cv::Rect();
