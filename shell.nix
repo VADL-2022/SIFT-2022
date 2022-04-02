@@ -99,14 +99,22 @@ mkShell {
     # #
 
     #lmdb
-    
+   
+    ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [ 
+      gpsd # For gps
+    ]) ++ [
+
     # VADL2022 "library" #
     coreutils
     (python37m.withPackages (p: with p; ([
       pyserial #(callPackage ./pyserial_nix/pyserial.nix {}) #pyserial # https://pyserial.readthedocs.io/en/latest/
       #opencv4
       #numpy
-      
+  
+      ] ++ (lib.optional (stdenv.hostPlatform.isLinux) [
+        gps3
+      ]) ++ [
+    
       # For Python interop #
       pybind11
       # #
