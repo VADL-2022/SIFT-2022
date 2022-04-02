@@ -142,7 +142,7 @@ std::string getOutputVideo() {
   if (fp == NULL) {
     printf("Failed to run ls command. Sending test values on radio.\n" );
     pyRunFile("subscale_driver/radio.py", 0, nullptr);
-    return false;
+    return "";
   }
   /* Read the output a line at a time. */
   std::string outputAcc2 = "";
