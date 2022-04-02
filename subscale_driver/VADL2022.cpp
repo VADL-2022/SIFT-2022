@@ -165,6 +165,7 @@ std::string getOutputVideo() {
   // Merge videos in the directory (note: this is blocking)
   //std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
   //cmd += "'";
+  // FIXME: HACK:
   char buf[10000];
   sprintf(buf, "bash ./mergeVideosInDataOutput_highCompression.sh '%s'", outputAcc2.c_str());
   
