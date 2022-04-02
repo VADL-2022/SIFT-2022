@@ -321,7 +321,7 @@ def runOneIter(write_obj):
             time_ = time3 * 65536 + time2 * 256 + time1
 
             #my_vals = [ax, ay, az, wx, wy, wz, time] # w = angular rate
-            my_vals = [wx, wy, wz, time_] * g_conv_factor # w = angular rate
+            my_vals = list(map(lambda x: x * g_conv_factor, [wx, wy, wz, time_])) # w = angular rate
             xAccl = ax * ac_conv_factor
             yAccl = ay * ac_conv_factor
             zAccl = az * ac_conv_factor
