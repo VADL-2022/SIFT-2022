@@ -180,7 +180,7 @@ std::string getOutputVideo() {
 // Returns true on success
 bool sendOnRadio() {
   char hostname[HOST_NAME_MAX + 1];
-  hostname = "fore1";
+  strcpy(hostname, "fore1");
   if (true) { //if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
     printf("hostname: %s\n", hostname);
     if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
