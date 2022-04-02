@@ -54,7 +54,7 @@ float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS = MAIN_DEPLOYME
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS = LANDING_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 
 // Command Line Args
-bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false;
+bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false, failsafeVideo = false;
 const char* lsm = "1";
 
 // Sift params initialization
@@ -73,6 +73,7 @@ const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 #endif
 std::string outputAcc;
 const char *sendOnRadioScriptArgs[] = {NULL, NULL, NULL};
+const char *knnMatcherScriptArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL};
 #ifdef USE_LIS331HH // Using the alternative IMU
 const char* LIS331HH_calibrationFile = nullptr;
 #endif
@@ -127,6 +128,55 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds);
 
 bool gps();
 
+// Saves to `outputAcc`
+void getOutputVideo() {
+  // Check for any SIFT output to send by getting the last modified directory (note: this is blocking)
+  // The below command is gotten based on https://stackoverflow.com/questions/9275964/get-the-newest-directory-to-a-variable-in-bash -- note: hack: "Despite being accepted and much-upvoted there are several problems with this solution. It doesn't work if the newest item in the directory is not a directory. It doesn't work if the newest subdirectory has a name that begins with '.'. It doesn't work if the newest subdirectory has a name that contains a newline. Shellcheck complains about the use of ls. See ParsingLs - Greg's Wiki for a detailed explanation of the dangers of processing the output of ls."
+  //const char* args[] = {"bash", "-c", "BACKUPDIR=$(ls -td /backups/*/ | head -1)", "bash",
+  // "", NULL};
+  // https://stackoverflow.com/questions/646241/c-run-a-system-command-and-get-output
+  FILE *fp;
+  char path[1035]; // Note: hack, but names won't be longer than a known amount anyway
+  /* Open the command for reading. */
+  fp = popen("ls -td dataOutput/*/ | head -1", "r");
+  if (fp == NULL) {
+    printf("Failed to run ls command. Sending test values on radio.\n" );
+    pyRunFile("subscale_driver/radio.py", 0, nullptr);
+    return false;
+  }
+  /* Read the output a line at a time. */
+  std::string outputAcc2 = "";
+  while (fgets(path, sizeof(path), fp) != NULL) {
+    outputAcc2 += path;
+  }
+  /* close */
+  pclose(fp);
+
+  { out_guard();
+    std::cout << "Directory: " << outputAcc2 << std::endl; }
+
+  // Merge videos in the directory (note: this is blocking)
+  std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2 + "'"; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
+  fp = popen(cmd.c_str(), "r");
+  if (fp == NULL) {
+    printf("Failed to run merge command. Sending test values on radio.\n" );
+    pyRunFile("subscale_driver/radio.py", 0, nullptr);
+    return false;
+  }
+  /* Read the output a line at a time. */
+  //outputAcc.clear();
+  while (fgets(path, sizeof(path), fp) != NULL) {
+    // Grab until last line (do nothing)
+  }
+  std::string outputAcc_ = path; // Get last line
+  /* close */
+  pclose(fp);
+
+  { out_guard();
+    std::cout << "getOutputVideo(): Video file: " << outputAcc_ << std::endl; }
+  return outputAcc_;
+}
+
 // Returns true on success
 bool sendOnRadio() {
   char hostname[HOST_NAME_MAX + 1];
@@ -135,62 +185,37 @@ bool sendOnRadio() {
     if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
       // do radio
       { out_guard();
-        std::cout << "sendOnRadio" << std::endl; }
+        std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
 
-      if (!outputAcc.empty()) {
+      mainDispatchQueue.enqueue([=](){
+        
+        if (!outputAcc.empty()) {
+          { out_guard();
+            std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
+          return false;
+        }
+
+        outputAcc = getOutputVideo();
+
+        // Run Python OpenCV SIFT on the output video
+        knnMatcherScriptArgs[0] = "1";
+        knnMatcherScriptArgs[1] = "1";
+        knnMatcherScriptArgs[2] = "0";
+        knnMatcherScriptArgs[3] = "0";
+        knnMatcherScriptArgs[4] = outputAcc.c_str();
+        knnMatcherScriptArgs[5] = "0";
         { out_guard();
-          std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
-        return false;
-      }
-      // Check for any SIFT output to send by getting the last modified directory (note: this is blocking)
-      // The below command is gotten based on https://stackoverflow.com/questions/9275964/get-the-newest-directory-to-a-variable-in-bash -- note: hack: "Despite being accepted and much-upvoted there are several problems with this solution. It doesn't work if the newest item in the directory is not a directory. It doesn't work if the newest subdirectory has a name that begins with '.'. It doesn't work if the newest subdirectory has a name that contains a newline. Shellcheck complains about the use of ls. See ParsingLs - Greg's Wiki for a detailed explanation of the dangers of processing the output of ls."
-      //const char* args[] = {"bash", "-c", "BACKUPDIR=$(ls -td /backups/*/ | head -1)", "bash",
-      // "", NULL};
-      // https://stackoverflow.com/questions/646241/c-run-a-system-command-and-get-output
-      FILE *fp;
-      char path[1035]; // Note: hack, but names won't be longer than a known amount anyway
-      /* Open the command for reading. */
-      fp = popen("ls -td dataOutput/*/ | head -1", "r");
-      if (fp == NULL) {
-        printf("Failed to run ls command. Sending test values on radio.\n" );
-        pyRunFile("subscale_driver/radio.py", 0, nullptr);
-        return false;
-      }
-      /* Read the output a line at a time. */
-      std::string outputAcc2 = "";
-      while (fgets(path, sizeof(path), fp) != NULL) {
-        outputAcc2 += path;
-      }
-      /* close */
-      pclose(fp);
-      
-      { out_guard();
-        std::cout << "Directory: " << outputAcc2 << std::endl; }
+          std::cout << "knn_matcher2 script enqueue" << std::endl; }
+        pyRunFile("knn_matcher2.py", 6, (char **)knnMatcherScriptArgs); // NOTE: This also enqueues..
 
-      // Merge videos in the directory (note: this is blocking)
-      std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2 + "'"; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
-      fp = popen(cmd.c_str(), "r");
-      if (fp == NULL) {
-        printf("Failed to run merge command. Sending test values on radio.\n" );
-        pyRunFile("subscale_driver/radio.py", 0, nullptr);
-        return false;
-      }
-      /* Read the output a line at a time. */
-      //outputAcc.clear();
-      while (fgets(path, sizeof(path), fp) != NULL) {
-        // Grab until last line (do nothing)
-      }
-      outputAcc = path; // Get last line
-      /* close */
-      pclose(fp);
-      
-      { out_guard();
-        std::cout << "Video file: " << outputAcc << std::endl; }
-      
-      sendOnRadioScriptArgs[0] = "0";
-      sendOnRadioScriptArgs[1] = "";
-      sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
-      return pyRunFile("subscale_driver/radio.py", 3, (char **)sendOnRadioScriptArgs);
+        // Send on radio for real now
+        sendOnRadioScriptArgs[0] = "0";
+        sendOnRadioScriptArgs[1] = "";
+        sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
+        { out_guard();
+          std::cout << "sendOnRadio script enqueue" << std::endl; }
+        bool success = pyRunFile("subscale_driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
+      },"sendOnRadioAndEtc",QueuedFunctionType::Misc);
     }
     else {
       // do gps
@@ -539,6 +564,13 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       // Record takeoff altitude
       { out_guard();
         std::cout << "Takeoff altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl; }
+
+      // Start video if not failsafe mode
+      if (!failsafeVideo) {
+        { out_guard();
+          std::cout << "Starting non-failsafe video" << std::endl; }
+        pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+      }
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
       //   bool ok = startDelayedSIFT();
@@ -603,7 +635,7 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
       pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
     }
     else {
-      // Stop the same videocapture script from on the pad in VADL2022::VADL2022():
+      // Stop the same videocapture script from {on the pad if failsafe or from takeoff if non-failsafe} in VADL2022::VADL2022():
       if (isRunningPython)
         raise(SIGINT);
 
@@ -1070,6 +1102,9 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
+    else if (strcmp(argv[i], "--failsafe-video") == 0) { // Take a video even on the pad, before takeoff (in case IMU doesn't detect takeoff, although that is pretty much impossible due to the length of time for which those g's occur..)
+      failsafeVideo = true;
+    }
     else if (strcmp(argv[i], "--force-no-imu") == 0) { // Mostly for debugging purposes. This forces the driver to consider the IMU as non-existent even though it might be connected.
       forceNoIMU = true;
     }
@@ -1273,7 +1308,7 @@ VADL2022::VADL2022(int argc, char** argv)
       ((LOG*)mLog)->receive();
     }
 
-    if (!imuOnly) {
+    if (!imuOnly && failsafeVideo) {
       // Always start the video to ensure we get some data in case takeoff
       // detection fails or SIFT doesn't start etc. Take an ascent video (on
       // SIFT and video capture pi's)
