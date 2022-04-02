@@ -2,10 +2,17 @@ import serial
 import random
 import time
 import sys
+import socket
+import datetime
 
 print("Inside radio.py")
 ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1) # gpio14
 ser.reset_input_buffer()
+
+timetable=datetime.timedelta(minutes=2)
+def ser_write(x):
+    hostname=socket.gethostname()
+    ser.write(x)
 
 def test():
     d = [x for x in range(5)]#range(300)] # range() excludes value given
@@ -16,7 +23,7 @@ def test():
         data = d[i] % 10
         res = str(data).encode('utf-8')
         print("Sending test value on radio:",res)
-        ser.write(res)
+        ser_write(res)
         time.sleep(0.1)
 
         i+=1
@@ -30,17 +37,17 @@ if True:
     if sendThisString is not None:
         res = str(sendThisString).encode('utf-8')
         print("Sending string on radio:",res)
-        ser.write(res)
+        ser_write(res)
     elif sendBytesOfThisFilename is not None:
         res = open(sendBytesOfThisFilename, 'rb').read()
         print("Sending bytes on radio:",res)
-        ser.write(res)
+        ser_write(res)
     elif useStdin:
         line = input()
         while line:
             res = str(line+'\n').encode('utf-8')
             print("Sending line on radio:",res)
-            ser.write(res)
+            ser_write(res)
             
             line = input()
     else:

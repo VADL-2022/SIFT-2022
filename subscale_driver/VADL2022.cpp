@@ -146,7 +146,7 @@ std::string getOutputVideo() {
   }
   /* Read the output a line at a time. */
   std::string outputAcc2 = "";
-  while (fgets(path, sizeof(path), fp) != NULL) {
+  while (fgets(path, sizeof(path)*sizeof(char), fp) != NULL) {
     outputAcc2 += path;
   }
   /* close */
@@ -165,7 +165,7 @@ std::string getOutputVideo() {
   }
   /* Read the output a line at a time. */
   //outputAcc.clear();
-  while (fgets(path, sizeof(path), fp) != NULL) {
+  while (fgets(path, sizeof(path)*sizeof(char), fp) != NULL) {
     // Grab until last line (do nothing)
   }
   std::string outputAcc_ = path; // Get last line
@@ -182,7 +182,7 @@ bool sendOnRadio() {
   char hostname[HOST_NAME_MAX + 1];
   if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
     printf("hostname: %s\n", hostname);
-    if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
+    if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
       // do radio
       { out_guard();
         std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
