@@ -223,7 +223,8 @@ bool sendOnRadio() {
     }
   }
   else {
-    puts("gethostname() errored out");
+    printf("gethostname() errored out: ");
+    perror();
   }
 }
 
@@ -242,7 +243,8 @@ bool gps() {
     }
   }
   else {
-    puts("gethostname() errored out");
+    printf("gethostname() errored out: ");
+    perror();
   }
 }
 
@@ -324,7 +326,8 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     }
   }
   else {
-    puts("gethostname() errored out");
+    printf("gethostname() errored out: ");
+    perror();
   }
   
   printf("Forking with bash command: %s\n", siftCommandLine.c_str());
