@@ -1251,7 +1251,7 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[5] = lsm; // 0=don't use lsm
     LIS331HH_videoCapArgs[6] = LANDING_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[7] = mecoDuration_str.c_str();
-    pyRunFile("subscale_driver/LIS331_loop.py", 8, (char **)LIS331HH_videoCapArgs);
+    //pyRunFile("subscale_driver/LIS331_loop.py", 8, (char **)LIS331HH_videoCapArgs);
 
     // Then send on radio afterwards (into dispatch queue)
     auto ret = sendOnRadio();
