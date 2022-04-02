@@ -64,6 +64,9 @@ trap onErr ERR
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
 
+# Trap on exit script
+trap cleanup EXIT
+
 sleep_ () {
     echo "Sleeping for $@ seconds"
     sleep "$@"
@@ -158,4 +161,4 @@ else
     ./$exe --video-capture --LIS331HH-imu-calibration-file "subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv" $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 fi
 set +e
-cleanup
+#cleanup
