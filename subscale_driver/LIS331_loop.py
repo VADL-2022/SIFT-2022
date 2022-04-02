@@ -440,7 +440,8 @@ def runOneIter(write_obj):
     offsetX = avgX/counter
     offsetY = avgY/counter
     offsetZ = avgZ/counter
-    my_accels = [currentTime, (xAccl-offsetX)/1000.0*9.81, (yAccl-offsetY)/1000.0*9.81, (zAccl-offsetZ)/1000.0*9.81]
+    div = 1000.0 if not useLSM_IMU else 1.0
+    my_accels = [currentTime, (xAccl-offsetX)/div*9.81, (yAccl-offsetY)/div*9.81, (zAccl-offsetZ)/div*9.81]
     resList = [xAccl,yAccl,zAccl,rx,ry,rz]
     if my_vals is not None:
         resList.extend(my_vals)
