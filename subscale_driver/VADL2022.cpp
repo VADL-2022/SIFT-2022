@@ -149,6 +149,11 @@ std::string getOutputVideo() {
   while (fgets(path, sizeof(path)*sizeof(char), fp) != NULL) {
     outputAcc2 += path;
   }
+  // Remove newline if any
+  size_t len = outputAcc2.size();
+  if (len > 1 && outputAcc2[len-1] == '\n') {
+    outputAcc2[len-1] = '\0';
+  }
   /* close */
   pclose(fp);
 
@@ -167,6 +172,11 @@ std::string getOutputVideo() {
   //outputAcc.clear();
   while (fgets(path, sizeof(path)*sizeof(char), fp) != NULL) {
     // Grab until last line (do nothing)
+  }
+  // Remove newline if any
+  size_t len = strlen(path);
+  if (len > 1 && path[len-1] == '\n') {
+    path[len-1] = '\0';
   }
   std::string outputAcc_ = path; // Get last line
   /* close */

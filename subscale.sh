@@ -6,6 +6,15 @@ if [[ "$(whoami)" != "pi" ]]; then
    exit 1
 fi
 
+# Sync network time
+timedatectl
+
+# Login script for logging your ip in case connection lost
+if [ ! -e ~/.loginScriptV1Added ]; then
+    echo -e "\n\n#loginScriptV1Added#\nifconfig\n#End loginScriptV1Added#\n" >> ~/.bashrc
+    touch ~/.loginScriptV1Added
+fi
+
 if [ "$(pwd)" != "/home/pi/VanderbiltRocketTeam" ]; then
    echo "This script must be run from /home/pi/VanderbiltRocketTeam" 
    exit 1
