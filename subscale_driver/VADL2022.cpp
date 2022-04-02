@@ -316,20 +316,20 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     + (verboseSIFTFD ? (std::string(" --verbose")) : "")
   ;
   
-  char hostname[HOST_NAME_MAX + 1];
-  if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
-    printf("hostname: %s\n", hostname);
-    if (endsWith(hostname, "2")) {
-      // video capture with SIFT exe..
-      siftCommandLine += " --image-capture-only --fps 30";
-    }
-    else { // sift2 and fore2 are gps
-      // Nothing
-    }
-  }
-  else {
-    perror("gethostname() errored out");
-  }
+  // char hostname[HOST_NAME_MAX + 1];
+  // if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+  //   printf("hostname: %s\n", hostname);
+  //   if (endsWith(hostname, "2")) {
+  //     // video capture with SIFT exe..
+  //     siftCommandLine += " --image-capture-only --fps 30";
+  //   }
+  //   else { // sift2 and fore2 are gps
+  //     // Nothing
+  //   }
+  // }
+  // else {
+  //   perror("gethostname() errored out");
+  // }
   
   printf("Forking with bash command: %s\n", siftCommandLine.c_str());
   pid_t pid = fork(); // create a new child process
