@@ -457,27 +457,29 @@ float timeSecondsOffset = 0;
 bool forceSkipNonSIFTCallbacks = false;
 
 template <typename LOG_T>
-double updateRelativeAltitude(LOG_T log, bool showAltitudeOnce) {
+double updateRelativeAltitude(LOG_T log, bool showAltitudeOnce, bool actuallyUpdateAltitude) {
   // Convert log->mImu->pres (pressure) to altitude using barometric formula (Cam) and use that to check for nearing the ground + stopping SIFT
   // TODO: IMU has altitude? See VADL2021-Source-Continued/VectorNav/include/vn/packet.h in https://github.com/VADL-2022/VADL2021-Source-Continued
   double kilopascals = log->mImu->pres;
   double altitudeFeet = computeAltitude(kilopascals);
-  if (onGroundAltitude == DBL_MIN) {
-    onGroundAltitude = altitudeFeet;
-    numAltitudes = 1;
-  }
-  else {
-    // Actually ignore the first altitude value because it is strangely high.
-    double currentOnGroundAltitude = onGroundAltitude / numAltitudes;
-    double percentDifference = abs(altitudeFeet - currentOnGroundAltitude) / currentOnGroundAltitude;
-    if (percentDifference > 0.5) {
-      // Replace
+  if (actuallyUpdateAltitude) {
+    if (onGroundAltitude == DBL_MIN) {
       onGroundAltitude = altitudeFeet;
       numAltitudes = 1;
     }
     else {
-      onGroundAltitude += altitudeFeet; // Running average
-      numAltitudes += 1;
+      // Actually ignore the first altitude value because it is strangely high.
+      double currentOnGroundAltitude = onGroundAltitude / numAltitudes;
+      double percentDifference = abs(altitudeFeet - currentOnGroundAltitude) / currentOnGroundAltitude;
+      if (percentDifference > 0.5) {
+        // Replace
+        onGroundAltitude = altitudeFeet;
+        numAltitudes = 1;
+      }
+      else {
+        onGroundAltitude += altitudeFeet; // Running average
+        numAltitudes += 1;
+      }
     }
   }
   static bool onceFlag = true;
@@ -527,7 +529,7 @@ bool checkIMUFailure(const char* callbackName, LOG_T *log, float magnitude, floa
 // Callback for waiting on takeoff
 template<typename LOG_T>
 void checkTakeoffCallback(LOG_T *log, float fseconds) {
-  double altitudeFeet = updateRelativeAltitude(log, true);
+  double altitudeFeet = updateRelativeAltitude(log, true, true);
 
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
@@ -656,8 +658,7 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
 // Callback for waiting on main parachute deployment
 template<typename LOG_T>
 void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
-  double kilopascals = log->mImu->pres;
-  double altitudeFeet = computeAltitude(kilopascals);
+  double altitudeFeet = updateRelativeAltitude(log, false, false);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   
   VADL2022* v = (VADL2022*)log->callbackUserData;
@@ -758,8 +759,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
 
   float timeSeconds = log->mImu->timestamp / 1.0e9;
-  double kilopascals = log->mImu->pres;
-  double altitudeFeet = computeAltitude(kilopascals);
+  double altitudeFeet = updateRelativeAltitude(log, false, false);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   static bool onceFlag = true;
   if (onceFlag || verbose) {
