@@ -128,8 +128,8 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds);
 
 bool gps();
 
-// Saves to `outputAcc`
-void getOutputVideo() {
+// Returns a non-empty string if successful, otherwise it's empty
+std::string getOutputVideo() {
   // Check for any SIFT output to send by getting the last modified directory (note: this is blocking)
   // The below command is gotten based on https://stackoverflow.com/questions/9275964/get-the-newest-directory-to-a-variable-in-bash -- note: hack: "Despite being accepted and much-upvoted there are several problems with this solution. It doesn't work if the newest item in the directory is not a directory. It doesn't work if the newest subdirectory has a name that begins with '.'. It doesn't work if the newest subdirectory has a name that contains a newline. Shellcheck complains about the use of ls. See ParsingLs - Greg's Wiki for a detailed explanation of the dangers of processing the output of ls."
   //const char* args[] = {"bash", "-c", "BACKUPDIR=$(ls -td /backups/*/ | head -1)", "bash",
@@ -161,7 +161,7 @@ void getOutputVideo() {
   if (fp == NULL) {
     printf("Failed to run merge command. Sending test values on radio.\n" );
     pyRunFile("subscale_driver/radio.py", 0, nullptr);
-    return false;
+    return "";
   }
   /* Read the output a line at a time. */
   //outputAcc.clear();
@@ -192,7 +192,7 @@ bool sendOnRadio() {
         if (!outputAcc.empty()) {
           { out_guard();
             std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
-          return false;
+          return;
         }
 
         outputAcc = getOutputVideo();
