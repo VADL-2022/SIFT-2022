@@ -37,9 +37,10 @@ else
     echo "This is a video capture pi (hostname doesn't start with \"sift\": $hostname)"
 fi
 
-dontsleep="$1"
-dontsleep2="$2"
-dontsleep3="$3"
+testingExtras="$1"
+dontsleep="$2"
+dontsleep2="$3"
+dontsleep3="$4"
 
 cleanup() {
     echo "@@@@ Stopping programs"
@@ -163,7 +164,8 @@ backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))" #
 gforce=
 realFlight="--time-for-main-stabilization $mainStabilizationTime $asdasd --main-deployment-g-force 2.5 --main-descent-time $backupSIFTStopTime --time-to-meco 1700 --landing-g-force 8 --emergency-main-deployment-g-force 16 --main-deployment-altitude 800" # --main-deployment-g-force is unused, just using timing
 #testing="--time-for-main-stabilization 0 --main-descent-time 20000 --time-to-meco 5200 --emergency-main-deployment-g-force 1"
-testing2="--time-for-main-stabilization $mainStabilizationTime --main-descent-time 5000 --time-to-apogee 5000 --time-to-meco 1700 --emergency-main-deployment-g-force 1 --takeoff-g-force 1 --landing-g-force 1"
+# Add overrides to realFlight for testing:
+testing2="$realFlight $testingExtras --emergency-main-deployment-g-force 1 --takeoff-g-force 1 --landing-g-force 1"
 extraArgs="$testing2"
 #extraArgs="$realFlight"
 commonArgs="$commonArgs --backup-takeoff-time 0 --time-to-main-deployment $timeToMainDeployment --time-to-apogee 9850"
