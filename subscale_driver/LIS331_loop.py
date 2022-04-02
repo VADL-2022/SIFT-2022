@@ -468,7 +468,7 @@ def runOneIter(write_obj):
                 shouldStop.set(1)
                 shouldStopMain.set(1)
             else:
-                print("Cooldown before landing detection with", (delt-needed).total_seconds(), "second(s) left")
+                print("Cooldown before landing detection with", (needed-delt).total_seconds(), "second(s) left")
             
 
     return True
