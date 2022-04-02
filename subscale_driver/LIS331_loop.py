@@ -323,8 +323,11 @@ def runOneIter(write_obj):
             #my_vals = [ax, ay, az, wx, wy, wz, time] # w = angular rate
             my_vals = list(map(lambda x: x * g_conv_factor, [wx, wy, wz, time_])) # w = angular rate
             xAccl = ax * ac_conv_factor
+            print(xAccl)
             yAccl = ay * ac_conv_factor
+            print(yAccl)
             zAccl = az * ac_conv_factor
+            print(zAccl)
         else:
             # X AXIS
             ###############################################################################
