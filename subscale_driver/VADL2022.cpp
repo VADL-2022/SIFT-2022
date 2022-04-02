@@ -236,8 +236,8 @@ bool gps() {
       // nothing.. radio..
     }
     else { // sift2 and fore2 are gps
-      { out_guard();
-      std::cout << "gps" << std::endl; }
+      // { out_guard();
+      // std::cout << "gps" << std::endl; }
       return pyRunFile("subscale_driver/gps.py", 0, nullptr);
     }
   }
