@@ -99,7 +99,7 @@ exe=subscale_exe_release
 $compileSIFT ; make -j4 $exe
 
 cd compareNatSort
-bash compile.sh
+#bash compile.sh
 cd ..
 
 # TODO: sha512 Checksum
@@ -162,7 +162,7 @@ else
 fi
 backupSIFTStopTime="$(($mainDeploymentToTouchDown-$siftAllowanceForStopping))" # Originally we were going to stop SIFT on altitude data. But we're unsure about altitude data being reliable, so we don't use it to stop SIFT, and there's a fallback via backupSIFTStopTime.
 gforce=
-realFlight="--time-for-main-stabilization $mainStabilizationTime $asdasd --main-deployment-g-force 2.5 --main-descent-time $backupSIFTStopTime --time-to-meco 1700 --landing-g-force 8 --emergency-main-deployment-g-force 16 --main-deployment-altitude 800" # --main-deployment-g-force is unused, just using timing
+realFlight="--time-for-main-stabilization $mainStabilizationTime $asdasd --main-descent-time $backupSIFTStopTime --time-to-meco 1700 --landing-g-force 8 --emergency-main-deployment-g-force 20 --main-deployment-altitude 800" # --main-deployment-g-force 2.5 # --main-deployment-g-force is unused, just using timing
 #testing="--time-for-main-stabilization 0 --main-descent-time 20000 --time-to-meco 5200 --emergency-main-deployment-g-force 1"
 # Add overrides to realFlight for testing:
 testing2="$realFlight $testingExtras --emergency-main-deployment-g-force 1 --takeoff-g-force 1 --landing-g-force 1"
