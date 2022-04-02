@@ -169,6 +169,15 @@ def showLerpController(firstImage, M, key_):
             break
     
 def run():
+    if not showPreviewWindow:
+        pSave="dataOutput"
+
+        now = datetime.now() # current date and time
+        date_time = now.strftime("knnMatcher_%m_%d_%Y_%H_%M_%S")
+        pSave = os.path.join(pSave, date_time)
+
+        Path(pSave).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
+            
     global imgs
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -295,17 +304,6 @@ def run():
         if showPreviewWindow:
             cv2.imshow('acc',tr);
             waitForInput(img2)
-        else:
-            # Save transformation
-            p="dataOutput"
-
-            now = datetime.now() # current date and time
-            date_time = now.strftime("knnMatcher_%m_%d_%Y_%H_%M_%S")
-            p = os.path.join(p, date_time)
-            
-            Path(p).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
-
-            cv2.imwrite(os.path.join(p, "scaled.png"), tr)
         #plt.imshow(img3),plt.show()
         
         # Save current keypoints as {the prev keypoints for next iteration}
@@ -313,5 +311,8 @@ def run():
         des1=des2
         img1=img2
         i+=1
+    if not showPreviewWindow:
+        # Save transformation
+        cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
 
 run()
