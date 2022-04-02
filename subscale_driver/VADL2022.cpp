@@ -946,6 +946,8 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
+    #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
+    #warning "Fundamentally flawed due to blast charge for drogue which likely triggers it although due to polling nature of the IMU, parachute deployment forces can be missed since they don't always last longer than 1/40th of a second for IMU polling rate, etc. (takeoff and landing are reliable g's though)"
     else if (strcmp(argv[i], "--main-deployment-g-force") == 0) { // Override thing
       if (i+1 < argc) {
 	MAIN_DEPLOYMENT_G_FORCE = stof(argv[i+1]);
@@ -958,6 +960,7 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
+    #endif
     else if (strcmp(argv[i], "--emergency-main-deployment-g-force") == 0) { // Override thing, optional // g force for main deployment after drogue failure
       if (i+1 < argc) {
 	MAIN_DEPLOYMENT_G_FORCE_NO_DROGUE = stof(argv[i+1]);
@@ -966,6 +969,17 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       else {
 	puts("Expected emergency main deployment g force");
+	exit(1);
+      }
+      i++;
+    }
+    else if (strcmp(argv[i], "--main-deployment-altitude") == 0) {
+      if (i+1 < argc) {
+	mainDeploymentAltitude = std::stoll(argv[i+1]);
+	std::cout << "Set main deployment altitude to " << mainDeploymentAltitude << std::endl;
+      }
+      else {
+	puts("Expected main deployment altitude");
 	exit(1);
       }
       i++;

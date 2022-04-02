@@ -305,7 +305,7 @@ time=30; output="log_$(hostname)_$(date "+%Y-%m-%d_%H_%M_%S_%Z").txt"; (sleep $t
 --- hough circle detection tuning practice on partial drone test footage
 ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission-interactive --video-file-data-source --video-file-data-source-path Data/DroneTests/2022-03-21_19_02_14_CDT/output.mp4  --finish-rest-always
 
----
+--- drone test 3-28-2022:
 
 time=30; output="log_$(hostname)_$(date "+%Y-%m-%d_%H_%M_%S_%Z").txt"; (sleep $time; ./subscale_exe_release --imu-record-only ) & (sleep $time ; ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --fps 5 --save-first-image --finish-rest-always --no-preview-window 2>&1 > >(trap '' INT; tee "$output"))
 
@@ -320,3 +320,21 @@ dataOutput/2022-03-28_18_50_08_CDT was 500ft
 dataOutput/2022-03-28_18_54_34_CDT was 450ft
 
 `time=55; output="log_$(hostname)_$(date "+%Y-%m-%d_%H_%M_%S_%Z").txt"; (sleep $time; ./subscale_exe_release --imu-record-only ) & (sleep $time ; ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission --fps 15 --save-first-image --finish-rest-always --no-preview-window 2>&1 > >(trap '' INT; tee "$output"))` was 500ft
+
+----- misc
+
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --main-mission-interactive --video-file-data-source --video-file-data-source-path Data/DroneTests/2022-03-21_19_02_14_CDT/output.mp4  --finish-rest-always --no-preview-window
+
+
+---- fullscale2 predictions
+
+based on estimated mass
+takeoff g's: 6.8g
+time to MECO: 1.6 seconds
+time to apogee: 9.22 seconds
+main deployment: 16.4 seconds (or 17.42 if 35 pounds mass, we'll see on the field)
+between main deployment and touchdown: 54.9-16.4=38.5
+(^^^^^checklist has adjusted ones for our program)
+aiming for 6 seconds for main stablization. 2.5-3 seconds to start SIFT. therefore main stabalization should be 6-2.5=3.5 seconds
+random stats for fun:
+- landing energy: 51 feet pound force
