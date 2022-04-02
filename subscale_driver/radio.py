@@ -18,7 +18,7 @@ def round_minutes(dt, direction, resolution):
 # minutes == 0 then s1 transmit
 #round_minutes(datetime.datetime.now(),'down',5) # Assign with repeating assignments
 
-multiple = 5 # Minutes for each pi to send
+multiple = 10 # 5 # Minutes for each pi to send
 timetable={
     multiple*0: 'sift1',
     multiple*1: 'sift2',
@@ -40,6 +40,7 @@ hostname=socket.gethostname()
 
 # Wait for your time to send
 while True:
+    break
     print("radio.py: Waiting for timetable")
     now = datetime.datetime.now()
     now_noSeconds = now.replace(second=0, microsecond=0)
@@ -66,7 +67,7 @@ while True:
 def ser_write(x):
     ser.write(x)
 
-ser_write(hostname) # Send identifier to radio
+ser_write(hostname.encode('utf-8')) # Send identifier to radio
 
 def test():
     d = [x for x in range(5)]#range(300)] # range() excludes value given
