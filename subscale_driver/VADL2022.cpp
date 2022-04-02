@@ -138,7 +138,9 @@ std::string getOutputVideo() {
   FILE *fp;
   char path[1035]; // Note: hack, but names won't be longer than a known amount anyway
   /* Open the command for reading. */
-  fp = popen("ls -td dataOutput/*/ | head -1", "r");
+  const char* cmd_ = "ls -td dataOutput/*/ | head -1";
+  printf("Running: %s\n", cmd_);
+  fp = popen(cmd_, "r");
   if (fp == NULL) {
     printf("Failed to run ls command. Sending test values on radio.\n" );
     pyRunFile("subscale_driver/radio.py", 0, nullptr);
@@ -162,6 +164,7 @@ std::string getOutputVideo() {
 
   // Merge videos in the directory (note: this is blocking)
   std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2 + "'"; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
+  printf("Running: %s\n", cmd.c_str());
   fp = popen(cmd.c_str(), "r");
   if (fp == NULL) {
     printf("Failed to run merge command. Sending test values on radio.\n" );
