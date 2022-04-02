@@ -37,7 +37,7 @@ else
     echo "This is a video capture pi (hostname doesn't start with \"sift\": $hostname)"
 fi
 
-testingExtras="$1"
+testingExtras="$2"
 dontsleep="$2"
 dontsleep2="$3"
 dontsleep3="$4"
