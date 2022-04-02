@@ -163,10 +163,15 @@ std::string getOutputVideo() {
     std::cout << "Directory: " << outputAcc2 << std::endl; }
 
   // Merge videos in the directory (note: this is blocking)
-  std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
-  cmd += "'";
-  printf("Running: %s\n", cmd.c_str());
-  fp = popen(cmd.c_str(), "r");
+  //std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
+  //cmd += "'";
+  char buf[10000];
+  sprintf(buf, "bash ./mergeVideosInDataOutput_highCompression.sh '%s'", outputAcc2.c_str());
+  
+  // printf("Running: %s\n", cmd.c_str());
+  // fp = popen(cmd.c_str(), "r");
+  printf("Running: %s\n", buf);
+  fp = popen(buf, "r");
   if (fp == NULL) {
     printf("Failed to run merge command. Sending test values on radio.\n" );
     pyRunFile("subscale_driver/radio.py", 0, nullptr);
