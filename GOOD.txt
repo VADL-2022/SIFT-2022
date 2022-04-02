@@ -338,3 +338,4 @@ between main deployment and touchdown: 54.9-16.4=38.5
 aiming for 6 seconds for main stablization. 2.5-3 seconds to start SIFT. therefore main stabalization should be 6-2.5=3.5 seconds
 random stats for fun:
 - landing energy: 51 feet pound force
+- 33.3 pound rocket

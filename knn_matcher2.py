@@ -5,7 +5,10 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 from src.python.General import shouldDiscardImage, undisortImage
+import os
+from pathlib import Path
 import sys
+from datetime import datetime
 
 #img1 = cv2.imread('box.png',0)          # queryImage
 #img2 = cv2.imread('box_in_scene.png',0) # trainImage
@@ -22,6 +25,8 @@ grabMode=int(sys.argv[1]) if len(sys.argv) > 1 else 2 # 1 for video, 0 for photo
 shouldRunSkyDetection=sys.argv[2] == '1' if len(sys.argv) > 2 else True
 shouldRunUndistort=sys.argv[3] == '1' if len(sys.argv) > 3 else False
 skip=int(sys.argv[4]) if len(sys.argv) > 4 else 0
+videoFilename=sys.argv[5] if len(sys.argv) > 5 else None
+showPreviewWindow=sys.argv[6] == '1' if len(sys.argv) > 6 else True
 imgs=None
 if grabMode==1:
     reader=cv2.VideoCapture(
@@ -37,7 +42,7 @@ if grabMode==1:
         #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4'
         #'quadcopterFlight/live2--.mp4' # our old standby
         #'/Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/Derived/live18_downwards_test/output.mp4'
-    )
+    ) if videoFilename is None else cv2.VideoCapture(videoFilename)
 elif grabMode==0:
     import subprocess
     #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
@@ -210,6 +215,8 @@ def run():
     # For each image, run SIFT and match with previous image:
     for imgName in imgs_iter:
         def waitForInput(img2=None):
+            if not showPreviewWindow:
+                return
             waitAmount = 1 if i < len(imgs) - 20 else 0
             if waitAmount == 0:
                 print("Press a key to continue")
@@ -278,14 +285,27 @@ def run():
         # acc[0][1] *= 0.9
         print("acc:", accOld, acc)
 
-        img3 = None
-        img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,good_old if mode==0 else list(map(lambda x: [x], good)),outImg=img3,flags=2)
-        cv2.imshow('matching',img3);
-        tr = cv2.warpPerspective(img1, transformation_matrix, (wOrig, hOrig))
-        cv2.imshow('current transformation',tr)
+        if showPreviewWindow:
+            img3 = None
+            img3 = cv2.drawMatchesKnn(img2,kp2,img1,kp1,good_old if mode==0 else list(map(lambda x: [x], good)),outImg=img3,flags=2)
+            cv2.imshow('matching',img3);
+            tr = cv2.warpPerspective(img1, transformation_matrix, (wOrig, hOrig))
+            cv2.imshow('current transformation',tr)
         tr = cv2.warpPerspective(firstImage, np.linalg.pinv(acc), (wOrig, hOrig))
-        cv2.imshow('acc',tr);
-        waitForInput(img2)
+        if showPreviewWindow:
+            cv2.imshow('acc',tr);
+            waitForInput(img2)
+        else:
+            # Save transformation
+            p="dataOutput"
+
+            now = datetime.now() # current date and time
+            date_time = now.strftime("knnMatcher_%m_%d_%Y_%H_%M_%S")
+            p = os.path.join(p, date_time)
+            
+            Path(p).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
+
+            cv2.imwrite(os.path.join(p, "scaled.png"), tr)
         #plt.imshow(img3),plt.show()
         
         # Save current keypoints as {the prev keypoints for next iteration}

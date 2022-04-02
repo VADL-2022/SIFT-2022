@@ -11,7 +11,13 @@ outputH="$1/output.highCompression.mp4"
 
 "$DIR/compareNatSort/compareNatSort" "$1" | sed 's:\ :\\\ :g'| sed 's/^/file /' > "$DIR/fl.txt"
 # For some reason this doesn't produce smaller size, but if you do it after the normal merge then it's ok: ffmpeg -f concat -safe 0 -i "$DIR/fl.txt" -c:v libx265 -vtag hvc1 -c:a copy "$output"
-ffmpeg -f concat -safe 0 -i "$DIR/fl.txt" -c copy "$output"
-ffmpeg -i "$output" -c:v libx265 -vtag hvc1  -b 200k -c:a copy "$outputH"
+
+# Note: https://superuser.com/questions/922866/ffmpeg-skip-process-if-output-already-exists : {"
+# -n (global)
+# Do not overwrite output files, and exit immediately if a specified output file already exists.
+# "}
+ffmpeg -n -f concat -safe 0 -i "$DIR/fl.txt" -c copy "$output"
+ffmpeg -n -i "$output" -c:v libx265 -vtag hvc1  -b 200k -c:a copy "$outputH"
+
 rm "$DIR/fl.txt"
 echo "$outputH"
