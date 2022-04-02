@@ -106,9 +106,13 @@ quiet=1 # set to 0 for verbose
 #sudo pip3 install adafruit-blinka
 # #
 windTunnel="import sys; sys.path = list(filter(lambda x: '/nix/store/' not in x, sys.path)); import WindTunnel.run #That's all folks"
+commonArgs=
 if [ "$mode" == "sift" -a "$hostname" == "sift2" ]; then # -a is "and"..
     echo "@@@@ Starting thermocouple temperature recording"
     /usr/bin/python3 -c "$windTunnel" 0 "$quiet" &
+
+    # for one sift pi: hostname: sift2: check for drogue or apogee instead and start at drogue
+    commonArgs="--start-sift-at-apogee"
 else
     echo "@@@@ Starting pi temperature recording"
     #bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
@@ -139,7 +143,7 @@ realFlight="--time-for-main-stabilization $mainStabilizationTime $asdasd --main-
 testing2="--time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --time-to-meco 2200 --emergency-main-deployment-g-force 1"
 extraArgs="$testing2"
 #extraArgs="$realFlight"
-commonArgs="--backup-takeoff-time 0 --time-to-main-deployment $timeToMainDeployment"
+commonArgs="$commonArgs --backup-takeoff-time 0 --time-to-main-deployment $timeToMainDeployment"
 if [ "$mode" == "sift" ]; then
     crop=
     #crop=--crop-for-fisheye-camera

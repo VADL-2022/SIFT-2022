@@ -339,3 +339,7 @@ aiming for 6 seconds for main stablization. 2.5-3 seconds to start SIFT. therefo
 random stats for fun:
 - landing energy: 51 feet pound force
 - 33.3 pound rocket
+
+
+for one sift pi: hostname: sift2: check for drogue or apogee instead and start at drogue
+pressure increasing THEN decreasing is what brian's altimeter does to deploy drogue at apogee. (is inside the altimeter automatically says brian)

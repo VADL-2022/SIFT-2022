@@ -54,7 +54,7 @@ float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS = MAIN_DEPLOYME
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS = LANDING_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 
 // Command Line Args
-bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false, failsafeVideo = false;
+bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false, failsafeVideo = false, startSIFTAtApogee = false;
 const char* lsm = "1";
 
 // Sift params initialization
@@ -662,8 +662,9 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
   auto millisSinceTakeoff = since(takeoffTime).count();
   const float MIN_TIME_FOR_CATCH_UP = 1000;
   const long long TIME_FOR_IMU_TO_CATCH_UP = MIN_TIME_FOR_CATCH_UP + IMU_MAIN_DEPLOYMENT_ACCEL_DURATION * 1000; // milliseconds to allow IMU to catch up to the fact that we experienced main deployment etc.
-  if (backupSIFTStartTime + TIME_FOR_IMU_TO_CATCH_UP < millisSinceTakeoff) { // Past our backup time, force trigger
-    auto millisTillSIFT = backupSIFTStartTime - millisSinceTakeoff;
+  auto timeToCheck = (startSIFTAtApogee ? timeToApogee : backupSIFTStartTime)
+  if (timeToCheck + TIME_FOR_IMU_TO_CATCH_UP < millisSinceTakeoff) { // Past our backup time, force trigger
+    auto millisTillSIFT = timeToCheck - millisSinceTakeoff;
     { out_guard();
   #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
       #warning "Fundamentally flawed due to blast charge for drogue which likely triggers it although due to polling nature of the IMU, parachute deployment forces can be missed since they don't always last longer than 1/40th of a second for IMU polling rate, etc. (takeoff and landing are reliable g's though)"
@@ -1079,6 +1080,9 @@ VADL2022::VADL2022(int argc, char** argv)
 	exit(1);
       }
       i++;
+    }
+    else if (strcmp(argv[i], "--start-sift-at-apogee") == 0) { // Starts SIFT at apogee instead of main deployment
+      startSIFTAtApogee = true;
     }
     else if (strcmp(argv[i], "--main-descent-time") == 0) { // Time in milliseconds since main deployment at which to stop SIFT but as an upper bound (don't make it possibly too low, since time for descent varies a lot)
       if (i+1 < argc) {
