@@ -128,7 +128,7 @@ ifeq ($(SIFT_IMPL),SIFTGPU)
 additionalPkgconfigPackages += gl glew glut IL
 additionalCFLAGS = -isystem /nix/store/0khrl4yrg1qyz93nk6kq1s79c4a0w8i0-libdevil-1.7.8-dev/include -isystem /nix/store/i0rmp3app7yqd37ihgxlx9c3lwsj16kq-opencl-headers-2020.06.16/include -isystem /nix/store/92h4zdgadxpf77iajcx7s60aanqmz9xy-opencl-headers-2020.06.16/include -I/nix/store/gilc17g399q13hghm8zzkdcn0mv1n7y7-libunwind-1.4.0-dev/include
 endif
-CFLAGS += -fstack-protector -Wall -pedantic `pkg-config --cflags opencv4 libpng python-3.7m ${additionalPkgconfigPackages}` -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1 -DSIFT_IMPL=$(SIFT_IMPL) -D$(SIFT_IMPL)_ $(CONFIG_TEST_DEFINES) -IVectorNav/include    $(additionalCFLAGS) #$(NIX_CFLAGS_COMPILE)  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
+CFLAGS += -Wall -pedantic `pkg-config --cflags opencv4 libpng python-3.7m ${additionalPkgconfigPackages}` -I/nix/store/zflx47lr00hipvkl5nncd2rnpzssnni6-backward-1.6/include -DBACKWARD_HAS_UNWIND=1 -DSIFT_IMPL=$(SIFT_IMPL) -D$(SIFT_IMPL)_ $(CONFIG_TEST_DEFINES) -IVectorNav/include    $(additionalCFLAGS) #$(NIX_CFLAGS_COMPILE)  #`echo "$NIX_CFLAGS_COMPILE"` # TODO: get backward-cpp working for segfault stack traces
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 $(info $(OS))
 ifeq ($(OS),Darwin)
@@ -266,7 +266,7 @@ ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE = $(ADDITIONAL_CFLAGS_RELEASE) $(ADDITIONA
 $(eval $(call C_AND_CXX_FLAGS_template,release_commandLine,$(ADDITIONAL_CFLAGS_RELEASE_COMMANDLINE),,$(PCH_C),$(PCH_CPP)))
 
 # debug target
-ADDITIONAL_CFLAGS_DEBUG = -O0 -g3 -DDEBUG # -Og # -O0
+ADDITIONAL_CFLAGS_DEBUG = -fstack-protector -O0 -g3 -DDEBUG # -Og # -O0
 ifeq ($(OS),Darwin)
 ifneq ($(USE_PRECOMPILED_HEADERS),1)
 ADDITIONAL_CFLAGS_DEBUG += -Xlinker -no_deduplicate
