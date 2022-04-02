@@ -656,7 +656,8 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
 // Callback for waiting on main parachute deployment
 template<typename LOG_T>
 void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
-  double altitudeFeet = updateRelativeAltitude(log, false);
+  double kilopascals = log->mImu->pres;
+  double altitudeFeet = computeAltitude(kilopascals);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   
   VADL2022* v = (VADL2022*)log->callbackUserData;
@@ -757,7 +758,8 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
   VADL2022* v = (VADL2022*)log->callbackUserData;
 
   float timeSeconds = log->mImu->timestamp / 1.0e9;
-  double altitudeFeet = updateRelativeAltitude(log, false);
+  double kilopascals = log->mImu->pres;
+  double altitudeFeet = computeAltitude(kilopascals);
   double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   static bool onceFlag = true;
   if (onceFlag || verbose) {
