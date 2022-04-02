@@ -1,13 +1,13 @@
-//#include "../src/DataSource.hpp"
+#include "../src/DataSource.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
 #include "strnatcmp.hpp"
 
-// #include "utils.hpp"
+#include "utils.hpp"
 
-// #include "common.hpp"
+#include "common.hpp"
 
 int main(int argc, char **argv) {
   // std::cout << argc << std::endl;
