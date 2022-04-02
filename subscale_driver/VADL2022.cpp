@@ -184,8 +184,8 @@ bool sendOnRadio() {
     printf("hostname: %s\n", hostname);
     if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
       // do radio
-      { out_guard();
-        std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
+      // { out_guard();
+      //   std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
 
       mainDispatchQueue.enqueue([=](){
         
