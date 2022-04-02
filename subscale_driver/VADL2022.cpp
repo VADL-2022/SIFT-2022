@@ -662,7 +662,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
   auto millisSinceTakeoff = since(takeoffTime).count();
   const float MIN_TIME_FOR_CATCH_UP = 1000;
   const long long TIME_FOR_IMU_TO_CATCH_UP = MIN_TIME_FOR_CATCH_UP + IMU_MAIN_DEPLOYMENT_ACCEL_DURATION * 1000; // milliseconds to allow IMU to catch up to the fact that we experienced main deployment etc.
-  auto timeToCheck = (startSIFTAtApogee ? timeToApogee : backupSIFTStartTime)
+  auto timeToCheck = (startSIFTAtApogee ? timeToApogee : backupSIFTStartTime);
   if (timeToCheck + TIME_FOR_IMU_TO_CATCH_UP < millisSinceTakeoff) { // Past our backup time, force trigger
     auto millisTillSIFT = timeToCheck - millisSinceTakeoff;
     { out_guard();
