@@ -166,8 +166,8 @@ realFlight="--time-for-main-stabilization $mainStabilizationTime $asdasd --main-
 #testing="--time-for-main-stabilization 0 --main-descent-time 20000 --time-to-meco 5200 --emergency-main-deployment-g-force 1"
 # Add overrides to realFlight for testing:
 testing2="$realFlight $testingExtras --emergency-main-deployment-g-force 1 --takeoff-g-force 1 --landing-g-force 1"
-extraArgs="$testing2"
-#extraArgs="$realFlight"
+#extraArgs="$testing2"
+extraArgs="$realFlight"
 commonArgs="$commonArgs --backup-takeoff-time 0 --time-to-main-deployment $timeToMainDeployment --time-to-apogee 9850"
 if [ "$mode" == "sift" ]; then
     crop=
