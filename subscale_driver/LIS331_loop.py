@@ -458,15 +458,17 @@ def runOneIter(write_obj):
             startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
         # Check for landing
         elif takeoffTime is not None and magnitude > landingGs*9.81:
-            delt = takeoffTime - datetime.now()
-            if delt > timedelta(milliseconds=timeToMECO):
+            needed = timedelta(milliseconds=timeToMECO)
+            now = datetime.now()
+            delt = now - takeoffTime
+            if delt > needed:
                 print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
 
                 print("Stopping")
                 shouldStop.set(1)
                 shouldStopMain.set(1)
             else:
-                print("Cooldown before landing detection with", delt.total_seconds(), "second(s) left")
+                print("Cooldown before landing detection with", (delt-needed).total_seconds(), "second(s) left")
             
 
     return True
