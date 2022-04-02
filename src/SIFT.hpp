@@ -99,6 +99,10 @@ struct ProcessedImage<SIFTAnatomy> {
     std::shared_ptr<struct sift_keypoint_std> k;
     int n; // Number of keypoints in `k`
     
+    inline int numKeypoints() const {
+        return n;
+    }
+    
     // Matching with the previous image, if any //
     shared_keypoints_ptr_t out_k1;
     shared_keypoints_ptr_t out_k2A;
@@ -132,6 +136,7 @@ struct ProcessedImage<SIFTOpenCV> {
     ProcessedImage() = default;
     
     cv::Mat image;
+    PythonLockedOptional<py::array_t<float>> image_python; // std::optional is used to prevent default ctor from being called before Python is initialized
     
     std::vector<cv::KeyPoint> computedKeypoints;
     cv::Mat descriptors;
@@ -145,6 +150,14 @@ struct ProcessedImage<SIFTOpenCV> {
         matches.clear();
     }
     // //
+    
+    inline size_t numKeypoints() const {
+        return computedKeypoints.size();
+    }
+    
+    size_t i;
+    
+    std::shared_ptr<IMUData> imu; // IMU data if any
     
 #ifdef USE_COMMAND_LINE_ARGS
     cv::Mat canvas;
@@ -273,7 +286,7 @@ struct SIFTOpenCV : public SIFTBase {
     
     std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale);
     
-    void findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2, SIFTState& s
+    MatchResult findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2, SIFTState& s
 #ifdef USE_COMMAND_LINE_ARGS
     , DataSourceBase* src, CommandLineConfig& cfg
 #endif

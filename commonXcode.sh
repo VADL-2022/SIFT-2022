@@ -32,6 +32,7 @@ CLANG_CXX_LANGUAGE_STANDARD=c++17
 
 //impl = SIFT_IMPL=SIFTGPU SIFTGPU_ // <-- Be sure to change both of these defines for an impl change
 impl = SIFT_IMPL=SIFTAnatomy SIFTAnatomy_
+impl = SIFT_IMPL=SIFTOpenCV SIFTOpenCV_
 //tests = SIFTGPU_TEST
 //etcConfig = USE_PTR_INC_MALLOC=1
 GCC_PREPROCESSOR_DEFINITIONS = \$(inherited) BACKWARD_HAS_UNWIND=1 USE_COMMAND_LINE_ARGS WINDOW_PREFER_GLUT CL_SIFTGPU_ENABLED \$(impl) \$(tests) \$(etcConfig)

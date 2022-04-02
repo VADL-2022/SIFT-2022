@@ -266,7 +266,7 @@ std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKe
     return std::make_pair(keypoints, descriptors);
 }
 
-void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2, SIFTState& s
+MatchResult SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2, SIFTState& s
 #ifdef USE_COMMAND_LINE_ARGS
     , DataSourceBase* src, CommandLineConfig& cfg
 #endif
@@ -344,6 +344,8 @@ void SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage
         // //
 #endif
     }
+    
+    return MatchResult::Success;
 }
 
 #elif defined(SIFTGPU_)
