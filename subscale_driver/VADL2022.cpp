@@ -706,7 +706,13 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
       altitudeFeet < mainDeploymentAltitude
       #endif
       ) {
-    mainDeploymentDetectedOrDrogueFailed(log, fseconds, false /*no drogue can't force IMU not detected*/, true); 
+    mainDeploymentDetectedOrDrogueFailed(log, fseconds,
+                                         #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
+                                         false /*no drogue can't force IMU not detected*/
+                                         #else
+                                         true // Altitude reached
+                                         #endif
+                                         , true); 
   }
   else if (force
            #ifdef USE_MAIN_DEPLOYMENT_TRIGGER

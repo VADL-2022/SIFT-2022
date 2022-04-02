@@ -347,7 +347,7 @@ pressure increasing THEN decreasing is what brian's altimeter does to deploy dro
 
 Testing for IMU altitude changes etc:
 
-./subscale_exe_release --extra-sift-exe-args '--verbose --video-file-data-source --video-file-data-source-path Data/fullscale1/sift1/Derived/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --time-to-main-deployment 67500 --time-for-main-stabilization 0 --takeoff-g-force 0 --main-deployment-g-force 0 --main-descent-time 28500 --time-to-meco 0 --landing-g-force 80 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/fullscale1/sift1/Derived/Trunc_Fullscale1.csv --imu-data-source-time-offset 17420
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/Derived/SIFT/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --time-to-main-deployment 67500 --time-for-main-stabilization 0 --takeoff-g-force 9 --main-descent-time 28500 --time-to-meco 2200 --landing-g-force 8 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/files_sift1_imuAndTemperatureOnly_fullscale1/LOG_20220219_104353.csv --imu-data-source-time-offset 2867000
 
 
 REAL ARGS (not original values, originals are wrong/not matching marissa):

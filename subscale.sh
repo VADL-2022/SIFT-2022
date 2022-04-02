@@ -39,6 +39,7 @@ cleanup() {
     fi
     # Stop temperature data
     #pkill -f vcgencmd
+    #pkill -SIGINT -f 'import WindTunnel.run'
     pkill -SIGTERM -f 'import WindTunnel.run' # Python matches this
     # sha512 Checksum
 
