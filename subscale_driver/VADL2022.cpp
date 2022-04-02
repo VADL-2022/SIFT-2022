@@ -179,53 +179,54 @@ std::string getOutputVideo() {
 
 // Returns true on success
 bool sendOnRadio() {
-  // char hostname[HOST_NAME_MAX + 1];
-  // strcpy(hostname, "fore1");
-  // if (true) { //if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
-  //   printf("hostname: %s\n", hostname);
-  //   if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
-  //     // do radio
-  //     // { out_guard();
-  //     //   std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
+  char hostname[HOST_NAME_MAX + 1];
+  if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+    printf("hostname: %s\n", hostname);
+    if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
+      // do radio
+      // { out_guard();
+      //   std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
 
-  //     mainDispatchQueue.enqueue([=](){
+      mainDispatchQueue.enqueue([=](){
         
-  //       if (!outputAcc.empty()) {
-  //         { out_guard();
-  //           std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
-  //         return;
-  //       }
+        if (!outputAcc.empty()) {
+          { out_guard();
+            std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
+          return;
+        }
 
-  //       outputAcc = getOutputVideo();
+        outputAcc = getOutputVideo();
 
-  //       // Run Python OpenCV SIFT on the output video
-  //       knnMatcherScriptArgs[0] = "1";
-  //       knnMatcherScriptArgs[1] = "1";
-  //       knnMatcherScriptArgs[2] = "0";
-  //       knnMatcherScriptArgs[3] = "0";
-  //       knnMatcherScriptArgs[4] = outputAcc.c_str();
-  //       knnMatcherScriptArgs[5] = "0";
-  //       { out_guard();
-  //         std::cout << "knn_matcher2 script enqueue" << std::endl; }
-  //       pyRunFile("knn_matcher2.py", 6, (char **)knnMatcherScriptArgs); // NOTE: This also enqueues..
+        // Run Python OpenCV SIFT on the output video
+        knnMatcherScriptArgs[0] = "1";
+        knnMatcherScriptArgs[1] = "1";
+        knnMatcherScriptArgs[2] = "0";
+        knnMatcherScriptArgs[3] = "0";
+        knnMatcherScriptArgs[4] = outputAcc.c_str();
+        knnMatcherScriptArgs[5] = "0";
+        { out_guard();
+          std::cout << "knn_matcher2 script enqueue" << std::endl; }
+        pyRunFile("knn_matcher2.py", 6, (char **)knnMatcherScriptArgs); // NOTE: This also enqueues..
 
-  //       // Send on radio for real now
-  //       sendOnRadioScriptArgs[0] = "0";
-  //       sendOnRadioScriptArgs[1] = "";
-  //       sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
-  //       { out_guard();
-  //         std::cout << "sendOnRadio script enqueue" << std::endl; }
-  //       bool success = pyRunFile("subscale_driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
-  //     },"sendOnRadioAndEtc",QueuedFunctionType::Misc);
-  //   }
-  //   else {
-  //     // do gps
-  //     //gps();
-  //   }
-  // }
-  // else {
-  //   perror("gethostname() errored out");
-  // }
+        // Send on radio for real now
+        sendOnRadioScriptArgs[0] = "0";
+        sendOnRadioScriptArgs[1] = "";
+        sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
+        { out_guard();
+          std::cout << "sendOnRadio script enqueue" << std::endl; }
+        bool success = pyRunFile("subscale_driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
+      },"sendOnRadioAndEtc",QueuedFunctionType::Misc);
+    }
+    else {
+      // do gps
+      return gps();
+    }
+  }
+  else {
+    perror("gethostname() errored out");
+    return false;
+  }
+  return true;
 }
 
 // Returns true on success
@@ -244,7 +245,9 @@ bool gps() {
   }
   else {
     perror("gethostname() errored out");
+    return false;
   }
+  return true;
 }
 
 enum State {
@@ -1206,7 +1209,7 @@ VADL2022::VADL2022(int argc, char** argv)
   installSignalHandlers();
             
   if (!imuOnly) {
-    //gps();
+    gps();
   }
 
 #ifdef USE_LIS331HH // Using the alternative IMU
@@ -1251,7 +1254,7 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[5] = lsm; // 0=don't use lsm
     LIS331HH_videoCapArgs[6] = LANDING_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[7] = mecoDuration_str.c_str();
-    //pyRunFile("subscale_driver/LIS331_loop.py", 8, (char **)LIS331HH_videoCapArgs);
+    pyRunFile("subscale_driver/LIS331_loop.py", 8, (char **)LIS331HH_videoCapArgs);
 
     // Then send on radio afterwards (into dispatch queue)
     auto ret = sendOnRadio();
