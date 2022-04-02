@@ -1259,8 +1259,8 @@ VADL2022::VADL2022(int argc, char** argv)
 
   if (sendOnRadio_) {
     //auto ret = sendOnRadio();
-    { out_guard();
-      std::cout << "sendOnRadio returned: " << ret << std::endl; }
+    // { out_guard();
+    //   std::cout << "sendOnRadio returned: " << ret << std::endl; }
     return;
   }
   else if (siftOnly) {
