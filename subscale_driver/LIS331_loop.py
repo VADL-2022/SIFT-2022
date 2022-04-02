@@ -462,7 +462,7 @@ def runOneIter(write_obj):
             now = datetime.now()
             delt = now - takeoffTime
             global switchedCameras
-            if delt > needed and not switchedCameras:
+            if delt > needed and switchedCameras:
                 print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
 
                 print("Stopping")
