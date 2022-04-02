@@ -163,7 +163,8 @@ std::string getOutputVideo() {
     std::cout << "Directory: " << outputAcc2 << std::endl; }
 
   // Merge videos in the directory (note: this is blocking)
-  std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2 + "''"; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
+  std::string cmd = "bash ./mergeVideosInDataOutput_highCompression.sh '" + outputAcc2; // Note: hack because file can't contain some special charactesr in the name, but we won't have those anyway.
+  cmd += "'";
   printf("Running: %s\n", cmd.c_str());
   fp = popen(cmd.c_str(), "r");
   if (fp == NULL) {
