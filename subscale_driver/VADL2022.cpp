@@ -656,6 +656,7 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
 template<typename LOG_T>
 void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
   double altitudeFeet = updateRelativeAltitude(log, false);
+  double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
   
   VADL2022* v = (VADL2022*)log->callbackUserData;
   float magnitude = log->mImu->linearAccelNed.mag();
@@ -703,7 +704,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
       magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS
       #else
       millisSinceTakeoff > timeToApogee &&
-      altitudeFeet < mainDeploymentAltitude
+      relativeAltitude < mainDeploymentAltitude
       #endif
       ) {
     mainDeploymentDetectedOrDrogueFailed(log, fseconds,
@@ -729,7 +730,7 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
         magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS && millisSinceTakeoff <= mecoDuration
         #else
         millisSinceTakeoff <= timeToApogee &&
-        altitudeFeet < mainDeploymentAltitude
+        relativeAltitude < mainDeploymentAltitude
         #endif
         ) {
       #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
@@ -1191,8 +1192,12 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --time-to-apogee");
     exit(1);
   }
-  
-  #ifdef USE_LIS331HH
+  if (mainDeploymentAltitude == -1 && !imuOnly) {
+    puts("Need to provide --main-deployment-altitude");
+    exit(1);
+  }
+
+#ifdef USE_LIS331HH
   std::string startPigpio = videoCapture ? "! sudo pgrep pigpiod && sudo pigpiod; " // video capture needs to start pigpiod if it's not already running ("!" negates the return code, and "&&" runs the next one only if return value of ! pgrep (not the return value of pgrep) is 0. pgrep returns 1 if not running. so not pgrep returns 0 if running!
     : "sudo pkill pigpiod ; " // SIFT pi needs to stop it in case it's running already
     ;

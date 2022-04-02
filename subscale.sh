@@ -87,6 +87,11 @@ fi
 #exe=subscale_exe_release
 exe=subscale_exe_release
 $compileSIFT ; make -j4 $exe
+
+cd compareNatSort
+bash compile.sh
+cd ..
+
 # TODO: sha512 Checksum
 # if [ "$dontsleep" != "1" ]; then
 #     echo "@@@@ Sleeping before takeoff"
