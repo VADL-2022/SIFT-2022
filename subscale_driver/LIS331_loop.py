@@ -323,11 +323,11 @@ def runOneIter(write_obj):
             #my_vals = [ax, ay, az, wx, wy, wz, time] # w = angular rate
             my_vals = list(map(lambda x: x * g_conv_factor, [wx, wy, wz, time_])) # w = angular rate
             xAccl = ax * ac_conv_factor
-            print(xAccl)
+            #print(xAccl)
             yAccl = ay * ac_conv_factor
-            print(yAccl)
+            #print(yAccl)
             zAccl = az * ac_conv_factor
-            print(zAccl)
+            #print(zAccl)
         else:
             # X AXIS
             ###############################################################################
@@ -458,7 +458,7 @@ def runOneIter(write_obj):
             startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
         # Check for landing
         elif takeoffTime is not None and magnitude > landingGs*9.81:
-            delt = datetime.now() - takeoffTime
+            delt = takeoffTime - datetime.now()
             if delt > timedelta(milliseconds=timeToMECO):
                 print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
 
