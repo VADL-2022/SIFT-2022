@@ -484,7 +484,8 @@ double updateRelativeAltitude(LOG_T log, bool showAltitudeOnce) {
   if ((showAltitudeOnce && onceFlag) || verbose) {
     onceFlag = false;
     { out_guard();
-      std::cout << "Altitude: " << altitudeFeet << " ft, average: " << onGroundAltitude / numAltitudes << " ft" << std::endl; }
+      double relativeAltitude = altitudeFeet - (onGroundAltitude / numAltitudes);
+      std::cout << "Altitude: " << altitudeFeet << " ft, relative altitude: " << relativeAltitude << ", average: " << onGroundAltitude / numAltitudes << " ft" << std::endl; }
   }
   return altitudeFeet;
 }
