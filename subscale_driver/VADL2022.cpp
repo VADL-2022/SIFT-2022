@@ -728,7 +728,8 @@ void checkMainDeploymentCallback(LOG_T *log, float fseconds) {
         #warning "Fundamentally flawed due to blast charge for drogue which likely triggers it although due to polling nature of the IMU, parachute deployment forces can be missed since they don't always last longer than 1/40th of a second for IMU polling rate, etc. (takeoff and landing are reliable g's though)"
         magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_MPS && millisSinceTakeoff <= mecoDuration
         #else
-        millisSinceTakeoff <= timeToApogee
+        millisSinceTakeoff <= timeToApogee &&
+        altitudeFeet < mainDeploymentAltitude
         #endif
         ) {
       #ifdef USE_MAIN_DEPLOYMENT_TRIGGER
@@ -1186,7 +1187,7 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --time-to-meco");
     exit(1);
   }
-  if (videoCapture && timeToApogee == -1 && !imuOnly) {
+  if (timeToApogee == -1 && !imuOnly) {
     puts("Need to provide --time-to-apogee");
     exit(1);
   }

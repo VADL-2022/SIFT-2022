@@ -48,37 +48,37 @@ template <typename T>
 struct PythonLockedOptional {
     PythonLockedOptional()
     {
-        puts("PythonLockedOptional: PythonLockedOptional()"); fflush(stdout);
+        //puts("PythonLockedOptional: PythonLockedOptional()"); fflush(stdout);
     }
     PythonLockedOptional(const T& t_)
     {
-        puts("PythonLockedOptional: PythonLockedOptional(T&)"); fflush(stdout);
+        //puts("PythonLockedOptional: PythonLockedOptional(T&)"); fflush(stdout);
         nonthrowing_python([this, &t_](){ // <-- Lock the interpreter GIL lock to access the `t` variable
             this->t = t_;
         });
     }
     PythonLockedOptional(const PythonLockedOptional& other) {
-        puts("PythonLockedOptional: PythonLockedOptional(PythonLockedOptional&)"); fflush(stdout);
+        //puts("PythonLockedOptional: PythonLockedOptional(PythonLockedOptional&)"); fflush(stdout);
         nonthrowing_python([this, &other](){ // <-- Lock the interpreter GIL lock to access the `t` variable
             this->t = other.t;
         });
     }
     PythonLockedOptional& operator=(const PythonLockedOptional& other) {
-        puts("PythonLockedOptional: operator=PythonLockedOptional"); fflush(stdout);
+        //puts("PythonLockedOptional: operator=PythonLockedOptional"); fflush(stdout);
         nonthrowing_python([this, &other](){ // <-- Lock the interpreter GIL lock to access the `t` variable
             this->t = other.t;
         });
         return *this;
     }
     PythonLockedOptional& operator=(const T& t) {
-        puts("PythonLockedOptional: operator=T"); fflush(stdout);
+        //puts("PythonLockedOptional: operator=T"); fflush(stdout);
         nonthrowing_python([this, &t](){ // <-- Lock the interpreter GIL lock to access the `t` variable
             this->t = t;
         });
         return *this;
     }
     ~PythonLockedOptional() {
-        puts("PythonLockedOptional: ~PythonLockedOptional()"); fflush(stdout);
+        //puts("PythonLockedOptional: ~PythonLockedOptional()"); fflush(stdout);
         nonthrowing_python([this](){ // <-- Lock the interpreter GIL lock to access the `t` variable
             this->t.reset();
         });
@@ -86,13 +86,13 @@ struct PythonLockedOptional {
     
     T* operator-> ()
     {
-        puts("PythonLockedOptional: operator->"); fflush(stdout);
+        //puts("PythonLockedOptional: operator->"); fflush(stdout);
         backtrace(std::cout);
         return &*t;
     }
     T& operator* ()
     {
-        puts("PythonLockedOptional: operator*"); fflush(stdout);
+        //puts("PythonLockedOptional: operator*"); fflush(stdout);
         backtrace(std::cout);
       return *t;
     }
