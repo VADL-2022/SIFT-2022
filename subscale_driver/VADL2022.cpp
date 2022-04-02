@@ -1253,14 +1253,14 @@ VADL2022::VADL2022(int argc, char** argv)
     pyRunFile("subscale_driver/LIS331_loop.py", 8, (char **)LIS331HH_videoCapArgs);
 
     // Then send on radio afterwards (into dispatch queue)
-    //auto ret = sendOnRadio();
+    auto ret = sendOnRadio();
   }
 #endif
 
   if (sendOnRadio_) {
-    //auto ret = sendOnRadio();
-    // { out_guard();
-    //   std::cout << "sendOnRadio returned: " << ret << std::endl; }
+    auto ret = sendOnRadio();
+    { out_guard();
+      std::cout << "sendOnRadio returned: " << ret << std::endl; }
     return;
   }
   else if (siftOnly) {
