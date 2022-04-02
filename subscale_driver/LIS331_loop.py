@@ -461,7 +461,8 @@ def runOneIter(write_obj):
             needed = timedelta(milliseconds=timeToMECO)
             now = datetime.now()
             delt = now - takeoffTime
-            if delt > needed:
+            global switchedCameras
+            if delt > needed and not switchedCameras:
                 print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
 
                 print("Stopping")
