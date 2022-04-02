@@ -174,7 +174,7 @@ std::string getOutputVideo() {
     // Grab until last line (do nothing)
   }
   // Remove newline if any
-  size_t len = strlen(path);
+  len = strlen(path);
   if (len > 1 && path[len-1] == '\n') {
     path[len-1] = '\0';
   }
