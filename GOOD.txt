@@ -352,3 +352,68 @@ Testing for IMU altitude changes etc:
 
 REAL ARGS (not original values, originals are wrong/not matching marissa):
 --takeof
+
+22.82 seconds for sift start
+finsish in 45 seconds since sift. entire flight is 67.8 or so
+
+ls -at dataOutput | head -n 15
+
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_49_18_PM.siftlog.txt         /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402_124920.csv		       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_02-12_49_19.log.csv    /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_13_27_16_CDT		       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_13_27_00_		       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-124920.gps.txt		       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402_122338.csv		       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_23_37_PM.siftlog.txt	       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_12_23_50_CDT		       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_02-12_23_37.log.csv    /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_12_23_43_		       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-122338.gps.txt		       /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+ sshpass -p 'camjet2021' scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402_122305.csv                    /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift1
+
+scp -r -p  pi@sift1.local:/home/pi/VanderbiltRocketTeam/dataOutput/
+
+mkdir /Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+/Volumes/MyTestVolume/Projects/DataRocket/fullscale2
+
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_43_46_PM.siftlog.txt        /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402_124347.csv		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_13_27_10_CDT		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_13_27_00_		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_02-12_43_47.log.csv   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-124347.gps.txt		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402_124334.csv		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_02-12_43_33.log.csv   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_43_33_PM.siftlog.txt	      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-124334.gps.txt		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_12_35_56_CDT		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402_123453.csv		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+ sshpass -p 'camjet2021' scp -r -p  pi@sift2.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-123453.gps.txt		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/sift2
+
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_02-13_21_00.log.csv   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_01_21_00_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-132700.gps.txt		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-132105.LIS331.csv	      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_13_26_58_		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-132100.gps.txt		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_02-12_44_15.log.csv   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_12_44_37_		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-124437.gps.txt		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220402-124421.LIS331.csv	      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_12_44_33_		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_44_15_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+ sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_42_59_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
