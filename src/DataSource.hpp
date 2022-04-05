@@ -46,6 +46,62 @@ protected:
     void initCrop(cv::Size sizeFrame);
 };
 
+// Gets data from a stream like a queue or something. But the data can come from an arbitrary function: getNextInStream_, which should return a color cv::Mat of type CV_8UC3 and of RGB format.
+struct StreamDataSource : public DataSourceBase
+{
+    StreamDataSource(std::function<cv::Mat(void)> getNextInStream_);
+    ~StreamDataSource() {};
+    
+    bool hasNext();
+    cv::Mat next();
+    
+    cv::Mat get(size_t index);
+    
+    std::string nameForIndex(size_t index);
+    float* dataForMat(size_t index) { return (float*)get(index).data; }
+    cv::Mat siftImageForMat(size_t index);
+    cv::Mat colorImageForMat(size_t index);
+    
+    bool wantsCustomFPS() const { return false; }
+    double fps() const { return DBL_MAX; }
+    double timeMilliseconds() const { return 0; }
+    
+//    bool shouldCrop() const { return false; }
+//    cv::Rect crop() const { return cv::Rect(); }
+    
+    size_t currentIndex; // Index to save into next
+    std::unordered_map<size_t, cv::Mat> cache;
+protected:
+    std::function<cv::Mat(void)> getNextInStream;
+    cv::Size sizeFrame;
+    bool inittedCrop = false;
+};
+
+struct SharedMemoryDataSource : public StreamDataSource
+{
+    SharedMemoryDataSource(int fd);
+    ~SharedMemoryDataSource() {};
+    
+    // Inherited: //
+//    bool hasNext();
+//    cv::Mat next();
+//
+//    cv::Mat get(size_t index);
+//
+//    std::string nameForIndex(size_t index);
+//    float* dataForMat(size_t index) { return (float*)get(index).data; }
+//    cv::Mat siftImageForMat(size_t index);
+//    cv::Mat colorImageForMat(size_t index);
+    // //
+    
+    bool wantsCustomFPS() const { return false; }
+    double fps() const { return DBL_MAX; }
+    double timeMilliseconds() const { return 0; }
+private:
+    void* shmem; size_t shmem_size; int shmemFD; // Shared memory from some source like a parent process etc.
+    uint64_t lastShmemFrameCounter = std::numeric_limits<uint64_t>::max(); // Frame counter (may/likely use(s) different indexing starting index from our `currentIndex`) of the last image grabbed from shared memory.
+};
+
 struct FolderDataSource : public DataSourceBase
 {
     FolderDataSource(std::string folderPath, size_t skip);

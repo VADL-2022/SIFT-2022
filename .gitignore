@@ -12,5 +12,6 @@ xcuserdata
 /subscale_exe*
 *.gch
 __pycache__/
+.clangd
 
 /fl.txt
