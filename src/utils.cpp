@@ -187,6 +187,15 @@ std::string cachedDataOutputFolderPath;
 const std::string& getDataOutputFolder() {
     if (cachedDataOutputFolderPath.empty()) {
         const std::string root = "dataOutput/";
+        // Make parent destination directory (if doesn't exist already)
+        int ret = mkdir(root.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH /* default mkdir permissions are probably: user can read, write, execute; group and others can read and execute */ );
+        // https://man7.org/linux/man-pages/man2/mkdir.2.html
+        if (ret != 0
+            && errno != EEXIST // EEXIST is ok because it exists already (it might not be a directory though...
+            ) {
+            perror("mkdir for parent of output folder failed");
+            puts("Continuing despite this.");
+        }
         
         time_t rawtime;
         struct tm * timeinfo;
@@ -204,8 +213,8 @@ const std::string& getDataOutputFolder() {
         // Make destination directory
         if (mkdir(cachedDataOutputFolderPath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH /* default mkdir permissions are probably: user can read, write, execute; group and others can read and execute */ ) != 0) {
             perror("mkdir failed");
-            puts("Exiting.");
-            exit(1);
+            puts("Trying to use the current directory instead as a backup.");
+            cachedDataOutputFolderPath = "./";
         }
     }
     return cachedDataOutputFolderPath;
