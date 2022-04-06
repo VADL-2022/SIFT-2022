@@ -68,6 +68,7 @@ if not logOnly:
 shouldStopMain = videoCapture.AtomicInt(0)
 videoCaptureThread = None
 name=None
+descent = False
 def videoCaptureThreadFunction(name):
     global shouldStop
     if shouldStop.get() != 0:
@@ -195,12 +196,14 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
     startVideoCapture()
     
     global switchedCameras
+    global descent
+
     if switchedCameras:
         print("Switched cameras already")
         if my_accels is None:
-            print("Sleeping for 90 seconds (total flight length)")
+            print("Sleeping for 300 seconds (total worst case flight length)")
             sys.stdout.flush()
-            time.sleep(90) # Total flight length is 90 seconds. NASA: >90 is points taken off so this is our upper bound.
+            time.sleep(300) # Total flight length is 90 seconds. Worst case is main deployment at apogee, which would make flight time around just under 300 seconds.
         return
     switchedCameras = True
     
@@ -229,6 +232,10 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         # Start new video capture
         videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
         videoCaptureThread.start()
+        time.sleep(300)
+        print("Stopping second camera video")
+        shouldStop.set(1)
+        shouldStopMain.set(1)
         logging.info("Thread %s: finishing", name)
     _2ndCamThread = thread_with_exception.thread_with_exception(name=name, target=thread_function2, args=("2ndCam",))
     _2ndCamThread.start()
@@ -264,6 +271,7 @@ def runOneIter(write_obj):
     global counter
     global shouldStop
     global printed_L3G_FailedAt3
+    global descent
     
     '''Do I ever need to sleep here? Or will the while take care of it?'''
 
@@ -456,20 +464,22 @@ def runOneIter(write_obj):
             takeoffTime = datetime.now()
             print("Takeoff detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
             startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop)
+            descent = True
+        # DEPRECATED - landing detection is not reliable enough
         # Check for landing
-        elif takeoffTime is not None and magnitude > landingGs*9.81:
-            needed = timedelta(milliseconds=timeToMECO)
-            now = datetime.now()
-            delt = now - takeoffTime
-            global switchedCameras
-            if delt > needed and switchedCameras:
-                print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
+        # elif takeoffTime is not None and magnitude > landingGs*9.81:
+        #     needed = timedelta(milliseconds=timeToMECO)
+        #     now = datetime.now()
+        #     delt = now - takeoffTime
+        #     global switchedCameras
+        #     if delt > needed and switchedCameras:
+        #         print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
 
-                print("Stopping")
-                shouldStop.set(1)
-                shouldStopMain.set(1)
-            else:
-                print("Cooldown before landing detection with", (needed-delt).total_seconds(), "second(s) left")
+        #         print("Stopping")
+        #         shouldStop.set(1)
+        #         shouldStopMain.set(1)
+        #     else:
+        #         print("Cooldown before landing detection with", (needed-delt).total_seconds(), "second(s) left")
             
 
     return True
