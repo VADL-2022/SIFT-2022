@@ -56,6 +56,8 @@ float IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS = LANDING_G_FORCE * 9.81 /*is se
 // Command Line Args
 bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false, failsafeVideo = false, startSIFTAtApogee = false;
 const char* lsm = "1";
+const char* l3g = "0";
+const char* useForeLandingDetection = "0";
 
 // Sift params initialization
 const char* siftParams = nullptr;
@@ -1171,6 +1173,12 @@ VADL2022::VADL2022(int argc, char** argv)
       i++;
     }
     #endif
+    else if (strcmp(argv[i], "--use-L3G") == 0) { // Use the L3G gryoscope on the fore pies instead of the LSM IMU
+      l3g = "1";
+    }
+    else if (strcmp(argv[i], "--use-fore-landing-detection") == 0) { // Look for landing on fore pi's
+      useForeLandingDetection = "1";
+    }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
       i++;
@@ -1289,7 +1297,9 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[5] = lsm; // 0=don't use lsm
     LIS331HH_videoCapArgs[6] = LANDING_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[7] = mecoDuration_str.c_str();
-    pyRunFile("subscale_driver/LIS331_loop.py", 8, (char **)LIS331HH_videoCapArgs);
+    LIS331HH_videoCapArgs[8] = l3g // 0=don't use l3g
+    LIS331HH_videoCapArgs[9] = useForeLandingDetection // 0=don't look for landing on fore pi's
+    pyRunFile("subscale_driver/LIS331_loop.py", 9, (char **)LIS331HH_videoCapArgs);
 
     // Then send on radio afterwards (into dispatch queue)
     auto ret = sendOnRadio();

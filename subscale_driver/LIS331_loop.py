@@ -39,7 +39,7 @@ if not logOnly and takeoffGs is None:
     exit(1)
 switchCamerasTime = float(sys.argv[3]) if len(sys.argv) > 3 else None
 if not logOnly and switchCamerasTime is None:
-    print("Must provide switchCamerasTime in milliseconds")
+    print("Must provide switchCamerasTime (usually time to apogee) in milliseconds")
     exit(1)
 takeoffTime = None
 calibrationFile = (sys.argv[4]) if len(sys.argv) > 4 else None
@@ -48,7 +48,7 @@ if calibrationFile is None:
     exit(1)
 stoppingTime = float(sys.argv[5]) if len(sys.argv) > 5 else None
 if not logOnly and stoppingTime is None:
-    print("Must provide stoppingTime in milliseconds")
+    print("Must provide stoppingTime (usually worst-case flight time) in milliseconds")
     exit(1)
 stopper = None
 useLSM_IMU = (sys.argv[6] == '1') if len(sys.argv) > 6 else False
@@ -60,6 +60,11 @@ timeToMECO = float(sys.argv[8]) if len(sys.argv) > 8 else None
 if not logOnly and timeToMECO is None:
     print("Must provide time to MECO in milliseconds")
     exit(1)
+useL3G_Gyro = float(sys.argv[9]) if len(sys.argv) > 9 else False
+if useL3G_Gyro is False and useLSM_IMU is False:
+    print("WARNING: You are using the LIS without a gryoscope")
+    #exit(1) #Don't force them out, just warn them so they know
+useLandingDetection = float(sys.argv[10]) if len(sys.argv) > 10 else False
 
 shouldStop=None
 if not logOnly:
@@ -122,11 +127,12 @@ except:
     print("Using backup timing parameters")
     bus = None # Means IMU is dead
 try:
-    # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
-    # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
-    # L3G_bus = smbus.SMBus(2) # if you want to use 2
+    if useL3G_Gyro:
+        # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
+        # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
+        # L3G_bus = smbus.SMBus(2) # if you want to use 2
 
-    L3G_bus = smbus.SMBus(0)
+        L3G_bus = smbus.SMBus(0)
 except: # Don't let a gyroscope bring down the whole video capture
     import traceback
     print("Caught exception from L3G at 1:")
@@ -168,7 +174,7 @@ except:
 
 # Gyroscope data recording
 try:
-    if L3G_bus is not None:
+    if L3G_bus is not None and useL3G_Gyro is True:
         # L3G
         L3G_address=0x6B
         # Required Binary: 0001 (Set ODR to 100 Hz), 0111 (Enable everything) --> Equivalent Hex: 00010111 -> 0x17
@@ -232,7 +238,7 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         # Start new video capture
         videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
         videoCaptureThread.start()
-        time.sleep(300)
+        time.sleep(stoppingTime / 1000.0)
         print("Stopping second camera video")
         shouldStop.set(1)
         shouldStopMain.set(1)
@@ -337,6 +343,7 @@ def runOneIter(write_obj):
             zAccl = az * ac_conv_factor
             #print(zAccl)
         else:
+            # LIS data recording
             # X AXIS
             ###############################################################################
             # H3LIS331DL address, 0x18(24)
@@ -405,7 +412,7 @@ def runOneIter(write_obj):
     ry=None
     rz=None
     try:
-        if L3G_bus is not None:
+        if L3G_bus is not None and useL3G_Gyro is True:
             # L3GD20H Gyroscope
             ###############################################################################
             rxL = L3G_bus.read_byte_data(L3G_address, 0x28)
@@ -467,19 +474,19 @@ def runOneIter(write_obj):
             descent = True
         # DEPRECATED - landing detection is not reliable enough
         # Check for landing
-        # elif takeoffTime is not None and magnitude > landingGs*9.81:
-        #     needed = timedelta(milliseconds=timeToMECO)
-        #     now = datetime.now()
-        #     delt = now - takeoffTime
-        #     global switchedCameras
-        #     if delt > needed and switchedCameras:
-        #         print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
+        elif takeoffTime is not None and magnitude > landingGs*9.81 and useLandingDetection is True:
+            needed = timedelta(milliseconds=timeToMECO)
+            now = datetime.now()
+            delt = now - takeoffTime
+            global switchedCameras
+            if delt > needed and switchedCameras:
+                print("Landing detected with magnitude", magnitude, "m/s^2 and filtered accels", my_accels[1:], "at time", my_accels[0], "seconds (originals:",[xAccl,yAccl,zAccl],")")
 
-        #         print("Stopping")
-        #         shouldStop.set(1)
-        #         shouldStopMain.set(1)
-        #     else:
-        #         print("Cooldown before landing detection with", (needed-delt).total_seconds(), "second(s) left")
+                print("Stopping")
+                shouldStop.set(1)
+                shouldStopMain.set(1)
+            else:
+                print("Cooldown before landing detection with", (needed-delt).total_seconds(), "second(s) left")
             
 
     return True
