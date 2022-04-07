@@ -34,6 +34,16 @@ if [ "$mode" == "sift" ]; then
 else
     #./subscale_exe_release --video-capture --time-for-main-stabilization "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
     ./$exe "--camera-test-only"
+    echo "Running first camera test"
+    echo "Sleeping for 5 seconds, then swapping"
+    sleep 5
+    pkill -SIGINT sift
+    python3 cameraSwap.py
+    ./$exe "--camera-test-only"
+    echo "Running second camera test"
+    sleep 5
+    pkill -SIGINT sift
 fi
 
 python3 radio.py
+echo "Running radio test"
