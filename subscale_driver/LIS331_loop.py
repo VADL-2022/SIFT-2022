@@ -38,87 +38,80 @@ def videoCaptureThreadFunction(name):
     logging.info("Thread %s: finishing", name)
 
 # Starts the video capture
-def startVideoCapture():
+def startVideoCapture(name):
     global videoCaptureThread
-    global name
     if shouldStop.get() != 0:
         print("startVideoCapture(): Video capture is already running, not starting again")
         return
-    name="videoCapture"
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
     videoCaptureThread.start()
+
+# Uses GPIO to swap cameras via camera multiplexer
+def swapCameras():
+    global switchedCameras
+    print("Switching cameras")
+    print("GPIO changing...")
+    pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
+    pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
+    time.sleep(100.0 / 1000.0)
+    print("GPIO done")
+    print("Switched cameras")
+    switchedCameras = True
+
+def stopVideoCaptureThread(name):
+    print("Stopping %s video capture", name)
+    global shouldStop
+    shouldStop.set(1) #shouldStop.incrementAndThenGet() #videoCaptureThread.raise_exception() # Stop existing video capture
+    videoCaptureThread.join()
+    shouldStop.set(0)
+    logging.info("Thread %s: finishing", name)
 
 # Append a list as a row to the CSV
 def append_list_as_row(write_obj, list_of_elem):
         # Create a writer object from csv module
         csv_writer = writer(write_obj)
         # Add contents of list as last row in the csv file
-        csv_writer.writerow(list_of_elem)
-
-# 
-def thread_function2(name):
-        global videoCaptureThread
-        global shouldStop
-        logging.info("Thread %s: starting", name)
-        print("Waiting for camera switching time...")
-        time.sleep(switchCamerasTime/1000.0)
-
-        print("Switching cameras")
-
-        shouldStop.set(1) #shouldStop.incrementAndThenGet() #videoCaptureThread.raise_exception() # Stop existing video capture
-        videoCaptureThread.join()
-        shouldStop.set(0)
-        print("GPIO changing...")
-        pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
-        pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
-        print("GPIO sleep...")
-        time.sleep(100.0 / 1000.0)
-
-        print("Switched cameras")
-        print("Starting 2nd camera")
-        # Start new video capture
-        videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
-        videoCaptureThread.start()
-        time.sleep(stoppingTime / 1000.0)
-        print("Stopping second camera video")
-        shouldStop.set(1)
-        shouldStopMain.set(1)
-        logging.info("Thread %s: finishing", name)
+        csv_writer.writerow(list_of_elem)  
 
 # Runs the mission sequence
 def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
     global switchedCameras
     global descent
+    global name
 
     # Start the video capture on the first camera
-    startVideoCapture()
-    
-    if switchedCameras:
-        print("Switched cameras already")
-        if my_accels is None:
-            print("Sleeping for 300 seconds (total worst case flight length)")
-            sys.stdout.flush()
-            time.sleep(300) # Total flight length is 90 seconds. Worst case is main deployment at apogee, which would make flight time around just under 300 seconds.
-        return
-    switchedCameras = True
-    
+    name = "1stCam"
+    startVideoCapture(name)
+
     if my_accels is None:
-        print("Switcher switching in", switchCamerasTime, "second(s)")
+        if switchedCameras:
+            print("IMU not detected and cameras already swapped")
+        else:
+            print("IMU not detected, swapping cameras immediately")
+            stopVideoCaptureThread()
+            swapCameras()
+        print("Sleeping 300 seconds (total worst case flight length)")
+        sys.stdout.flush()
+        name = "2ndCam"
+        startVideoCapture(name)
+        time.sleep(300)
+        return
+    else:
+        print("Waiting for camera switching time...")
+        time.sleep(switchCamerasTime/1000.0)
+        stopVideoCaptureThread(name)
 
-    _2ndCamThread = thread_with_exception.thread_with_exception(name=name, target=thread_function2, args=("2ndCam",))
-    _2ndCamThread.start()
+    # Swap the camera
+    swapCameras()
 
-    # def thread_function_stopper(name):
-    #     global shouldStop
-    #     logging.info("Thread %s: starting", name)
-    #     print("Waiting for stopping time...")
-    #     time.sleep(stoppingTime/1000.0)
-    #     print("Stopping")
-    #     shouldStop.incrementAndThenGet()
-    #     logging.info("Thread %s: finishing", name)
-    #     shouldStopMain.incrementAndThenGet()
-    # stopper = thread_with_exception.thread_with_exception(name="Stopper", target=thread_function_stopper, args=("Stopper",))
-    # stopper.start()
+    # Start the video capture on the second camera
+    name = "2ndCam"
+    startVideoCapture(name)
+
+    # Record till the end of the flight
+    time.sleep(stoppingTime / 1000.0)
+    stopVideoCaptureThread(name)
+    shouldStopMain.set(1)
 
 # Calibrate the IMU
 def calibrate(file):
