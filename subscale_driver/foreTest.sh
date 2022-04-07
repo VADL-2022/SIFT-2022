@@ -38,7 +38,7 @@ else
     echo "Sleeping for 5 seconds, then swapping"
     sleep 5
     pkill -SIGINT sift
-    pigpiod
+    sudo pigpiod
     python3 ./subscale_driver/cameraSwap.py
     ./$exe "--camera-test-only"
     echo "Running second camera test"
