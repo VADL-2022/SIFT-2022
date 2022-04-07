@@ -16,12 +16,13 @@ WINDOWS
 3. 	Open your SSH client and connect to the address "forex.local".
 	If this address does not work, try "pi@forex.local".
 	If neither of the above work, try allowing the payload module you are working to join someone else's hotspot and repeat steps 2-3.
-4. 	Username: pi
-	Password: Camjet2021
+4. 	Username: "pi"
+	Password: "camjet2021"
 5. 	Once in, note the IP address shown in the terminal. This may be used in place of the address in step 3 and may be more reliable.
+	Look for wlan:0. Then look a line under it to the right. You should see "inet XXX.XX.XX.X". This is the IP address.
 6.	Run the command "cd VanderbiltRocketTeam".
 7.	Run the command "nix-shell".
-8.	Separately, open up VNC viewer and follow the instructions to connect to the address in step 3.
+8.	Separately, open up VNC viewer and follow the instructions to connect to the address in steps 3-4.
 	If none of those work, try the address in step 5.
 9.	Proceed with the checklist items for the fore sections of the payload.
 
@@ -30,11 +31,12 @@ MACOS
 2. 	Connect to your phone's hotspot with your laptop.
 3. 	Open Terminal and run the command "ssh pi@forex.local".
 	If the above doesn't work, try allowing the payload module you are working to join someone else's hotspot and repeat steps 2-3.
-4. 	Username: pi
-	Password: Camjet2021
+4. 	Username: "pi"
+	Password: "camjet2021"
 5. 	Once in, note the IP address shown in the terminal. This may be used in place of the address in step 3 and may be more reliable.
+	Look for wlan:0. Then look a line under it to the right. You should see "inet XXX.XX.XX.X". This is the IP address.
 6.	Run the command "cd VanderbiltRocketTeam".
 7.	Run the command "nix-shell".
-8.	Separately, open up VNC viewer and follow the instructions to connect to the address in step 3.
+8.	Separately, open up VNC viewer and follow the instructions to connect to the address in steps 3-4.
 	If none of those work, try the address in step 5.
 9.	Proceed with the checklist items for the fore sections of the payload.
