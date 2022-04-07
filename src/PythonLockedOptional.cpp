@@ -10,6 +10,8 @@
 
 #include "Timer.hpp"
 
+#include "main/siftMainCmdConfig.hpp"
+
 static thread_local bool lockedAlready;
 
 PyGILState_STATE* lockPython() {
@@ -26,7 +28,9 @@ PyGILState_STATE* lockPython() {
     // GIL does not allow multiple threads to execute Python code at the same time. If you don’t go into detail, GIL can be visualized as a sort of flag that carried over from thread to thread. Whoever has the flag can do the job. The flag is transmitted either every Python instruction or, for example, when some type of input-output operation is performed.
     // Therefore, different threads will not run in parallel and the program will simply switch between them executing them at different times. However, if in the program there is some “wait” (packages from the network, user request, time.sleep pause), then in such program the threads will be executed as if in parallel. This is because during such pauses the flag (GIL) can be passed to another thread.
     // "} -- https://pyneng.readthedocs.io/en/latest/book/19_concurrent_connections/cpython_gil.html )
-    t2.logElapsed(/*id,*/ "nonthrowing_python PyGILState_Ensure");
+    if (CMD_CONFIG(verbose)) {
+        t2.logElapsed(/*id,*/ "nonthrowing_python PyGILState_Ensure");
+    }
     return &gstate;
 }
 void unlockPython(PyGILState_STATE* gstate) {
