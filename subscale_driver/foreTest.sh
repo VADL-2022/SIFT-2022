@@ -42,6 +42,7 @@ else
     python3 ./subscale_driver/cameraSwap.py 1
     ./$exe "--camera-test-only"
     echo "Running first camera test"
+    sudo pigpiod
     python3 ./subscale_driver/cameraSwap.py 1
     ./$exe "--camera-test-only"
 fi
