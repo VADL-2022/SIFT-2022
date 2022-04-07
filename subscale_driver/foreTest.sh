@@ -25,8 +25,13 @@ else
     echo "This is a video capture pi (hostname doesn't start with \"sift\": $hostname)"
 fi
 
+ctrl_c() {
+    sudo pkill -SIGINT sift
+    sudo pkill -SIGINT pigpio
+}
+
 exe=sift_exe_release_commandLine
-trap "pkill -SIGINT sift" SIGINT
+trap ctrl_c SIGINT
 
 if [ "$mode" == "sift" ]; then
     crop=
