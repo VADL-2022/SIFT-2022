@@ -268,26 +268,27 @@ def runOneIter(write_obj):
     ry=None
     rz=None
     try:
-        if L3G_bus is not None and useL3G_Gyro is True:
-            # L3GD20H Gyroscope
-            ###############################################################################
-            rxL = L3G_bus.read_byte_data(L3G_address, 0x28)
-            rxH = L3G_bus.read_byte_data(L3G_address, 0x29)
-            rx = rxH * 256 + rxL
-            if rx > 32767:
-                rx -= 65536
+        if useL3G_Gyro is True:
+            if L3G_bus is not None:
+                # L3GD20H Gyroscope
+                ###############################################################################
+                rxL = L3G_bus.read_byte_data(L3G_address, 0x28)
+                rxH = L3G_bus.read_byte_data(L3G_address, 0x29)
+                rx = rxH * 256 + rxL
+                if rx > 32767:
+                    rx -= 65536
 
-            ryL = L3G_bus.read_byte_data(L3G_address, 0x2A)
-            ryH = L3G_bus.read_byte_data(L3G_address, 0x2B)
-            ry = ryH * 256 + ryL
-            if ry > 32767:
-                ry -= 65536
+                ryL = L3G_bus.read_byte_data(L3G_address, 0x2A)
+                ryH = L3G_bus.read_byte_data(L3G_address, 0x2B)
+                ry = ryH * 256 + ryL
+                if ry > 32767:
+                    ry -= 65536
 
-            rzL = L3G_bus.read_byte_data(L3G_address, 0x2C)
-            rzH = L3G_bus.read_byte_data(L3G_address, 0x2D)
-            rz = rzH * 256 + rzL
-            if rz > 32767:
-                rz -= 65536
+                rzL = L3G_bus.read_byte_data(L3G_address, 0x2C)
+                rzH = L3G_bus.read_byte_data(L3G_address, 0x2D)
+                rz = rzH * 256 + rzL
+                if rz > 32767:
+                    rz -= 65536
     except: # Don't let a gyroscope bring down the whole video capture
         if not printed_L3G_FailedAt3:
             import traceback
@@ -486,11 +487,12 @@ except:
 
 # Gyroscope data recording
 try:
-    if L3G_bus is not None and useL3G_Gyro is True:
-        # L3G
-        L3G_address=0x6B
-        # Required Binary: 0001 (Set ODR to 100 Hz), 0111 (Enable everything) --> Equivalent Hex: 00010111 -> 0x17
-        L3G_bus.write_byte_data(L3G_address, 0x20, 0x17)
+    if useL3G_Gyro is True:
+        if L3G_bus is not None:
+            # L3G
+            L3G_address=0x6B
+            # Required Binary: 0001 (Set ODR to 100 Hz), 0111 (Enable everything) --> Equivalent Hex: 00010111 -> 0x17
+            L3G_bus.write_byte_data(L3G_address, 0x20, 0x17)
 except: # Don't let a gyroscope bring down the whole video capture
     import traceback
     print("Caught exception from L3G at 2:")
