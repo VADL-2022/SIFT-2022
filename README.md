@@ -6,7 +6,7 @@ This is an implementation of the VADL Data Processing System (VDPS) and the driv
    1. If SSH connections are interrupted, use a different iPhone completely, and set the name to `ObersterFuhrerderWermacht` with password `test1567` (or try changing the name and password if your current iPhone to this).
 2. Enable personal hotspot on your iPhone under Settings -> Personal Hotspot and then set the password to `test1234`. If it doesn't show up, you don't have that service enabled from your cellular service provider, so use someone else's phone.
 3. Connect to that hotspot on your computer.
-4. For all 4 of the Raspberry Pi's on the rocket, SSH into each one by using their host name. In other words: `ssh pi@fore1.local` to connect to the first Pi in the fore section; then do `ssh pi@fore2.local`, `ssh pi@sift1.local`, and finally `ssh pi@sift2.local`. And for each Pi run: `tmux`, then `cd VanderbiltRocketTeam`, then `nix-shell`; then, to start the mission sequence, run (and this works for fullscale despite the name!): `bash ./subscale.sh`. The Pi will then wait idly on the pad until takeoff is detected. Press *Ctrl-b* and then *d* to detach from tmux, then *Ctrl-d* to exit that SSH connection to the pi (this leaves tmux running in the background on the Pi). To reconnect, do the same SSH command as used previously and then run `tmux a` to attach to it. If needed, at any point while attached, press *Ctrl-c* multiple times (press it until you see a command-line `$` prompt again) to stop the script/mission.
+4. For all 4 of the Raspberry Pi's on the rocket, SSH into each one by using their host name. In other words: `ssh pi@fore1.local` to connect to the first Pi in the fore section; then do `ssh pi@fore2.local`, `ssh pi@sift1.local`, and finally `ssh pi@sift2.local`. And for each Pi run: `tmux`, then `cd VanderbiltRocketTeam`, then `nix-shell`; then, to start the mission sequence, run (and this works for fullscale despite the name!): `bash ./launch.sh`. The Pi will then wait idly on the pad until takeoff is detected. Press *Ctrl-b* and then *d* to detach from tmux, then *Ctrl-d* to exit that SSH connection to the pi (this leaves tmux running in the background on the Pi). To reconnect, do the same SSH command as used previously and then run `tmux a` to attach to it. If needed, at any point while attached, press *Ctrl-c* multiple times (press it until you see a command-line `$` prompt again) to stop the script/mission.
 
 # Development: installing dependencies
 
@@ -141,7 +141,7 @@ May be necessary if something doesn't work above:
 ![Driver](/documentation/architecture/Modular%20Software%20Architecture2-Page-1.drawio.png?raw=true)
 
 - [Temperature Measurement and Recording System](/WindTunnel/run.py)
-- [Driver Script](/subscale.sh) (NOTE: it is called subscale but is actually for fullscale)
+- [Driver Script](/launch.sh) (NOTE: it is called subscale but is actually for fullscale)
 
 ![General-Purpose Video Capture System](/documentation/architecture/Modular%20Software%20Architecture2-Page-2.drawio.png?raw=true)
 
