@@ -581,7 +581,7 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       ((LOG_T*)v->mLog)->userCallback = (reinterpret_cast<void(*)()>(&checkMainDeploymentCallback<LOG_T>));
       #endif
       
-      puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTarget time reached, the rocket has launched\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+      puts("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nThe rocket has launched\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
       v->startTime = -1; // Reset timer so we don't detect a main parachute deployment afterwards (although IMU would have to report higher g's to do that which is unlikely)
       
       // Record takeoff time
@@ -645,7 +645,7 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
     }
     #endif
 
-    printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\nTarget time reached, %smain parachute has deployed%s\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n", drogueFailed ? "EMERGENCY " : "", drogueFailed ? " WITHOUT DROGUE" : "");
+    printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n%smain parachute has deployed%s\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n", drogueFailed ? "EMERGENCY " : "", drogueFailed ? " WITHOUT DROGUE" : "");
     v->startTime = -1; // Reset timer
 
     // Let video capture python script know that the main parachute has deployed in order to swap cameras
@@ -842,7 +842,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     }
   }
   // Check for landing
-  else if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS) {
+  else if (magnitude > IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS && relativeAltitude < 100) {
     // Record this, it must last for IMU_ACCEL_DURATION
     if (v->startTime == -1) {
       v->startTime = fseconds;
@@ -850,7 +850,7 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     float duration = fseconds - v->startTime;
     printf("Exceeded landing acceleration magnitude threshold for %f seconds\n", duration);
     if (duration >= LANDING_ACCEL_DURATION) {
-       puts("`````````````````````````````````````````````````````````\nTarget time reached, landed\n`````````````````````````````````````````````````````````");
+       puts("`````````````````````````````````````````````````````````\nLanded\n`````````````````````````````````````````````````````````");
        v->startTime = -1; // Reset timer
        reportStatus(Status::StoppingSIFTOrVideoCaptureOnLanding);
        raise(SIGINT);
