@@ -41,7 +41,7 @@ sift test:
 -- new commands:
 
 PREPARE:
-./subscale.sh subscale2_goodMostly
+./launch.sh subscale2_goodMostly
 
 
 --tips for mophie
