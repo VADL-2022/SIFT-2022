@@ -83,6 +83,7 @@ network={
         priority=3
 }
 ```
+- When modifying this file, it may be somehow reset to its previous contents after a reboot. When rebooting after changing this file, use this to preserve its contents: `sudo service wpa_supplicant stop && sudo reboot`
 - If you're on a personal hotspot by now: connect to it on your computer, then `ssh pi@raspberrypi.local` on macOS to SSH into the pi.
   - password is `raspberry` by default
 - Install Nix using the commands on [this website](https://nixos.org/download.html)
