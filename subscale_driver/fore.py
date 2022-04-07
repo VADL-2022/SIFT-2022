@@ -7,7 +7,7 @@ https://www.sparkfun.com/datasheets/Sensors/Accelerometer/LIS331HH.pdf
 
 """
 
-# Import all required packages
+# Import all required packages ############################################
 try:
     import smbus
 except:
@@ -25,14 +25,18 @@ from datetime import timedelta
 import pigpio
 import videoCapture
 
-# Forward declare all functions
+# Forward declare all functions ###########################################
 
 # Function to run on the video capture thread
 def videoCaptureThreadFunction(name):
     global shouldStop
+
+    # Check if video capture is already running
     if shouldStop.get() != 0:
         print("videoCaptureThreadFunction(): Video capture is already running, not starting again")
         return
+
+    # Start the actual video capture
     logging.info("Thread %s: starting", name)
     videoCapture.run(shouldStop)
     logging.info("Thread %s: finishing", name)
@@ -40,9 +44,13 @@ def videoCaptureThreadFunction(name):
 # Starts the video capture
 def startVideoCapture(name):
     global videoCaptureThread
+
+    # Check if a video capture thread is already running
     if shouldStop.get() != 0:
         print("startVideoCapture(): Video capture is already running, not starting again")
         return
+
+    # Start the video capture thread
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
     videoCaptureThread.start()
 
@@ -51,9 +59,12 @@ def swapCameras():
     global switchedCameras
     print("Switching cameras")
     print("GPIO changing...")
+
+    # Set GPIO pin 26 to pull down resistor to swap to upward camera
     pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
     pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
     time.sleep(100.0 / 1000.0)
+
     print("GPIO done")
     print("Switched cameras")
     switchedCameras = True
@@ -61,17 +72,20 @@ def swapCameras():
 def stopVideoCaptureThread(name):
     print("Stopping %s video capture", name)
     global shouldStop
+
+    # Stop the video capture thread
     shouldStop.set(1) #shouldStop.incrementAndThenGet() #videoCaptureThread.raise_exception() # Stop existing video capture
     videoCaptureThread.join()
     shouldStop.set(0)
+
     logging.info("Thread %s: finishing", name)
 
 # Append a list as a row to the CSV
 def append_list_as_row(write_obj, list_of_elem):
-        # Create a writer object from csv module
-        csv_writer = writer(write_obj)
-        # Add contents of list as last row in the csv file
-        csv_writer.writerow(list_of_elem)  
+    # Create a writer object from csv module
+    csv_writer = writer(write_obj)
+    # Add contents of list as last row in the csv file
+    csv_writer.writerow(list_of_elem)  
 
 # Runs the mission sequence
 def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
@@ -83,10 +97,13 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
     name = "1stCam"
     startVideoCapture(name)
 
+    # Check if IMU has failed
     if my_accels is None:
         if switchedCameras:
+            # If the camera has already swapped, just sleep for rest of flight
             print("IMU not detected and cameras already swapped")
         else:
+            # If the camera hasn't swapped, swap immediately and sleep for rest of flight
             print("IMU not detected, swapping cameras immediately")
             stopVideoCaptureThread()
             swapCameras()
@@ -95,8 +112,9 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         name = "2ndCam"
         startVideoCapture(name)
         time.sleep(300)
-        return
+        shouldStopMain.set(1)
     else:
+        # Wait till apogee time to swap cameras
         print("Waiting for camera switching time...")
         time.sleep(switchCamerasTime/1000.0)
         stopVideoCaptureThread(name)
@@ -138,6 +156,7 @@ def runOneIter(write_obj):
     '''Do I ever need to sleep here? Or will the while take care of it?'''
 
     try:
+        # LSM IMU data recording ############################################
         if useLSM_IMU:
             # CONVERSION FACTOR TO M/S^2:
             ac_conv_factor = 0.00482283
@@ -199,7 +218,7 @@ def runOneIter(write_obj):
             zAccl = az * ac_conv_factor
             #print(zAccl)
         else:
-            # LIS data recording
+            # LIS data recording ##################################################
             # X AXIS
             ###############################################################################
             # H3LIS331DL address, 0x18(24)
@@ -254,13 +273,6 @@ def runOneIter(write_obj):
         # Swap cameras regardless of taking off, if needed
         print("IMU failed, startMissionSequence() now")
         startMissionSequence(0, None, None, None, None, None, shouldStop)
-        
-        # destSleep = (takeoffTime + timedelta(milliseconds=switchCamerasTime) - datetime.now()).total_seconds() if takeoffTime is not None else (switchCamerasTime / 1000.0)
-        # if destSleep > 0:
-        #     print("Using backup timing parameters: sleeping until switchCamerasTime:", destSleep,"seconds")
-        #     time.sleep(destSleep)
-        #     startMissionSequence(0, None, None, None, None, None, shouldStop)
-        #     return False
 
         return False # Don't bother retrying since we could have missed an event.
         
@@ -268,6 +280,7 @@ def runOneIter(write_obj):
     ry=None
     rz=None
     try:
+        # L3G Gyro data recording ########################################################
         if useL3G_Gyro is True:
             if L3G_bus is not None:
                 # L3GD20H Gyroscope
@@ -319,7 +332,7 @@ def runOneIter(write_obj):
         resList.extend(my_vals)
     append_list_as_row(write_obj, resList)
 
-    # Wait for takeoff
+    # Wait for takeoff ####################################################################
     if not logOnly:
         magnitude = np.linalg.norm(np.array(my_accels[1:]))
         global videoCaptureThread
@@ -348,13 +361,13 @@ def runOneIter(write_obj):
 
     return True
 
-# Initialize GPIO pins
+# Initialize GPIO pins ############################################################
 pi = pigpio.pi()
 pi.set_pull_up_down(26, pigpio.PUD_OFF) # Clear pull down resistor on pin 26
 pi.set_mode(26, pigpio.OUTPUT) # Set pin 26 to output
 pi.write(26, 1) # Set pin 26 to high
 
-# Initialize command line arguments
+# Initialize command line arguments #################################################
 logOnly = (sys.argv[1] == '1') if len(sys.argv) > 1 else False # If set to "1", don't do anything but log IMU data
 takeoffGs = float(sys.argv[2]) if len(sys.argv) > 2 else None
 if not logOnly and takeoffGs is None:
@@ -389,14 +402,14 @@ if useL3G_Gyro is False and useLSM_IMU is False:
     #exit(1) #Don't force them out, just warn them so they know
 useLandingDetection = float(sys.argv[10]) if len(sys.argv) > 10 else False
 
-# Initialize CSV file for recording IMU data
+# Initialize CSV file for recording IMU data ########################################
 timestr = time.strftime("%Y%m%d-%H%M%S")
 my_log = "dataOutput/LOG_" + timestr + ".LIS331.csv"
 file_name=my_log
 with open(my_log, 'w', newline='') as file:
     new_file = writer(file)
 
-# Initialize sensor recording variables
+# Initialize sensor recording variables ################################################
 avgX=0
 avgY=0
 avgZ=0
@@ -406,7 +419,7 @@ offsetX=0
 offsetY=0
 offsetZ=0
 
-# Initialize all other global variables
+# Initialize all other global variables ############################################
 logging.basicConfig(level=logging.INFO)
 shouldStop=None
 if not logOnly:
@@ -418,8 +431,8 @@ switchedCameras = False
 descent = False
 start = time.time_ns() # Time since epoch
 
-# Initialize sensors
 try:
+    # Initialize LSM IMU ##########################################################
     if useLSM_IMU:
         bus = smbus.SMBus(1)
         address = 0x6B
@@ -440,6 +453,7 @@ except:
     print("Using backup timing parameters")
     bus = None # Means IMU is dead
 try:
+    # Initialize L3g Gyroscope #######################################################
     if useL3G_Gyro:
         # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
         # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
@@ -455,6 +469,7 @@ except: # Don't let a gyroscope bring down the whole video capture
 printed_L3G_FailedAt3 = False
 
 try:
+    # Initialize LIS Accelerometer ###################################################################
     if not useLSM_IMU:
         #Syntax:
         #write_byte_data(self, addr, cmd, val)
@@ -485,8 +500,8 @@ except:
     print("Using backup timing parameters")
     bus = None # Means IMU is dead
 
-# Gyroscope data recording
 try:
+    # Initialize L3G Gyroscope Part 2 ##################################################
     if useL3G_Gyro is True:
         if L3G_bus is not None:
             # L3G
@@ -504,7 +519,7 @@ time.sleep(0.5)
 
 calibrate(calibrationFile)
 
-# Starts everything
+# Starts running the mission loop that continually checks data
 try:
     # Open file in append mode
     with open(file_name, 'a+', newline='') as write_obj:
