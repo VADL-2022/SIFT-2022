@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jan 27 17:43:47 2022
-
-@author: kdmen
-
-YOU MUST DOWNLOAD SMSBUS ON THE RPI BEFORE YOU CAN RUN THIS:
     
-DATA SHEET FOR THIS IMU
+DATA SHEET FOR LIS ACCELEROMETER
 https://www.sparkfun.com/datasheets/Sensors/Accelerometer/LIS331HH.pdf
 
 """
 
+# Import all required packages
 try:
     import smbus
 except:
@@ -26,54 +23,11 @@ import numpy as np
 from datetime import datetime
 from datetime import timedelta
 import pigpio
-pi = pigpio.pi()
-pi.set_pull_up_down(26, pigpio.PUD_OFF) # Clear pull down resistor on pin 26
-pi.set_mode(26, pigpio.OUTPUT) # Set pin 26 to output
-pi.write(26, 1) # Set pin 26 to high
-logging.basicConfig(level=logging.INFO)
+import videoCapture
 
-logOnly = (sys.argv[1] == '1') if len(sys.argv) > 1 else False # If set to "1", don't do anything but log IMU data
-takeoffGs = float(sys.argv[2]) if len(sys.argv) > 2 else None
-if not logOnly and takeoffGs is None:
-    print("Must provide takeoff g's")
-    exit(1)
-switchCamerasTime = float(sys.argv[3]) if len(sys.argv) > 3 else None
-if not logOnly and switchCamerasTime is None:
-    print("Must provide switchCamerasTime (usually time to apogee) in milliseconds")
-    exit(1)
-takeoffTime = None
-calibrationFile = (sys.argv[4]) if len(sys.argv) > 4 else None
-if calibrationFile is None:
-    print("Must provide calibrationFile")
-    exit(1)
-stoppingTime = float(sys.argv[5]) if len(sys.argv) > 5 else None
-if not logOnly and stoppingTime is None:
-    print("Must provide stoppingTime (usually worst-case flight time) in milliseconds")
-    exit(1)
-stopper = None
-useLSM_IMU = (sys.argv[6] == '1') if len(sys.argv) > 6 else False
-landingGs = float(sys.argv[7]) if len(sys.argv) > 7 else None
-if not logOnly and landingGs is None:
-    print("Must provide landing g's")
-    exit(1)
-timeToMECO = float(sys.argv[8]) if len(sys.argv) > 8 else None
-if not logOnly and timeToMECO is None:
-    print("Must provide time to MECO in milliseconds")
-    exit(1)
-useL3G_Gyro = float(sys.argv[9]) if len(sys.argv) > 9 else False
-if useL3G_Gyro is False and useLSM_IMU is False:
-    print("WARNING: You are using the LIS without a gryoscope")
-    #exit(1) #Don't force them out, just warn them so they know
-useLandingDetection = float(sys.argv[10]) if len(sys.argv) > 10 else False
+# Forward declare all functions
 
-shouldStop=None
-if not logOnly:
-    import videoCapture
-    shouldStop=videoCapture.AtomicInt(0)
-shouldStopMain = videoCapture.AtomicInt(0)
-videoCaptureThread = None
-name=None
-descent = False
+# Function to run on the video capture thread
 def videoCaptureThreadFunction(name):
     global shouldStop
     if shouldStop.get() != 0:
@@ -82,6 +36,8 @@ def videoCaptureThreadFunction(name):
     logging.info("Thread %s: starting", name)
     videoCapture.run(shouldStop)
     logging.info("Thread %s: finishing", name)
+
+# Starts the video capture
 def startVideoCapture():
     global videoCaptureThread
     global name
@@ -92,130 +48,15 @@ def startVideoCapture():
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
     videoCaptureThread.start()
 
+# Append a list as a row to the CSV
 def append_list_as_row(write_obj, list_of_elem):
         # Create a writer object from csv module
         csv_writer = writer(write_obj)
         # Add contents of list as last row in the csv file
         csv_writer.writerow(list_of_elem)
 
-timestr = time.strftime("%Y%m%d-%H%M%S")
-my_log = "dataOutput/LOG_" + timestr + ".LIS331.csv"
-file_name=my_log
-
-# Create a new (empty) csv file
-with open(my_log, 'w', newline='') as file:
-    new_file = writer(file)
-
-try:
-    if useLSM_IMU:
-        bus = smbus.SMBus(1)
-        address = 0x6B
-
-        # SET THE DATA RATE
-        ###############################################################################
-        # Required Binary: 0101 (Set ODR to 208 Hz), 01 (+/- 16g), 11 (50 Hz Anti Aliasing) --> Equivalent Hex: 01010111 -> 0x57
-        bus.write_byte_data(address, 0x10, 0x57)
-        # Required Binary: 0101 (Set ODR to 208 Hz), 00 (245 dps), 10 (Set SA0 high) --> Equivalent Hex: 01010010 -> 0x52
-        bus.write_byte_data(address, 0x11, 0x52)
-    else:
-        # Get I2C bus
-        bus = smbus.SMBus(1)
-except:
-    import traceback
-    print("Caught exception from IMU at 1:")
-    traceback.print_exc()
-    print("Using backup timing parameters")
-    bus = None # Means IMU is dead
-try:
-    if useL3G_Gyro:
-        # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
-        # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
-        # L3G_bus = smbus.SMBus(2) # if you want to use 2
-
-        L3G_bus = smbus.SMBus(0)
-except: # Don't let a gyroscope bring down the whole video capture
-    import traceback
-    print("Caught exception from L3G at 1:")
-    traceback.print_exc()
-    
-    L3G_bus = None
-printed_L3G_FailedAt3 = False
-
-try:
-    if not useLSM_IMU:
-        #Syntax:
-        #write_byte_data(self, addr, cmd, val)
-
-        # SET THE DATA RATE
-        ###############################################################################
-        # H3LIS331DL address, 0x18(24)
-        # Select control register 1, 0x20(32)
-        #		0x27(39)	Power ON mode, Data output rate = 50 Hz
-        #					X, Y, Z-Axis enabled
-        address=0x19
-        bus.write_byte_data(address, 0x20, 0x27)
-        # Required Binary: 001 (normal power mode), 00 (50 Hz), 111 (enable XYZ)
-        # Equivalent Hex: 00100111 -> 0x27
-        # TOGGLE THE MAXIMUM RANGE
-        ###############################################################################
-        # H3LIS331DL address, 0x18(24)
-        # Select control register 4, 0x23(35)
-        #		0x00(00)	Continuous update,
-        #Full scale selection = +/-24g: 0x18
-        #SUBSCALE = +/- 12g: 0x10
-        #bus.write_byte_data(0x18, 0x23, 0x00)
-        bus.write_byte_data(address, 0x23, 0x10)
-except:
-    import traceback
-    print("Caught exception from IMU at 2:")
-    traceback.print_exc()
-    print("Using backup timing parameters")
-    bus = None # Means IMU is dead
-
-# Gyroscope data recording
-try:
-    if L3G_bus is not None and useL3G_Gyro is True:
-        # L3G
-        L3G_address=0x6B
-        # Required Binary: 0001 (Set ODR to 100 Hz), 0111 (Enable everything) --> Equivalent Hex: 00010111 -> 0x17
-        L3G_bus.write_byte_data(L3G_address, 0x20, 0x17)
-except: # Don't let a gyroscope bring down the whole video capture
-    import traceback
-    print("Caught exception from L3G at 2:")
-    traceback.print_exc()
-
-
-time.sleep(0.5)
-
-avgX=0
-avgY=0
-avgZ=0
-counter=0
-
-offsetX=0
-offsetY=0
-offsetZ=0
-
-switchedCameras = False
-
-def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
-    startVideoCapture()
-    
-    global switchedCameras
-    global descent
-
-    if switchedCameras:
-        print("Switched cameras already")
-        if my_accels is None:
-            print("Sleeping for 300 seconds (total worst case flight length)")
-            sys.stdout.flush()
-            time.sleep(300) # Total flight length is 90 seconds. Worst case is main deployment at apogee, which would make flight time around just under 300 seconds.
-        return
-    switchedCameras = True
-    
-    if my_accels is None:
-        print("Switcher switching in", switchCamerasTime, "second(s)")
-    def thread_function2(name):
+# 
+def thread_function2(name):
         global videoCaptureThread
         global shouldStop
         logging.info("Thread %s: starting", name)
@@ -243,6 +84,27 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         shouldStop.set(1)
         shouldStopMain.set(1)
         logging.info("Thread %s: finishing", name)
+
+# Runs the mission sequence
+def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_accels, shouldStop):
+    global switchedCameras
+    global descent
+
+    # Start the video capture on the first camera
+    startVideoCapture()
+    
+    if switchedCameras:
+        print("Switched cameras already")
+        if my_accels is None:
+            print("Sleeping for 300 seconds (total worst case flight length)")
+            sys.stdout.flush()
+            time.sleep(300) # Total flight length is 90 seconds. Worst case is main deployment at apogee, which would make flight time around just under 300 seconds.
+        return
+    switchedCameras = True
+    
+    if my_accels is None:
+        print("Switcher switching in", switchCamerasTime, "second(s)")
+
     _2ndCamThread = thread_with_exception.thread_with_exception(name=name, target=thread_function2, args=("2ndCam",))
     _2ndCamThread.start()
 
@@ -258,6 +120,7 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
     # stopper = thread_with_exception.thread_with_exception(name="Stopper", target=thread_function_stopper, args=("Stopper",))
     # stopper.start()
 
+# Calibrate the IMU
 def calibrate(file):
     global offsetX
     global offsetY
@@ -268,7 +131,7 @@ def calibrate(file):
         last_line = line
         offsetX,offsetY,offsetZ=list(map(float, last_line.split(",")[1:]))
 
-start = time.time_ns() # Time since epoch
+# Run one loop of data collection
 def runOneIter(write_obj):
     global takeoffTime
     global avgX
@@ -491,9 +354,162 @@ def runOneIter(write_obj):
 
     return True
 
-            
+# Initialize GPIO pins
+pi = pigpio.pi()
+pi.set_pull_up_down(26, pigpio.PUD_OFF) # Clear pull down resistor on pin 26
+pi.set_mode(26, pigpio.OUTPUT) # Set pin 26 to output
+pi.write(26, 1) # Set pin 26 to high
+
+# Initialize command line arguments
+logOnly = (sys.argv[1] == '1') if len(sys.argv) > 1 else False # If set to "1", don't do anything but log IMU data
+takeoffGs = float(sys.argv[2]) if len(sys.argv) > 2 else None
+if not logOnly and takeoffGs is None:
+    print("Must provide takeoff g's")
+    exit(1)
+switchCamerasTime = float(sys.argv[3]) if len(sys.argv) > 3 else None
+if not logOnly and switchCamerasTime is None:
+    print("Must provide switchCamerasTime (usually time to apogee) in milliseconds")
+    exit(1)
+takeoffTime = None
+calibrationFile = (sys.argv[4]) if len(sys.argv) > 4 else None
+if calibrationFile is None:
+    print("Must provide calibrationFile")
+    exit(1)
+stoppingTime = float(sys.argv[5]) if len(sys.argv) > 5 else None
+if not logOnly and stoppingTime is None:
+    print("Must provide stoppingTime (usually worst-case flight time) in milliseconds")
+    exit(1)
+stopper = None
+useLSM_IMU = (sys.argv[6] == '1') if len(sys.argv) > 6 else False
+landingGs = float(sys.argv[7]) if len(sys.argv) > 7 else None
+if not logOnly and landingGs is None:
+    print("Must provide landing g's")
+    exit(1)
+timeToMECO = float(sys.argv[8]) if len(sys.argv) > 8 else None
+if not logOnly and timeToMECO is None:
+    print("Must provide time to MECO in milliseconds")
+    exit(1)
+useL3G_Gyro = float(sys.argv[9]) if len(sys.argv) > 9 else False
+if useL3G_Gyro is False and useLSM_IMU is False:
+    print("WARNING: You are using the LIS without a gryoscope")
+    #exit(1) #Don't force them out, just warn them so they know
+useLandingDetection = float(sys.argv[10]) if len(sys.argv) > 10 else False
+
+# Initialize CSV file for recording IMU data
+timestr = time.strftime("%Y%m%d-%H%M%S")
+my_log = "dataOutput/LOG_" + timestr + ".LIS331.csv"
+file_name=my_log
+with open(my_log, 'w', newline='') as file:
+    new_file = writer(file)
+
+# Initialize sensor recording variables
+avgX=0
+avgY=0
+avgZ=0
+counter=0
+
+offsetX=0
+offsetY=0
+offsetZ=0
+
+# Initialize all other global variables
+logging.basicConfig(level=logging.INFO)
+shouldStop=None
+if not logOnly:
+    shouldStop=videoCapture.AtomicInt(0)
+shouldStopMain = videoCapture.AtomicInt(0)
+videoCaptureThread = None
+name=None
+switchedCameras = False
+descent = False
+start = time.time_ns() # Time since epoch
+
+# Initialize sensors
+try:
+    if useLSM_IMU:
+        bus = smbus.SMBus(1)
+        address = 0x6B
+
+        # SET THE DATA RATE
+        ###############################################################################
+        # Required Binary: 0101 (Set ODR to 208 Hz), 01 (+/- 16g), 11 (50 Hz Anti Aliasing) --> Equivalent Hex: 01010111 -> 0x57
+        bus.write_byte_data(address, 0x10, 0x57)
+        # Required Binary: 0101 (Set ODR to 208 Hz), 00 (245 dps), 10 (Set SA0 high) --> Equivalent Hex: 01010010 -> 0x52
+        bus.write_byte_data(address, 0x11, 0x52)
+    else:
+        # Get I2C bus
+        bus = smbus.SMBus(1)
+except:
+    import traceback
+    print("Caught exception from IMU at 1:")
+    traceback.print_exc()
+    print("Using backup timing parameters")
+    bus = None # Means IMU is dead
+try:
+    if useL3G_Gyro:
+        # Requires: dtoverlay=i2c-gpio,bus=2,i2c_gpio_sda=22,i2c_gpio_scl=23  in /boot/config.txt (add line) ( https://medium.com/cemac/creating-multiple-i2c-ports-on-a-raspberry-pi-e31ce72a3eb2 )
+        # Or run this: `dtoverlay i2c-gpio bus=2 i2c_gpio_sda=22 i2c_gpio_scl=23`
+        # L3G_bus = smbus.SMBus(2) # if you want to use 2
+
+        L3G_bus = smbus.SMBus(0)
+except: # Don't let a gyroscope bring down the whole video capture
+    import traceback
+    print("Caught exception from L3G at 1:")
+    traceback.print_exc()
+    
+    L3G_bus = None
+printed_L3G_FailedAt3 = False
+
+try:
+    if not useLSM_IMU:
+        #Syntax:
+        #write_byte_data(self, addr, cmd, val)
+
+        # SET THE DATA RATE
+        ###############################################################################
+        # H3LIS331DL address, 0x18(24)
+        # Select control register 1, 0x20(32)
+        #		0x27(39)	Power ON mode, Data output rate = 50 Hz
+        #					X, Y, Z-Axis enabled
+        address=0x19
+        bus.write_byte_data(address, 0x20, 0x27)
+        # Required Binary: 001 (normal power mode), 00 (50 Hz), 111 (enable XYZ)
+        # Equivalent Hex: 00100111 -> 0x27
+        # TOGGLE THE MAXIMUM RANGE
+        ###############################################################################
+        # H3LIS331DL address, 0x18(24)
+        # Select control register 4, 0x23(35)
+        #		0x00(00)	Continuous update,
+        #Full scale selection = +/-24g: 0x18
+        #SUBSCALE = +/- 12g: 0x10
+        #bus.write_byte_data(0x18, 0x23, 0x00)
+        bus.write_byte_data(address, 0x23, 0x10)
+except:
+    import traceback
+    print("Caught exception from IMU at 2:")
+    traceback.print_exc()
+    print("Using backup timing parameters")
+    bus = None # Means IMU is dead
+
+# Gyroscope data recording
+try:
+    if L3G_bus is not None and useL3G_Gyro is True:
+        # L3G
+        L3G_address=0x6B
+        # Required Binary: 0001 (Set ODR to 100 Hz), 0111 (Enable everything) --> Equivalent Hex: 00010111 -> 0x17
+        L3G_bus.write_byte_data(L3G_address, 0x20, 0x17)
+except: # Don't let a gyroscope bring down the whole video capture
+    import traceback
+    print("Caught exception from L3G at 2:")
+    traceback.print_exc()
+
+
+time.sleep(0.5)
+
 
 calibrate(calibrationFile)
+
+# Starts everything
 try:
     # Open file in append mode
     with open(file_name, 'a+', newline='') as write_obj:
