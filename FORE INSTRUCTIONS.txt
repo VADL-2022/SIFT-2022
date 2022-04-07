@@ -20,11 +20,13 @@ WINDOWS
 	Password: "camjet2021"
 5. 	Once in, note the IP address shown in the terminal. This may be used in place of the address in step 3 and may be more reliable.
 	Look for wlan:0. Then look a line under it to the right. You should see "inet XXX.XX.XX.X". This is the IP address.
-6.	Run the command "cd VanderbiltRocketTeam".
-7.	Run the command "nix-shell".
-8.	Separately, open up VNC viewer and follow the instructions to connect to the address in steps 3-4.
+6.	Run the command "tmux".
+7.	Run the command "cd VanderbiltRocketTeam".
+8.	Run the command "nix-shell".
+9.	Separately, open up VNC viewer and follow the instructions to connect to the address in steps 3-4.
 	If none of those work, try the address in step 5.
-9.	Proceed with the checklist items for the fore sections of the payload.
+10.	Proceed with the checklist items for the fore sections of the payload.
+11. If you ever get disconnected from the Pi, attempt to connect back with steps 3-4. Once you reach step 6, run the command "tmux a" instead.
 
 MACOS
 1. 	Open your phone's hotspot to allow ForeX to connect.
@@ -35,8 +37,10 @@ MACOS
 	Password: "camjet2021"
 5. 	Once in, note the IP address shown in the terminal. This may be used in place of the address in step 3 and may be more reliable.
 	Look for wlan:0. Then look a line under it to the right. You should see "inet XXX.XX.XX.X". This is the IP address.
-6.	Run the command "cd VanderbiltRocketTeam".
-7.	Run the command "nix-shell".
-8.	Separately, open up VNC viewer and follow the instructions to connect to the address in steps 3-4.
+6.	Run the command "tmux".
+7.	Run the command "cd VanderbiltRocketTeam".
+8.	Run the command "nix-shell".
+9.	Separately, open up VNC viewer and follow the instructions to connect to the address in steps 3-4.
 	If none of those work, try the address in step 5.
-9.	Proceed with the checklist items for the fore sections of the payload.
+10.	Proceed with the checklist items for the fore sections of the payload.
+11. If you ever get disconnected from the Pi, attempt to connect back with steps 3-4. Once you reach step 6, run the command "tmux a" instead.
