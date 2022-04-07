@@ -38,12 +38,12 @@ else
     echo "Sleeping for 5 seconds, then swapping"
     sleep 5
     pkill -SIGINT sift
-    python3 cameraSwap.py
+    python3 ./subscale_driver/cameraSwap.py
     ./$exe "--camera-test-only"
     echo "Running second camera test"
     sleep 5
     pkill -SIGINT sift
 fi
 
-python3 radio.py
+python3 ./subscale_driver/radio.py
 echo "Running radio test"
