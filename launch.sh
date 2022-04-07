@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start with `bash ./subscale.sh`
+# Start with `bash ./launch.sh`
 
 if [[ "$(whoami)" != "pi" ]]; then
    echo "This script must be run as \"pi\""

@@ -41,7 +41,7 @@ sift test:
 -- new commands:
 
 PREPARE:
-./subscale.sh subscale2_goodMostly
+./launch.sh subscale2_goodMostly
 
 
 --tips for mophie
@@ -72,7 +72,7 @@ final gzip: tar --use-compress-program='gzip -9' -cf ./subscale2_data.tar.gz ./f
 
 ./subscale_exe_debug --time-for-main-stabilization 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 1.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --time-to-main-deployment 100000 --main-descent-time 10000 --verbose --imu-data-source-time-offset 374000
 
-subscale_driver/LIS331_loop.py 0 0.500000 10000 subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv 20000
+subscale_driver/fore.py 0 0.500000 10000 subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv 20000
 
 
 ./subscale_exe_debug --time-for-main-stabilization 2000  --backup-takeoff-time 10000000  --main-deployment-g-force 0.5  --imu-data-source-path Data/subscale2/SIFT/LOG_20220130_014355.csv --time-to-main-deployment 100000 --main-descent-time 10000 --verbose --imu-data-source-time-offset 374000 --sift-params '-C_edge 2 -delta_min 0.6' --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path /home/pi/VanderbiltRocketTeam/dataOutput/2022-01-30_01_50_07_CST/output.mp4'
