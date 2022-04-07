@@ -38,11 +38,11 @@ if [ "$mode" == "sift" ]; then
     #crop=--crop-for-fisheye-camera
     ./$exe --extra-sift-exe-args "$crop --no-preview-window --finish-rest-always --fps $fps --save-first-image" --sift-params '-C_edge 2 -delta_min 0.6' $commonArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "subscale_driver/radio.py" 1)
 else
-    #./subscale_exe_release --video-capture --time-for-main-stabilization "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
+    python3 ./subscale_driver/cameraSwap.py 1
     ./$exe "--camera-test-only"
     echo "Running first camera test"
     sudo pigpiod
-    python3 ./subscale_driver/cameraSwap.py
+    python3 ./subscale_driver/cameraSwap.py 1
     ./$exe "--camera-test-only"
 fi
 
