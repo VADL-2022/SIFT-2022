@@ -15,49 +15,55 @@ from datetime import datetime
 
 # Initiate SIFT detector
 sift = cv2.xfeatures2d.SIFT_create() # https://stackoverflow.com/questions/63949074/cv2-sift-causes-segmentation-fault  #cv2.SIFT()
+#sift = cv2.ORB_create()
 
 # BFMatcher with default params
 bf = cv2.BFMatcher()
 
-# Config #
-mode = 1
-grabMode=int(sys.argv[1]) if len(sys.argv) > 1 else 2 # 1 for video, 0 for photos, 2 for provide list of images manually
-shouldRunSkyDetection=sys.argv[2] == '1' if len(sys.argv) > 2 else True
-shouldRunUndistort=sys.argv[3] == '1' if len(sys.argv) > 3 else False
-skip=int(sys.argv[4]) if len(sys.argv) > 4 else 0
-videoFilename=sys.argv[5] if len(sys.argv) > 5 else None
-showPreviewWindow=sys.argv[6] == '1' if len(sys.argv) > 6 else True
-imgs=None
-if grabMode==1:
-    reader=cv2.VideoCapture(
-        # Drone tests from 3-28-2022: #
-        # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4' # GOOD
-        # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4' # CHALLENGING; a bit offset
-        #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_46_26_CDT/output.mp4' #<--!!!!!!!!!!!!!!! WOAH! shockingly accurate result
-        #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_50_08_CDT/output.mp4' # also good, but recovery is a little late
-        #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_54_34_CDT/output.mp4' # TOUGHEST ONE
-        '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_19_00_01_CDT/output.mp4' # WOW... actually not bad even though it hits the tower thing. maybe its higher fps is the key for opencv sift?
-        # #
-        
-        #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4'
-        #'quadcopterFlight/live2--.mp4' # our old standby
-        #'/Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/Derived/live18_downwards_test/output.mp4'
-    ) if videoFilename is None else cv2.VideoCapture(videoFilename)
-elif grabMode==0:
-    import subprocess
-    #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
-    p=subprocess.run(["compareNatSort/compareNatSort",
-                      "Data/fullscale1/Derived/SIFT/ExtractedFrames"
-                      # '/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_19_02_14_CDT'
-                      #'/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_18_47_47_CDT'
-                      , ".png"], capture_output=True)
-elif grabMode==2:
-    imgs=[
-        '/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/cnn-registration/img/Screen Shot 2022-03-29 at 2.13.17 PM.png',
-        #'/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/Data/fullscale1/Derived/SIFT/ExtractedFrames_undistorted/thumb0127.png',
-        '/Volumes/MyTestVolume/Projects/VanderbiltRocketTeam/Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0127.png',
-    ]
-# End Config #
+if __name__ == "__main__":
+    # Config #
+    mode = 1
+    grabMode=int(sys.argv[1]) if len(sys.argv) > 1 else 2 # 1 for video, 0 for photos, 2 for provide list of images manually
+    shouldRunSkyDetection=sys.argv[2] == '1' if len(sys.argv) > 2 else True
+    shouldRunUndistort=sys.argv[3] == '1' if len(sys.argv) > 3 else False
+    skip=int(sys.argv[4]) if len(sys.argv) > 4 else 0
+    videoFilename=sys.argv[5] if len(sys.argv) > 5 else None
+    showPreviewWindow=sys.argv[6] == '1' if len(sys.argv) > 6 else True
+    imgs=None
+    if grabMode==1:
+        reader=cv2.VideoCapture(
+            # Drone tests from 3-28-2022: #
+            # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4' # GOOD
+            # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4' # CHALLENGING; a bit offset
+            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_46_26_CDT/output.mp4' #<--!!!!!!!!!!!!!!! WOAH! shockingly accurate result
+            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_50_08_CDT/output.mp4' # also good, but recovery is a little late
+            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_54_34_CDT/output.mp4' # TOUGHEST ONE
+            '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_19_00_01_CDT/output.mp4' # WOW... actually not bad even though it hits the tower thing. maybe its higher fps is the key for opencv sift?
+            # #
+
+            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4'
+            #'quadcopterFlight/live2--.mp4' # our old standby
+            #'/Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/Derived/live18_downwards_test/output.mp4'
+        ) if videoFilename is None else cv2.VideoCapture(videoFilename)
+    elif grabMode==0:
+        import subprocess
+        #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
+        p=subprocess.run(["compareNatSort/compareNatSort",
+                          "Data/fullscale1/Derived/SIFT/ExtractedFrames"
+                          # '/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_19_02_14_CDT'
+                          #'/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_18_47_47_CDT'
+                          , ".png"], capture_output=True)
+    elif grabMode==2:
+        imgs=[
+            #'cnn-registration/img/Screen Shot 2022-03-29 at 2.13.17 PM.png',
+            #'Data/fullscale1/Derived/SIFT/ExtractedFrames_undistorted/thumb0127.png',
+            #'Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0127.png',
+
+            'Data/fullscale1/Derived/SIFT/SatelliteMatchingTesting/thumb0005.png',
+            'Data/fullscale1/Derived/SIFT/SatelliteMatchingTesting/Screen Shot 2022-03-29 at 2.13.17 PM_.png',
+            'Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0127.png',
+        ]
+    # End Config #
 
 # This function is from https://www.programcreek.com/python/example/110698/cv2.estimateAffinePartial2D
 def find_homography(keypoints_pic1, keypoints_pic2, matches) -> (List, np.float32, np.float32):
@@ -91,7 +97,7 @@ def find_homography(keypoints_pic1, keypoints_pic2, matches) -> (List, np.float3
 
         return good, transformation_matrix, transformation_rigid_matrix
 
-def grabImage(imgName):
+def grabImage(imgName, i):
     def grabInternal(imgName):
         if grabMode == 1:
             ret,frame = reader.read()
@@ -110,7 +116,7 @@ def grabImage(imgName):
     if shouldRunUndistort:
         frame = undisortImage(frame)
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if shouldRunSkyDetection and shouldDiscardImage(greyscale):
+    if shouldRunSkyDetection and shouldDiscardImage(greyscale, i):
         return None, True, greyscale
     else:
         return frame, False, greyscale
@@ -120,11 +126,11 @@ def grabImage(imgName):
 def lerp(a, b, t):
     return a + (b-a) * t
 
-def showLerpController(firstImage, M, key_):
+idMat=np.matrix([[1.0, 0.0, 0.0],
+                 [0.0, 1.0, 0.0],
+                 [0.0, 0.0, 1.0]])
+def showLerpController(firstImage, M, key_='a', idMat=idMat):
     img2=firstImage
-    idMat=np.matrix([[1.0, 0.0, 0.0],
-                     [0.0, 1.0, 0.0],
-                     [0.0, 0.0, 1.0]])
     Mcurrent = idMat.copy()
     #inc=0.005*2
     inc=0.005/2
@@ -201,7 +207,7 @@ def run():
         #exit(0)
 
         while img1 is None and discarded:
-            img1, discarded, greyscale = grabImage(imgs[i])
+            img1, discarded, greyscale = grabImage(imgs[i], i)
             i+=1
         firstImage = img1
         
@@ -238,7 +244,7 @@ def run():
             elif k & 0xFF == ord(applyMatKey) and img2 is not None: # Apply matrix with lerp
                 showLerpController(firstImage, acc, applyMatKey)
         
-        img2, discarded, greyscale = grabImage(imgName)
+        img2, discarded, greyscale = grabImage(imgName, i)
         if img2 is None and not discarded:
             print("img2 was None")
             cv2.waitKey(0)
@@ -315,4 +321,5 @@ def run():
         # Save transformation
         cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
 
-run()
+if __name__ == "__main__":
+    run()

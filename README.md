@@ -3,7 +3,7 @@ This is an implementation of the VADL Data Processing System (VDPS) and the driv
 # Running for the mission (USE THIS for launch)
 
 1. Set your iPhone's name to "PiRescue" under Settings -> General -> About -> Name. This allows the Pi's to find and conncet to the hotspot on your phone after you enable it in the step below. (After the mission, you can change it back to what it was before.)
-   1. If SSH connections are interrupted, use a different iPhone completely, and set the name to `ObersterFuhrerderWermacht` with password `test1567` (or try changing the name and password if your current iPhone to this).
+   1. If SSH connections are interrupted, use a different iPhone completely, and set the name to `ObersterFuhrerderWermacht` with password `test1567` (or try changing the name and password of your current iPhone to this).
 2. Enable personal hotspot on your iPhone under Settings -> Personal Hotspot and then set the password to `test1234`. If it doesn't show up, you don't have that service enabled from your cellular service provider, so use someone else's phone.
 3. Connect to that hotspot on your computer.
 4. For all 4 of the Raspberry Pi's on the rocket, SSH into each one by using their host name. In other words: `ssh pi@fore1.local` to connect to the first Pi in the fore section; then do `ssh pi@fore2.local`, `ssh pi@sift1.local`, and finally `ssh pi@sift2.local`. And for each Pi run: `tmux`, then `cd VanderbiltRocketTeam`, then `nix-shell`; then, to start the mission sequence, run (and this works for fullscale despite the name!): `bash ./launch.sh`. The Pi will then wait idly on the pad until takeoff is detected. Press *Ctrl-b* and then *d* to detach from tmux, then *Ctrl-d* to exit that SSH connection to the pi (this leaves tmux running in the background on the Pi). To reconnect, do the same SSH command as used previously and then run `tmux a` to attach to it. If needed, at any point while attached, press *Ctrl-c* multiple times (press it until you see a command-line `$` prompt again) to stop the script/mission.
@@ -22,7 +22,7 @@ Not supported unless you manually install OpenCV and a compiler that supports Ma
 
 1. To have all git submodules, ensure you cloned the repo with `git clone --recursive`. If not, run `git submodule update --init --recursive` in the project root to fix it.
 2. macOS or Linux: Run `nix-shell` in the project root. Proceed with this shell for the remaining steps.
-3. `make -j4 sift_exe_release_commandLine subscale_exe_release` to compile for release, or `make -j4 sift_exe_debug_commandLine subscale_exe_debug` for debug mode.
+3. `make -j4 sift_exe_release_commandLine subscale_exe_release` to compile for release, or `make -j4 sift_exe_debug_commandLine subscale_exe_debug` for debug mode. Note that `subscale_exe_release` and `subscale_exe_debug` only compile on the Raspberry Pi due to their use of the GPIO library. Leave them out of the `make` command provided if you are compiling from an arbitrary Linux or macOS device.
 4. `./sift_exe_release_commandLine --main-mission` to run the mission for release, or `./sift_exe_debug_commandLine --main-mission` for debug. See [this file](/src/main/siftMainCmdLineParser.hpp) for documentation on more command-line arguments. Without `--main-mission` or with `--main-mission-interactive`: when a window comes up, you can press any key to advance to the next frame and show the matching features.
 
 # Screenshots
@@ -122,9 +122,22 @@ May be necessary if something doesn't work above:
 
 # Software documentation
 
-## To add a data source
+## To add a new SIFT / computer vision algorithm implementation
 
 - See [SIFT Software Architecture Documentation](/documentation/architecture/SIFT%20Software%20Architecture%20Documentation.pdf)
+
+## To add a data source
+
+Data sources are reusable classes that provide the ability to read from some abstracted/encapsulated source. For example, `VideoFileDataSource` reads from an OpenCV video capture ([`cv::VideoCapture`](https://docs.opencv.org/4.x/d8/dfe/classcv_1_1VideoCapture.html)) hooked up to a video file such as a `.mp4` file, and `CameraDataSource` reads from an OpenCV video capture hooked up to the camera.
+
+1. Open [DataSource.hpp](/src/DataSource.hpp) and [DataSource.cpp](/src/DataSource.cpp).
+2. Add a subclass of one of the existing classes, such as `DataSourceBase`.
+3. Implement the methods.
+4. You can instantiate your data source in [siftMain.cpp](/src/siftMain.cpp) (such as based on command line arguments parsed by the `parseCommandLineArgs` function) near the `std::make_unique` calls within `int main(int argc, char **argv)`.
+
+## To add a data output
+
+Similar to data sources, data outputs allow the program to output to abstracted locations, such as a preview GUI window via `PreviewWindowDataOutput` or to an OpenCV [`cv::VideoWriter`](https://docs.opencv.org/4.x/dd/d9e/classcv_1_1VideoWriter.html) hooked up to a video file via `FileDataOutput`. Like with data sources, subclass one of the existing classes in [DataOutput.hpp](/src/DataOutput.hpp) and [DataOutput.cpp](/src/DataOutput.cpp).
 
 ## Mission sequence
 
