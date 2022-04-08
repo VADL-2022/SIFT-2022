@@ -16,6 +16,7 @@
 int driverInput_fd = -1; // File descriptor for reading from the driver program, if any (else it is -1)
 int driverInput_fd_fcntl_flags = 0;
 FILE* driverInput_file = NULL;
+int imageStream_fd = -1; // File descriptor for reading images from shared memory, if any (else it is -1)
 
 #ifdef USE_COMMAND_LINE_ARGS
 // Returns 0 on success, else returns the exit code for something like int main().
@@ -116,6 +117,20 @@ int parseCommandLineArgs(int argc, char** argv,
         else if (i+1 < argc && strcmp(argv[i], "--subscale-driver-fd") == 0) { // For grabbing IMU data, SIFT requires a separate driver program writing to the file descriptor given.
             driverInput_fd = std::stoi(argv[i+1]);
             printf("driverInput_fd set to: %d\n", driverInput_fd);
+            i++;
+        }
+        else if (i+1 < argc && strcmp(argv[i], "--image-stream-data-source-fd") == 0) { // For providing a stream of images one by one from some file descriptor to SIFT using shared memory with an mmap()'ed file instead of using the camera, video files, etc.
+            imageStream_fd = std::stoi(argv[i+1]);
+            printf("imageStream_fd set to: %d\n", imageStream_fd);
+            i++;
+        }
+        else if (i+1 < argc && strcmp(argv[i], "--directory") == 0) { // SIFT will cd here before running.
+            printf("cd to: %s\n", argv[i+1]);
+            int ret = chdir(argv[i+1]);
+            if (ret != 0) {
+                perror("cd failed");
+                puts("Continuing anyway.");
+            }
             i++;
         }
         else if (strcmp(argv[i], "--debug-no-std-terminate") == 0) { // Disables the SIFT unhandled exception handler for C++ exceptions. Use for lldb purposes.

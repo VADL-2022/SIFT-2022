@@ -15,6 +15,7 @@
 extern int driverInput_fd; // File descriptor for reading from the driver program, if any (else it is -1)
 extern int driverInput_fd_fcntl_flags;
 extern FILE* driverInput_file;
+extern int imageStream_fd; // File descriptor for reading images from shared memory, if any (else it is -1)
 
 struct SIFTState;
 struct SIFTParams;

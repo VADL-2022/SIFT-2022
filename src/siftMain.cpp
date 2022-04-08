@@ -150,9 +150,6 @@ int main(int argc, char **argv)
     return 0;
 #endif
     
-    // Warm up (in case mkdir fails)
-    getDataOutputFolder();
-    
     // Main area //
     
 #ifdef SLEEP_BEFORE_RUNNING
@@ -186,6 +183,9 @@ int main(int argc, char **argv)
         return ret;
     }
     
+    // Warm up (in case mkdir fails)
+    getDataOutputFolder();
+    
     if (cfg.cameraTestOnly) {
         // Simple camera test to isolate issues
         // https://answers.opencv.org/question/1/how-can-i-get-frames-from-my-webcam/
@@ -210,7 +210,10 @@ int main(int argc, char **argv)
         return 0;
     }
     
-    if (cfg.cameraDataSource()) {
+    if (imageStream_fd != -1) {
+        src = std::make_unique<SharedMemoryDataSource>(imageStream_fd);
+    }
+    else if (cfg.cameraDataSource()) {
         src = std::make_unique<DataSourceT>(argc, argv); // Sets fps, etc. from command line args
     }
     

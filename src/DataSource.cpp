@@ -17,6 +17,12 @@ namespace fs = std::filesystem;
 
 #include "common.hpp"
 
+#include "../sharedMemory/sharedMemory.hpp"
+#include "../sharedMemory/SharedMemoryConvention.hpp"
+
+template <typename F1, typename F2>
+cv::Mat siftImageForMatFromColoredImageInCache(size_t index, std::unordered_map<size_t, cv::Mat>& cache, F1 shouldCrop, F2 crop);
+
 cv::Rect cropForFisheyeCamera() {
     //return cv::Rect(cv::Point(137,62), cv::Point(490,401));
     int inset;
@@ -38,6 +44,170 @@ void DataSourceBase::initCrop(cv::Size sizeFrame) {
         _crop = true;
     }
     #endif
+}
+
+StreamDataSource::StreamDataSource(std::function<cv::Mat(void)> getNextInStream_) {
+    currentIndex = 0;
+    getNextInStream = getNextInStream_;
+}
+
+bool StreamDataSource::hasNext() {
+    return true;
+}
+
+cv::Mat StreamDataSource::next() {
+    return get(currentIndex++);
+}
+
+static thread_local std::string msg;
+cv::Mat StreamDataSource::get(size_t index) {
+    size_t i = index;
+    
+//        if (!(i < files.size())) {
+//            return cv::Mat(); // End is reached, no more images
+//        }
+    
+    if (!inittedCrop) {
+        // Ensure we init crop
+        inittedCrop = true;
+        cv::Mat res = get(0);
+        sizeFrame.width = res.cols;
+        sizeFrame.height = res.rows;
+        initCrop(sizeFrame);
+    }
+    auto it = cache.find(i);
+    if (it != cache.end()) {
+        return it->second;
+    }
+
+//    std::string msg2 = "Testing:";
+//    msg2 += " (index was " + std::to_string(i) + " but currentIndex was " + std::to_string(currentIndex) + ")";
+//    std::cout << msg2 << std::endl;
+    
+    if (i < currentIndex) {
+        msg = "Index given has no cached image";
+        msg += " (index was " + std::to_string(i) + " but currentIndex was " + std::to_string(currentIndex) + ")";
+        recoverableError(msg.c_str());
+        return cv::Mat();
+    }
+    else if (i == currentIndex) {
+        currentIndex++;
+    }
+    else if (i > currentIndex) { // Index given is too large
+        return cv::Mat();
+    }
+
+    // Loading image
+    t.reset();
+    cv::Mat mat = getNextInStream();
+    t.logElapsed("StreamDataSource load image from getNextInStream()");
+    
+    // Ensure good size for SIFT
+//    if (w > sizeFrame.width || h > sizeFrame.height) {
+//        t.reset();
+//
+//        // TODO: Keep same aspect ratio
+////        double EPSILON = 0.0001;
+////        if (sizeFrame.width / (double)sizeFrame.height - w / (double)h > EPSILON) {
+////
+////        }
+//
+//        { out_guard();
+//            std::cout << "Resize from " << w << " x " << h << " to " << sizeFrame << std::endl; }
+//        cv::resize(mat, mat, sizeFrame);
+//        t.logElapsed("resize frame for SIFT");
+//    }
+    
+    // Cache it
+    cache.emplace(i, mat);
+    
+//    printf("TESTINGasd\n");
+    
+    return mat;
+}
+
+std::string StreamDataSource::nameForIndex(size_t index) {
+    return "Image " + std::to_string(index);
+}
+
+cv::Mat StreamDataSource::siftImageForMat(size_t index) {
+    return siftImageForMatFromColoredImageInCache(index, cache, std::bind(&OpenCVVideoCaptureDataSource::shouldCrop, *this), std::bind(&OpenCVVideoCaptureDataSource::crop, *this));
+}
+cv::Mat StreamDataSource::colorImageForMat(size_t index) {
+    return cache.at(index);
+}
+
+// https://stackoverflow.com/questions/6537436/how-do-you-get-file-size-by-fd
+//off_t fileSize(int fd) {
+//   struct stat s;
+//   if (fstat(fd, &s) == -1) {
+//      int saveErrno = errno;
+//      fprintf(stderr, "fstat(%d) returned errno=%d (%s).", fd, saveErrno, strerror(errno));
+//      return(-1);
+//   }
+//   return(s.st_size);
+//}
+
+SharedMemoryDataSource::SharedMemoryDataSource(int fd) :
+shmem(nullptr),
+shmem_size(0),
+shmemFD(fd),
+StreamDataSource([this](){
+    SharedMemoryConvention* shmem = ((SharedMemoryConvention*)this->shmem);
+    if (shmem == nullptr) {
+        puts("SharedMemoryDataSource: no shmem pointer was set");
+        return cv::Mat();
+    }
+    // Get a cv::Mat from the shared memory
+    lockSharedMemoryWithConvention(shmem);
+    
+    // Check if we have an image yet
+    while (/* (This condition is included in the condition that followed it: `shmem->frameCounter == std::numeric_limits<uint64_t>::max() ||`) */
+           shmem->frameCounter == this->lastShmemFrameCounter // On the same image, so wait for another
+           ) {
+        // Wait for an image
+        unlockSharedMemoryWithConvention(shmem);
+        puts("SharedMemoryDataSource: waiting for an image...");
+        usleep(100 // <--milliseconds
+               *1000); // (Microseconds after conversion)
+        lockSharedMemoryWithConvention(shmem);
+    }
+    
+    // Check for closed data source
+    if (shmem->frameCounter == std::numeric_limits<uint64_t>::max() - 1) {
+        puts("SharedMemoryDataSource: data source was closed from outside SIFT");
+        unlockSharedMemoryWithConvention(shmem);
+        return cv::Mat();
+    }
+    
+    this->lastShmemFrameCounter = shmem->frameCounter;
+    printf("SharedMemoryDataSource: shmem->frameCounter: " "%" PRIu64 "\n",  shmem->frameCounter);
+    
+    // size_t size = this->shmem+this->shmem_size-addr
+    // Copy (so we can release the lock)
+    cv::Mat mat(shmem->imgHeight_, shmem->imgWidth_, CV_8UC3); // Default-initialized matrix
+    memcpy(mat.data, &shmem->mat, sizeof(shmem->mat));// Copy into our own Mat
+    
+    unlockSharedMemoryWithConvention(shmem);
+    return mat;
+})
+{
+//    this->shmem_size = fileSize(this->shmemFD);
+//    if (this->shmem_size <= 0) {
+//        return;
+//    }
+    this->shmem = (SharedMemoryConvention*)map_shared_memory_from_fd(this->shmemFD, &this->shmem_size);
+    if (this->shmem == nullptr) {
+        puts("SharedMemoryDataSource: failed to map_shared_memory_from_fd(). Ignoring.");
+        return;
+    }
+    SharedMemoryConvention* shmem = ((SharedMemoryConvention*)this->shmem);
+    assert(this->shmem_size == sizeof(SharedMemoryConvention)); // Ensure the other program's established shared memory is the size we know of.
+    lockSharedMemoryWithConvention(shmem);
+    //printf("SharedMemoryDataSource: mapped shared memory with message: %s\n", shmem->msg);
+    printf("SharedMemoryDataSource: mapped shared memory with shmem_size: %zu, sizeof(SharedMemoryConvention): %zu, frameCounter: " "%" PRIu64 "\n" // https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c
+           , this->shmem_size, sizeof(SharedMemoryConvention), shmem->frameCounter);
+    unlockSharedMemoryWithConvention(shmem);
 }
 
 FolderDataSource::FolderDataSource(std::string folderPath, size_t skip_ = 0) {
@@ -164,7 +334,6 @@ cv::Mat FolderDataSource::get(size_t index) {
     auto& path = files[i];
     std::cout << path << std::endl;
     
-    auto it = cache.find(i);
     if (!inittedCrop) {
         // Ensure we init crop
         inittedCrop = true;
@@ -173,6 +342,7 @@ cv::Mat FolderDataSource::get(size_t index) {
         sizeFrame.height = res.rows;
         initCrop(sizeFrame);
     }
+    auto it = cache.find(i);
     if (it != cache.end()) {
         return it->second;
     }
@@ -241,6 +411,10 @@ cv::Mat FolderDataSource::colorImageForMat(size_t index) {
 }
 #define CROP_FOR_FISHEYE_CAMERA
 cv::Mat OpenCVVideoCaptureDataSource::siftImageForMat(size_t index) {
+    return siftImageForMatFromColoredImageInCache(index, cache, std::bind(&OpenCVVideoCaptureDataSource::shouldCrop, *this), std::bind(&OpenCVVideoCaptureDataSource::crop, *this)); // Have we defeated OOP once and for all?   // https://stackoverflow.com/questions/30930350/why-member-functions-cant-be-used-as-template-arguments
+}
+template <typename F1, typename F2>
+cv::Mat siftImageForMatFromColoredImageInCache(size_t index, std::unordered_map<size_t, cv::Mat>& cache, F1 shouldCrop, F2 crop) {
     cv::Mat grey = cache.at(index);
     
     if (shouldCrop()) {

@@ -27,6 +27,9 @@
 		302D772327DD711E003891D7 /* mat_wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 302D772127DD711E003891D7 /* mat_wrapper.cpp */; };
 		303CB676276319A700ABDBF1 /* printf.c in Sources */ = {isa = PBXBuildFile; fileRef = 303CB674276319A700ABDBF1 /* printf.c */; };
 		303CB67827631A0200ABDBF1 /* _putchar.c in Sources */ = {isa = PBXBuildFile; fileRef = 303CB67727631A0200ABDBF1 /* _putchar.c */; };
+		305C741427FB904C008FD10A /* SharedMemoryConvention.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 305C740627FB904C008FD10A /* SharedMemoryConvention.cpp */; };
+		305C741627FB904C008FD10A /* shm_open_anon.c in Sources */ = {isa = PBXBuildFile; fileRef = 305C740A27FB904C008FD10A /* shm_open_anon.c */; };
+		305C741727FB904C008FD10A /* sharedMemory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 305C741327FB904C008FD10A /* sharedMemory.cpp */; };
 		308B6C06275AA96D00FE86A9 /* mymalloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B6C05275AA96D00FE86A9 /* mymalloc.cpp */; };
 		308B709D275AFBDD00FE86A9 /* jemalloc_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 308B709C275AFBDD00FE86A9 /* jemalloc_wrapper.c */; };
 		308B70A1275BC77B00FE86A9 /* malloc_with_free_all.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 308B709F275BC77B00FE86A9 /* malloc_with_free_all.cpp */; };
@@ -149,6 +152,12 @@
 		303CB675276319A700ABDBF1 /* printf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = printf.h; sourceTree = "<group>"; };
 		303CB67727631A0200ABDBF1 /* _putchar.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = _putchar.c; sourceTree = "<group>"; };
 		303CB67927631A4800ABDBF1 /* file_descriptors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = file_descriptors.h; sourceTree = "<group>"; };
+		305C740327FB904C008FD10A /* sharedMemory.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = sharedMemory.hpp; sourceTree = "<group>"; };
+		305C740427FB904C008FD10A /* SharedMemoryConvention.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SharedMemoryConvention.hpp; sourceTree = "<group>"; };
+		305C740627FB904C008FD10A /* SharedMemoryConvention.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedMemoryConvention.cpp; sourceTree = "<group>"; };
+		305C740A27FB904C008FD10A /* shm_open_anon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shm_open_anon.c; sourceTree = "<group>"; };
+		305C741127FB904C008FD10A /* shm_open_anon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shm_open_anon.h; sourceTree = "<group>"; };
+		305C741327FB904C008FD10A /* sharedMemory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sharedMemory.cpp; sourceTree = "<group>"; };
 		308B6C05275AA96D00FE86A9 /* mymalloc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mymalloc.cpp; sourceTree = "<group>"; };
 		308B7099275AD7CF00FE86A9 /* malloc_override_osx.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = malloc_override_osx.hpp; sourceTree = "<group>"; };
 		308B709A275ADF1A00FE86A9 /* timers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = timers.hpp; sourceTree = "<group>"; };
@@ -293,6 +302,7 @@
 			children = (
 				300EE45527209F9400969C5F /* sift_anatomy_20141201 */,
 				30F99A21278CF13F00DBD9C8 /* SiftGPU */,
+				305C740227FB904C008FD10A /* sharedMemory */,
 				30ED93AD27A11125001D8655 /* common.cpp */,
 				30ED93AC27A11125001D8655 /* common.hpp */,
 				30A92EBB27CB114300852B08 /* vn_sensors_common.hpp */,
@@ -414,6 +424,28 @@
 			);
 			name = src;
 			path = ../../src;
+			sourceTree = "<group>";
+		};
+		305C740227FB904C008FD10A /* sharedMemory */ = {
+			isa = PBXGroup;
+			children = (
+				305C740327FB904C008FD10A /* sharedMemory.hpp */,
+				305C740427FB904C008FD10A /* SharedMemoryConvention.hpp */,
+				305C740627FB904C008FD10A /* SharedMemoryConvention.cpp */,
+				305C740827FB904C008FD10A /* shm_open_anon */,
+				305C741327FB904C008FD10A /* sharedMemory.cpp */,
+			);
+			name = sharedMemory;
+			path = ../../sharedMemory;
+			sourceTree = "<group>";
+		};
+		305C740827FB904C008FD10A /* shm_open_anon */ = {
+			isa = PBXGroup;
+			children = (
+				305C740A27FB904C008FD10A /* shm_open_anon.c */,
+				305C741127FB904C008FD10A /* shm_open_anon.h */,
+			);
+			path = shm_open_anon;
 			sourceTree = "<group>";
 		};
 		308B6C04275AA95400FE86A9 /* tools */ = {
@@ -641,6 +673,7 @@
 				30F99A4B278CF14000DBD9C8 /* PyramidCU.cpp in Sources */,
 				300EE49327209F9400969C5F /* Makefile in Sources */,
 				30CBDBC02731A01600473B25 /* DataSource.cpp in Sources */,
+				305C741627FB904C008FD10A /* shm_open_anon.c in Sources */,
 				30F99A51278CF14000DBD9C8 /* SiftGPU.cpp in Sources */,
 				30F99A5C278E819C00DBD9C8 /* backtrace.cpp in Sources */,
 				30A92ECB27CF207C00852B08 /* siftMainSignals.cpp in Sources */,
@@ -659,6 +692,7 @@
 				30C2C00B27D57FAC00989103 /* pthread_mutex_lock_.cpp in Sources */,
 				30F99A53278CF14000DBD9C8 /* FrameBufferObject.cpp in Sources */,
 				30FE900C2745924C0086957E /* SIFT.cpp in Sources */,
+				305C741727FB904C008FD10A /* sharedMemory.cpp in Sources */,
 				30F99A4A278CF14000DBD9C8 /* GLTexImage.cpp in Sources */,
 				30F99A4F278CF14000DBD9C8 /* ProgramGLSL.cpp in Sources */,
 				300EE4B527209F9400969C5F /* siftMain.cpp in Sources */,
@@ -667,6 +701,7 @@
 				302D771E27DAC065003891D7 /* siftMainCanvasShower.cpp in Sources */,
 				30F99A4E278CF14000DBD9C8 /* PyramidGL.cpp in Sources */,
 				30CBDBCB2733137400473B25 /* DataOutputRun.cpp in Sources */,
+				305C741427FB904C008FD10A /* SharedMemoryConvention.cpp in Sources */,
 				30CE61EE27237D8C001C987F /* compareKeypoints.cpp in Sources */,
 				303CB67827631A0200ABDBF1 /* _putchar.c in Sources */,
 				30A92EC527CF1E8700852B08 /* siftMainMatcher.cpp in Sources */,

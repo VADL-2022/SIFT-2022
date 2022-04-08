@@ -19,3 +19,6 @@
 [submodule "cnn-registration"]
 	path = cnn-registration
 	url = https://github.com/sbond75/cnn-registration.git
+[submodule "sharedMemory"]
+	path = sharedMemory
+	url = https://github.com/sbond75/sharedMemory
