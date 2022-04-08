@@ -152,6 +152,10 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
     bool affine = true;
     int method = cv::LMEDS /*cv::RANSAC*/;
     img2.transformation = affine ? cv::estimateAffine2D(obj, scene, cv::noArray(), method) : cv::findHomography( obj, scene, method );
+    if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
+        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated.\n";
+        return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
+    }
     if (affine) { // Make the affine transformation into a perspective one: "Since affine transformations can be thought of as homographies where the bottom row is 0, 0, 1, affine transformations are still homographies. See affine homography on Wiki for e.g.. If someone says "homography" or "perspective transformation" though they mean a 3x3 transformation." ( https://stackoverflow.com/questions/45637472/opencv-transformationmatrix-affine-vs-perspective-warping )
         cv::Mat_<double> row = (cv::Mat_<double>(1, 3) << 0, 0, 1); // https://github.com/opencv/opencv/blob/master/modules/core/include/opencv2/core.hpp
         img2.transformation.push_back(row);
@@ -161,10 +165,6 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
         matrixToString(img2.transformation, str);
         { out_guard();
             std::cout << "affine made into perspective matrix: " << str << std::endl; }
-    }
-    if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
-        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated.\n";
-        return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
     }
 
     printf("Number of matching keypoints: %d\n", k1->size);
