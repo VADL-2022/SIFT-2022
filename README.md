@@ -159,9 +159,9 @@ Similar to data sources, data outputs allow the program to output to abstracted 
 
 ![General-Purpose Video Capture System](/documentation/architecture/Modular%20Software%20Architecture2-Page-2.drawio.png?raw=true)
 
-- [General-Purpose Video Capture System](/subscale_driver/videoCapture.py)
+- [General-Purpose Video Capture System](/driver/videoCapture.py)
 
 ![VLS and VMS](/documentation/architecture/Modular%20Software%20Architecture2-Page-3.drawio.png?raw=true)
 
 - [VLS](/src/siftMain.cpp)
-- [VMS](/subscale_driver/subscaleMain.cpp)
+- [VMS](/driver/subscaleMain.cpp)

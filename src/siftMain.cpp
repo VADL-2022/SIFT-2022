@@ -26,8 +26,8 @@
 #include <fstream>
 #include <python3.7m/Python.h>
 #include "../common.hpp"
-#include "../subscale_driver/pyMainThreadInterface.hpp"
-#include "../subscale_driver/py.h"
+#include "../driver/pyMainThreadInterface.hpp"
+#include "../driver/py.h"
 #include "main/SubscaleDriverInterface.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h> // for py::array_t
