@@ -33,6 +33,8 @@ ctrl_c() {
 exe=sift_exe_release_commandLine
 trap ctrl_c SIGINT
 
+echo "Running first camera test"
+
 if [ "$mode" == "sift" ]; then
     crop=
     #crop=--crop-for-fisheye-camera
@@ -41,11 +43,13 @@ else
     sudo pigpiod
     python3 ./subscale_driver/cameraSwap.py 0
     ./$exe "--camera-test-only"
-    echo "Running first camera test"
+    echo "Running second camera test"
     sudo pigpiod
     python3 ./subscale_driver/cameraSwap.py 1
     ./$exe "--camera-test-only"
 fi
 
-python3 ./subscale_driver/radio.py
 echo "Running radio test"
+python3 ./subscale_driver/radio.py
+
+
