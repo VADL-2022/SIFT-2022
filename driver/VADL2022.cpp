@@ -145,7 +145,7 @@ std::string getOutputVideo() {
   fp = popen(cmd_, "r");
   if (fp == NULL) {
     printf("Failed to run ls command. Sending test values on radio.\n" );
-    pyRunFile("subscale_driver/radio.py", 0, nullptr);
+    pyRunFile("driver/radio.py", 0, nullptr);
     return "";
   }
   /* Read the output a line at a time. */
@@ -177,7 +177,7 @@ std::string getOutputVideo() {
   fp = popen(buf, "r");
   if (fp == NULL) {
     printf("Failed to run merge command. Sending test values on radio.\n" );
-    pyRunFile("subscale_driver/radio.py", 0, nullptr);
+    pyRunFile("driver/radio.py", 0, nullptr);
     return "";
   }
   /* Read the output a line at a time. */
@@ -236,7 +236,7 @@ bool sendOnRadio() {
         sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
         { out_guard();
           std::cout << "sendOnRadio script enqueue" << std::endl; }
-        bool success = pyRunFile("subscale_driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
+        bool success = pyRunFile("driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
       },"sendOnRadioAndEtc",QueuedFunctionType::Misc);
     }
     else {
@@ -262,7 +262,7 @@ bool gps() {
     else { // sift2 and fore2 are gps
       // { out_guard();
       // std::cout << "gps" << std::endl; }
-      return pyRunFile("subscale_driver/gps.py", 0, nullptr);
+      return pyRunFile("driver/gps.py", 0, nullptr);
     }
   }
   else {
@@ -598,7 +598,7 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       if (!failsafeVideo) {
         { out_guard();
           std::cout << "Starting non-failsafe video" << std::endl; }
-        pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+        pyRunFile("driver/videoCapture.py", 0, nullptr);
       }
       
       // Start SIFT which will wait for the configured amount of time until main parachute deployment and stabilization:
@@ -609,7 +609,7 @@ void checkTakeoffCallback(LOG_T *log, float fseconds) {
       // [nvm the below, already done on the pad in VADL2022::VADL2022():
       // Take the ascent picture 
       // if (videoCapture) {
-      //   pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+      //   pyRunFile("driver/videoCapture.py", 0, nullptr);
       // }
     }
   }
@@ -661,7 +661,7 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
 
       reportStatus(Status::SwitchingToSecondCamera);
       // Run the python videocapture script again on the second camera
-      pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+      pyRunFile("driver/videoCapture.py", 0, nullptr);
     }
     else {
       // Stop the same videocapture script from {on the pad if failsafe or from takeoff if non-failsafe} in VADL2022::VADL2022():
@@ -1267,7 +1267,7 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[1] = TAKEOFF_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[2] = timeToApogee_str.c_str(); //backupSIFTStartTime_str.c_str();
     if (LIS331HH_calibrationFile == nullptr) {
-      #define CALIBRATION_FILE "subscale_driver/LIS331HH_calibration/LOG_20220129-183224.csv"
+      #define CALIBRATION_FILE "driver/LIS331HH_calibration/LOG_20220129-183224.csv"
       puts("Using default (unused) --LIS331HH-imu-calibration-file of " CALIBRATION_FILE);
       //exit(1);
       LIS331HH_calibrationFile = CALIBRATION_FILE;
@@ -1299,7 +1299,7 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[7] = mecoDuration_str.c_str();
     LIS331HH_videoCapArgs[8] = l3g; // 0=don't use l3g
     LIS331HH_videoCapArgs[9] = useForeLandingDetection; // 0=don't look for landing on fore pi's
-    pyRunFile("subscale_driver/fore.py", 9, (char **)LIS331HH_videoCapArgs);
+    pyRunFile("driver/fore.py", 9, (char **)LIS331HH_videoCapArgs);
 
     // Then send on radio afterwards (into dispatch queue)
     auto ret = sendOnRadio();
@@ -1367,7 +1367,7 @@ VADL2022::VADL2022(int argc, char** argv)
       // SIFT and video capture pi's)
       { out_guard();
         std::cout << "Starting failsafe video" << std::endl; }
-      pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+      pyRunFile("driver/videoCapture.py", 0, nullptr);
     }
   }
   else {
@@ -1383,7 +1383,7 @@ VADL2022::VADL2022(int argc, char** argv)
 #ifndef USE_LIS331HH
       videoCaptureOnlyThread = std::make_unique<std::thread>([](){
         // Take the ascent video
-        pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+        pyRunFile("driver/videoCapture.py", 0, nullptr);
 
         { out_guard();
           std::cout << "Using backupSIFTStartTime for a delay of " << backupSIFTStartTime << " milliseconds, then switching cameras..." << std::endl; }
@@ -1400,7 +1400,7 @@ VADL2022::VADL2022(int argc, char** argv)
 
         reportStatus(Status::SwitchingToSecondCamera);
         // Run the python videocapture script again on the second camera
-        pyRunFile("subscale_driver/videoCapture.py", 0, nullptr);
+        pyRunFile("driver/videoCapture.py", 0, nullptr);
 
         { out_guard();
           std::cout << "Using backupSIFTStopTime for a delay of " << backupSIFTStopTime << " milliseconds, then stopping 2nd camera..." << std::endl; }
@@ -1433,8 +1433,8 @@ VADL2022::VADL2022(int argc, char** argv)
   // Start video capture if doing so
   // if (videoCapture) {
   //   std::cout << "python3" << std::endl;
-  //   system("sudo -H -u pi `which nix-shell` --run \"`which python3` ./subscale_driver/videoCapture.py\""); // Doesn't handle sigint
-  //   //RunFile("./subscale_driver/videoCapture.py");
+  //   system("sudo -H -u pi `which nix-shell` --run \"`which python3` ./driver/videoCapture.py\""); // Doesn't handle sigint
+  //   //RunFile("./driver/videoCapture.py");
   //   std::cout << "end python3" << std::endl;
   // }
 }
