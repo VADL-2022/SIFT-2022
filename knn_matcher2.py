@@ -33,12 +33,14 @@ if __name__ == "__main__":
     if grabMode==1:
         reader=cv2.VideoCapture(
             # Drone tests from 3-28-2022: #
-            # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4' # GOOD
+             '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4' # GOOD
             # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4' # CHALLENGING; a bit offset
             #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_46_26_CDT/output.mp4' #<--!!!!!!!!!!!!!!! WOAH! shockingly accurate result
             #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_50_08_CDT/output.mp4' # also good, but recovery is a little late
             #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_54_34_CDT/output.mp4' # TOUGHEST ONE
-            '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_19_00_01_CDT/output.mp4' # WOW... actually not bad even though it hits the tower thing. maybe its higher fps is the key for opencv sift?
+
+            # hard one:
+            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_19_00_01_CDT/output.mp4' # WOW... actually not bad even though it hits the tower thing. maybe its higher fps is the key for opencv sift?
             # #
 
             #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4'
@@ -49,7 +51,7 @@ if __name__ == "__main__":
         import subprocess
         #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
         p=subprocess.run(["compareNatSort/compareNatSort",
-                          "Data/fullscale1/Derived/SIFT/ExtractedFrames"
+                          "Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated" #"Data/fullscale1/Derived/SIFT/ExtractedFrames"
                           # '/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_19_02_14_CDT'
                           #'/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_18_47_47_CDT'
                           , ".png"], capture_output=True)

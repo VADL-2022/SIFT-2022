@@ -417,3 +417,30 @@ mkdir /Volumes/MyTestVolume/Projects/DataRocket/fullscale2
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_12_44_33_		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_44_15_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_42_59_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+
+-- emfinger demo
+
+# fullscale1 footage -- normal SIFT
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4  --main-mission-interactive
+
+# fullscale1 footage with manual discards -- normal SIFT
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --folder-data-source --folder-data-source-path Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated  --main-mission-interactive
+
+# fullscale1 footage with manual discards -- normal SIFT WITH skip indices
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path /Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/2022-02-19_11_31_58_CST/output.mp4 --skip-image-indices 2 3 --skip-image-indices 4 6 --skip-image-indices 7 8 --skip-image-indices 14 15 --skip-image-indices 18 21 --skip-image-indices 22 24 --skip-image-indices 25 29 --skip-image-indices 32 33 --skip-image-indices 35 37 --skip-image-indices 39 41 --skip-image-indices 42 43 --skip-image-indices 44 46 --skip-image-indices 47 50 --skip-image-indices 51 55 --skip-image-indices 56 57 --skip-image-indices 58 59 --skip-image-indices 60 61 --skip-image-indices 64 66 --skip-image-indices 67 70 --skip-image-indices 71 74 --skip-image-indices 75 80 --skip-image-indices 81 82 --skip-image-indices 83 85 --skip-image-indices 86 88 --skip-image-indices 89 92 --skip-image-indices 94 95 --skip-image-indices 96 97 --skip-image-indices 99 102 --skip-image-indices 103 105 --skip-image-indices 106 111 --skip-image-indices 112 117 --skip-image-indices 118 122 --skip-image-indices 123 125 --skip-image-indices 128 130 --skip-image-indices 132 136 --skip-image-indices 139 140 --skip-image-indices 141 142 --no-sky-detection --main-mission-interactive
+
+# fullscale1 footage -- python OpenCV SIFT
+python3 knn_matcher2.py 0
+
+# fullscale1 footage -- python OpenCV SIFT
+python3 knn_matcher2.py 1
+
+# drone footage -- python OpenCV SIFT
+python3 knn_matcher2.py 1
+
+# fullscale1 footage with manual discards -- python OpenCV SIFT
+python3 knn_matcher2.py 0
+
+-- bragg farms drone footage grabbing command
+
+./sift_exe_release_commandLine --image-capture-only --main-mission --fps 30

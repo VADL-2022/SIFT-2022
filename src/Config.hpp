@@ -35,7 +35,7 @@
 
 #ifdef USE_COMMAND_LINE_ARGS
 struct CommandLineConfig {
-    bool cameraTestOnly = false, imageCaptureOnly = false, imageFileOutput = false, siftVideoOutput = false, folderDataSource = false, videoFileDataSource = false, mainMission = false, noPreviewWindow = false, useSetTerminate = true, verbose = false, waitKeyForever = false, saveFirstImage = false, finishRestOnSigInt = false, finishRestOnOutOfImages = false, noLines = false, noDots = false, debugMutexDeadlocks = false, undistortFisheye = false;
+    bool cameraTestOnly = false, imageCaptureOnly = false, imageFileOutput = false, siftVideoOutput = false, folderDataSource = false, videoFileDataSource = false, mainMission = false, noPreviewWindow = false, useSetTerminate = true, verbose = false, waitKeyForever = false, saveFirstImage = false, finishRestOnSigInt = false, finishRestOnOutOfImages = false, noLines = false, noDots = false, debugMutexDeadlocks = false, undistortFisheye = false, noSkyDetection = false;
     std::vector<std::pair<int /*Starting index*/, int /*Ending index, exclusive*/>> skipImageIndices;
     int flushVideoOutputEveryNSeconds = 2; // Default is to flush after every 2 seconds
     int debugReportMutexLockAttemptsLongerThanNMilliseconds = 5000; // Only used if debugMutexDeadlocks is true
