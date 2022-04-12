@@ -51,7 +51,7 @@ if __name__ == "__main__":
         import subprocess
         #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
         p=subprocess.run(["compareNatSort/compareNatSort",
-                          "Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated" #"Data/fullscale1/Derived/SIFT/ExtractedFrames"
+                          "Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated"
                           # '/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_19_02_14_CDT'
                           #'/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_18_47_47_CDT'
                           , ".png"], capture_output=True)
@@ -65,6 +65,11 @@ if __name__ == "__main__":
             'Data/fullscale1/Derived/SIFT/SatelliteMatchingTesting/Screen Shot 2022-03-29 at 2.13.17 PM_.png',
             'Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0127.png',
         ]
+    elif grabMode==3:
+        import subprocess
+        p=subprocess.run(["compareNatSort/compareNatSort",
+                          "Data/fullscale1/Derived/SIFT/ExtractedFrames"
+                          , ".png"], capture_output=True)
     # End Config #
 
 # This function is from https://www.programcreek.com/python/example/110698/cv2.estimateAffinePartial2D
@@ -85,7 +90,11 @@ def find_homography(keypoints_pic1, keypoints_pic2, matches) -> (List, np.float3
 
         # Find the transformation between points
         #transformation_matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-        transformation_matrix, mask = cv2.estimateAffine2D(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        transformation_matrix, mask = cv2.estimateAffine2D(src_pts, dst_pts, np.array([]), cv2.RANSAC, 5.0)
+        if transformation_matrix is not None:
+            # https://stackoverflow.com/questions/3881453/numpy-add-row-to-array
+            transformation_matrix = np.append(transformation_matrix, [[0.0,0.0,1.0]], axis=0) # Make affine into perspective matrix
+            print(transformation_matrix)
 
         # Compute a rigid transformation (without depth, only scale + rotation + translation)
         transformation_rigid_matrix, rigid_mask = cv2.estimateAffinePartial2D(src_pts, dst_pts)
@@ -191,7 +200,7 @@ def run():
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
         imgs = [None]*totalFrames
-    elif grabMode == 0:
+    elif grabMode == 0 or grabMode == 3:
         imgs=p.stdout.split(b'\n')
     i = 0
     img1 = None
