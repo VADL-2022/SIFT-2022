@@ -220,8 +220,8 @@ endif
 
 # Subscale driver
 ifeq ($(USE_PRECOMPILED_HEADERS),1)
-#PCH_C += $(wildcard src/tools/*.h) $(wildcard subscale_driver/*.h) $(wildcard subscale_driver/lib/*.h)
-#PCH_CPP += ./vn_sensors_common.hpp ./common.hpp $(wildcard subscale_driver/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp)
+#PCH_C += $(wildcard src/tools/*.h) $(wildcard driver/*.h) $(wildcard driver/lib/*.h)
+#PCH_CPP += ./vn_sensors_common.hpp ./common.hpp $(wildcard driver/*.hpp) $(wildcard src/tools/*.hpp) $(wildcard src/tools/backtrace/*.hpp)
 # Realized that actually only one precompiled header is allowed "per compilation unit" ( https://stackoverflow.com/questions/55709100/how-to-use-multiple-precompiled-headers-some-from-a-library ). ( Also for more reference: https://web.mit.edu/rhel-doc/3/rhel-gcc-en-3/precompiled-headers.html ) :
 PCH_C :=
 PCH_CPP := src/stdafx.hpp
@@ -231,7 +231,7 @@ PCH_CPP :=
 endif
 # #
 SOURCES := common.cpp commonOutMutex.cpp $(filter-out src/siftMain.cpp src/quadcopter.cpp, $(ALL_SOURCES)) $(wildcard $(SRC)/tools/*.cpp) $(wildcard $(SRC)/tools/backtrace/*.cpp) $(wildcard $(SRC)/main/*.cpp) $(wildcard $(SRC)/python/*.cpp) $(wildcard sharedMemory/*.cpp) #$(wildcard $(SRC)/optick/src/*.cpp) # `filter-out`: Remove files with `int main`'s so we can add them later per subproject    # https://stackoverflow.com/questions/10276202/exclude-source-file-in-compilation-using-makefile/10280945
-SOURCES_C := subscale_driver/py.c subscale_driver/lib/pf_string.c $(SOURCES_C) $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c) sharedMemory/shm_open_anon/shm_open_anon.c
+SOURCES_C := driver/py.c driver/lib/pf_string.c $(SOURCES_C) $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/tools/*.c) sharedMemory/shm_open_anon/shm_open_anon.c
 ALL_OBJECTS := $(ALL_SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o)
 OBJECTS := $(SOURCES:%.cpp=%.o) $(SOURCES_C:%.c=%.o) # https://stackoverflow.com/questions/60329676/search-for-all-c-and-cpp-files-and-compiling-them-in-one-makefile
 $(info $(OBJECTS)) # https://stackoverflow.com/questions/19488990/how-to-add-or-in-pathsubst-in-makefile
@@ -292,7 +292,7 @@ $(eval $(call OBJECTS_LINKING_template,sift,debug_commandLine,$(OBJECTS) $(SIFT_
 ############################# Driver targets #############################
 
 #$(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),))
-SUBSCALE_SRC := ./subscale_driver/
+SUBSCALE_SRC := ./driver/
 SUBSCALE_SOURCES := src/pthread_mutex_lock_.cpp common.cpp commonOutMutex.cpp $(filter-out $(SUBSCALE_SRC)/subscaleMain.cpp,$(wildcard $(SUBSCALE_SRC)/*.cpp)) $(wildcard src/tools/backtrace/*.cpp) src/utils.cpp
 SUBSCALE_SOURCES_C := $(wildcard $(SUBSCALE_SRC)/*.c) $(wildcard $(SUBSCALE_SRC)/lib/*.c) src/tools/printf.c src/tools/_putchar.c
 SUBSCALE_OBJECTS := $(SUBSCALE_SRC)/subscaleMain.o $(SUBSCALE_SOURCES:%.cpp=%.o) $(SUBSCALE_SOURCES_C:%.c=%.o)
