@@ -185,6 +185,24 @@ def showLerpController(firstImage, M, key_='a', idMat=idMat):
             Mcurrent=M.copy()
         else:
             break
+def showLandingPos(firstImage, M, key_='l', idMat=idMat):
+    img = firstImage.copy()
+    # 4 corner points
+    height,width=img.shape[:2]
+    pts = np.array([[(0,0), (width,0), (width,height), (0,height)]], dtype=np.float32)
+    dstPts = np.zeros_like(pts)
+    print(pts, dstPts)
+    dstPts = cv2.perspectiveTransform(pts, M, dstPts)
+    print(dstPts)
+    dstPts=dstPts[0] # It was wrapped by an extra array
+    if len(dstPts) > 1:
+        for i in range(0, len(dstPts)-1):
+            print(dstPts[i])
+            cv2.line(img, list(map(int, dstPts[i])), list(map(int, dstPts[i+1])), (255,0,0), 2)
+        cv2.line(img, list(map(int, dstPts[0])), list(map(int, dstPts[len(dstPts)-1])), (255,0,0), 2)
+    cv2.imshow('landingPos', img)
+    key = cv2.waitKey(0)
+    return img, key
     
 def run():
     if not showPreviewWindow:
@@ -241,7 +259,7 @@ def run():
     #i = 1 # (Skipped first image)
     # For each image, run SIFT and match with previous image:
     for imgName in imgs_iter:
-        def waitForInput(img2=None):
+        def waitForInput(img2, firstImage, skipWaitKeyUsingKey=None):
             if not showPreviewWindow:
                 return
             waitAmount = 1 if i < len(imgs) - 20 else 0
@@ -249,12 +267,20 @@ def run():
                 print("Press a key to continue")
                 if i == len(imgs) - 1:
                     print("(Last image)")
-            k=cv2.waitKey(waitAmount)
+            if skipWaitKeyUsingKey is None:
+                k=cv2.waitKey(waitAmount)
+            else:
+                k=skipWaitKeyUsingKey
             applyMatKey='a'
+            showLandingPosKey='l'
             if k & 0xFF == ord('q'):
                 exit(0)
             elif k & 0xFF == ord(applyMatKey) and img2 is not None: # Apply matrix with lerp
                 showLerpController(firstImage, acc, applyMatKey)
+            elif k & 0xFF == ord(showLandingPosKey) and img2 is not None: # Show landing position
+                img, key = showLandingPos(firstImage, acc, showLandingPosKey)
+                if k & 0xFF == ord(applyMatKey):
+                    waitForInput(img2, firstImage, applyMatKey)
         
         img2, discarded, greyscale = grabImage(imgName, i)
         if img2 is None and not discarded:
@@ -262,7 +288,7 @@ def run():
             cv2.waitKey(0)
             break
         if img2 is None and discarded:
-            waitForInput()
+            waitForInput(None, firstImage)
             i += 1
             continue # Keep img1 as the previous image so we can match it next time
         hOrig, wOrig = img2.shape[:2]
@@ -291,13 +317,13 @@ def run():
         except cv2.error:
             print("Error in find_homography, probably not enough keypoints:", sys.exc_info()[1])
             cv2.imshow('bad',img2);
-            waitForInput()
+            waitForInput(None, firstImage)
             i+=1
             continue  # Keep img1 as the previous image so we can match it next time
         
         if transformation_matrix is None:
             print("transformation_matrix was None")
-            waitForInput()
+            waitForInput(None, firstImage)
             i+=1
             continue # Keep img1 as the previous image so we can match it next time
             # cv2.waitKey(0)
@@ -321,7 +347,7 @@ def run():
         tr = cv2.warpPerspective(firstImage, np.linalg.pinv(acc), (wOrig, hOrig))
         if showPreviewWindow:
             cv2.imshow('acc',tr);
-            waitForInput(img2)
+            waitForInput(img2, firstImage)
         #plt.imshow(img3),plt.show()
         
         # Save current keypoints as {the prev keypoints for next iteration}
