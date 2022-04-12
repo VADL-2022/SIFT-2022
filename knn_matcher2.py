@@ -71,7 +71,8 @@ def find_homography(keypoints_pic1, keypoints_pic2, matches) -> (List, np.float3
         dst_pts = np.float32([keypoints_pic2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
 
         # Find the transformation between points
-        transformation_matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        #transformation_matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        transformation_matrix, mask = cv2.estimateAffine2D(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
         # Compute a rigid transformation (without depth, only scale + rotation + translation)
         transformation_rigid_matrix, rigid_mask = cv2.estimateAffinePartial2D(src_pts, dst_pts)
