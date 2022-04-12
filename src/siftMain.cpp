@@ -405,6 +405,7 @@ int mainMission(DataSourceT* src,
             cv::Mat mat = src->get(i2); // Consume images
             
             // Enqueue null image indirectly
+#ifdef SIFTAnatomy_
             processedImageQueue_enqueueIndirect(i2, mat, py::array_t<float>(),
                                     shared_keypoints_ptr(),
                                     std::shared_ptr<struct sift_keypoint_std>(),
@@ -416,6 +417,17 @@ int mainMission(DataSourceT* src,
                                     p,
                                     i2,
                                     std::shared_ptr<IMUData>());
+#elif defined(SIFTOpenCV_)
+            processedImageQueue_enqueueIndirect(i2, mat, py::array_t<float>(),
+                                                std::vector<cv::KeyPoint>(),
+                                                cv::Mat(),
+                                                std::vector< cv::DMatch >(),
+                                                cv::Mat(),
+                                                i2,
+                                                std::shared_ptr<IMUData>());
+#else
+#error "Not yet implemented"
+#endif
             
             // Show a bit (twice because with only one call to showAnImageUsingCanvasesReadyQueue() we may fill up the canvasesReadyQueue since it only dequeues once per call to showAnImageUsingCanvasesReadyQueue())
             showAnImageUsingCanvasesReadyQueue(src, o2);
@@ -431,6 +443,7 @@ int mainMission(DataSourceT* src,
                 for (size_t i2 = pair.first; i2 < pair.second; i2++) {
                     cv::Mat mat = src->get(i2); // Consume images
                     // Enqueue null image indirectly
+#ifdef SIFTAnatomy_
                     processedImageQueue_enqueueIndirect(i2, mat, py::array_t<float>(),
                                             shared_keypoints_ptr(),
                                             std::shared_ptr<struct sift_keypoint_std>(),
@@ -442,6 +455,17 @@ int mainMission(DataSourceT* src,
                                             p,
                                             i2,
                                             std::shared_ptr<IMUData>());
+#elif defined(SIFTOpenCV_)
+                    processedImageQueue_enqueueIndirect(i2, mat, py::array_t<float>(),
+                                                        std::vector<cv::KeyPoint>(),
+                                                        cv::Mat(),
+                                                        std::vector< cv::DMatch >(),
+                                                        cv::Mat(),
+                                                        i2,
+                                                        std::shared_ptr<IMUData>());
+#else
+#error "Not yet implemented"
+#endif
                     
                     // Show a bit (twice because with only one call to showAnImageUsingCanvasesReadyQueue() we may fill up the canvasesReadyQueue since it only dequeues once per call to showAnImageUsingCanvasesReadyQueue())
                     showAnImageUsingCanvasesReadyQueue(src, o2);
@@ -578,7 +602,11 @@ int mainMission(DataSourceT* src,
         }
         t.reset();
         if (!CMD_CONFIG(imageCaptureOnly)) {
-            cv::Mat greyscale = src->siftImageForMat(i);
+            cv::Mat mayBeGreyscale = src->siftImageForMat(i);
+            cv::Mat greyscale;
+            if (mayBeGreyscale.type() == CV_8UC3) {
+                cv::cvtColor(mayBeGreyscale, greyscale, cv::COLOR_BGR2GRAY);
+            }
             PythonLockedOptional<py::array_t<float>> greyscale_;
             t.logElapsed("siftImageForMat");
             //auto path = src->nameForIndex(i);
@@ -703,6 +731,7 @@ int mainMission(DataSourceT* src,
             discardImage_label:
             if (discardImage) {
                 // Enqueue null image indirectly
+#ifdef SIFTAnatomy_
                 processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
                                             shared_keypoints_ptr(),
                                             std::shared_ptr<struct sift_keypoint_std>(),
@@ -714,6 +743,17 @@ int mainMission(DataSourceT* src,
                                             p,
                                             i,
                                             imu_);
+#elif defined(SIFTOpenCV_)
+                processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
+                                                    std::vector<cv::KeyPoint>(),
+                                                    cv::Mat(),
+                                                    std::vector< cv::DMatch >(),
+                                                    cv::Mat(),
+                                                    i,
+                                                    std::shared_ptr<IMUData>());
+#else
+#error "Not yet implemented"
+#endif
                 
                 // Don't push a function for this image or save it as a possible firstImage
                 goto skipImage;
@@ -800,6 +840,7 @@ int mainMission(DataSourceT* src,
                 
                 if (discardImage) {
                     // Enqueue null image indirectly
+#ifdef SIFTAnatomy_
                     processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
                                                 shared_keypoints_ptr(),
                                                 std::shared_ptr<struct sift_keypoint_std>(),
@@ -811,6 +852,17 @@ int mainMission(DataSourceT* src,
                                                 pOrig,
                                                 i,
                                                 imu_);
+#elif defined(SIFTOpenCV_)
+                    processedImageQueue_enqueueIndirect(i, greyscale, greyscale_,
+                                                        std::vector<cv::KeyPoint>(),
+                                                        cv::Mat(),
+                                                        std::vector< cv::DMatch >(),
+                                                        cv::Mat(),
+                                                        i,
+                                                        std::shared_ptr<IMUData>());
+#else
+#error "Not yet implemented"
+#endif
                     return;
                 }
 
@@ -914,11 +966,13 @@ int mainMission(DataSourceT* src,
                                                 i,
                                                 imu_);
                         #elif defined(SIFTOpenCV_)
-                        processedImageQueue.enqueueNoLock(greyscale,
-                                                          vecPair.first,
-                                                          vecPair.second,
-                                                          std::vector< cv::DMatch >(),
-                                                cv::Mat());
+                        processedImageQueue.enqueueNoLock(greyscale, greyscale_,
+                                                            vecPair.first,
+                                                            vecPair.second,
+                                                            std::vector< cv::DMatch >(),
+                                                            cv::Mat(),
+                                                            i,
+                                                            std::shared_ptr<IMUData>());
                         #elif defined(SIFTGPU_)
                         processedImageQueue.enqueueNoLock(greyscale,
                                                           keys1,

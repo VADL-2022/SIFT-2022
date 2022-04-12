@@ -99,6 +99,10 @@ struct ProcessedImage<SIFTAnatomy> {
     std::shared_ptr<struct sift_keypoint_std> k;
     int n; // Number of keypoints in `k`
     
+    inline int numKeypoints() const {
+        return n;
+    }
+    
     // Matching with the previous image, if any //
     shared_keypoints_ptr_t out_k1;
     shared_keypoints_ptr_t out_k2A;
@@ -132,6 +136,7 @@ struct ProcessedImage<SIFTOpenCV> {
     ProcessedImage() = default;
     
     cv::Mat image;
+    PythonLockedOptional<py::array_t<float>> image_python; // std::optional is used to prevent default ctor from being called before Python is initialized
     
     std::vector<cv::KeyPoint> computedKeypoints;
     cv::Mat descriptors;
@@ -145,6 +150,14 @@ struct ProcessedImage<SIFTOpenCV> {
         matches.clear();
     }
     // //
+    
+    inline size_t numKeypoints() const {
+        return computedKeypoints.size();
+    }
+    
+    size_t i;
+    
+    std::shared_ptr<IMUData> imu; // IMU data if any
     
 #ifdef USE_COMMAND_LINE_ARGS
     cv::Mat canvas;
@@ -273,7 +286,7 @@ struct SIFTOpenCV : public SIFTBase {
     
     std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale);
     
-    void findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2, SIFTState& s
+    MatchResult findHomography(ProcessedImage<SIFTOpenCV>& img1, ProcessedImage<SIFTOpenCV>& img2, SIFTState& s
 #ifdef USE_COMMAND_LINE_ARGS
     , DataSourceBase* src, CommandLineConfig& cfg
 #endif
@@ -295,13 +308,30 @@ protected:
         return descriptors;
     }
     
-    // TODO: unused function
     std::vector<cv::DMatch> match(cv::Mat& descriptors_1, cv::Mat& descriptors_2) {
         //-- Step 3: Matching descriptor vectors using BFMatcher :
-        cv::BFMatcher matcher;
-        std::vector< cv::DMatch > matches;
-        matcher.match( descriptors_1, descriptors_2, matches );
-        return matches;
+//        cv::BFMatcher matcher;
+//        std::vector< cv::DMatch > matches;
+//        matcher.match( descriptors_1, descriptors_2, matches );
+//        return matches;
+        
+        // https://docs.opencv.org/3.4/d5/d6f/tutorial_feature_flann_matcher.html
+        static thread_local cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
+        std::vector< std::vector<cv::DMatch> > knn_matches;
+        matcher->knnMatch( descriptors_1, descriptors_2, knn_matches, 2 );
+        
+        //-- Filter matches using the Lowe's ratio test
+        const float ratio_thresh = 0.7f;
+        std::vector<cv::DMatch> good_matches;
+        for (size_t i = 0; i < knn_matches.size(); i++)
+        {
+            if (knn_matches[i][0].distance < ratio_thresh * knn_matches[i][1].distance)
+            {
+                good_matches.push_back(knn_matches[i][0]);
+            }
+        }
+        
+        return good_matches;
     }
     
     cv::Ptr<cv::Feature2D> f2d;

@@ -29,6 +29,7 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewW
     // Accumulate homography
     if (!useIdentityMatrix) {
         cv::Mat M = img2.transformation.inv();
+        //cv::Mat M = img2.transformation;
         cv::Ptr<cv::Formatted> str;
         matrixToString(M, str);
         { out_guard();
@@ -85,7 +86,7 @@ void matcherWaitForNonPlaceholderImageNoLock(bool seekInsteadOfDequeue, int& cur
         // Dequeue placeholder/null or non-null images as needed
         ProcessedImage<SIFT_T>& front = seekInsteadOfDequeue ? processedImageQueue.get(currentIndex) : processedImageQueue.front();
         currentIndex++;
-        if (front.n < 4 /*"null" image*/) {
+        if (front.numKeypoints() < 4 /*"null" image*/) {
             if (seekInsteadOfDequeue) {
                 // Peek is done already since we did currentIndex++, nothing to do here.
                 { out_guard();

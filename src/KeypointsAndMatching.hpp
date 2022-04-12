@@ -95,6 +95,14 @@ struct SIFTState {
     unique_keypoints_ptr loaded_out_k2B = nullptr;
     // //
 };
+#elif defined(SIFTOpenCV_)
+struct SIFTParams {
+    
+};
+
+struct SIFTState {
+    SIFTState() {}
+};
 #elif defined(SIFTGPU_)
 struct SIFTParams {
     
