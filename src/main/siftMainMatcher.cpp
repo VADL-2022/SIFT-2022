@@ -29,6 +29,7 @@ void onMatcherFinishedMatching(ProcessedImage<SIFT_T>& img2, bool showInPreviewW
     // Accumulate homography
     if (!useIdentityMatrix) {
         cv::Mat M = img2.transformation.inv();
+        //cv::Mat M = img2.transformation;
         cv::Ptr<cv::Formatted> str;
         matrixToString(M, str);
         { out_guard();

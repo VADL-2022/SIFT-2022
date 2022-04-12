@@ -19,6 +19,29 @@
 #include "../common.hpp"
 #include "utils.hpp"
 
+// Fills img2.transformation
+MatchResult findHomographyCommon(ProcessedImage<SIFT_T>& img2, std::vector<cv::Point2f>& obj, std::vector<cv::Point2f>& scene) {
+    bool affine = true;
+    int method = cv::LMEDS /*cv::RANSAC*/;
+    img2.transformation = affine ? cv::estimateAffine2D(obj, scene, cv::noArray(), method) : cv::findHomography(obj, scene, method );
+    if (affine) { // Make the affine transformation into a perspective one: "Since affine transformations can be thought of as homographies where the bottom row is 0, 0, 1, affine transformations are still homographies. See affine homography on Wiki for e.g.. If someone says "homography" or "perspective transformation" though they mean a 3x3 transformation." ( https://stackoverflow.com/questions/45637472/opencv-transformationmatrix-affine-vs-perspective-warping )
+        cv::Mat_<double> row = (cv::Mat_<double>(1, 3) << 0, 0, 1); // https://github.com/opencv/opencv/blob/master/modules/core/include/opencv2/core.hpp
+        img2.transformation.push_back(row);
+        // Or: cv::vconcat(img2.transformation, row);
+        
+        cv::Ptr<cv::Formatted> str;
+        matrixToString(img2.transformation, str);
+        { out_guard();
+            std::cout << "affine made into perspective matrix: " << str << std::endl; }
+    }
+    if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
+        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated.\n";
+        return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
+    }
+    
+    return MatchResult::Success;
+}
+
 #ifdef SIFTAnatomy_
 
 ProcessedImage<SIFTAnatomy>::ProcessedImage(cv::Mat& image_,
@@ -101,7 +124,8 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
         //throw ""; // TODO: temp, need to notify main thread and retry matching maybe
         return MatchResult::NotEnoughKeypoints;
     }
-    matching(keypointsPrev, keypoints, img2.out_k1.get(), img2.out_k2A.get(), img2.out_k2B.get(), img2.p.thresh, img2.p.meth_flag); // NOTE: there can be less descriptors in out_k1 etc. than in keypoints->size or the n value.
+    matching(keypoints, keypointsPrev, //keypointsPrev, keypoints,
+             img2.out_k1.get(), img2.out_k2A.get(), img2.out_k2B.get(), img2.p.thresh, img2.p.meth_flag); // NOTE: there can be less descriptors in out_k1 etc. than in keypoints->size or the n value.
     t.logElapsed("Matcher thread: find matches");
     
     // Find homography
@@ -149,22 +173,9 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
         return retval;
     }
     
-    bool affine = true;
-    int method = cv::LMEDS /*cv::RANSAC*/;
-    img2.transformation = affine ? cv::estimateAffine2D(obj, scene, cv::noArray(), method) : cv::findHomography( obj, scene, method );
-    if (affine) { // Make the affine transformation into a perspective one: "Since affine transformations can be thought of as homographies where the bottom row is 0, 0, 1, affine transformations are still homographies. See affine homography on Wiki for e.g.. If someone says "homography" or "perspective transformation" though they mean a 3x3 transformation." ( https://stackoverflow.com/questions/45637472/opencv-transformationmatrix-affine-vs-perspective-warping )
-        cv::Mat_<double> row = (cv::Mat_<double>(1, 3) << 0, 0, 1); // https://github.com/opencv/opencv/blob/master/modules/core/include/opencv2/core.hpp
-        img2.transformation.push_back(row);
-        // Or: cv::vconcat(img2.transformation, row);
-        
-        cv::Ptr<cv::Formatted> str;
-        matrixToString(img2.transformation, str);
-        { out_guard();
-            std::cout << "affine made into perspective matrix: " << str << std::endl; }
-    }
-    if (img2.transformation.empty()) { // "Note that whenever an H matrix cannot be estimated, an empty one will be returned." ( https://docs.opencv.org/3.3.0/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780 , https://stackoverflow.com/questions/28331296/opencv-findhomography-generating-an-empty-matrix )
-        std::cout << "cv::findHomography returned empty matrix, indicating that a matrix could not be estimated.\n";
-        return MatchResult::NotEnoughMatchesForFirstImage; // Optimistic
+    MatchResult result = findHomographyCommon(img2, obj, scene);
+    if (result != MatchResult::Success) {
+        return result;
     }
 
     printf("Number of matching keypoints: %d\n", k1->size);
@@ -241,6 +252,7 @@ MatchResult SIFTAnatomy::findHomography(ProcessedImage<SIFTAnatomy>& img1, Proce
 }
 
 #elif defined(SIFTOpenCV_)
+
 std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKeypoints(int threadID, SIFTParams& p, cv::Mat& greyscale) {
 //    t.reset();
 //    auto ret = detect(greyscale);
@@ -249,11 +261,19 @@ std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKe
 //    auto ret2 = descriptors(greyscale, ret);
 //    t.logElapsed(threadID, "compute descriptors");
 //    return std::make_pair(ret, ret2);
+    
+    static thread_local cv::Mat test_mask(greyscale.cols, greyscale.rows, greyscale.type());
+    if (test_mask.empty()) {
+        int hOrig = greyscale.rows, wOrig = greyscale.cols;
+        int xc = int(wOrig / 2), yc = int(hOrig / 2);
+        int radius2 = int(hOrig * 0.45);
+        cv::circle(test_mask, cv::Point(xc,yc), radius2, cv::Scalar(255,255,255), -1);
+    }
 
     t.reset();
     std::vector<cv::KeyPoint> keypoints;
     cv::Mat descriptors;
-    f2d->detectAndCompute(greyscale, cv::Mat(), keypoints, descriptors);
+    f2d->detectAndCompute(greyscale, /*cv::Mat()*/ test_mask, keypoints, descriptors);
     
     printf("Thread %d: Number of keypoints: %zu\n", threadID, keypoints.size());
     if (keypoints.size() < 4) {
@@ -271,6 +291,7 @@ MatchResult SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, Process
     , DataSourceBase* src, CommandLineConfig& cfg
 #endif
 ) {
+#ifdef OLD_SIFT_OPENCV_findHomography
     img2.matches = match(img1.descriptors, img2.descriptors);
     
     // Using descriptors (makes it able to match each feature using scale invariance):
@@ -344,6 +365,34 @@ MatchResult SIFTOpenCV::findHomography(ProcessedImage<SIFTOpenCV>& img1, Process
         // //
 #endif
     }
+#else
+    img2.matches = match(img2.descriptors, img1.descriptors);
+    
+    std::vector<cv::Point2f> obj; obj.reserve(img2.matches.size());
+    std::vector<cv::Point2f> scene; scene.reserve(img1.matches.size()); // TODO: correct order?
+    for (cv::DMatch match : img2.matches) {
+        scene.push_back(img1.computedKeypoints[match.trainIdx].pt);
+        obj.push_back(img2.computedKeypoints[match.queryIdx].pt);
+    }
+    
+    MatchResult result = findHomographyCommon(img2, obj, scene);
+    if (result != MatchResult::Success) {
+        return result;
+    }
+    
+    if (CMD_CONFIG(mainMission) && CMD_CONFIG(showPreviewWindow())) {
+//        std::vector<cv::KeyPoint> obj; obj.reserve(img2.matches.size());
+//        std::vector<cv::KeyPoint> scene; scene.reserve(img1.matches.size()); // TODO: correct order?
+//        for (cv::DMatch match : img2.matches) {
+//            scene.push_back(img1.computedKeypoints[match.trainIdx]);
+//            obj.push_back(img2.computedKeypoints[match.queryIdx]);
+//        }
+        std::vector<cv::KeyPoint>& obj = img2.computedKeypoints;
+        std::vector<cv::KeyPoint>& scene = img1.computedKeypoints;
+        
+        cv::drawMatches(img2.image, obj, img1.image, scene, img2.matches, img2.canvas);
+    }
+#endif
     
     return MatchResult::Success;
 }

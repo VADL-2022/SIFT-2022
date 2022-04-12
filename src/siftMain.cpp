@@ -599,7 +599,11 @@ int mainMission(DataSourceT* src,
         }
         t.reset();
         if (!CMD_CONFIG(imageCaptureOnly)) {
-            cv::Mat greyscale = src->siftImageForMat(i);
+            cv::Mat mayBeGreyscale = src->siftImageForMat(i);
+            cv::Mat greyscale;
+            if (mayBeGreyscale.type() == CV_8UC3) {
+                cv::cvtColor(mayBeGreyscale, greyscale, cv::COLOR_BGR2GRAY);
+            }
             PythonLockedOptional<py::array_t<float>> greyscale_;
             t.logElapsed("siftImageForMat");
             //auto path = src->nameForIndex(i);
