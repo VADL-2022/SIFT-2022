@@ -604,8 +604,15 @@ int mainMission(DataSourceT* src,
         if (!CMD_CONFIG(imageCaptureOnly)) {
             cv::Mat mayBeGreyscale = src->siftImageForMat(i);
             cv::Mat greyscale;
-            if (mayBeGreyscale.type() == CV_8UC3) {
-                cv::cvtColor(mayBeGreyscale, greyscale, cv::COLOR_BGR2GRAY);
+            if (mayBeGreyscale.type() == CV_8UC1) {
+                mayBeGreyscale.convertTo(greyscale, CV_32FC1);
+            }
+            else if (mayBeGreyscale.type() == CV_8UC3) {
+                mayBeGreyscale.convertTo(greyscale, CV_32FC3);
+                cv::cvtColor(greyscale, greyscale, cv::COLOR_BGR2GRAY);
+            }
+            else {
+                greyscale = mayBeGreyscale;
             }
             PythonLockedOptional<py::array_t<float>> greyscale_;
             t.logElapsed("siftImageForMat");
@@ -619,6 +626,9 @@ int mainMission(DataSourceT* src,
             cv::Mat laplacianImage;
             // https://stackoverflow.com/questions/24080123/opencv-with-laplacian-formula-to-detect-image-is-blur-or-not-in-ios/44579247#44579247 , https://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/ , https://github.com/WillBrennan/BlurDetection2/blob/master/blur_detection/detection.py
             auto type = CV_32F;
+            { out_guard();
+                std::cout << "mayBeGreyscale.type(): " << mat_type2str(mayBeGreyscale.type()) << std::endl;
+                std::cout << "greyscale.type(): " << mat_type2str(greyscale.type()) << std::endl; }
             assert(type == greyscale.type()); // The type must be the same as `greyscale` else you get an error like `OpenCV(4.5.2) /build/source/modules/imgproc/src/filter.simd.hpp:3173: error: (-213:The function/feature is not implemented) Unsupported combination of source format (=5), and destination format (=6) in function 'getLinearFilter'`
             cv::Laplacian(greyscale, laplacianImage, type);
             cv::Scalar mean, stddev; // 0:1st channel, 1:2nd channel and 2:3rd channel

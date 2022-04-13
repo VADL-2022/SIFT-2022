@@ -247,6 +247,10 @@ int parseCommandLineArgs(int argc, char** argv,
                 i++; // Also go past the extra argument for this argument
                 continue;
             }
+            else if (strcmp(argv[i], "--skip") == 0) {
+                i++; // Also go past the extra argument for this argument
+                continue;
+            }
             // //
             
             printf("Unrecognized command-line argument given: %s", argv[i]);

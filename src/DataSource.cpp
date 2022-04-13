@@ -265,6 +265,7 @@ FolderDataSource::FolderDataSource(int argc, char** argv, size_t skip) {
             else if (strcmp(argv[i], "--skip") == 0) {
                 skip = getSize(argv[i+1]);
                 printf("Using skip %zu\n", skip); // Note: if you give a negative number: "If the minus sign was part of the input sequence, the numeric value calculated from the sequence of digits is negated as if by unary minus in the result type." ( https://en.cppreference.com/w/c/string/byte/strtoimax )
+                currentIndex = skip;
                 i++;
             }
             else if (i+2 < argc && strcmp(argv[i], "--size-frame") == 0) {

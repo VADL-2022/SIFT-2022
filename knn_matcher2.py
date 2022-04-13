@@ -14,7 +14,22 @@ from datetime import datetime
 #img2 = cv2.imread('box_in_scene.png',0) # trainImage
 
 # Initiate SIFT detector
-sift = cv2.xfeatures2d.SIFT_create() # https://stackoverflow.com/questions/63949074/cv2-sift-causes-segmentation-fault  #cv2.SIFT()
+# https://docs.opencv.org/3.4/d7/d60/classcv_1_1SIFT.html for params:
+# Defaults #
+# nfeatures = 0
+# nOctaveLayers = 3
+# contrastThreshold = 0.04
+# edgeThreshold = 10
+# sigma = 1.6
+# #
+# Custom #
+nfeatures = 0
+nOctaveLayers = 10
+contrastThreshold = 0.02
+edgeThreshold = 10
+sigma = 0.8
+# #
+sift = cv2.xfeatures2d.SIFT_create(nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma) # https://stackoverflow.com/questions/63949074/cv2-sift-causes-segmentation-fault  #cv2.SIFT()
 #sift = cv2.ORB_create()
 
 # BFMatcher with default params
