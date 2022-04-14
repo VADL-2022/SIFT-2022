@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import sys
 from datetime import datetime
+from src.python import GridCell
 
 #img1 = cv2.imread('box.png',0)          # queryImage
 #img2 = cv2.imread('box_in_scene.png',0) # trainImage
@@ -102,6 +103,7 @@ def find_homography(keypoints_pic1, keypoints_pic2, matches) -> (List, np.float3
         #print(cv2.KeyPoint_convert(keypoints_pic1[matches[0].queryIdx]))
         src_pts = np.float32([keypoints_pic1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
         dst_pts = np.float32([keypoints_pic2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
+        #print("src_pts:", src_pts)
 
         # Find the transformation between points
         #transformation_matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
@@ -210,11 +212,17 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     dstPts = cv2.perspectiveTransform(pts, M, dstPts)
     print(dstPts)
     dstPts=dstPts[0] # It was wrapped by an extra array
+    # Show average
+    dstMidpoint = np.mean(dstPts, axis=0) # https://stackoverflow.com/questions/15819980/calculate-mean-across-dimension-in-a-2d-array
+    cv2.circle(img, list(map(int, dstMidpoint)), 3, (255, 0, 0), 3)
     if len(dstPts) > 1:
         for i in range(0, len(dstPts)-1):
             print(dstPts[i])
             cv2.line(img, list(map(int, dstPts[i])), list(map(int, dstPts[i+1])), (255,0,0), 2)
         cv2.line(img, list(map(int, dstPts[0])), list(map(int, dstPts[len(dstPts)-1])), (255,0,0), 2)
+    # Get landing grid cell #
+    cv2.putText(img,str(GridCell.getGridCellIdentifier(width, height, dstMidpoint[0], dstMidpoint[1])),(5,5+25),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)  #text,coordinate,font,size of text,color,thickness of font   # https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
+    # #
     cv2.imshow('landingPos', img)
     key = cv2.waitKey(0)
     return img, key
