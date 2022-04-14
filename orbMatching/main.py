@@ -80,6 +80,7 @@ def shapes(img, imgGry, outCanvas, tmin, showText=False):
 canvas=np.ones((w,h))
 img=shapes(query_img_bw, query_img_bw, canvas, 150)
 cv2.imshow('shapes1',img)
+canvas=np.ones((w,h))
 img=shapes(train_img_bw, train_img_bw, canvas, 100)
 cv2.imshow('shapes2',img)
 cv2.waitKey(0)
