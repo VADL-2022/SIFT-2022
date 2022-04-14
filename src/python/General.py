@@ -113,8 +113,11 @@ def minimalEnclosingCircle(a, b):
 
 videoWriter = None
 
-def shouldDiscardImage(greyscaleImage, imageIndex, showPreviewWindow=False, siftVideoOutputPath=None #False #Should be None but had to do a hack
+def shouldDiscardImage(greyscaleImage, imageIndex, shouldRunSkyDetection=True, showPreviewWindow=False, siftVideoOutputPath=None #False #Should be None but had to do a hack
                        , siftVideoOutputFPS=None):
+    if not shouldRunSkyDetection:
+        return False
+    
     global videoWriter
     height,width=greyscaleImage.shape[:2]
     #print("BBBBBBBB",type(siftVideoOutputPath), siftVideoOutputPath)
@@ -211,9 +214,10 @@ def shouldDiscardImage(greyscaleImage, imageIndex, showPreviewWindow=False, sift
         print("noneCenters:\n  bad -=", badInc)
         bad -= badInc
     elif noneCenters > 0:
-        badInc = (noneCenters*2) / (badIncs + 1)
-        print("noneCenters:\n  bad +=", badInc)
-        bad += badInc
+        # badInc = (noneCenters*2) / (badIncs + 1)
+        # print("noneCenters:\n  bad +=", badInc)
+        # bad += badInc
+        bad += 1
     if showPreviewWindow:
         cv2.putText(image, "badness: " + str(bad), (int(30), int(30)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
@@ -238,7 +242,8 @@ def shouldDiscardImage(greyscaleImage, imageIndex, showPreviewWindow=False, sift
     #gray = blurred
     rows = gray.shape[0]
     #cannyThreshold = 50 # 100
-    cannyThreshold = 70
+    #cannyThreshold = 70
+    cannyThreshold = 30
     #accumulatorThreshold = 50
     accumulatorThreshold = 70
     minRadius = 0#int(width/2)

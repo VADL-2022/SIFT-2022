@@ -14,7 +14,22 @@ from datetime import datetime
 #img2 = cv2.imread('box_in_scene.png',0) # trainImage
 
 # Initiate SIFT detector
-sift = cv2.xfeatures2d.SIFT_create() # https://stackoverflow.com/questions/63949074/cv2-sift-causes-segmentation-fault  #cv2.SIFT()
+# https://docs.opencv.org/3.4/d7/d60/classcv_1_1SIFT.html for params:
+# Defaults #
+# nfeatures = 0
+# nOctaveLayers = 3
+# contrastThreshold = 0.04
+# edgeThreshold = 10
+# sigma = 1.6
+# #
+# Custom #
+nfeatures = 0
+nOctaveLayers = 10
+contrastThreshold = 0.02
+edgeThreshold = 10
+sigma = 0.8
+# #
+sift = cv2.xfeatures2d.SIFT_create(nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma) # https://stackoverflow.com/questions/63949074/cv2-sift-causes-segmentation-fault  #cv2.SIFT()
 #sift = cv2.ORB_create()
 
 # BFMatcher with default params
@@ -33,12 +48,14 @@ if __name__ == "__main__":
     if grabMode==1:
         reader=cv2.VideoCapture(
             # Drone tests from 3-28-2022: #
-            # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4' # GOOD
+             '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4' # GOOD
             # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4' # CHALLENGING; a bit offset
             #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_46_26_CDT/output.mp4' #<--!!!!!!!!!!!!!!! WOAH! shockingly accurate result
             #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_50_08_CDT/output.mp4' # also good, but recovery is a little late
             #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_54_34_CDT/output.mp4' # TOUGHEST ONE
-            '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_19_00_01_CDT/output.mp4' # WOW... actually not bad even though it hits the tower thing. maybe its higher fps is the key for opencv sift?
+
+            # hard one:
+            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_19_00_01_CDT/output.mp4' # WOW... actually not bad even though it hits the tower thing. maybe its higher fps is the key for opencv sift?
             # #
 
             #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4'
@@ -49,7 +66,7 @@ if __name__ == "__main__":
         import subprocess
         #p=subprocess.run(["../compareNatSort/compareNatSort", "../Data/fullscale1/Derived/SIFT/ExtractedFrames", ".png"], capture_output=True)
         p=subprocess.run(["compareNatSort/compareNatSort",
-                          "Data/fullscale1/Derived/SIFT/ExtractedFrames"
+                          "Data/fullscale1/Derived/SIFT/ExtractedFrames_unrotated"
                           # '/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_19_02_14_CDT'
                           #'/Users/sebastianbond/Desktop/sdCardImages/sdCardN64RaspberryPiImage/2022-03-21_18_47_47_CDT'
                           , ".png"], capture_output=True)
@@ -63,6 +80,11 @@ if __name__ == "__main__":
             'Data/fullscale1/Derived/SIFT/SatelliteMatchingTesting/Screen Shot 2022-03-29 at 2.13.17 PM_.png',
             'Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0127.png',
         ]
+    elif grabMode==3:
+        import subprocess
+        p=subprocess.run(["compareNatSort/compareNatSort",
+                          "Data/fullscale1/Derived/SIFT/ExtractedFrames"
+                          , ".png"], capture_output=True)
     # End Config #
 
 # This function is from https://www.programcreek.com/python/example/110698/cv2.estimateAffinePartial2D
@@ -82,7 +104,12 @@ def find_homography(keypoints_pic1, keypoints_pic2, matches) -> (List, np.float3
         dst_pts = np.float32([keypoints_pic2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
 
         # Find the transformation between points
-        transformation_matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        #transformation_matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        transformation_matrix, mask = cv2.estimateAffine2D(src_pts, dst_pts, np.array([]), cv2.RANSAC, 5.0)
+        if transformation_matrix is not None:
+            # https://stackoverflow.com/questions/3881453/numpy-add-row-to-array
+            transformation_matrix = np.append(transformation_matrix, [[0.0,0.0,1.0]], axis=0) # Make affine into perspective matrix
+            print(transformation_matrix)
 
         # Compute a rigid transformation (without depth, only scale + rotation + translation)
         transformation_rigid_matrix, rigid_mask = cv2.estimateAffinePartial2D(src_pts, dst_pts)
@@ -173,6 +200,24 @@ def showLerpController(firstImage, M, key_='a', idMat=idMat):
             Mcurrent=M.copy()
         else:
             break
+def showLandingPos(firstImage, M, key_='l', idMat=idMat):
+    img = firstImage.copy()
+    # 4 corner points
+    height,width=img.shape[:2]
+    pts = np.array([[(0,0), (width,0), (width,height), (0,height)]], dtype=np.float32)
+    dstPts = np.zeros_like(pts)
+    print(pts, dstPts)
+    dstPts = cv2.perspectiveTransform(pts, M, dstPts)
+    print(dstPts)
+    dstPts=dstPts[0] # It was wrapped by an extra array
+    if len(dstPts) > 1:
+        for i in range(0, len(dstPts)-1):
+            print(dstPts[i])
+            cv2.line(img, list(map(int, dstPts[i])), list(map(int, dstPts[i+1])), (255,0,0), 2)
+        cv2.line(img, list(map(int, dstPts[0])), list(map(int, dstPts[len(dstPts)-1])), (255,0,0), 2)
+    cv2.imshow('landingPos', img)
+    key = cv2.waitKey(0)
+    return img, key
     
 def run():
     if not showPreviewWindow:
@@ -188,7 +233,7 @@ def run():
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
         imgs = [None]*totalFrames
-    elif grabMode == 0:
+    elif grabMode == 0 or grabMode == 3:
         imgs=p.stdout.split(b'\n')
     i = 0
     img1 = None
@@ -229,7 +274,7 @@ def run():
     #i = 1 # (Skipped first image)
     # For each image, run SIFT and match with previous image:
     for imgName in imgs_iter:
-        def waitForInput(img2=None):
+        def waitForInput(img2, firstImage, skipWaitKeyUsingKey=None):
             if not showPreviewWindow:
                 return
             waitAmount = 1 if i < len(imgs) - 20 else 0
@@ -237,12 +282,20 @@ def run():
                 print("Press a key to continue")
                 if i == len(imgs) - 1:
                     print("(Last image)")
-            k=cv2.waitKey(waitAmount)
+            if skipWaitKeyUsingKey is None:
+                k=cv2.waitKey(waitAmount)
+            else:
+                k=skipWaitKeyUsingKey
             applyMatKey='a'
+            showLandingPosKey='l'
             if k & 0xFF == ord('q'):
                 exit(0)
             elif k & 0xFF == ord(applyMatKey) and img2 is not None: # Apply matrix with lerp
                 showLerpController(firstImage, acc, applyMatKey)
+            elif k & 0xFF == ord(showLandingPosKey) and img2 is not None: # Show landing position
+                img, key = showLandingPos(firstImage, acc, showLandingPosKey)
+                if k & 0xFF == ord(applyMatKey):
+                    waitForInput(img2, firstImage, applyMatKey)
         
         img2, discarded, greyscale = grabImage(imgName, i)
         if img2 is None and not discarded:
@@ -250,7 +303,7 @@ def run():
             cv2.waitKey(0)
             break
         if img2 is None and discarded:
-            waitForInput()
+            waitForInput(None, firstImage)
             i += 1
             continue # Keep img1 as the previous image so we can match it next time
         hOrig, wOrig = img2.shape[:2]
@@ -279,13 +332,13 @@ def run():
         except cv2.error:
             print("Error in find_homography, probably not enough keypoints:", sys.exc_info()[1])
             cv2.imshow('bad',img2);
-            waitForInput()
+            waitForInput(None, firstImage)
             i+=1
             continue  # Keep img1 as the previous image so we can match it next time
         
         if transformation_matrix is None:
             print("transformation_matrix was None")
-            waitForInput()
+            waitForInput(None, firstImage)
             i+=1
             continue # Keep img1 as the previous image so we can match it next time
             # cv2.waitKey(0)
@@ -309,7 +362,7 @@ def run():
         tr = cv2.warpPerspective(firstImage, np.linalg.pinv(acc), (wOrig, hOrig))
         if showPreviewWindow:
             cv2.imshow('acc',tr);
-            waitForInput(img2)
+            waitForInput(img2, firstImage)
         #plt.imshow(img3),plt.show()
         
         # Save current keypoints as {the prev keypoints for next iteration}
