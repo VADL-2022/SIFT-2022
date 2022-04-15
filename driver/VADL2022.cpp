@@ -80,13 +80,16 @@ const char *knnMatcherScriptArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL};
 const char* LIS331HH_calibrationFile = nullptr;
 #endif
 long long backupSIFTStopTime = -1;
-std::string backupSIFTStopTime_str, timeToApogee_str, mecoDuration_str;
+std::string backupSIFTStopTime_str, timeToApogee_str, mecoDuration_str, foreStopTime_str;
 long long backupTakeoffTime = -1;
 bool verbose = false, verboseSIFTFD = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
 auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not actually `now`
 long long imuDataSourceOffset = 0; // For --imu-data-source-path only
 long long mecoDuration = -1, timeToApogee = -1, mainDeploymentAltitude = -1;
+long long foreStopTime = 300000;
+int launchBox = -1;
+double launchAngle = -10.0;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -1182,6 +1185,15 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--use-fore-landing-detection") == 0) { // Look for landing on fore pi's
       useForeLandingDetection = "1";
     }
+    else if (strcmp(argv[i], "--fore-stop-time") == 0) { // Time to stop the fore section camera recordings
+      foreStopTime = std::stoll(argv[i+1]); // Must be long long;
+    }
+    else if (strcmp(argv[i], "--launch-box") == 0) { // Grid identifier for the launch rail's location
+      launchBox = std::stoi(argv[i+1]); // Must be long long;
+    }
+    else if (strcmp(argv[i], "--launch-angle") == 0) { // angle of the launch rail
+      launchAngle = std::stod(argv[i+1]); // Must be long long;
+    }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
       i++;
@@ -1230,6 +1242,14 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --main-deployment-altitude");
     exit(1);
   }
+  if (launchBox == -1 && !imuOnly && !videoCapture) {
+    puts("Need to provide --launch-box");
+    exit(1);
+  }
+   if (launchAngle == -10.0 && !imuOnly && !videoCapture) {
+    puts("Need to provide --launch-angle");
+    exit(1);
+  }
 
 #ifdef USE_LIS331HH
   std::string startPigpio = videoCapture ? "! sudo pgrep pigpiod && sudo pigpiod; " // video capture needs to start pigpiod if it's not already running ("!" negates the return code, and "&&" runs the next one only if return value of ! pgrep (not the return value of pgrep) is 0. pgrep returns 1 if not running. so not pgrep returns 0 if running!
@@ -1266,6 +1286,7 @@ VADL2022::VADL2022(int argc, char** argv)
     backupSIFTStopTime_str = std::to_string(backupSIFTStopTime);
     LANDING_G_FORCE_str = std::to_string(LANDING_G_FORCE);
     mecoDuration_str = std::to_string(mecoDuration);
+    foreStopTime_str = std::to_string(foreStopTime);
     LIS331HH_videoCapArgs[0] = "0";
     LIS331HH_videoCapArgs[1] = TAKEOFF_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[2] = timeToApogee_str.c_str(); //backupSIFTStartTime_str.c_str();
@@ -1276,7 +1297,7 @@ VADL2022::VADL2022(int argc, char** argv)
       LIS331HH_calibrationFile = CALIBRATION_FILE;
     }
     LIS331HH_videoCapArgs[3] = LIS331HH_calibrationFile;
-    LIS331HH_videoCapArgs[4] = backupSIFTStopTime_str.c_str();
+    LIS331HH_videoCapArgs[4] = foreStopTime_str.c_str();
 
     //fore2 has lsm
     // const char* lsm = "0";
