@@ -608,7 +608,7 @@ int mainMission(DataSourceT* src,
                 mayBeGreyscale.convertTo(greyscale, CV_32FC1);
             }
             else if (mayBeGreyscale.type() == CV_8UC3) {
-                mayBeGreyscale.convertTo(greyscale, CV_32FC3);
+                mayBeGreyscale.convertTo(greyscale, CV_32FC3, 1/255.0);
                 cv::cvtColor(greyscale, greyscale, cv::COLOR_BGR2GRAY);
             }
             else {

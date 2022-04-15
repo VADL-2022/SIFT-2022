@@ -8,7 +8,7 @@
 
 #include "pthread_mutex_lock_.h"
 
-#ifndef CMD_CONFIG
+#ifndef USE_COMMAND_LINE_ARGS
 // Subscale driver, etc.
 #define CMD_CONFIG(x) (false) // debugMutexDeadlocks is not supported from subscale driver for now
 #include <iostream>

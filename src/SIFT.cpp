@@ -18,6 +18,7 @@
 
 #include "../common.hpp"
 #include "utils.hpp"
+#include "main/siftMainCanvasShower.hpp"
 
 // Fills img2.transformation
 MatchResult findHomographyCommon(ProcessedImage<SIFT_T>& img2, std::vector<cv::Point2f>& obj, std::vector<cv::Point2f>& scene) {
@@ -273,6 +274,7 @@ std::pair<std::vector<cv::KeyPoint>, cv::Mat /*descriptors*/> SIFTOpenCV::findKe
     t.reset();
     std::vector<cv::KeyPoint> keypoints;
     cv::Mat descriptors;
+    //canvasesReadyQueue.enqueue(greyscale);
     f2d->detectAndCompute(greyscale, /*cv::Mat()*/ test_mask, keypoints, descriptors);
     
     printf("Thread %d: Number of keypoints: %zu\n", threadID, keypoints.size());

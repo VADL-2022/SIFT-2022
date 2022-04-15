@@ -11,6 +11,7 @@ class LOG : public LOGBase
 {
 public:
     std::ofstream mLog; // Log File
+    std::string mLogFileName; // File name of the opened log file in the ofstream above, if any
 
     typedef void (*UserCallback)(LOG* log, float fseconds);
     // Anything except IMU* may be nullptr:

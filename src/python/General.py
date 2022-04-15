@@ -120,7 +120,7 @@ def shouldDiscardImage(greyscaleImage, imageIndex, shouldRunSkyDetection=True, s
     
     global videoWriter
     height,width=greyscaleImage.shape[:2]
-    print("BBBBBBBB",type(siftVideoOutputPath), siftVideoOutputPath)
+    #print("BBBBBBBB",type(siftVideoOutputPath), siftVideoOutputPath)
     if siftVideoOutputPath is not None and isinstance(siftVideoOutputPath, str): #if not(isinstance(siftVideoOutputPath, bool) and siftVideoOutputPath == False): # Note: `if siftVideoOutputPath is not None:` and `if siftVideoOutputPath:` doesn't work if used here.. it thinks it is not None even though it is, maybe because it somehow has type 'str' printed in the print statement above. so we do a hack here.
         if videoWriter is None:
            # https://stackoverflow.com/questions/30103077/what-is-the-codec-for-mp4-videos-in-python-opencv
