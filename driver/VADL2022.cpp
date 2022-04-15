@@ -80,7 +80,7 @@ const char *knnMatcherScriptArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL};
 const char* LIS331HH_calibrationFile = nullptr;
 #endif
 long long backupSIFTStopTime = -1;
-std::string backupSIFTStopTime_str, timeToApogee_str, mecoDuration_str;
+std::string backupSIFTStopTime_str, timeToApogee_str, mecoDuration_str, foreStopTime_str;
 long long backupTakeoffTime = -1;
 bool verbose = false, verboseSIFTFD = false;
 // This holds the main deployment time if the IMU is working at the time of main deployment. Otherwise it holds the time SIFT was started.
@@ -1283,6 +1283,7 @@ VADL2022::VADL2022(int argc, char** argv)
     backupSIFTStopTime_str = std::to_string(backupSIFTStopTime);
     LANDING_G_FORCE_str = std::to_string(LANDING_G_FORCE);
     mecoDuration_str = std::to_string(mecoDuration);
+    foreStopTime_str = std::to_string(foreStopTime);
     LIS331HH_videoCapArgs[0] = "0";
     LIS331HH_videoCapArgs[1] = TAKEOFF_G_FORCE_str.c_str();
     LIS331HH_videoCapArgs[2] = timeToApogee_str.c_str(); //backupSIFTStartTime_str.c_str();
