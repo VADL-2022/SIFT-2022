@@ -160,7 +160,7 @@ def runOneIter(write_obj):
         # LSM IMU data recording ############################################
         if useLSM_IMU:
             # CONVERSION FACTOR TO M/S^2:
-            ac_conv_factor = 0.00482283
+            ac_conv_factor = 0.000482283
             # CONVERSION FACTOR TO DEG:
             g_conv_factor = 0.00072
             # ^^Both were empirically determined
