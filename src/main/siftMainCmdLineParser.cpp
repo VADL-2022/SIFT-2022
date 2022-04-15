@@ -139,9 +139,6 @@ int parseCommandLineArgs(int argc, char** argv,
         else if (strcmp(argv[i], "--debug-mutex-deadlocks") == 0) { // Makes pthread mutexes into polling loops that time how long they run for, reporting when they take a long time to lock. Use for debugging purposes.
             cfg.debugMutexDeadlocks = true;
         }
-        else if (strcmp(argv[i], "--debug-startup-time") == 0) { // Exits after starting the program and initializing everything up to and including grabbing the first image
-            cfg.debugStartupTime = true;
-        }
         else if (strcmp(argv[i], "--debug-mutex-milliseconds") == 0) { // This takes a number of milliseconds and reports a lock attempt failing for more than the provided time. Without this argument, the default time that `--debug-mutex-deadlocks` waits is 5000 milliseconds. Use with `--debug-mutex-deadlocks`.
             cfg.debugReportMutexLockAttemptsLongerThanNMilliseconds = std::stoi(argv[i+1]);
             i++;
