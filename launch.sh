@@ -165,7 +165,7 @@ gforce=
 realFlight="--time-for-main-stabilization $mainStabilizationTime $asdasd --main-descent-time $backupSIFTStopTime --time-to-meco 1700 --landing-g-force 8 --emergency-main-deployment-g-force 20 --main-deployment-altitude 800" # --main-deployment-g-force 2.5 # --main-deployment-g-force is unused, just using timing
 #testing="--time-for-main-stabilization 0 --main-descent-time 20000 --time-to-meco 5200 --emergency-main-deployment-g-force 1"
 # Add overrides to realFlight for testing:
-testing2="$realFlight $testingExtras --emergency-main-deployment-g-force 1 --takeoff-g-force 1 --landing-g-force 1 --fore-stop-time 5000"
+testing2="$realFlight $testingExtras --emergency-main-deployment-g-force 1 --takeoff-g-force 1 --landing-g-force 1"
 #extraArgs="$testing2"
 extraArgs="$realFlight"
 commonArgs="$commonArgs --backup-takeoff-time 0 --time-to-main-deployment $timeToMainDeployment --time-to-apogee 9850"
