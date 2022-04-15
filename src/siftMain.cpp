@@ -48,6 +48,7 @@ namespace backward {
 #include "python/mat_wrapper.hpp"
 
 #include "Queue.hpp"
+#include <signal.h>
 
 //// https://docs.opencv.org/master/da/d6a/tutorial_trackbar.html
 //const int alpha_slider_max = 2;
