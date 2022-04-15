@@ -1294,7 +1294,7 @@ VADL2022::VADL2022(int argc, char** argv)
       LIS331HH_calibrationFile = CALIBRATION_FILE;
     }
     LIS331HH_videoCapArgs[3] = LIS331HH_calibrationFile;
-    LIS331HH_videoCapArgs[4] = foreStopTime.c_str();
+    LIS331HH_videoCapArgs[4] = foreStopTime_str.c_str();
 
     //fore2 has lsm
     // const char* lsm = "0";
