@@ -87,6 +87,7 @@ bool verbose = false, verboseSIFTFD = false;
 auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not actually `now`
 long long imuDataSourceOffset = 0; // For --imu-data-source-path only
 long long mecoDuration = -1, timeToApogee = -1, mainDeploymentAltitude = -1;
+long long foreStopTime = 300000;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -1179,6 +1180,9 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--use-fore-landing-detection") == 0) { // Look for landing on fore pi's
       useForeLandingDetection = "1";
     }
+    else if (strcmp(argv[i], "--fore-stop-time") == 0) { // Look for landing on fore pi's
+      foreStopTime = std::stoll(argv[i+1]); // Must be long long;
+    }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
       i++;
@@ -1273,7 +1277,7 @@ VADL2022::VADL2022(int argc, char** argv)
       LIS331HH_calibrationFile = CALIBRATION_FILE;
     }
     LIS331HH_videoCapArgs[3] = LIS331HH_calibrationFile;
-    LIS331HH_videoCapArgs[4] = backupSIFTStopTime_str.c_str();
+    LIS331HH_videoCapArgs[4] = foreStopTime.c_str();
 
     //fore2 has lsm
     // const char* lsm = "0";
