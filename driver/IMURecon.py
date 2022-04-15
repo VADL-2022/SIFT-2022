@@ -1,3 +1,5 @@
+# https://github.com/VADL-2022/IMU_VV/blob/main/03_Path_Recon/model_funcs.py
+
 import numpy as np
 from pandas import read_csv
 from math import sin, cos, pi, atan2, asin, sqrt, ceil
@@ -58,7 +60,20 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, my_thresh=50, my
     fields = ['Timestamp', 'Pres',
     'Roll', 'Pitch', 'Yaw',
     'LinearAccelNed X', 'LinearAccelNed Y', 'LinearAccelNed Z']
-    df = read_csv(imu_data_file_and_path, skipinitialspace=True, usecols=fields)
+    while True:
+        try:
+            df = read_csv(imu_data_file_and_path, skipinitialspace=True, usecols=fields)
+            break
+        except:
+            # Retry (sometimes we may not have a complete line from C++ flush. So verify it). Supposedly bad lines are dropped automatically by Pandas though so we should be good ( https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html : "Lines with too many fields (e.g. a csv line with too many commas) will by default cause an exception to be raised, and no DataFrame will be returned. If False, then these “bad lines” will be dropped from the DataFrame that is returned." )
+            print("Caught exception:")
+            import traceback
+            traceback.print_exc()
+            df = read_csv(imu_data_file_and_path, skipinitialspace=True, usecols=fields, error_bad_lines=False)
+            print("CSV was read after retry")
+        finally:
+            print("Retry loop trying again")
+            continue
 
     ## EXTRACT TIME, ACCEL, AND ALTITUDE
     imu_t = np.array(df['Timestamp'].values)

@@ -476,6 +476,9 @@ int mainMission(DataSourceT* src,
 #endif
         t.reset();
         cv::Mat mat = src->get(i);
+        if (CMD_CONFIG(debugStartupTime)) {
+            raise(SIGSEGV); // Exit ASAP
+        }
         { out_guard();
             std::cout << "CAP_PROP_POS_MSEC: " << src->timeMilliseconds() << std::endl; }
         t.logElapsed("get image");
