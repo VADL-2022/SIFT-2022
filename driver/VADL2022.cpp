@@ -88,6 +88,8 @@ auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not 
 long long imuDataSourceOffset = 0; // For --imu-data-source-path only
 long long mecoDuration = -1, timeToApogee = -1, mainDeploymentAltitude = -1;
 long long foreStopTime = 300000;
+int launchBox = -1;
+double launchAngle = -10.0;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -1180,8 +1182,14 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--use-fore-landing-detection") == 0) { // Look for landing on fore pi's
       useForeLandingDetection = "1";
     }
-    else if (strcmp(argv[i], "--fore-stop-time") == 0) { // Look for landing on fore pi's
+    else if (strcmp(argv[i], "--fore-stop-time") == 0) { // Time to stop the fore section camera recordings
       foreStopTime = std::stoll(argv[i+1]); // Must be long long;
+    }
+    else if (strcmp(argv[i], "--launch-box") == 0) { // Grid identifier for the launch rail's location
+      launchBox = std::stoi(argv[i+1]); // Must be long long;
+    }
+    else if (strcmp(argv[i], "--launch-angle") == 0) { // angle of the launch rail
+      launchAngle = std::stod(argv[i+1]); // Must be long long;
     }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
@@ -1229,6 +1237,14 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   if (mainDeploymentAltitude == -1 && !imuOnly) {
     puts("Need to provide --main-deployment-altitude");
+    exit(1);
+  }
+  if (launchBox == -1 && !imuOnly && !videoCapture) {
+    puts("Need to provide --launch-box");
+    exit(1);
+  }
+   if (launchAngle == -10.0 && !imuOnly && !videoCapture) {
+    puts("Need to provide --launch-angle");
     exit(1);
   }
 
