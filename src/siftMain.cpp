@@ -478,6 +478,7 @@ int mainMission(DataSourceT* src,
         t.reset();
         cv::Mat mat = src->get(i);
         if (CMD_CONFIG(debugStartupTime)) {
+            puts("Raising SIGSEGV for timing purposes");
             raise(SIGSEGV); // Exit ASAP
         }
         { out_guard();

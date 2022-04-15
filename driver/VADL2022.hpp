@@ -27,11 +27,11 @@ public:
 
     float startTime = -1; // Seconds
 
-private:
     //bool GDSTimeout = 0;
 
     const char* imuDataSourcePath = nullptr;
-
+    
+private:
     void connect_GPIO(bool initCppGpio);
     void disconnect_GPIO();
     void connect_Python();

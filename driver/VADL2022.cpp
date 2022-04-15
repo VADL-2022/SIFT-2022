@@ -672,6 +672,9 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
       startDelayedSIFT(true /* <--boolean: when true, use the IMU in SIFT*/);
       // ^if an error happens, continue with this error, we might as well try recording IMU data at least.
       g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
+
+      // Enqueue the IMU flight path reconstruction
+      enqueueIMURecon();
     }
   }
 }

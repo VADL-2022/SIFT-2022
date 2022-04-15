@@ -417,3 +417,11 @@ mkdir /Volumes/MyTestVolume/Projects/DataRocket/fullscale2
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_12_44_33_		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_44_15_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_42_59_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+
+--
+
+ORIGINAL TIMES:
+time to meco: 1.6s
+time to main deployment 16.5s
+main descent time: 33.8s
+time to apogee: 9.5s
