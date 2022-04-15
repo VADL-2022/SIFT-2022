@@ -85,7 +85,7 @@ sleep_ () {
 
 commitThing="$1"
 if [ -z "$commitThing" ]; then
-    commitThing="fullscale2"
+    commitThing="fullscale3"
 fi
 git checkout "$commitThing"
 # Checkout submodules from the above commit as well:
