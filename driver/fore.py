@@ -24,6 +24,7 @@ from datetime import datetime
 from datetime import timedelta
 import pigpio
 import videoCapture
+import socket
 
 # Forward declare all functions ###########################################
 
@@ -430,13 +431,16 @@ name=None
 switchedCameras = False
 descent = False
 start = time.time_ns() # Time since epoch
+hostname = socket.gethostname()
 
 try:
     # Initialize LSM IMU ##########################################################
     if useLSM_IMU:
-        bus = smbus.SMBus(1)
+        if hostname == "fore1":
+            bus = smbus.SMBus(1)
+        else:
+            bus = smbus.SMBus(3)
         address = 0x6B
-
         # SET THE DATA RATE
         ###############################################################################
         # Required Binary: 0101 (Set ODR to 208 Hz), 01 (+/- 16g), 11 (50 Hz Anti Aliasing) --> Equivalent Hex: 01010111 -> 0x57
