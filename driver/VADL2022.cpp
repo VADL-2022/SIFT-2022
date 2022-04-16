@@ -32,6 +32,8 @@ int driverInput_fd_fcntl_flags = 0;
 #include <float.h>
 #include "subscaleMain.hpp"
 #include "../src/utils.hpp"
+#include "IMURecon.hpp"
+#include "SatelliteMatch.hpp"
 
 // G Forces
 float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
@@ -71,7 +73,7 @@ std::string TAKEOFF_G_FORCE_str;
 std::string LANDING_G_FORCE_str;
 #define USE_LIS331HH
 #ifdef USE_LIS331HH // Using the alternative IMU
-const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 #endif
 std::string outputAcc;
 const char *sendOnRadioScriptArgs[] = {NULL, NULL, NULL};
@@ -88,8 +90,6 @@ auto mainDeploymentOrStartedSIFTTime = std::chrono::steady_clock::now(); // Not 
 long long imuDataSourceOffset = 0; // For --imu-data-source-path only
 long long mecoDuration = -1, timeToApogee = -1, mainDeploymentAltitude = -1;
 long long foreStopTime = 300000;
-int launchBox = -1;
-double launchAngle = -10.0;
 
 std::string gpioUserPermissionFixingCommands;
 std::string gpioUserPermissionFixingCommands_arg;
@@ -208,39 +208,39 @@ bool sendOnRadio() {
   if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
     printf("hostname: %s\n", hostname);
     if (strcmp(hostname, "sift1") == 0) { //if (true) { //if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
-      // do radio
-      { out_guard();
-        std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
+      // // do radio
+      // { out_guard();
+      //   std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
 
-      mainDispatchQueue.enqueue([=](){
+      // mainDispatchQueue.enqueue([=](){
         
-        if (!outputAcc.empty()) {
-          { out_guard();
-            std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
-          return;
-        }
+      //   if (!outputAcc.empty()) {
+      //     { out_guard();
+      //       std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
+      //     return;
+      //   }
 
-        outputAcc = getOutputVideo();
+      //   outputAcc = getOutputVideo();
 
-        // Run Python OpenCV SIFT on the output video
-        knnMatcherScriptArgs[0] = "1";
-        knnMatcherScriptArgs[1] = "1";
-        knnMatcherScriptArgs[2] = "0";
-        knnMatcherScriptArgs[3] = "0";
-        knnMatcherScriptArgs[4] = outputAcc.c_str();
-        knnMatcherScriptArgs[5] = "0";
-        { out_guard();
-          std::cout << "knn_matcher2 script enqueue" << std::endl; }
-        pyRunFile("knn_matcher2.py", 6, (char **)knnMatcherScriptArgs); // NOTE: This also enqueues..
+      //   // Run Python OpenCV SIFT on the output video
+      //   knnMatcherScriptArgs[0] = "1";
+      //   knnMatcherScriptArgs[1] = "1";
+      //   knnMatcherScriptArgs[2] = "0";
+      //   knnMatcherScriptArgs[3] = "0";
+      //   knnMatcherScriptArgs[4] = outputAcc.c_str();
+      //   knnMatcherScriptArgs[5] = "0";
+      //   { out_guard();
+      //     std::cout << "knn_matcher2 script enqueue" << std::endl; }
+      //   pyRunFile("knn_matcher2.py", 6, (char **)knnMatcherScriptArgs); // NOTE: This also enqueues..
 
-        // Send on radio for real now
-        sendOnRadioScriptArgs[0] = "0";
-        sendOnRadioScriptArgs[1] = "";
-        sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
-        { out_guard();
-          std::cout << "sendOnRadio script enqueue" << std::endl; }
-        bool success = pyRunFile("driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
-      },"sendOnRadioAndEtc",QueuedFunctionType::Misc);
+      //   // Send on radio for real now
+      //   sendOnRadioScriptArgs[0] = "0";
+      //   sendOnRadioScriptArgs[1] = "";
+      //   sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
+      //   { out_guard();
+      //     std::cout << "sendOnRadio script enqueue" << std::endl; }
+      //   bool success = pyRunFile("driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
+      // },"sendOnRadioAndEtc",QueuedFunctionType::Misc);
     }
     else {
       // do gps
@@ -387,7 +387,14 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   
     // Wait for SIFT process to end
     int status = 0;
-    if (wait(&status) != -1) {
+    int wpid;
+    // https://stackoverflow.com/questions/10160583/fork-multiple-processes-and-system-calls , https://stackoverflow.com/questions/39329540/wait-returns-0-and-errno-interrupted-system-call
+    do
+      {
+        wpid = wait(&status);
+      }
+    while (wpid == -1 && errno == EINTR);
+    if (wpid != -1) {
       if (WIFEXITED(status)) {
 	// now check to see what its exit status was
 	printf("The exit status was: %d\n", WEXITSTATUS(status));
@@ -402,7 +409,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
 	printf("The signal that killed me was %d\n", WTERMSIG(status));
       }
     } else {
-      printf("Error waiting!\n");
+      perror("Error waiting for SIFT");
       lastForkedPIDM.lock();
       lastForkedPIDValid=false;
       lastForkedPIDM.unlock();
@@ -675,6 +682,12 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
       startDelayedSIFT(true /* <--boolean: when true, use the IMU in SIFT*/);
       // ^if an error happens, continue with this error, we might as well try recording IMU data at least.
       g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
+
+      // Enqueue grid identifier computation and sending for SIFT result
+      enqueueSatelliteMatch(v);
+
+      // Enqueue the IMU flight path reconstruction
+      enqueueIMURecon(v);
     }
   }
 }
@@ -858,7 +871,9 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
        puts("`````````````````````````````````````````````````````````\nLanded\n`````````````````````````````````````````````````````````");
        v->startTime = -1; // Reset timer
        reportStatus(Status::StoppingSIFTOrVideoCaptureOnLanding);
-       raise(SIGINT);
+       if (!isRunningPython) { // Stop SIFT since we assume SIFT must be running if !isRunningPython
+         raise(SIGINT);
+       }
        // Also close main dispatch queue so the subscale driver terminates
        mainDispatchQueueDrainThenStop = true;
        ((LOG_T*)v->mLog)->userCallback = nullptr;
@@ -1186,10 +1201,12 @@ VADL2022::VADL2022(int argc, char** argv)
       foreStopTime = std::stoll(argv[i+1]); // Must be long long;
     }
     else if (strcmp(argv[i], "--launch-box") == 0) { // Grid identifier for the launch rail's location
-      launchBox = std::stoi(argv[i+1]); // Must be long long;
+      launchBox = /*std::stoi*/(argv[i+1]); // PYTHON EXPRESSION
+      i++;
     }
     else if (strcmp(argv[i], "--launch-angle") == 0) { // angle of the launch rail
-      launchAngle = std::stod(argv[i+1]); // Must be long long;
+      launchAngle = /*std::stod*/(argv[i+1]); // PYTHON EXPRESSION
+      i++;
     }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
@@ -1239,11 +1256,11 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --main-deployment-altitude");
     exit(1);
   }
-  if (launchBox == -1 && !imuOnly && !videoCapture) {
+  if (launchBox == nullptr && !imuOnly && !videoCapture) {
     puts("Need to provide --launch-box");
     exit(1);
   }
-   if (launchAngle == -10.0 && !imuOnly && !videoCapture) {
+   if (launchAngle == nullptr && !imuOnly && !videoCapture) {
     puts("Need to provide --launch-angle");
     exit(1);
   }
@@ -1320,7 +1337,7 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[7] = mecoDuration_str.c_str();
     LIS331HH_videoCapArgs[8] = l3g; // 0=don't use l3g
     LIS331HH_videoCapArgs[9] = useForeLandingDetection; // 0=don't look for landing on fore pi's
-    pyRunFile("driver/fore.py", 9, (char **)LIS331HH_videoCapArgs);
+    pyRunFile("driver/fore.py", sizeof(LIS331HH_videoCapArgs), (char **)LIS331HH_videoCapArgs);
 
     // Then send on radio afterwards (into dispatch queue)
     auto ret = sendOnRadio();

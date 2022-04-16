@@ -134,9 +134,11 @@ def grabImage(imgName, i):
         else:
             if isinstance(imgName, bytes):
                 imgName=imgName.decode('utf-8')
-            print(imgName)
+            imgNameNew = os.path.normpath(imgName)
+            print(imgName, imgNameNew)
             # load the image and convert it to grayscale
-            image=cv2.imread(imgName)
+            image=cv2.imread(imgNameNew)
+            print("image:",image,shouldRunSkyDetection)
             return image
     
     frame = grabInternal(imgName)
@@ -266,6 +268,8 @@ def run():
         
         mask2 = np.zeros_like(greyscale)
         hOrig, wOrig = img1.shape[:2]
+        hOrig_=hOrig
+        wOrig_=wOrig
         xc = int(wOrig / 2)
         yc = int(hOrig / 2)
         radius2 = int(hOrig * 0.45)
@@ -378,9 +382,10 @@ def run():
         des1=des2
         img1=img2
         i+=1
-    if not showPreviewWindow:
+    if not showPreviewWindow or __name__ == "__main__":
         # Save transformation
         cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
+    return acc, wOrig_, hOrig_
 
 if __name__ == "__main__":
     run()

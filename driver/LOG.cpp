@@ -94,7 +94,8 @@ LOG::LOG(UserCallback userCallback_, void* callbackUserData_, IMU *imu, long lon
                 localtime(&now)->tm_hour,
                 localtime(&now)->tm_min,
                 localtime(&now)->tm_sec);
-        mLog.open(LOG_FILE + timestamp + ".csv");
+	mLogFileName = LOG_FILE + timestamp + ".csv";
+        mLog.open(mLogFileName);
 
         if (!mLog.is_open())
         {

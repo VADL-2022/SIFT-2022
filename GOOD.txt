@@ -417,3 +417,22 @@ mkdir /Volumes/MyTestVolume/Projects/DataRocket/fullscale2
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022-04-02_12_44_33_		      /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_44_15_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_42_59_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
+
+--
+
+ORIGINAL TIMES:
+time to meco: 1.6s
+time to main deployment 16.5s
+main descent time: 33.8s
+time to apogee: 9.5s
+
+--
+
+# 1 degree is the launch angle for fullscale1
+./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/Derived/SIFT/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --time-to-main-deployment 67500 --time-for-main-stabilization 0 --takeoff-g-force 9 --main-descent-time 28500 --time-to-meco 2200 --landing-g-force 8 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/files_sift1_imuAndTemperatureOnly_fullscale1/LOG_20220219_104353.csv --imu-data-source-time-offset 2867000 --time-to-apogee 17600 --main-deployment-altitude 800 --start-sift-at-apogee --verbose --launch-box 1 --launch-angle 'deg2rad(1)'
+
+real apogee: 4660 feet apogee
+
+# WORKS:
+./subscale_exe_release --extra-sift-exe-args '--save-first-image --video-file-data-source --video-file-data-source-path Data/fullscale1/Derived/SIFT/output.mp4 --no-sky-detection' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --time-to-main-deployment 67500 --time-for-main-stabilization 0 --takeoff-g-force 9 --main-descent-time 28500 --time-to-meco 2200 --landing-g-force 8 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/files_sift1_imuAndTemperatureOnly_fullscale1/LOG_20220219_104353.csv --imu-data-source-time-offset 2867000 --time-to-apogee 17600 --main-deployment-altitude 800 --start-sift-at-apogee --verbose --launch-box 1 --launch-angle '__import__("numpy").deg2rad(1)'
+

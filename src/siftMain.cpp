@@ -478,6 +478,7 @@ int mainMission(DataSourceT* src,
         t.reset();
         cv::Mat mat = src->get(i);
         if (CMD_CONFIG(debugStartupTime)) {
+            puts("Raising SIGSEGV for timing purposes");
             raise(SIGSEGV); // Exit ASAP
         }
         { out_guard();
@@ -790,7 +791,7 @@ int mainMission(DataSourceT* src,
                         });
                         isNone = false;
                     }
-                    py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image), i, CMD_CONFIG(showPreviewWindow()), path, g_src->fps());
+                    py::bool_ discardImage_ = general.attr("shouldDiscardImage")(cv_mat_uint8_1c_to_numpy(image), i, !CMD_CONFIG(noSkyDetection), CMD_CONFIG(showPreviewWindow()), path, g_src->fps());
                     if (discardImage_ == false) {
                         std::cout << "general: Python likes this image\n";
                     }

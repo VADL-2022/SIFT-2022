@@ -1,11 +1,13 @@
 import cv2
-from src.python.General import shouldDiscardImage, undisortImage
+import src.python.General
+#from src.python.General import shouldDiscardImage, undisortImage
 import os
 from pathlib import Path
 import sys
 
 imgName=sys.argv[1] #imgName = 'Data/fullscale1/Derived/SIFT/ExtractedFrames/thumb0089.png'
-img=undisortImage(cv2.imread(imgName))
+src.python.General.useFullImageInsteadOfROI=sys.argv[2] == '1' if len(sys.argv) > 2 else False
+img=src.python.General.undisortImage(cv2.imread(imgName))
 cv2.imshow('',img)
 k=cv2.waitKey(0)
 if k & 0xFF == ord('w'): # Write

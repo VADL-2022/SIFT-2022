@@ -5,6 +5,8 @@
 
 #include <sys/wait.h>
 
+#include <errno.h>
+
 pid_t lastForkedPID;
 bool lastForkedPIDValid = false;
 std::mutex lastForkedPIDM;
@@ -19,7 +21,14 @@ bool runCommandWithFork(const char* commandWithArgs[] /* array with NULL as the 
     lastForkedPIDValid=true;
     lastForkedPIDM.unlock();
     int status = 0;
-    if (wait(&status) != -1) {
+    int wpid;
+    // https://stackoverflow.com/questions/10160583/fork-multiple-processes-and-system-calls , https://stackoverflow.com/questions/39329540/wait-returns-0-and-errno-interrupted-system-call
+    do
+      {
+        wpid = wait(&status);
+      }
+    while (wpid == -1 && errno == EINTR);
+    if (wpid != -1) {
       if (WIFEXITED(status)) {
        // now check to see what its exit status was
        printf("The exit status for command \"%s\" was: %d\n", command, WEXITSTATUS(status));
