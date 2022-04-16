@@ -1252,7 +1252,7 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --time-to-apogee");
     exit(1);
   }
-  if (mainDeploymentAltitude == -1 && !imuOnly) {
+  if (mainDeploymentAltitude == -1 && !imuOnly && !videoCapture) {
     puts("Need to provide --main-deployment-altitude");
     exit(1);
   }
