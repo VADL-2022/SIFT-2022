@@ -31,7 +31,7 @@ std::string getOutputMatrix() {
   // Remove newline if any
   size_t len = outputAcc2.size();
   if (len > 1 && outputAcc2[len-1] == '\n') {
-    outputAcc2[len-1] = '\0';
+    outputAcc2.pop_back();            //[len-1] = '\0'; <-- THIS CAUSES PROBLEMS with appending to the string!
   }
   /* close */
   pclose(fp);
@@ -90,7 +90,7 @@ std::string getOutputFirstImage() {
   // Remove newline if any
   size_t len = outputAcc2.size();
   if (len > 1 && outputAcc2[len-1] == '\n') {
-    outputAcc2[len-1] = '\0';
+    outputAcc2.pop_back();            //[len-1] = '\0'; <-- THIS CAUSES PROBLEMS with appending to the string!
   }
   /* close */
   pclose(fp);

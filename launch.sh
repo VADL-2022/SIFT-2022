@@ -170,7 +170,7 @@ backupSIFTStopTime="$(($mainDescentTime-$siftAllowanceForStopping))" # Originall
 
 forePayloadArgs="--video-capture --LIS331HH-imu-calibration-file "driver/LIS331HH_calibration/LOG_20220129-183224.csv" --time-to-apogee $timeToApogee"
 
-siftPayloadArgs="$siftPayloadArgs --time-to-main-deployment $timeToMainDeployment --time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --emergency-main-deployment-g-force 20 --main-deployment-altitude $mainDeploymentAltitude --launch-box $launchBox --launch-angle $launchAngle --extra-sift-exe-args '--fps $fps --no-preview-window --finish-rest-always --save-first-image' --sift-params '-C_edge 2 -delta_min 0.6'"
+siftPayloadArgs="$siftPayloadArgs --time-to-main-deployment $timeToMainDeployment --time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --emergency-main-deployment-g-force 20 --main-deployment-altitude $mainDeploymentAltitude --launch-box $launchBox --launch-angle $launchAngle --extra-sift-exe-args '--no-sky-detection --fps $fps --no-preview-window --finish-rest-always --save-first-image' --sift-params '-C_edge 2 -delta_min 0.6'"
 
 realFlight="--takeoff-g-force $takeoffGForce --landing-g-force $landingGForce --backup-takeoff-time $backupTakeoffTime --time-to-meco $timeToMeco"
 

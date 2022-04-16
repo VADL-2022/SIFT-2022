@@ -138,10 +138,22 @@ def grabImage(imgName, i):
             #imgNameNew = os.path.normpath(imgName) # DOESN"T WORK BUT WORKS IN THE PYTHON PROMPT?! IMPOSSIBLE!!
             #imgNameNew = re.sub(r'/+', lambda matchobj: '/', imgName) # same as the above, not working here but works in the prompt
             #imgNameNew = os.path.join(os.path.dirname(imgName), os.path.basename(imgName)) # same as above
-            imgNameNew = os.path.dirname(imgName).rstrip('/') + os.path.basename(imgName).lstrip('/')
-            import code
-            code.InteractiveConsole(locals=locals()).interact()
-            print(imgName, imgNameNew)
+            # Found out the reason for the above: the actual string is different from what is printed!:
+            # Python 3.7.11 (default, Jun 28 2021, 17:43:59)
+            # [GCC 9.3.0] on linux
+            # Type "help", "copyright", "credits" or "license" for more information.
+            # (InteractiveConsole)
+            # >>> imgName
+            # 'dataOutput/2022-04-16_02_19_40_CDT/\x00/firstImage0.png'
+            # >>> imgNameNew
+            # 'dataOutput/2022-04-16_02_19_40_CDT/\x00firstImage0.png'
+            # >>>
+            #imgNameNew = os.path.dirname(imgName).rstrip('\x00/') + '/' os.path.basename(imgName).lstrip('\x00/')
+            imgNameNew = imgName
+            #import code
+            #code.InteractiveConsole(locals=locals()).interact()
+            #print(imgName, imgNameNew)
+            print(imgNameNew)
             # load the image and convert it to grayscale
             image=cv2.imread(imgNameNew)
             #image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png') # THIS WORKS BUT NOT THE ABOVE when imgNameNew is as mentioned above
