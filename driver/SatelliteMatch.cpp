@@ -104,7 +104,7 @@ std::string getOutputFirstImage() {
 
 void enqueueSatelliteMatch(VADL2022* v) {
   mainDispatchQueue.enqueue([=](){
-    nonthrowing_python_nolock([](){
+    nonthrowing_python_nolock([=](){
       std::string matrixFilename = getOutputMatrix();
       std::string firstImageFilename = getOutputFirstImage();
 

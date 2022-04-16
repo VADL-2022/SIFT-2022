@@ -15,7 +15,7 @@ void enqueueIMURecon(VADL2022* v) {
   mainDispatchQueue.enqueue([=](){
     //PyGILState_STATE state = PyGILState_Ensure(); // Only run this if no other python code is running now, otherwise wait for a lock // TODO: implement properly
     
-    nonthrowing_python_nolock([](){
+    nonthrowing_python_nolock([=](){
       reportStatus(Status::RunningPython);
       py::module_ IMURecon = py::module_::import("driver.IMURecon");
       const char* logFileName;
