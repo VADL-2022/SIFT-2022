@@ -415,3 +415,6 @@ def undisortImage(image):
         # cv2.waitKey(0)
     image = cv2.resize(image, (wOrig,hOrig))
     return image
+
+# Makes a 2D image into a fisheye distorted image
+def distortImage(img):
