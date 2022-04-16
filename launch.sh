@@ -190,7 +190,7 @@ if [ "$mode" == "sift" ]; then
     ./$exe $extraArgs $siftPayloadArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "driver/radio.py" 1)
 else
     #./subscale_exe_release --video-capture --time-for-main-stabilization "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
-    ./$exe $extraArgs $forePayloadArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
+    ./$exe $forePayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
 fi
 set +e
 #cleanup
