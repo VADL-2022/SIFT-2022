@@ -137,7 +137,7 @@ def grabImage(imgName, i):
             imgNameNew = os.path.normpath(imgName)
             print(imgName, imgNameNew)
             # load the image and convert it to grayscale
-            image=cv2.imread(imgNameNew)
+            image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png')
             print("image:",image,shouldRunSkyDetection)
             return image
     
