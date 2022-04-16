@@ -207,7 +207,7 @@ bool sendOnRadio() {
   char hostname[HOST_NAME_MAX + 1];
   if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
     printf("hostname: %s\n", hostname);
-    if (strcmp(hostname, "sift1") == 0) { //if (true) { //if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
+    if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "sift2") == 0) { //if (true) { //if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
       // // do radio
       // { out_guard();
       //   std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
@@ -259,7 +259,7 @@ bool gps() {
   char hostname[HOST_NAME_MAX + 1];
   if (gethostname(hostname, HOST_NAME_MAX + 1) == 0 || true) { // success
     printf("hostname: %s\n", hostname);
-    if (false) { //if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") {
+    if (strcmp(hostname, "fore1") == 0 || strcmp(hostname, "fore2") == 0) { //if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") {
       // nothing.. radio..
     }
     else { // sift2 and fore2 are gps
