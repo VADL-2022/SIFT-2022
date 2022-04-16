@@ -13,6 +13,7 @@
 #include "main/siftMainCmdConfig.hpp"
 
 #include "pthread_mutex_lock_.h"
+#include <atomic>
 
 static thread_local bool lockedAlready;
 

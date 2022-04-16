@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 from datetime import datetime
 from src.python import GridCell
+import re
 
 #img1 = cv2.imread('box.png',0)          # queryImage
 #img2 = cv2.imread('box_in_scene.png',0) # trainImage
@@ -134,10 +135,28 @@ def grabImage(imgName, i):
         else:
             if isinstance(imgName, bytes):
                 imgName=imgName.decode('utf-8')
-            imgNameNew = os.path.normpath(imgName)
-            print(imgName, imgNameNew)
+            #imgNameNew = os.path.normpath(imgName) # DOESN"T WORK BUT WORKS IN THE PYTHON PROMPT?! IMPOSSIBLE!!
+            #imgNameNew = re.sub(r'/+', lambda matchobj: '/', imgName) # same as the above, not working here but works in the prompt
+            #imgNameNew = os.path.join(os.path.dirname(imgName), os.path.basename(imgName)) # same as above
+            # Found out the reason for the above: the actual string is different from what is printed!:
+            # Python 3.7.11 (default, Jun 28 2021, 17:43:59)
+            # [GCC 9.3.0] on linux
+            # Type "help", "copyright", "credits" or "license" for more information.
+            # (InteractiveConsole)
+            # >>> imgName
+            # 'dataOutput/2022-04-16_02_19_40_CDT/\x00/firstImage0.png'
+            # >>> imgNameNew
+            # 'dataOutput/2022-04-16_02_19_40_CDT/\x00firstImage0.png'
+            # >>>
+            #imgNameNew = os.path.dirname(imgName).rstrip('\x00/') + '/' os.path.basename(imgName).lstrip('\x00/')
+            imgNameNew = imgName
+            #import code
+            #code.InteractiveConsole(locals=locals()).interact()
+            #print(imgName, imgNameNew)
+            print(imgNameNew)
             # load the image and convert it to grayscale
             image=cv2.imread(imgNameNew)
+            #image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png') # THIS WORKS BUT NOT THE ABOVE when imgNameNew is as mentioned above
             print("image:",image,shouldRunSkyDetection)
             return image
     
@@ -274,8 +293,9 @@ def run():
         yc = int(hOrig / 2)
         radius2 = int(hOrig * 0.45)
         test_mask=cv2.circle(mask2, (xc,yc), radius2, (255,255,255), -1) # https://stackoverflow.com/questions/42346761/opencv-python-feature-detection-how-to-provide-a-mask-sift
-        cv2.imshow('test_mask', test_mask)
-        cv2.waitKey(0)
+        if showPreviewWindow:
+            cv2.imshow('test_mask', test_mask)
+            cv2.waitKey(0)
     
         kp1, des1 = sift.detectAndCompute(img1,mask = test_mask) # Returns keypoints and descriptors
     else:
