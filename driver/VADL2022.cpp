@@ -401,7 +401,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
 	printf("The signal that killed me was %d\n", WTERMSIG(status));
       }
     } else {
-      printf("Error waiting!\n");
+      perror("Error waiting for SIFT");
       lastForkedPIDM.lock();
       lastForkedPIDValid=false;
       lastForkedPIDM.unlock();
