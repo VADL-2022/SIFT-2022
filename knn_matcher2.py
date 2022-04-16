@@ -165,11 +165,17 @@ def grabImage(imgName, i, firstImage):
         return None, False, None
     if True: #if firstImage is not None:
         # Convert to same format
-        scaling_factor=1.0/255.0 # technically this works only for uint8-based images
-        if frame.dtype != np.uint8:
+        # scaling_factor=1.0/255.0 # technically this works only for uint8-based images
+        # if frame.dtype != np.uint8:
+        #     print("Error but continuing: incorrect dtype for frame:",frame.dtype)
+        # if frame.dtype != np.float32:
+        #     frame = np.float32(frame)*scaling_factor
+        
+        scaling_factor=255.0 # technically this works only for float32-based images
+        if frame.dtype != np.float32 and frame.dtype != np.uint8:
             print("Error but continuing: incorrect dtype for frame:",frame.dtype)
-        if frame.dtype != np.float32:
-            frame = np.float32(frame)*scaling_factor
+        if frame.dtype != np.uint8:
+            frame = np.uint8(frame)*scaling_factor
     if shouldRunUndistort:
         frame = undisortImage(frame)
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
