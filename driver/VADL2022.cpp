@@ -871,7 +871,9 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
        puts("`````````````````````````````````````````````````````````\nLanded\n`````````````````````````````````````````````````````````");
        v->startTime = -1; // Reset timer
        reportStatus(Status::StoppingSIFTOrVideoCaptureOnLanding);
-       raise(SIGINT);
+       if (!isRunningPython) { // Stop SIFT since we assume SIFT must be running if !isRunningPython
+         raise(SIGINT);
+       }
        // Also close main dispatch queue so the subscale driver terminates
        mainDispatchQueueDrainThenStop = true;
        ((LOG_T*)v->mLog)->userCallback = nullptr;
