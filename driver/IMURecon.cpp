@@ -4,6 +4,8 @@ namespace py = pybind11;
 #include "VADL2022.hpp"
 #include "subscaleMain.hpp"
 #include "pyMainThreadInterface.hpp"
+#include "py.h"
+#include "../common.hpp"
 
 void enqueueIMURecon(VADL2022* v) {
   mainDispatchQueue.enqueue([=](){
@@ -26,6 +28,7 @@ void enqueueIMURecon(VADL2022* v) {
     py::print("C++ got gridBoxNumbers:", gridBoxNumbers);
 
     // Send the gridBoxNumbers on the radio
+    const char *sendOnRadioScriptArgs[] = {NULL, NULL};
     sendOnRadioScriptArgs[0] = "0"; // 1 to use stdin
     std::string gridBoxNumbers_str = py::str(gridBoxNumbers); // Cast the python list to std::string
     sendOnRadioScriptArgs[1] = gridBoxNumbers_str.c_str(); // String to send
