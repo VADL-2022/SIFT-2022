@@ -1199,6 +1199,7 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (strcmp(argv[i], "--fore-stop-time") == 0) { // Time to stop the fore section camera recordings
       foreStopTime = std::stoll(argv[i+1]); // Must be long long;
+      i++;
     }
     else if (strcmp(argv[i], "--launch-box") == 0) { // Grid identifier for the launch rail's location
       launchBox = /*std::stoi*/(argv[i+1]); // PYTHON EXPRESSION
