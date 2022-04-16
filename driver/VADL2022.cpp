@@ -495,11 +495,11 @@ double updateRelativeAltitude(LOG_T log, bool showAltitudeOnce, bool actuallyUpd
   double kilopascals = log->mImu->pres;
   double altitudeFeet = computeAltitude(kilopascals);
   if (actuallyUpdateAltitude) {
-    if (onGroundAltitude == DBL_MIN || onGroundAltitude > 50000/*145366 was reported once, so this catches that and filters it out so that the relative altitude grabbing can re-latch onto a different value*/) {
+    if (onGroundAltitude == DBL_MIN || onGroundAltitude / numAltitudes > 50000/*145366 was reported once, so this catches that and filters it out so that the relative altitude grabbing can re-latch onto a different value*/) {
       onGroundAltitude = altitudeFeet;
-      { out_guard();
-        std::cout << "Latching onto relativeAltitude: " << onGroundAltitude << " ft" << std::endl; }
       numAltitudes = 1;
+      { out_guard();
+        std::cout << "Latching onto relativeAltitude: " << onGroundAltitude / numAltitudes << " ft" << std::endl; }
     }
     else {
       // Actually ignore the first altitude value because it is strangely high.
