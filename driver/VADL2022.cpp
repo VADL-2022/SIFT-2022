@@ -676,7 +676,7 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
       g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
 
       // Enqueue the IMU flight path reconstruction
-      enqueueIMURecon();
+      enqueueIMURecon(v);
     }
   }
 }
