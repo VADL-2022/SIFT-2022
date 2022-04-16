@@ -73,7 +73,6 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, my_thresh=50, my
             print("CSV was read after retry")
         finally:
             print("Retry loop trying again")
-            continue
 
     ## EXTRACT TIME, ACCEL, AND ALTITUDE
     imu_t = np.array(df['Timestamp'].values)
