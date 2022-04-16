@@ -136,7 +136,8 @@ def grabImage(imgName, i):
             if isinstance(imgName, bytes):
                 imgName=imgName.decode('utf-8')
             #imgNameNew = os.path.normpath(imgName) # DOESN"T WORK BUT WORKS IN THE PYTHON PROMPT?! IMPOSSIBLE!!
-            imgNameNew = re.sub(r'/+', lambda matchobj: '/', imgName)
+            #imgNameNew = re.sub(r'/+', lambda matchobj: '/', imgName) # same as the above, not working here but works in the prompt
+            imgNameNew = os.path.join(os.path.dirname(imgName), os.path.basename(imgName))
             print(imgName, imgNameNew)
             # load the image and convert it to grayscale
             image=cv2.imread(imgNameNew)
