@@ -20,8 +20,9 @@ void enqueueIMURecon(VADL2022* v) {
       // IMU is from a file
       logFileName = v->imuDataSourcePath;
     }
+    const bool USE_DEFAULT_ARGS = false;
     using namespace pybind11::literals; // to bring in the `_a` literal
-    py::list gridBoxNumbers = IMURecon.attr("calc_displacement2")(logFileName, "launch_rail_box"_a="192", "my_thresh"_a="50", "my_post_drogue_delay_a"="0.85", "my_signal_length"_a="3", "my_t_sim_landing"_a="50", "ld_launch_angle"_a="2*pi/180", "ld_ssm"_a="3.2", "ld_dry_base"_a="15.89");
+    py::list gridBoxNumbers = IMURecon.attr("calc_displacement2")(logFileName, USE_DEFAULT_ARGS ? "launch_rail_box"_a="192" : "launch_rail_box"_a=v->launchBox, "my_thresh"_a="50", "my_post_drogue_delay_a"="0.85", "my_signal_length"_a="3", "my_t_sim_landing"_a="50", USE_DEFAULT_ARGS ? "ld_launch_angle"_a="2*pi/180" : "ld_launch_angle"_a=v->launchAngle, "ld_ssm"_a="3.2", "ld_dry_base"_a="15.89");
     py::print("C++ got gridBoxNumbers:", gridBoxNumbers);
 
     // Send the gridBoxNumbers on the radio

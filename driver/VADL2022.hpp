@@ -30,6 +30,9 @@ public:
     //bool GDSTimeout = 0;
 
     const char* imuDataSourcePath = nullptr;
+
+    const char* launchBox = nullptr;
+    const char* launchAngle = nullptr;
     
 private:
     void connect_GPIO(bool initCppGpio);
