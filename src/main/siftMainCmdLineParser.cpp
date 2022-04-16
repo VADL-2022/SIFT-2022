@@ -85,6 +85,9 @@ int parseCommandLineArgs(int argc, char** argv,
             cfg.frameskip = std::stoi(argv[i+1]);
             i++;
         }
+        else if (strcmp(argv[i], "--no-sky-detection") == 0) {
+            cfg.noSkyDetection = true;
+        }
         else if (strcmp(argv[i], "--main-mission") == 0) {
             cfg.mainMission = true;
         }
