@@ -11,7 +11,11 @@ def run(filenameMatrix,
     p0=np.array([x,y])
     # Get matrix as python list
     # HACK: no quote handling for filenameMatrix below
-    m0 = np.matrix(eval(subprocess.run(['bash', '-c', "matrix=$(cat \"" + filenameMatrix + "\" | sed 's/^/[/' | sed -E 's/.$/]&/' | sed -E 's/;/,/')"], capture_output=True, text=True).stdout))
+    print("filenameMatrix:",filenameMatrix)
+    evalThisDotStdout=subprocess.run(['bash', '-c', "matrix=$(cat \"" + filenameMatrix + "\" | sed 's/^/[/' | sed -E 's/.$/]&/' | sed -E 's/;/,/')"], capture_output=True, text=True)
+    stdout_=evalThisDotStdout.stdout
+    print("about to eval (stderr was", evalThisDotStdout.stderr, "):", stdout_)
+    m0 = np.matrix(eval(stdout_))
     print("m0:",m0)
     m1, firstImageWidth, firstImageHeight = oneShotMatch.run(filenameFirstImage, 'driver/vlcsnap-2022-04-05-15h36m34s616.png')
     mc = np.matrix([[-0.18071, -0.77495, 573.08481],
