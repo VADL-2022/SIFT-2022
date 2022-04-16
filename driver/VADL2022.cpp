@@ -208,39 +208,39 @@ bool sendOnRadio() {
   if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
     printf("hostname: %s\n", hostname);
     if (strcmp(hostname, "sift1") == 0) { //if (true) { //if (strcmp(hostname, "sift1") == 0 || strcmp(hostname, "fore1") == 0) { //if (std::string(hostname) == "sift1" || std::string(hostname) == "fore1") { //if (endsWith(hostname, "1")) {
-      // do radio
-      { out_guard();
-        std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
+      // // do radio
+      // { out_guard();
+      //   std::cout << "sendOnRadio and etc. enqueue" << std::endl; }
 
-      mainDispatchQueue.enqueue([=](){
+      // mainDispatchQueue.enqueue([=](){
         
-        if (!outputAcc.empty()) {
-          { out_guard();
-            std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
-          return;
-        }
+      //   if (!outputAcc.empty()) {
+      //     { out_guard();
+      //       std::cout << "Already sent video on radio, not doing it again (not implemented)" << std::endl; }
+      //     return;
+      //   }
 
-        outputAcc = getOutputVideo();
+      //   outputAcc = getOutputVideo();
 
-        // Run Python OpenCV SIFT on the output video
-        knnMatcherScriptArgs[0] = "1";
-        knnMatcherScriptArgs[1] = "1";
-        knnMatcherScriptArgs[2] = "0";
-        knnMatcherScriptArgs[3] = "0";
-        knnMatcherScriptArgs[4] = outputAcc.c_str();
-        knnMatcherScriptArgs[5] = "0";
-        { out_guard();
-          std::cout << "knn_matcher2 script enqueue" << std::endl; }
-        pyRunFile("knn_matcher2.py", 6, (char **)knnMatcherScriptArgs); // NOTE: This also enqueues..
+      //   // Run Python OpenCV SIFT on the output video
+      //   knnMatcherScriptArgs[0] = "1";
+      //   knnMatcherScriptArgs[1] = "1";
+      //   knnMatcherScriptArgs[2] = "0";
+      //   knnMatcherScriptArgs[3] = "0";
+      //   knnMatcherScriptArgs[4] = outputAcc.c_str();
+      //   knnMatcherScriptArgs[5] = "0";
+      //   { out_guard();
+      //     std::cout << "knn_matcher2 script enqueue" << std::endl; }
+      //   pyRunFile("knn_matcher2.py", 6, (char **)knnMatcherScriptArgs); // NOTE: This also enqueues..
 
-        // Send on radio for real now
-        sendOnRadioScriptArgs[0] = "0";
-        sendOnRadioScriptArgs[1] = "";
-        sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
-        { out_guard();
-          std::cout << "sendOnRadio script enqueue" << std::endl; }
-        bool success = pyRunFile("driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
-      },"sendOnRadioAndEtc",QueuedFunctionType::Misc);
+      //   // Send on radio for real now
+      //   sendOnRadioScriptArgs[0] = "0";
+      //   sendOnRadioScriptArgs[1] = "";
+      //   sendOnRadioScriptArgs[2] = outputAcc.c_str(); // Send this file on the radio
+      //   { out_guard();
+      //     std::cout << "sendOnRadio script enqueue" << std::endl; }
+      //   bool success = pyRunFile("driver/radio.py", 3, (char **)sendOnRadioScriptArgs); // NOTE: This also enqueues..
+      // },"sendOnRadioAndEtc",QueuedFunctionType::Misc);
     }
     else {
       // do gps

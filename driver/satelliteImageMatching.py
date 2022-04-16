@@ -12,7 +12,7 @@ def run(filenameMatrix,
     # Get matrix as python list
     # HACK: no quote handling for filenameMatrix below
     print("filenameMatrix:",filenameMatrix)
-    evalThisDotStdout=subprocess.run(['bash', '-c', "matrix=$(cat \"" + filenameMatrix + "\" | sed 's/^/[/' | sed -E 's/.$/]&/' | sed -E 's/;/,/')"], capture_output=True, text=True)
+    evalThisDotStdout=subprocess.run(['bash', '-c', "cat \"" + filenameMatrix + "\" | sed 's/^/[/' | sed -E 's/.$/]&/' | sed -E 's/;/,/'"], capture_output=True, text=True)
     stdout_=evalThisDotStdout.stdout
     print("about to eval (stderr was", evalThisDotStdout.stderr, "):", stdout_)
     m0 = np.matrix(eval(stdout_))
