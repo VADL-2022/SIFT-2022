@@ -1189,9 +1189,11 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (strcmp(argv[i], "--launch-box") == 0) { // Grid identifier for the launch rail's location
       launchBox = /*std::stoi*/(argv[i+1]); // PYTHON EXPRESSION
+      i++;
     }
     else if (strcmp(argv[i], "--launch-angle") == 0) { // angle of the launch rail
       launchAngle = /*std::stod*/(argv[i+1]); // PYTHON EXPRESSION
+      i++;
     }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
