@@ -134,9 +134,10 @@ def grabImage(imgName, i):
         else:
             if isinstance(imgName, bytes):
                 imgName=imgName.decode('utf-8')
-            print(imgName)
+            imgNameNew = os.path.normpath(imgName)
+            print(imgName, imgNameNew)
             # load the image and convert it to grayscale
-            image=cv2.imread(imgName)
+            image=cv2.imread(imgNameNew)
             print("image:",image,shouldRunSkyDetection)
             return image
     

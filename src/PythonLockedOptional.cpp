@@ -18,7 +18,7 @@ static thread_local bool lockedAlready;
 
 // For debugging
 pthread_mutex_t debugMutex;
-std::atomic<bool> inittedDebugMutex = false;
+std::atomic<int> inittedDebugMutex = 0; // 0 for false
 
 PyGILState_STATE* lockPython() {
     if (lockedAlready) {
@@ -31,9 +31,9 @@ PyGILState_STATE* lockPython() {
     // https://docs.python.org/3/c-api/init.html#non-python-created-threads
     static thread_local PyGILState_STATE gstate;
     if (CMD_CONFIG(debugMutexDeadlocks)) {
-        if (!inittedDebugMutex.compare_exchange_strong() {
+        if (inittedDebugMutex.fetch_or(1) == 0) { // [same for _or but is OR instead of XOR:] fetch_xor: "Atomically replaces the current value with the result of bitwise XOR of the value and arg. The operation is read-modify-write operation." ( https://en.cppreference.com/w/cpp/atomic/atomic/fetch_xor )   // https://stackoverflow.com/questions/9806200/how-to-atomically-negate-an-stdatomic-bool
             pthread_mutex_init(&debugMutex, nullptr);
-            inittedDebugMutex = true;
+            //inittedDebugMutex.store(1); should be done already by the header of this if statement.
         }
         
         // Lock this so we get reports of deadlocks since the PyGILState_Ensure() below doesn't report them as expected:
