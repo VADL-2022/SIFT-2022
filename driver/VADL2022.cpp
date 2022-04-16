@@ -1337,7 +1337,7 @@ VADL2022::VADL2022(int argc, char** argv)
     LIS331HH_videoCapArgs[7] = mecoDuration_str.c_str();
     LIS331HH_videoCapArgs[8] = l3g; // 0=don't use l3g
     LIS331HH_videoCapArgs[9] = useForeLandingDetection; // 0=don't look for landing on fore pi's
-    pyRunFile("driver/fore.py", sizeof(LIS331HH_videoCapArgs), (char **)LIS331HH_videoCapArgs);
+    pyRunFile("driver/fore.py", sizeof(LIS331HH_videoCapArgs) / sizeof(LIS331HH_videoCapArgs[0]), (char **)LIS331HH_videoCapArgs);
 
     // Then send on radio afterwards (into dispatch queue)
     auto ret = sendOnRadio();
