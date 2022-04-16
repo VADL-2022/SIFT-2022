@@ -177,7 +177,7 @@ realFlight="--takeoff-g-force $takeoffGForce --landing-g-force $landingGForce --
 # Add overrides to realFlight for testing:
 testing="$realFlight --takeoff-g-force 1 --landing-g-force 1"
 if [ "$mode" == "video_cap" ]; then
-    testing="$testing --time-to-apogee 5 --fore-stop-time 5"
+    testing="$testing --time-to-apogee 5000 --fore-stop-time 5000"
 fi
 
 #extraArgs="$testing"
