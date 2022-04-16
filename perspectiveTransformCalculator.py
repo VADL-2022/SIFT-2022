@@ -3,12 +3,20 @@ import numpy as np
 from sys import argv
 from math import sin, cos, pi, atan2, asin, sqrt, ceil
 import copy
+import src.python.General
 
 idMat=[[1.0, 0.0, 0.0],
        [0.0, 1.0, 0.0],
        [0.0, 0.0, 1.0]]
 
 imgOrig = cv2.imread(argv[1])
+distort=argv[2] == '1' if len(argv) > 2 else False
+if distort:
+    #imgOrig = src.python.General.distortImage(imgOrig)
+    pass
+undistort=argv[3] == '1' if len(argv) > 3 else False
+if undistort:
+    imgOrig = src.python.General.undisortImage(imgOrig)
 widthAndHeight=np.array(imgOrig.shape[:2])
 # Swap #
 temp=widthAndHeight[0]
@@ -16,6 +24,9 @@ widthAndHeight[0] = widthAndHeight[1]
 widthAndHeight[1]=temp
 # #
 Mcurrent=copy.deepcopy(idMat)
+Mcurrent=[[-0.18071, -0.77495, 573.08481],
+          [0.77063, 0.06183, -34.54974],
+          [-0.00005, -0.00003, 1.00000]]
 inc=0.5/2
 incTranslate=5
 from enum import Enum
@@ -58,9 +69,9 @@ while True:
             Mcurrent[0][0] -= inc
     elif key & 0xFF == ord('s'): # Grow image
         if shrinkMode == ShrinkMode.Height:
-            Mcurrent[1][1] += Mcurrent[1][1]*inc
+            Mcurrent[1][1] += inc
         elif shrinkMode == ShrinkMode.Width:
-            Mcurrent[0][0] += Mcurrent[0][0]*inc
+            Mcurrent[0][0] += inc
     elif key & 0xFF == ord('a'): # Translate image left
         Mcurrent[0][2] -= incTranslate
     elif key & 0xFF == ord('d'): # Translate image right

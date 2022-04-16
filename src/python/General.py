@@ -398,6 +398,7 @@ def undisortImage(image):
     hOrig, wOrig = image.shape[:2]
     image = cv2.resize(image, (w,h))
     image = cv2.remap(image, mapx, mapy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    #image = cv2.fisheye.undistortImage(image, k, dist)
     if not useFullImageInsteadOfROI:
         roiInsetX = 500
         roiInsetY = int(roiInsetX * 0.6)
@@ -417,4 +418,10 @@ def undisortImage(image):
     return image
 
 # Makes a 2D image into a fisheye distorted image
-def distortImage(img):
+# https://stackoverflow.com/questions/66059554/the-functions-distortpoints-and-undistortpoints-are-not-inverse-of-each-other
+# def distortImage(image):
+#     hOrig, wOrig = image.shape[:2]
+#     image = cv2.resize(image, (w,h))
+#     #image = cv2.fisheye.distortImage(image, k, dist) #<-- doesn't exist # TIP: USE cv2.fisheye.(un)distortPoints to grab original grid position from our fisheye ( https://docs.opencv.org/3.4/db/d58/group__calib3d__fisheye.html#gab738cdf90ceee97b2b52b0d0e7511541 )
+#     image = cv2.resize(image, (wOrig,hOrig))
+#     return image

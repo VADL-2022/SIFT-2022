@@ -33,6 +33,7 @@ int driverInput_fd_fcntl_flags = 0;
 #include "subscaleMain.hpp"
 #include "../src/utils.hpp"
 #include "IMURecon.hpp"
+#include "SatelliteMatch.hpp"
 
 // G Forces
 float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
@@ -681,6 +682,9 @@ void mainDeploymentDetectedOrDrogueFailed(LOG_T* log, float fseconds, bool force
       startDelayedSIFT(true /* <--boolean: when true, use the IMU in SIFT*/);
       // ^if an error happens, continue with this error, we might as well try recording IMU data at least.
       g_state = State_WaitingForMainStabilizationTime; // Now have sift use sift_time to wait for stabilization
+
+      // Enqueue grid identifier computation and sending for SIFT result
+      enqueueSatelliteMatch(v);
 
       // Enqueue the IMU flight path reconstruction
       enqueueIMURecon(v);

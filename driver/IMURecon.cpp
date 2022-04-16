@@ -1,3 +1,5 @@
+#include "IMURecon.hpp"
+
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
@@ -35,7 +37,7 @@ void enqueueIMURecon(VADL2022* v) {
     sendOnRadioScriptArgs[1] = gridBoxNumbers_str.c_str(); // String to send
     //sendOnRadioScriptArgs[2] = ""; // Send this file on the radio
     { out_guard();
-      std::cout << "sendOnRadio script execution" << std::endl; }
+      std::cout << "sendOnRadio script execution for IMURecon" << std::endl; }
     bool success = S_RunFile("driver/radio.py", 2, (char **)sendOnRadioScriptArgs);
 
     //PyGILState_Release(state); // TODO: implement properly
