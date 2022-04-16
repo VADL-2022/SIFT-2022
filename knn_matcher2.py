@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 from datetime import datetime
 from src.python import GridCell
+import re
 
 #img1 = cv2.imread('box.png',0)          # queryImage
 #img2 = cv2.imread('box_in_scene.png',0) # trainImage
@@ -134,10 +135,12 @@ def grabImage(imgName, i):
         else:
             if isinstance(imgName, bytes):
                 imgName=imgName.decode('utf-8')
-            imgNameNew = os.path.normpath(imgName)
-            print(imgName, imgNameNew)
+            #imgNameNew = os.path.normpath(imgName) # DOESN"T WORK BUT WORKS IN THE PYTHON PROMPT?! IMPOSSIBLE!!
+            imgNameNew = re.sub(r'/+', lambda matchobj: '/', imgName)
+            #print(imgName, imgNameNew)
             # load the image and convert it to grayscale
-            image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png')
+            image=cv2.imread(imgNameNew)
+            #image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png')
             print("image:",image,shouldRunSkyDetection)
             return image
     
@@ -274,8 +277,9 @@ def run():
         yc = int(hOrig / 2)
         radius2 = int(hOrig * 0.45)
         test_mask=cv2.circle(mask2, (xc,yc), radius2, (255,255,255), -1) # https://stackoverflow.com/questions/42346761/opencv-python-feature-detection-how-to-provide-a-mask-sift
-        cv2.imshow('test_mask', test_mask)
-        cv2.waitKey(0)
+        if showPreviewWindow:
+            cv2.imshow('test_mask', test_mask)
+            cv2.waitKey(0)
     
         kp1, des1 = sift.detectAndCompute(img1,mask = test_mask) # Returns keypoints and descriptors
     else:
