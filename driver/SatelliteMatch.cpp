@@ -9,6 +9,7 @@ namespace py = pybind11;
 #include "pyMainThreadInterface.hpp"
 #include "py.h"
 #include "../common.hpp"
+#include "../pythonCommon.hpp"
 
 // Returns a non-empty string if successful, otherwise it's empty
 std::string getOutputMatrix() {
@@ -103,20 +104,22 @@ std::string getOutputFirstImage() {
 
 void enqueueSatelliteMatch(VADL2022* v) {
   mainDispatchQueue.enqueue([=](){
-    std::string matrixFilename = getOutputMatrix();
-    std::string firstImageFilename = getOutputFirstImage();
-    
-    py::module_ match = py::module_::import("driver.satelliteImageMatching");
-    py::int_ gridIdentifier = match.attr("run")(matrixFilename, firstImageFilename, 640/2, 480/2); // HACK: hardcoded 480p
+    nonthrowing_python_nolock([](){
+      std::string matrixFilename = getOutputMatrix();
+      std::string firstImageFilename = getOutputFirstImage();
 
-    // Send the grid ID on the radio
-    const char *sendOnRadioScriptArgs[] = {NULL, NULL};
-    sendOnRadioScriptArgs[0] = "0"; // 1 to use stdin
-    std::string gridBoxNumbers_str = py::str(gridIdentifier); // Cast the python list to std::string
-    sendOnRadioScriptArgs[1] = gridBoxNumbers_str.c_str(); // String to send
-    //sendOnRadioScriptArgs[2] = ""; // Send this file on the radio
-    { out_guard();
-      std::cout << "sendOnRadio script execution for SIFT SatelliteMatch" << std::endl; }
-    bool success = S_RunFile("driver/radio.py", 2, (char **)sendOnRadioScriptArgs);
+      py::module_ match = py::module_::import("driver.satelliteImageMatching");
+      py::int_ gridIdentifier = match.attr("run")(matrixFilename, firstImageFilename, 640/2, 480/2); // HACK: hardcoded 480p
+
+      // Send the grid ID on the radio
+      const char *sendOnRadioScriptArgs[] = {NULL, NULL};
+      sendOnRadioScriptArgs[0] = "0"; // 1 to use stdin
+      std::string gridBoxNumbers_str = py::str(gridIdentifier); // Cast the python list to std::string
+      sendOnRadioScriptArgs[1] = gridBoxNumbers_str.c_str(); // String to send
+      //sendOnRadioScriptArgs[2] = ""; // Send this file on the radio
+      { out_guard();
+	std::cout << "sendOnRadio script execution for SIFT SatelliteMatch" << std::endl; }
+      bool success = S_RunFile("driver/radio.py", 2, (char **)sendOnRadioScriptArgs);
+    });
   },"satelliteImageMatching.py",QueuedFunctionType::Python);
 }

@@ -152,6 +152,7 @@
 		303CB675276319A700ABDBF1 /* printf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = printf.h; sourceTree = "<group>"; };
 		303CB67727631A0200ABDBF1 /* _putchar.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = _putchar.c; sourceTree = "<group>"; };
 		303CB67927631A4800ABDBF1 /* file_descriptors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = file_descriptors.h; sourceTree = "<group>"; };
+		304BE48D280B11B000061D43 /* pythonCommon.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = pythonCommon.hpp; path = ../../pythonCommon.hpp; sourceTree = "<group>"; };
 		305C740327FB904C008FD10A /* sharedMemory.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = sharedMemory.hpp; sourceTree = "<group>"; };
 		305C740427FB904C008FD10A /* SharedMemoryConvention.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SharedMemoryConvention.hpp; sourceTree = "<group>"; };
 		305C740627FB904C008FD10A /* SharedMemoryConvention.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SharedMemoryConvention.cpp; sourceTree = "<group>"; };
@@ -309,6 +310,7 @@
 				302D771A27DAB39E003891D7 /* commonOutMutex.cpp */,
 				302D771927DAB39E003891D7 /* commonOutMutex.hpp */,
 				302D772027DAC966003891D7 /* commonOutMutex.h */,
+				304BE48D280B11B000061D43 /* pythonCommon.hpp */,
 				30ED93B127A1B2DB001D8655 /* driver */,
 				300EE48327209F9400969C5F /* src */,
 				300EE4B827209FF000969C5F /* Config.xcconfig */,
