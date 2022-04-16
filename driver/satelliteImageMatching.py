@@ -25,4 +25,5 @@ def run(filenameMatrix,
     # Reference for the below: pPrime = p0*np.linalg.pinv(m0)*m1*mc
     pPrime = cv2.perspectiveTransform(cv2.perspectiveTransform(cv2.perspectiveTransform(np.array([[p0]], dtype=np.float32), np.linalg.pinv(m0)),m1),mc)
     print("pPrime:", pPrime)
+    pPrime=pPrime[0][0] # unwrap the junk one-element embedding arrays
     return src.python.GridCell.getGridCellIdentifier(1796, 1796, pPrime[0], pPrime[1])
