@@ -134,6 +134,8 @@ mkShell {
       (callPackage ./nix/lap.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
       # #
 
+      pandas
+
       #scipy
 
       # For LIS331HH IMU
