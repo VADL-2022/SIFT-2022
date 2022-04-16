@@ -148,6 +148,7 @@ def grabImage(imgName, i):
     if shouldRunSkyDetection and shouldDiscardImage(greyscale, i):
         return None, True, greyscale
     else:
+        print("FRAME:",frame)
         return frame, False, greyscale
 
 
