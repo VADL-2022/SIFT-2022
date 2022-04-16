@@ -127,7 +127,7 @@ def find_homography(keypoints_pic1, keypoints_pic2, matches) -> (List, np.float3
 
         return good, transformation_matrix, transformation_rigid_matrix
 
-def grabImage(imgName, i):
+def grabImage(imgName, i, firstImage):
     def grabInternal(imgName):
         if grabMode == 1:
             ret,frame = reader.read()
@@ -163,6 +163,13 @@ def grabImage(imgName, i):
     frame = grabInternal(imgName)
     if frame is None:
         return None, False, None
+    if True: #if firstImage is not None:
+        # Convert to same format
+        scaling_factor=1.0/255.0 # technically this works only for uint8-based images
+        if frame.dtype != np.uint8:
+            print("Error but continuing: incorrect dtype for frame:",frame.dtype)
+        if frame.dtype != np.float32:
+            frame = np.float32(frame)*scaling_factor
     if shouldRunUndistort:
         frame = undisortImage(frame)
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -281,7 +288,7 @@ def run():
         #exit(0)
 
         while img1 is None and discarded:
-            img1, discarded, greyscale = grabImage(imgs[i], i)
+            img1, discarded, greyscale = grabImage(imgs[i], i, None)
             i+=1
         firstImage = img1
         
@@ -329,7 +336,7 @@ def run():
                 if k & 0xFF == ord(applyMatKey):
                     waitForInput(img2, firstImage, applyMatKey)
         
-        img2, discarded, greyscale = grabImage(imgName, i)
+        img2, discarded, greyscale = grabImage(imgName, i, firstImage)
         if img2 is None and not discarded:
             print("img2 was None")
             cv2.waitKey(0)
