@@ -31,7 +31,7 @@ PyGILState_STATE* lockPython() {
     // https://docs.python.org/3/c-api/init.html#non-python-created-threads
     static thread_local PyGILState_STATE gstate;
     if (CMD_CONFIG(debugMutexDeadlocks)) {
-        if (!inittedDebugMutex) {
+        if (!inittedDebugMutex.compare_exchange_strong() {
             pthread_mutex_init(&debugMutex, nullptr);
             inittedDebugMutex = true;
         }

@@ -137,6 +137,7 @@ def grabImage(imgName, i):
             print(imgName)
             # load the image and convert it to grayscale
             image=cv2.imread(imgName)
+            print("image:",image,shouldRunSkyDetection)
             return image
     
     frame = grabInternal(imgName)
@@ -148,7 +149,6 @@ def grabImage(imgName, i):
     if shouldRunSkyDetection and shouldDiscardImage(greyscale, i):
         return None, True, greyscale
     else:
-        print("FRAME:",frame)
         return frame, False, greyscale
 
 
