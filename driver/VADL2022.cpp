@@ -32,6 +32,7 @@ int driverInput_fd_fcntl_flags = 0;
 #include <float.h>
 #include "subscaleMain.hpp"
 #include "../src/utils.hpp"
+#include "IMURecon.hpp"
 
 // G Forces
 float TAKEOFF_G_FORCE = 0.5; // Takeoff is 5-7 g's or etc.
@@ -71,7 +72,7 @@ std::string TAKEOFF_G_FORCE_str;
 std::string LANDING_G_FORCE_str;
 #define USE_LIS331HH
 #ifdef USE_LIS331HH // Using the alternative IMU
-const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+const char *LIS331HH_videoCapArgs[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 #endif
 std::string outputAcc;
 const char *sendOnRadioScriptArgs[] = {NULL, NULL, NULL};
