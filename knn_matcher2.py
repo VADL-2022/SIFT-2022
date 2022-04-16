@@ -137,11 +137,14 @@ def grabImage(imgName, i):
                 imgName=imgName.decode('utf-8')
             #imgNameNew = os.path.normpath(imgName) # DOESN"T WORK BUT WORKS IN THE PYTHON PROMPT?! IMPOSSIBLE!!
             #imgNameNew = re.sub(r'/+', lambda matchobj: '/', imgName) # same as the above, not working here but works in the prompt
-            imgNameNew = os.path.join(os.path.dirname(imgName), os.path.basename(imgName))
+            #imgNameNew = os.path.join(os.path.dirname(imgName), os.path.basename(imgName)) # same as above
+            imgNameNew = os.path.dirname(imgName).rstrip('/') + os.path.basename(imgName).lstrip('/')
+            import code
+            code.InteractiveConsole(locals=locals()).interact()
             print(imgName, imgNameNew)
             # load the image and convert it to grayscale
             image=cv2.imread(imgNameNew)
-            #image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png')
+            #image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png') # THIS WORKS BUT NOT THE ABOVE when imgNameNew is as mentioned above
             print("image:",image,shouldRunSkyDetection)
             return image
     
