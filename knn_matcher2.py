@@ -159,8 +159,9 @@ def grabImage(imgName, i, firstImage):
             #image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png') # THIS WORKS BUT NOT THE ABOVE when imgNameNew is as mentioned above
             print("image:",image,shouldRunSkyDetection)
             return image
-    
-    frame = grabInternal(imgName)
+
+    for i in range(0,20):
+        frame = grabInternal(imgName)
     if frame is None:
         return None, False, None
     if True: #if firstImage is not None:
@@ -290,7 +291,7 @@ def run():
         for j in range(0, skip):
             i += 1
             #print('skip')
-            next(imgs_iter)
+            img1, discarded, greyscale = grabImage(imgs[i], i, None)
         #exit(0)
 
         while img1 is None and discarded:
