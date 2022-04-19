@@ -76,6 +76,11 @@ py::array_t<float> cv_mat_float32_1c_to_numpy(cv::Mat& input) {
     return dst;
 }
 
+py::array_t<double> cv_mat_float64_1c_to_numpy(cv::Mat& input) {
+    py::array_t<double> dst = py::array_t<double>({ input.rows,input.cols }, (double*)input.data);
+    return dst;
+}
+
 
 
 //PYBIND11_MODULE(cv_mat_warper, m) {

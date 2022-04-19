@@ -16,7 +16,7 @@
 struct DataSourceBase;
 struct DataOutputBase;
 cv::Mat prepareCanvas(ProcessedImage<SIFT_T>& img);
-void showAnImageUsingCanvasesReadyQueue(DataSourceBase* src, DataOutputBase& o2);
+void showAnImageUsingCanvasesReadyQueue(DataSourceBase* src, DataOutputBase& o2, cv::Mat& firstImage, cv::Mat& M);
 
 extern Queue<ProcessedImage<SIFT_T>, 16> canvasesReadyQueue;
 #endif

@@ -69,7 +69,6 @@ struct StreamDataSource : public DataSourceBase
 //    bool shouldCrop() const { return false; }
 //    cv::Rect crop() const { return cv::Rect(); }
     
-    size_t currentIndex; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
 protected:
     std::function<cv::Mat(void)> getNextInStream;
@@ -125,7 +124,6 @@ struct FolderDataSource : public DataSourceBase
 //    bool shouldCrop() const { return false; }
 //    cv::Rect crop() const { return cv::Rect(); }
     
-    size_t currentIndex; // Index to save into next
     std::unordered_map<size_t, cv::Mat> cache;
 //private:
     std::vector<std::string> files;

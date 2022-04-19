@@ -419,9 +419,13 @@ int mainMission(DataSourceT* src,
                                     std::shared_ptr<IMUData>());
             
             // Show a bit (twice because with only one call to showAnImageUsingCanvasesReadyQueue() we may fill up the canvasesReadyQueue since it only dequeues once per call to showAnImageUsingCanvasesReadyQueue())
-            showAnImageUsingCanvasesReadyQueue(src, o2);
+            lastImageToFirstImageTransformationMutex.lock();
+            showAnImageUsingCanvasesReadyQueue(src, o2, firstImage, lastImageToFirstImageTransformation);
+            lastImageToFirstImageTransformationMutex.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            showAnImageUsingCanvasesReadyQueue(src, o2);
+            lastImageToFirstImageTransformationMutex.lock();
+            showAnImageUsingCanvasesReadyQueue(src, o2, firstImage, lastImageToFirstImageTransformation);
+            lastImageToFirstImageTransformationMutex.unlock();
         }
         i = i2;
         // Skip specific indices
@@ -445,9 +449,13 @@ int mainMission(DataSourceT* src,
                                             std::shared_ptr<IMUData>());
                     
                     // Show a bit (twice because with only one call to showAnImageUsingCanvasesReadyQueue() we may fill up the canvasesReadyQueue since it only dequeues once per call to showAnImageUsingCanvasesReadyQueue())
-                    showAnImageUsingCanvasesReadyQueue(src, o2);
+                    lastImageToFirstImageTransformationMutex.lock();
+                    showAnImageUsingCanvasesReadyQueue(src, o2, firstImage, lastImageToFirstImageTransformation);
+                    lastImageToFirstImageTransformationMutex.unlock();
                     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-                    showAnImageUsingCanvasesReadyQueue(src, o2);
+                    lastImageToFirstImageTransformationMutex.lock();
+                    showAnImageUsingCanvasesReadyQueue(src, o2, firstImage, lastImageToFirstImageTransformation);
+                    lastImageToFirstImageTransformationMutex.unlock();
                 }
                 i = pair.second; // -1 due to the i++
                 continue;
@@ -984,7 +992,9 @@ int mainMission(DataSourceT* src,
         
         skipImage:
         // Show images if we have them and if we are showing a preview window
-        showAnImageUsingCanvasesReadyQueue(src, o2);
+        lastImageToFirstImageTransformationMutex.lock();
+        showAnImageUsingCanvasesReadyQueue(src, o2, firstImage, lastImageToFirstImageTransformation);
+        lastImageToFirstImageTransformationMutex.unlock();
         
         showTimers("main");
     }

@@ -472,3 +472,5 @@ sftp\:\/\/.*\.local →  `
 
 
 ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/output.mp4  --main-mission-interactive
+
+python3 knn_matcher2.py  1 1 0 0 Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/output.mp4  1
