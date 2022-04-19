@@ -30,7 +30,7 @@ let
   }); # this is two lambdas (curried + nested)
   nixpkgs = import pkgs {};
   finalPkgs = import pkgs {
-    system = if (nixpkgs.hostPlatform.isDarwin) then "x86_64-darwin" else builtins.currentSystem; # For M1 Mac to work
+    system = if false then "x86_64-darwin" else builtins.currentSystem; # For M1 Mac to work
     # Identity: overlays = [];
     overlays = [ myOverlay ];
   };
@@ -85,7 +85,7 @@ mkShell {
 
       #] ++ (builtins.exec ["bash" "-c", "xcrun --show-sdk-version"] >= 11.3 [] # no jemalloc for Latif due to newer macOS SDK impurity causing jemalloc build to fail..
       #else: [
-      jemalloc #] 
+      #jemalloc #] 
       
     #bear # Optional, for generating emacs compile_commands.json
 
@@ -130,7 +130,7 @@ mkShell {
       #(callPackage ./skyDetection/nix/matplotlib.nix {})
       #(callPackage tensorflow {matplotlib=matplotlib_; pyroma=pyroma_;})
       #tensorflow #tensorflow.override (old : {nativeBuildInputs.matplotlib=(callPackage ./skyDetection/nix/matplotlib.nix {Cocoa=darwin.apple_sdk.frameworks.Cocoa;}); nativeBuildInputs.pyroma=pyroma_;}) # nix show-derivation /nix/store/95jcq26lvz2fijxndja6yp2dpq4mi293-python3.7-tensorflow-2.4.2.drv
-      (callPackage ./nix/tensorflow.nix {keras=Keras; protobuf-python=protobuf; flatbuffers-python=flatbuffers; flatbuffers-core=finalPkgs.flatbuffers; lmdb-core=finalPkgs.lmdb; protobuf-core=finalPkgs.protobuf; Foundation=darwin.apple_sdk.frameworks.Foundation; Security=darwin.apple_sdk.frameworks.Security; cctools=darwin.cctools;})
+      #(callPackage ./nix/tensorflow.nix {keras=Keras; protobuf-python=protobuf; flatbuffers-python=flatbuffers; flatbuffers-core=finalPkgs.flatbuffers; lmdb-core=finalPkgs.lmdb; protobuf-core=finalPkgs.protobuf; Foundation=darwin.apple_sdk.frameworks.Foundation; Security=darwin.apple_sdk.frameworks.Security; cctools=darwin.cctools;})
       (callPackage ./nix/lap.nix {buildPythonPackage=python37m.pkgs.buildPythonPackage;})
       # #
 

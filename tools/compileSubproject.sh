@@ -9,8 +9,9 @@ if [ "$OS" == "Darwin" ]; then
     # https://stackoverflow.com/questions/16387484/clangllvm-compile-with-frameworks
     CC="xcrun -sdk macosx clang"
     CXX="xcrun -sdk macosx clang++"
-    CFLAGS="$CFLAGS -target x86_64-apple-macos10.15 -I/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/include -I/nix/store/690a3qx1w73vd86aawgih3fv5bn393lf-python3.7-pybind11-2.7.0/include"
-    LFLAGS="$LDFLAGS -lc++fs"
+    CFLAGS="$CFLAGS -I/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/include -I/nix/store/690a3qx1w73vd86aawgih3fv5bn393lf-python3.7-pybind11-2.7.0/include"
+    #CFLAGS="$CFLAGS -target x86_64-apple-macos10.15 -I/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/include -I/nix/store/690a3qx1w73vd86aawgih3fv5bn393lf-python3.7-pybind11-2.7.0/include"
+    #LFLAGS="$LDFLAGS -lc++fs"
     LFLAGS="$LFLAGS $LDFLAGS -framework CoreGraphics -framework Foundation"
 else
     CC="clang"
