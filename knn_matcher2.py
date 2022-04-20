@@ -5,12 +5,16 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 from src.python.General import shouldDiscardImage, undisortImage
+import src.python.General
 import os
 from pathlib import Path
 import sys
 from datetime import datetime
 from src.python import GridCell
 import re
+
+class EarlyExitException(Exception):
+    pass
 
 #img1 = cv2.imread('box.png',0)          # queryImage
 #img2 = cv2.imread('box_in_scene.png',0) # trainImage
@@ -37,6 +41,7 @@ sift = cv2.xfeatures2d.SIFT_create(nfeatures, nOctaveLayers, contrastThreshold, 
 # BFMatcher with default params
 bf = cv2.BFMatcher()
 
+isMain=__name__ == "__main__"
 if __name__ == "__main__":
     # Config #
     mode = 1
@@ -46,6 +51,7 @@ if __name__ == "__main__":
     skip=int(sys.argv[4]) if len(sys.argv) > 4 else 0
     videoFilename=sys.argv[5] if len(sys.argv) > 5 else None
     showPreviewWindow=sys.argv[6] == '1' if len(sys.argv) > 6 else True
+    frameSkip=int(sys.argv[7]) if len(sys.argv) > 7 else 1
     imgs=None
     if grabMode==1:
         reader=cv2.VideoCapture(
@@ -127,7 +133,7 @@ def find_homography(keypoints_pic1, keypoints_pic2, matches) -> (List, np.float3
 
         return good, transformation_matrix, transformation_rigid_matrix
 
-def grabImage(imgName, i, firstImage):
+def grabImage(imgName, i, firstImage, skip=False):
     def grabInternal(imgName):
         if grabMode == 1:
             ret,frame = reader.read()
@@ -135,6 +141,10 @@ def grabImage(imgName, i, firstImage):
         else:
             if isinstance(imgName, bytes):
                 imgName=imgName.decode('utf-8')
+            elif not isinstance(imgName, str):
+                # Assume cv matrix
+                print("grabInternal: cv matrix for image", i)
+                return imgName
             #imgNameNew = os.path.normpath(imgName) # DOESN"T WORK BUT WORKS IN THE PYTHON PROMPT?! IMPOSSIBLE!!
             #imgNameNew = re.sub(r'/+', lambda matchobj: '/', imgName) # same as the above, not working here but works in the prompt
             #imgNameNew = os.path.join(os.path.dirname(imgName), os.path.basename(imgName)) # same as above
@@ -157,11 +167,13 @@ def grabImage(imgName, i, firstImage):
             # load the image and convert it to grayscale
             image=cv2.imread(imgNameNew)
             #image=cv2.imread('dataOutput/2022-04-16_02_02_13_CDT/firstImage0.png') # THIS WORKS BUT NOT THE ABOVE when imgNameNew is as mentioned above
-            print("image:",image,shouldRunSkyDetection)
+            #print("image:",image,shouldRunSkyDetection)
             return image
 
-    for i in range(0,20):
+    for i in range(0,frameSkip):
         frame = grabInternal(imgName)
+        if skip:
+            return None, True, None
     if frame is None:
         return None, False, None
     if True: #if firstImage is not None:
@@ -178,9 +190,11 @@ def grabImage(imgName, i, firstImage):
         if frame.dtype != np.uint8:
             frame = np.uint8(frame)*scaling_factor
     if shouldRunUndistort:
-        frame = undisortImage(frame)
+        #frame = undisortImage(frame)
+        frame = src.python.General.undistortImg(frame)
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     if shouldRunSkyDetection and shouldDiscardImage(greyscale, i):
+        print("Discarded image", i)
         return None, True, greyscale
     else:
         return frame, False, greyscale
@@ -249,7 +263,15 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     dstPts=dstPts[0] # It was wrapped by an extra array
     # Show average
     dstMidpoint = np.mean(dstPts, axis=0) # https://stackoverflow.com/questions/15819980/calculate-mean-across-dimension-in-a-2d-array
+    # undistort midpoint
+    #undistortPoints = cv2.fisheye.undistortPoints # gives error: `cv2.error: OpenCV(4.5.2) /private/var/folders/yg/9244vmfs33v7l8m1wm7glkp40000gn/T/nix-build-opencv-4.5.2.drv-0/source/modules/calib3d/src/fisheye.cpp:331: error: (-215:Assertion failed) D.total() == 4 && K.size() == Size(3, 3) && (K.depth() == CV_32F || K.depth() == CV_64F) in function 'undistortPoints'`
+    #undistortPoints = cv2.undistortPoints
+    dstMidpointUndist = src.python.General.undistortPoints(np.array([[dstMidpoint*(src.python.General.w/640)]], dtype=np.float32))[0][0]*(640/src.python.General.w)
+    #dstMidpointUndist = undistortPoints(np.array([[dstMidpoint*(src.python.General.w/640)]], dtype=np.float32), src.python.General.k, src.python.General.dist)[0][0]*(640/src.python.General.w)
+    print("dstMidpointUndist:",dstMidpointUndist)
     cv2.circle(img, list(map(int, dstMidpoint)), 3, (255, 0, 0), 3)
+    cv2.circle(img, list(map(int, dstMidpointUndist)), 3, (255, 255, 0), 3)
+    cv2.circle(img, list(map(int, np.array([width/2,height/2])+dstMidpointUndist-dstMidpoint)), 3, (0, 255, 255), 3)
     if len(dstPts) > 1:
         for i in range(0, len(dstPts)-1):
             print(dstPts[i])
@@ -291,13 +313,17 @@ def run():
         for j in range(0, skip):
             i += 1
             #print('skip')
-            img1, discarded, greyscale = grabImage(imgs[i], i, None)
+            img1, discarded, greyscale = grabImage(imgs[i], i, None, True)
         #exit(0)
 
         while img1 is None and discarded:
+            firstImageFilename=imgs[i]
             img1, discarded, greyscale = grabImage(imgs[i], i, None)
             i+=1
         firstImage = img1
+        if showPreviewWindow:
+            cv2.imshow('firstImage (index ' + str(i-1) + ')', firstImage)
+            cv2.waitKey(0)
         
         mask2 = np.zeros_like(greyscale)
         hOrig, wOrig = img1.shape[:2]
@@ -335,7 +361,16 @@ def run():
             applyMatKey='a'
             showLandingPosKey='l'
             if k & 0xFF == ord('q'):
-                exit(0)
+                if isMain:
+                    exit(0)
+                else:
+                    e = EarlyExitException()
+                    e.acc = acc
+                    e.w=wOrig_
+                    e.h=hOrig_
+                    e.firstImage=firstImage
+                    e.firstImageFilename=firstImageFilename
+                    raise e
             elif k & 0xFF == ord(applyMatKey) and img2 is not None: # Apply matrix with lerp
                 showLerpController(firstImage, acc, applyMatKey)
             elif k & 0xFF == ord(showLandingPosKey) and img2 is not None: # Show landing position
@@ -346,7 +381,8 @@ def run():
         img2, discarded, greyscale = grabImage(imgName, i, firstImage)
         if img2 is None and not discarded:
             print("img2 was None")
-            cv2.waitKey(0)
+            if showPreviewWindow:
+                cv2.waitKey(0)
             break
         if img2 is None and discarded:
             waitForInput(None, firstImage)
@@ -419,7 +455,7 @@ def run():
     if not showPreviewWindow or __name__ == "__main__":
         # Save transformation
         cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
-    return acc, wOrig_, hOrig_
+    return acc, wOrig_, hOrig_, firstImage, firstImageFilename
 
 if __name__ == "__main__":
     run()
