@@ -378,8 +378,8 @@ def run(pSave=None):
                 #cv2.imwrite(path1, acc)
                 with open(path1, 'w') as f:
                     f.write("[" + str(np.array(acc[0])[0][0]) + ", " + str(np.array(acc[0])[0][1]) + ", " + str(np.array(acc[0])[0][2]) + ";\n")
-                    f.write("" + str(np.array(acc[1])[0][0]) + ", " + str(np.array(acc[1])[0][1]) + ", " + str(np.array(acc[1])[0][2]) + ";\n")
-                    f.write("[" + str(np.array(acc[2])[0][0]) + ", " + str(np.array(acc[2])[0][1]) + ", " + str(np.array(acc[2])[0][2]) + "]\n")
+                    f.write(" " + str(np.array(acc[1])[0][0]) + ", " + str(np.array(acc[1])[0][1]) + ", " + str(np.array(acc[1])[0][2]) + ";\n")
+                    f.write(" " + str(np.array(acc[2])[0][0]) + ", " + str(np.array(acc[2])[0][1]) + ", " + str(np.array(acc[2])[0][2]) + "]\n")
             else:
                 print("acc is None")
 
