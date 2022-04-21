@@ -298,15 +298,16 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     key = cv2.waitKey(0)
     return img, key
     
-def run():
+def run(pSave=None):
     if not showPreviewWindow:
-        pSave="dataOutput"
+        if pSave is None:
+            pSave="dataOutput"
 
-        now = datetime.now() # current date and time
-        date_time = now.strftime("knnMatcher_%m_%d_%Y_%H_%M_%S")
-        pSave = os.path.join(pSave, date_time)
+            now = datetime.now() # current date and time
+            date_time = now.strftime("knnMatcher_%m_%d_%Y_%H_%M_%S")
+            pSave = os.path.join(pSave, date_time)
 
-        Path(pSave).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
+            Path(pSave).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
     else:
         pSave=None
     

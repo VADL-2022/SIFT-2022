@@ -17,6 +17,7 @@ import threading, queue
 import signal
 import knn_matcher2
 import argparse
+from datetime import datetime
 
 shouldStop=videoCapture.AtomicInt(0)
 
@@ -96,7 +97,7 @@ print(namespace)
 showPreviewWindow=namespace.show_preview_window
 skip=namespace.skip
 frameSkip=namespace.frameskip
-def runOnTheWayDown(capAPI):
+def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
     knn_matcher2.shouldRunSkyDetection = True
@@ -106,17 +107,24 @@ def runOnTheWayDown(capAPI):
     knn_matcher2.showPreviewWindow = showPreviewWindow
     knn_matcher2.reader = capAPI
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
-    rets = knn_matcher2.run()
+    rets = knn_matcher2.run(pSave)
     return rets
 
 if __name__ == '__main__':
     name = "SIFT_Cam"
     signal.signal(signal.SIGINT, signal_handler)
-    startVideoCapture(name, onFrame=onFrame, fps=5, onSetVideoCapture=onSetVideoCapture)
+    
+    now = datetime.now() # current date and time
+    date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
+    o1=now.strftime("%Y-%m-%d_%H_%M_%S_%Z")
+    outputFolderPath=os.path.join('.', 'dataOutput', o1)
+    pSave = outputFolderPath
+    
+    startVideoCapture(name, onFrame=onFrame, fps=5, onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave)
     
     try:
         # NOTE: first image given should match what the sky detector chooses so we re-set firstImage and firstImageFilename here
-        accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(cv2.VideoCapture(videoFilename) if videoFileDataSource else customVideoCapture)
+        accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(cv2.VideoCapture(videoFilename) if videoFileDataSource else customVideoCapture, pSave)
     except knn_matcher2.EarlyExitException as e:
         accMat = e.acc
         w=e.w

@@ -71,6 +71,7 @@ def run(shouldStop # AtomicInt
         , frame_width=640
         , frame_height=480
         , onSetVideoCapture = None # handler for when video capture object changes
+        , outputFolderPath = None
         ):
     global mainThreadShouldFlush
     global dispatchQueue
@@ -102,8 +103,10 @@ def run(shouldStop # AtomicInt
     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
     date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
     print("Old width,height:",frame_width,frame_height)
-    o1=now.strftime("%Y-%m-%d_%H_%M_%S_%Z")
-    p=os.path.join('.', 'dataOutput', o1,'outpy' + date_time + '.mp4')
+    if outputFolderPath is None:
+        o1=now.strftime("%Y-%m-%d_%H_%M_%S_%Z")
+        outputFolderPath=os.path.join('.', 'dataOutput', o1)
+    p=os.path.join(outputFolderPath,'outpy' + date_time + '.mp4')
     try:
       os.mkdir(os.path.dirname(p), mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     except FileExistsError:
