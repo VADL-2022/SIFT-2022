@@ -200,6 +200,7 @@ def grabImage(imgName, i, firstImage, skip=False):
             print("Error but continuing: incorrect dtype for frame:",frame.dtype)
         if frame.dtype != np.uint8:
             frame = np.uint8(frame)*scaling_factor
+        print("DTYPE &&&&&&&&&&&&&&&&&&&&&:", frame.dtype)
     greyscaleOrig = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     if shouldRunUndistort:
         #frame = undisortImage(frame)
