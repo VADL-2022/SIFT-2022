@@ -22,8 +22,8 @@ def runOnTheWayDown(videoFilename):
     knn_matcher2.showPreviewWindow = showPreviewWindow
     knn_matcher2.reader = cv2.VideoCapture(videoFilename)
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
-    mat, w, h, firstImage, firstImageFilename = knn_matcher2.run()
-    return mat, w, h, firstImage, firstImageFilename
+    rets = knn_matcher2.run()
+    return rets
 videoFilename=sys.argv[1] if len(sys.argv) > 1 else 'Data/fullscale3/sift2/2022-04-16_12_08_35_CDT/output.mp4'
 firstImageFilename=sys.argv[2] if len(sys.argv) > 2 else "Data/fullscale3/sift2/2022-04-16_12_08_35_CDT/firstImage0.png"
 def evalMatrix(matStr):
@@ -45,7 +45,7 @@ firstImage=cv2.imread(firstImageFilename)
 if useExistingMatrix is None:
     try:
         # NOTE: first image given should match what the sky detector chooses so we re-set firstImage and firstImageFilename here
-        accMat, w, h, firstImage, firstImageFilename = runOnTheWayDown(videoFilename)
+        accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(videoFilename)
     except knn_matcher2.EarlyExitException as e:
         accMat = e.acc
         w=e.w
@@ -61,7 +61,9 @@ else:
 
 m0Res=cv2.warpPerspective(firstImage, np.linalg.pinv(accMat), (w,h))
 cv2.imshow('sift on the way down',m0Res)
-gridID, m0, m1, mc, firstImage_, firstImageFilename_=driver.satelliteImageMatching.run(accMat, firstImageFilename # not undistorted
+gridID, m0, m1, mc, firstImage_, firstImageOrig, firstImageFilename_=driver.satelliteImageMatching.run(accMat,
+                                                                                                       firstImageOrig # not undistorted
+                                                                                                       # firstImage # distorted
                                                                                        , 640/2, 480/2, showPreviewWindow)
 #assert(m0==accMat)
 

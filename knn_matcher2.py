@@ -192,13 +192,16 @@ def grabImage(imgName, i, firstImage, skip=False):
             frame = np.uint8(frame)*scaling_factor
     if shouldRunUndistort:
         #frame = undisortImage(frame)
+        frameOrig = frame.copy()
         frame = src.python.General.undistortImg(frame)
+    else:
+        frameOrig = frame
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     if shouldRunSkyDetection and shouldDiscardImage(greyscale, i):
         print("Discarded image", i)
         return None, True, greyscale
     else:
-        return frame, False, greyscale
+        return (frame, frameOrig), False, greyscale
 
 
 # https://medium.com/swlh/youre-using-lerp-wrong-73579052a3c3
@@ -302,7 +305,7 @@ def run():
     elif grabMode == 0 or grabMode == 3:
         imgs=p.stdout.split(b'\n')
     i = 0
-    img1 = None
+    img1Pair = None
     discarded = True # Assume True to start with
     greyscale = None
     
@@ -314,19 +317,21 @@ def run():
         for j in range(0, skip):
             i += 1
             #print('skip')
-            img1, discarded, greyscale = grabImage(imgs[i], i, None, True)
+            img1Pair, discarded, greyscale = grabImage(imgs[i], i, None, True)
         #exit(0)
 
-        while img1 is None or discarded:
+        while img1Pair is None or discarded:
             firstImageFilename=imgs[i]
-            img1, discarded, greyscale = grabImage(imgs[i], i, None)
+            img1Pair, discarded, greyscale = grabImage(imgs[i], i, None)
             i+=1
-        firstImage = img1
+        firstImage = img1Pair[0]
+        firstImageOrig=img1Pair[1] # undistorted etc.
         if showPreviewWindow:
             cv2.imshow('firstImage (index ' + str(i-1) + ')', firstImage)
             cv2.waitKey(0)
         
         mask2 = np.zeros_like(greyscale)
+        img1=img1Pair[0]
         hOrig, wOrig = img1.shape[:2]
         hOrig_=hOrig
         wOrig_=wOrig
@@ -379,16 +384,17 @@ def run():
                 if k & 0xFF == ord(applyMatKey):
                     waitForInput(img2, firstImage, applyMatKey)
         
-        img2, discarded, greyscale = grabImage(imgName, i, firstImage)
-        if img2 is None and not discarded:
+        img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
+        if img2Pair is None and not discarded:
             print("img2 was None")
             if showPreviewWindow:
                 cv2.waitKey(0)
             break
-        if img2 is None and discarded:
+        if img2Pair is None and discarded:
             waitForInput(None, firstImage)
             i += 1
             continue # Keep img1 as the previous image so we can match it next time
+        img2=img2Pair[0]
         hOrig, wOrig = img2.shape[:2]
 
         # find the keypoints and descriptors with SIFT
@@ -486,7 +492,7 @@ def run():
     if not showPreviewWindow or __name__ == "__main__":
         # Save transformation
         cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
-    return acc, wOrig_, hOrig_, firstImage, firstImageFilename
+    return acc, wOrig_, hOrig_, firstImage, firstImageOrig, firstImageFilename
 
 if __name__ == "__main__":
     run()
