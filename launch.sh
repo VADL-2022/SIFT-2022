@@ -28,8 +28,6 @@ fi
 # Disable ASLR for slight speedup
 echo 0 | sudo tee /proc/sys/kernel/randomize_va_space # https://askubuntu.com/questions/318315/how-can-i-temporarily-disable-aslr-address-space-layout-randomization
 
-export PYTHONUNBUFFERED='1' # https://stackoverflow.com/questions/27534609/tee-does-not-show-output-or-write-to-file
-
 hostname=$(hostname)
 if [[ "$hostname" =~ ^sift.* ]]; then
     mode=sift
