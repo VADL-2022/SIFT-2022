@@ -13,6 +13,7 @@
 
 #undef BACKTRACE_SET_TERMINATE
 #include "../src/tools/backtrace/backtrace_on_terminate.hpp"
+#include "../src/tools/backtrace/backtrace.hpp"
 void stopMain(bool backtrace) {
   if (!isRunningPython) {
     lastForkedPIDM.lock();
