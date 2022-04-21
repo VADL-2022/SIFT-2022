@@ -12,6 +12,7 @@ import sys
 from datetime import datetime
 from src.python import GridCell
 import re
+import timeit
 
 class EarlyExitException(Exception):
     pass
@@ -316,7 +317,7 @@ def run():
             img1, discarded, greyscale = grabImage(imgs[i], i, None, True)
         #exit(0)
 
-        while img1 is None and discarded:
+        while img1 is None or discarded:
             firstImageFilename=imgs[i]
             img1, discarded, greyscale = grabImage(imgs[i], i, None)
             i+=1
@@ -391,32 +392,62 @@ def run():
         hOrig, wOrig = img2.shape[:2]
 
         # find the keypoints and descriptors with SIFT
-        kp2, des2 = sift.detectAndCompute(img2,mask = test_mask) # Returns keypoints and descriptors
+        kp2=None
+        des2=None
+        def fn():
+            nonlocal kp2
+            nonlocal des2
+            kp2, des2 = sift.detectAndCompute(img2,mask = test_mask) # Returns keypoints and descriptors
+        print("sift.detectAndCompute() took", timeit.timeit(lambda: fn(), number=1), "seconds")
 
         # Find matches
-        matches = bf.knnMatch(des2,des1, k=2) # Swap order of des1,des2 because want to find first image in the second
+        matches = None
+        good = None
+        good_flatList = None
+        good_old = None
+        def fn2():
+            nonlocal matches
+            nonlocal good
+            nonlocal good_flatList
+            nonlocal good_old
+            
+            matches = bf.knnMatch(des2,des1, k=2) # Swap order of des1,des2 because want to find first image in the second
 
-        # Apply ratio test
-        good = []
-        good_flatList = []
-        for m,n in matches:
-            if m.distance < 0.75*n.distance:
-                good.append([m])
-                good_flatList.append(m)
+            # Apply ratio test
+            good = []
+            good_flatList = []
+            for m,n in matches:
+                if m.distance < 0.75*n.distance:
+                    good.append([m])
+                    good_flatList.append(m)
 
-                # cv2.drawMatchesKnn expects list of lists as matches.
-                #img3 = None
-                #img3 = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good,img3,flags=2)
-        good_old = good
+                    # cv2.drawMatchesKnn expects list of lists as matches.
+                    #img3 = None
+                    #img3 = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good,img3,flags=2)
+            good_old = good
+        print("matching took", timeit.timeit(lambda: fn2(), number=1), "seconds")
 
-        try:
-            good, transformation_matrix, transformation_rigid_matrix = find_homography(kp2, kp1, good_flatList) # Swap order of kp1, kp2 because want to find first image in the second
-        except cv2.error:
-            print("Error in find_homography, probably not enough keypoints:", sys.exc_info()[1])
-            cv2.imshow('bad',img2);
-            waitForInput(None, firstImage)
-            i+=1
-            continue  # Keep img1 as the previous image so we can match it next time
+        transformation_matrix = None
+        transformation_rigid_matrix = None
+        continue_=False
+        def fn3():
+            nonlocal transformation_matrix
+            nonlocal transformation_rigid_matrix
+            nonlocal i
+            nonlocal continue_
+            nonlocal good
+            try:
+                good, transformation_matrix, transformation_rigid_matrix = find_homography(kp2, kp1, good_flatList) # Swap order of kp1, kp2 because want to find first image in the second
+            except cv2.error:
+                print("Error in find_homography, probably not enough keypoints:", sys.exc_info()[1])
+                if showPreviewWindow:
+                    cv2.imshow('bad',img2);
+                waitForInput(None, firstImage)
+                i+=1
+                continue_=True  # Keep img1 as the previous image so we can match it next time
+        print("find_homography took", timeit.timeit(lambda: fn3(), number=1), "seconds")
+        if continue_:
+            continue
         
         if transformation_matrix is None:
             print("transformation_matrix was None")
