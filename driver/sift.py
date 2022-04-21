@@ -106,8 +106,8 @@ print(namespace)
 showPreviewWindow=namespace.show_preview_window
 skip=namespace.skip
 frameSkip=namespace.frameskip
-shouldRunSkyDetection=not namespace.noSkyDetection
-videoFileDataSourcePath=namespace.videoFileDataSourcePath
+shouldRunSkyDetection=not namespace.no_sky_detection
+videoFileDataSourcePath=namespace.video_file_data_source_path
 def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
