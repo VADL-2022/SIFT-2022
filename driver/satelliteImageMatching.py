@@ -25,7 +25,26 @@ def run(filenameMatrixOrActualMatrixObject,
     else:
         m0=filenameMatrixOrActualMatrixObject
     print("m0:",m0)
-    m1, firstImageWidth, firstImageHeight, firstImage_, firstImageOrig, firstImageFilename_ = oneShotMatch.run(filenameFirstImageOrActualMatrixObject, 'driver/vlcsnap-2022-04-05-15h36m34s616.png', showPreviewWindow)
+    try:
+        m1, firstImageWidth, firstImageHeight, firstImage_, firstImageOrig, firstImageFilename_ = oneShotMatch.run(filenameFirstImageOrActualMatrixObject, 'driver/vlcsnap-2022-04-05-15h36m34s616.png', showPreviewWindow)
+    except:
+        print("satellite matcher handler exception, will use id matrix:")
+        import traceback
+        traceback.print_exc()
+        
+        if isinstance(filenameFirstImageOrActualMatrixObject, str):
+            firstImage = cv2.imread(filenameFirstImageOrActualMatrixObject)
+        else:
+            firstImage = filenameFirstImageOrActualMatrixObject
+        m1=np.matrix([[1.0, 0.0, 0.0],
+                      [0.0, 1.0, 0.0],
+                      [0.0, 0.0, 1.0]])
+        # hOrig, wOrig = firstImage.shape[:2]
+        # firstImageWidth = wOrig
+        # firstImageHeight = hOrig
+        firstImage_ = firstImage
+        firstImageOrig = firstImage
+        firstImageFilename_ = filenameFirstImageOrActualMatrixObject if isinstance(filenameFirstImageOrActualMatrixObject, str) else None
     print("m1:",m1)
     mc = np.matrix([[-0.18071, -0.77495, 573.08481],
                     [0.77063, 0.06183, -34.54974],
