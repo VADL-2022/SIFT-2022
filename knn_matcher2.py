@@ -429,10 +429,12 @@ def run():
 
         transformation_matrix = None
         transformation_rigid_matrix = None
+        continue_=False
         def fn3():
             nonlocal transformation_matrix
             nonlocal transformation_rigid_matrix
             nonlocal i
+            nonlocal continue_
             try:
                 good, transformation_matrix, transformation_rigid_matrix = find_homography(kp2, kp1, good_flatList) # Swap order of kp1, kp2 because want to find first image in the second
             except cv2.error:
@@ -441,8 +443,10 @@ def run():
                     cv2.imshow('bad',img2);
                 waitForInput(None, firstImage)
                 i+=1
-                continue  # Keep img1 as the previous image so we can match it next time
+                continue_=True  # Keep img1 as the previous image so we can match it next time
         print("find_homography took", timeit.timeit(lambda: fn3(), number=1), "seconds")
+        if continue_:
+            continue
         
         if transformation_matrix is None:
             print("transformation_matrix was None")
