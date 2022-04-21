@@ -307,7 +307,9 @@ def run():
         pSave = os.path.join(pSave, date_time)
 
         Path(pSave).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
-            
+    else:
+        pSave=None
+    
     global imgs
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -338,7 +340,7 @@ def run():
         firstImage = img1Pair[0]
         if not showPreviewWindow or __name__ == "__main__":
             # Save first image
-            cv2.imwrite(os.path.join(pSave, "firstImage.png"), firstImage)
+            cv2.imwrite(os.path.join(pSave, "firstImage0.png"), firstImage)
         firstImageOrig=img1Pair[1] # undistorted etc.
         if showPreviewWindow:
             cv2.imshow('firstImage (index ' + str(i-1) + ')', firstImage)
@@ -360,6 +362,18 @@ def run():
         kp1, des1 = sift.detectAndCompute(img1,mask = test_mask) # Returns keypoints and descriptors
     else:
         print("No images")
+
+    def flushMatAndScaledImage(pSave, i, tr):
+        if pSave is None:
+            return
+        if not showPreviewWindow or __name__ == "__main__":
+            if tr is not None:
+                # Save transformation
+                cv2.imwrite(os.path.join(pSave, "scaled" + str(i) + ".png"), tr)
+                # Save matrix
+                cv2.imwrite(os.path.join(pSave, "scaled" + str(i) + ".matrix0.txt"), tr)
+            else:
+                print("tr is None")
 
     #acc = np.matrix([[1,0,0],[0,1,0],[0,0,1]])
     acc = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
@@ -411,6 +425,10 @@ def run():
             img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
             print(i,"$$$$$$$$$$$$$$$$$$$$$$$$$")
             #input()
+
+            if i % 4 == 0:
+                print("Flushing matrix and scaled image")
+                flushMatAndScaledImage(pSave, i, tr)
         except EarlyExitException as e:
                 e.acc = acc
                 e.w=wOrig_
@@ -539,13 +557,8 @@ def run():
                     continue
                 elif ret == Action.Break:
                     break
-    finally:    
-        if not showPreviewWindow or __name__ == "__main__":
-            if tr is not None:
-                # Save transformation
-                cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
-            else:
-                print("tr is None")
+    finally:
+        flushMatAndScaledImage(pSave, i, tr)
     return acc, wOrig_, hOrig_, firstImage, firstImageOrig, firstImageFilename
 
 if __name__ == "__main__":
