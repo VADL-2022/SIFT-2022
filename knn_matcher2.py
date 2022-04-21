@@ -363,7 +363,7 @@ def run():
     else:
         print("No images")
 
-    def flushMatAndScaledImage(pSave, i, tr):
+    def flushMatAndScaledImage(pSave, i, tr, acc):
         if pSave is None:
             return
         if not showPreviewWindow or __name__ == "__main__":
@@ -371,7 +371,12 @@ def run():
                 # Save transformation
                 cv2.imwrite(os.path.join(pSave, "scaled" + str(i) + ".png"), tr)
                 # Save matrix
-                cv2.imwrite(os.path.join(pSave, "scaled" + str(i) + ".matrix0.txt"), tr)
+                path1=os.path.join(pSave, "scaled" + str(i) + ".matrix0.txt")
+                #cv2.imwrite(path1, acc)
+                with open(path1, 'w') as f:
+                    f.write("[" + str(acc[0][0]) + ", " + str(acc[0][1]) + ", " + str(acc[0][2]) + ";\n")
+                    f.write("" + str(acc[1][0]) + ", " + str(acc[1][1]) + ", " + str(acc[2][2]) + ";\n")
+                    f.write("[" + str(acc[2][0]) + ", " + str(acc[2][1]) + ", " + str(acc[2][2]) + "]\n")
             else:
                 print("tr is None")
 
@@ -425,10 +430,6 @@ def run():
             img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
             print(i,"$$$$$$$$$$$$$$$$$$$$$$$$$")
             #input()
-
-            if i % 4 == 0:
-                print("Flushing matrix and scaled image")
-                flushMatAndScaledImage(pSave, i, tr)
         except EarlyExitException as e:
                 e.acc = acc
                 e.w=wOrig_
@@ -533,6 +534,13 @@ def run():
         if showPreviewWindow:
             cv2.imshow('acc',tr);
             waitForInput(img2, firstImage)
+            if i % 4 == 0:
+                print("Flushing matrix and scaled image")
+                flushMatAndScaledImage(pSave, i, tr, acc)
+        else:
+            if i % 4 == 0:
+                print("Flushing matrix")
+                flushMatAndScaledImage(pSave, i, None, acc)
         #plt.imshow(img3),plt.show()
         
         # Save current keypoints as {the prev keypoints for next iteration}
@@ -558,7 +566,7 @@ def run():
                 elif ret == Action.Break:
                     break
     finally:
-        flushMatAndScaledImage(pSave, i, tr)
+        flushMatAndScaledImage(pSave, i, None, acc)
     return acc, wOrig_, hOrig_, firstImage, firstImageOrig, firstImageFilename
 
 if __name__ == "__main__":
