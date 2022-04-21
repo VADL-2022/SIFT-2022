@@ -17,6 +17,7 @@ def run(filenameMatrixOrActualMatrixObject,
     # HACK: no quote handling for filenameMatrix below
     print("filenameMatrixOrActualMatrixObject:",filenameMatrixOrActualMatrixObject)
     if isinstance(filenameMatrixOrActualMatrixObject, str):
+        filenameMatrix=filenameMatrixOrActualMatrixObject
         evalThisDotStdout=subprocess.run(['bash', '-c', "cat \"" + filenameMatrix + "\" | sed 's/^/[/' | sed -E 's/.$/]&/' | sed -E 's/;/,/'"], capture_output=True, text=True)
         stdout_=evalThisDotStdout.stdout
         print("about to eval (stderr was", evalThisDotStdout.stderr, "):", stdout_)

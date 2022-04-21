@@ -200,6 +200,7 @@ def grabImage(imgName, i, firstImage, skip=False):
             print("Error but continuing: incorrect dtype for frame:",frame.dtype)
         if frame.dtype != np.uint8:
             frame = np.uint8(frame)*scaling_factor
+    greyscaleOrig = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     if shouldRunUndistort:
         #frame = undisortImage(frame)
         frameOrig = frame.copy()
@@ -207,7 +208,7 @@ def grabImage(imgName, i, firstImage, skip=False):
     else:
         frameOrig = frame
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if shouldRunSkyDetection and shouldDiscardImage(greyscale, i):
+    if shouldRunSkyDetection and shouldDiscardImage(greyscaleOrig, i):
         print("Discarded image", i)
         return None, True, greyscale
     else:
