@@ -369,9 +369,10 @@ def run(pSave=None):
         if pSave is None:
             return
         if not showPreviewWindow or __name__ == "__main__":
-            if tr is not None:
+            if acc is not None:
                 # Save transformation
-                cv2.imwrite(os.path.join(pSave, "scaled" + str(i) + ".png"), tr)
+                if tr is not None:
+                    cv2.imwrite(os.path.join(pSave, "scaled" + str(i) + ".png"), tr)
                 # Save matrix
                 path1=os.path.join(pSave, "scaled" + str(i) + ".matrix0.txt")
                 #cv2.imwrite(path1, acc)
@@ -380,7 +381,7 @@ def run(pSave=None):
                     f.write("" + str(acc[1][0]) + ", " + str(acc[1][1]) + ", " + str(acc[2][2]) + ";\n")
                     f.write("[" + str(acc[2][0]) + ", " + str(acc[2][1]) + ", " + str(acc[2][2]) + "]\n")
             else:
-                print("tr is None")
+                print("acc is None")
 
     #acc = np.matrix([[1,0,0],[0,1,0],[0,0,1]])
     acc = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
