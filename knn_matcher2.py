@@ -473,7 +473,8 @@ def run(pSave=None):
             nonlocal good
             nonlocal good_flatList
             nonlocal good_old
-            
+
+            print(des2, des1)
             matches = bf.knnMatch(des2,des1, k=2) # Swap order of des1,des2 because want to find first image in the second
 
             # Apply ratio test
