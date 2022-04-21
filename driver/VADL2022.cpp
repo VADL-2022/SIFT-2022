@@ -1285,8 +1285,12 @@ VADL2022::VADL2022(int argc, char** argv)
     : "sudo pkill pigpiod ; " // SIFT pi needs to stop it in case it's running already
     ;
   #endif
-  gpioUserPermissionFixingCommands = startPigpio + std::string("export PYTHONUNBUFFERED='1'" // An extra for fixing python not showing output  // https://stackoverflow.com/questions/27534609/tee-does-not-show-output-or-write-to-file
-                                                               "sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
+  // "export PYTHONUNBUFFERED='1'" // An extra for fixing python not showing output  // https://stackoverflow.com/questions/27534609/tee-does-not-show-output-or-write-to-file
+    if (putenv("PYTHONUNBUFFERED=1") != 0) { // Equivalent to running `export DISPLAY=:0.0` in bash.  // Needed to show windows with GTK/X11 correctly
+        perror("Failed to set PYTHONUNBUFFERED");
+        //exit(EXIT_FAILURE);
+    }
+  gpioUserPermissionFixingCommands = startPigpio + std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
 						 // For good measure, even though the Makefile does it already (this won't take effect until another run of the executable, so that's why we do it in the Makefile) :
 						 "&& sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot
   gpioUserPermissionFixingCommands_arg = argv[0];
