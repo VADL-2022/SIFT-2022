@@ -365,6 +365,7 @@ def run(pSave=None):
         print("No images")
 
     def flushMatAndScaledImage(pSave, i, tr, acc):
+        print(pSave, i, acc, "%%%%%%%%%%%%%%%%%%%%%%%")
         if pSave is None:
             return
         if not showPreviewWindow or __name__ == "__main__":
