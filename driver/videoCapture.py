@@ -155,7 +155,7 @@ def run(shouldStop # AtomicInt
               out = None # If exception occurs after this, we know outMainThreadShouldFlush = the video writer object, and out = None, so the `"main thread flushing unflushed edge case"` should fire.
               mainThreadShouldFlush.decrementAndThenGet() # If exception/preemption occurs after we decrement this, we know `out` is None so main thread has nothing to flush, and the queue will handle it.
               date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
-              p=os.path.join('.', 'dataOutput',o1,'outpy' + date_time + '.mp4')
+              p=os.path.join(outputFolderPath,'outpy' + date_time + '.mp4')
               print("Making new VideoWriter at", p)
               out = cv2.VideoWriter(p,format, fps, (frame_width,frame_height))
               print("Made new VideoWriter at", p)
