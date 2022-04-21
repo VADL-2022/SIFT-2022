@@ -44,7 +44,7 @@ def signal_handler(sig, frame):
     print('You pressed Ctrl+C! Stopping video capture thread...')
     #sys.exit(0)
     shouldStop.set(1)
-    customVideoCapture.put(None) # placeholder for stopping
+    customVideoCapture.q.put(None) # placeholder for stopping
 
 # Function to run on the video capture thread
 def videoCaptureThreadFunction(name, **kwargs):
