@@ -14,7 +14,7 @@
 #undef BACKTRACE_SET_TERMINATE
 #include "../src/tools/backtrace/backtrace_on_terminate.hpp"
 #include "../src/tools/backtrace/backtrace.hpp"
-void stopMain(bool backtrace) {
+void stopMain(bool backtrace_) {
   if (!isRunningPython) {
     lastForkedPIDM.lock();
     if (lastForkedPIDValid) {
@@ -34,7 +34,7 @@ void stopMain(bool backtrace) {
     gpioTerminate();
     printf_("Finished shutting down pigpio\n");
   
-    if (backtrace) {
+    if (backtrace_) {
       printf_("Printing backtrace: ");
       backtrace(std::cout);
     }
@@ -43,7 +43,7 @@ void stopMain(bool backtrace) {
     exit(1);
   }
   else {
-    if (backtrace) {
+    if (backtrace_) {
       printf_("Printing backtrace: ");
       backtrace(std::cout);
     }
@@ -73,8 +73,8 @@ void ctrlC(int s, siginfo_t *si, void *arg){
     // Print stack trace
     //backward::sh->handleSignal(s, si, arg);
 }
-void terminate_handler(bool backtrace) {
-  stopMain(backtrace);
+void terminate_handler(bool backtrace_) {
+  stopMain(backtrace_);
 }
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
