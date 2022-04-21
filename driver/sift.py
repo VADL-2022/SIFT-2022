@@ -19,11 +19,13 @@ import knn_matcher2
 import argparse
 
 shouldStop=videoCapture.AtomicInt(0)
+customVideoCapture = CustomVideoCapture()
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C! Stopping video capture thread...')
     #sys.exit(0)
     shouldStop.set(1)
+    customVideoCapture.put(None) # placeholder for stopping
 
 # Function to run on the video capture thread
 def videoCaptureThreadFunction(name, **kwargs):
@@ -72,7 +74,6 @@ class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
             print("self.origVideoCap is None")
             return 1
         return self.origVideoCap.get(attr)
-customVideoCapture = CustomVideoCapture()
 def onSetVideoCapture(cap):
     customVideoCapture.setOrigVideoCap(cap)
 def onFrame(frame):

@@ -410,7 +410,7 @@ def run():
         try:
             img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
             print(i,"$$$$$$$$$$$$$$$$$$$$$$$$$")
-            input()
+            #input()
         except EarlyExitException as e:
                 e.acc = acc
                 e.w=wOrig_
