@@ -66,6 +66,11 @@ num_worker_threads = 1 #<--due to use of mainThreadShouldFlush, we need to use 1
 
 def run(shouldStop # AtomicInt
         , verbose = False
+        , onFrame = None # handler function that accepts an image
+        , fps = 30
+        , frame_width=640
+        , frame_height=480
+        , onSetVideoCapture = None # handler for when video capture object changes
         ):
     global mainThreadShouldFlush
     global dispatchQueue
@@ -82,6 +87,8 @@ def run(shouldStop # AtomicInt
     
     # Create a VideoCapture object
     cap = cv2.VideoCapture(0)
+    if onSetVideoCapture is not None:
+        onSetVideoCapture(cap)
 
     # Check if camera opened successfully
     if (cap.isOpened() == False): 
@@ -94,10 +101,7 @@ def run(shouldStop # AtomicInt
 
     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
     date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
-    fps = 30
     print("Old width,height:",frame_width,frame_height)
-    frame_width=640
-    frame_height=480
     o1=now.strftime("%Y-%m-%d_%H_%M_%S_%Z")
     p=os.path.join('.', 'dataOutput', o1,'outpy' + date_time + '.mp4')
     try:
@@ -118,6 +122,8 @@ def run(shouldStop # AtomicInt
                   print("out.write(frame) took", timeit.timeit(lambda: out.write(frame), number=1), "seconds")
               else:
                   out.write(frame)
+              if onFrame is not None:
+                  onFrame(frame)
 
               # Display the resulting frame    
               #cv2.imshow('frame',frame)

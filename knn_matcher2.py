@@ -13,6 +13,12 @@ from datetime import datetime
 from src.python import GridCell
 import re
 import timeit
+from enum import Enum
+
+class Action(Enum):
+    Break = 1
+    Continue = 2
+
 
 class EarlyExitException(Exception):
     pass
@@ -138,6 +144,10 @@ def grabImage(imgName, i, firstImage, skip=False):
     def grabInternal(imgName):
         if grabMode == 1:
             ret,frame = reader.read()
+            if frame is None:
+                print("knn matcher: Done processing images")
+                e = EarlyExitException()
+                raise e
             return frame
         else:
             if isinstance(imgName, bytes):
@@ -171,7 +181,7 @@ def grabImage(imgName, i, firstImage, skip=False):
             #print("image:",image,shouldRunSkyDetection)
             return image
 
-    for i in range(0,frameSkip):
+    for j in range(0,frameSkip):
         frame = grabInternal(imgName)
         if skip:
             return None, True, None
@@ -308,6 +318,7 @@ def run():
     img1Pair = None
     discarded = True # Assume True to start with
     greyscale = None
+    tr = None
     
     imgs_iter = iter(imgs)
     next(imgs_iter) # Skip first image
@@ -325,6 +336,9 @@ def run():
             img1Pair, discarded, greyscale = grabImage(imgs[i], i, None)
             i+=1
         firstImage = img1Pair[0]
+        if not showPreviewWindow or __name__ == "__main__":
+            # Save first image
+            cv2.imwrite(os.path.join(pSave, "firstImage.png"), firstImage)
         firstImageOrig=img1Pair[1] # undistorted etc.
         if showPreviewWindow:
             cv2.imshow('firstImage (index ' + str(i-1) + ')', firstImage)
@@ -351,11 +365,20 @@ def run():
     acc = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
     #i = 1 # (Skipped first image)
     # For each image, run SIFT and match with previous image:
-    for imgName in imgs_iter:
+    def runInternal(imgNameOrImg):
+        imgName=imgNameOrImg
+        nonlocal acc
+        nonlocal hOrig
+        nonlocal wOrig
+        nonlocal i
+        nonlocal img1
+        nonlocal des1
+        nonlocal kp1
+        nonlocal greyscale
         def waitForInput(img2, firstImage, skipWaitKeyUsingKey=None):
             if not showPreviewWindow:
                 return
-            waitAmount = 1 if i < len(imgs) - 20 else 0
+            waitAmount = 1 if i < len(imgs) - 20 or not isinstance(reader, cv2.VideoCapture) else 0
             if waitAmount == 0:
                 print("Press a key to continue")
                 if i == len(imgs) - 1:
@@ -383,17 +406,27 @@ def run():
                 img, key = showLandingPos(firstImage, acc, showLandingPosKey)
                 if k & 0xFF == ord(applyMatKey):
                     waitForInput(img2, firstImage, applyMatKey)
-        
-        img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
+
+        try:
+            img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
+            print(i,"$$$$$$$$$$$$$$$$$$$$$$$$$")
+            input()
+        except EarlyExitException as e:
+                e.acc = acc
+                e.w=wOrig_
+                e.h=hOrig_
+                e.firstImage=firstImage
+                e.firstImageFilename=firstImageFilename
+                raise e
         if img2Pair is None and not discarded:
             print("img2 was None")
             if showPreviewWindow:
                 cv2.waitKey(0)
-            break
+            return Action.Break
         if img2Pair is None and discarded:
             waitForInput(None, firstImage)
             i += 1
-            continue # Keep img1 as the previous image so we can match it next time
+            return Action.Continue #  # Keep img1 as the previous image so we can match it next time
         img2=img2Pair[0]
         hOrig, wOrig = img2.shape[:2]
 
@@ -453,13 +486,13 @@ def run():
                 continue_=True  # Keep img1 as the previous image so we can match it next time
         print("find_homography took", timeit.timeit(lambda: fn3(), number=1), "seconds")
         if continue_:
-            continue
+            return Action.Continue
         
         if transformation_matrix is None:
             print("transformation_matrix was None")
             waitForInput(None, firstImage)
             i+=1
-            continue # Keep img1 as the previous image so we can match it next time
+            return Action.Continue # Keep img1 as the previous image so we can match it next time
             # cv2.waitKey(0)
             # break
         acc *= transformation_matrix
@@ -489,9 +522,30 @@ def run():
         des1=des2
         img1=img2
         i+=1
-    if not showPreviewWindow or __name__ == "__main__":
-        # Save transformation
-        cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
+        return None
+    try:
+        if len(imgs) > 1:
+            for imgName in imgs_iter:
+                ret = runInternal(imgName)
+                if ret == Action.Continue:
+                    continue
+                elif ret == Action.Break:
+                    break
+        else:
+            # Must be real video capture object
+            while True:
+                ret = runInternal(reader.read())
+                if ret == Action.Continue:
+                    continue
+                elif ret == Action.Break:
+                    break
+    finally:    
+        if not showPreviewWindow or __name__ == "__main__":
+            if tr is not None:
+                # Save transformation
+                cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
+            else:
+                print("tr is None")
     return acc, wOrig_, hOrig_, firstImage, firstImageOrig, firstImageFilename
 
 if __name__ == "__main__":
