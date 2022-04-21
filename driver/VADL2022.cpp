@@ -56,7 +56,7 @@ float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS = MAIN_DEPLOYME
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS = LANDING_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 
 // Command Line Args
-bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false, failsafeVideo = false, startSIFTAtApogee = false;
+bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false, failsafeVideo = false, startSIFTAtApogee = false, usePythonSIFT = false;
 const char* lsm = "1";
 const char* l3g = "0";
 const char* useForeLandingDetection = "0";
@@ -327,19 +327,28 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   // signal-safety(7)) until such time as it calls execve(2).
   // "} ( https://man7.org/linux/man-pages/man2/fork.2.html )
   // and I don't think std::string is async-signal-safe because it could call malloc
-  siftCommandLine =
-      "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine " +
-    (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string("")) +
-      " --main-mission " +
-  (siftParams != nullptr
-	       ? ("--sift-params " + std::string(siftParams))
-	       : std::string("")) +
-	  std::string(" --sleep-before-running ") +
-    std::string(timeAfterMainDeployment) //+
-    //std::string(" --no-preview-window") // --video-file-data-source
-    + (false/*useIMU*/ ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
-    + (verboseSIFTFD ? (std::string(" --verbose")) : "")
-  ;
+  if (!usePythonSIFT) {
+    siftCommandLine =
+        "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine " +
+      (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string("")) +
+        " --main-mission " +
+    (siftParams != nullptr
+                 ? ("--sift-params " + std::string(siftParams))
+                 : std::string("")) +
+            std::string(" --sleep-before-running ") +
+      std::string(timeAfterMainDeployment) //+
+      //std::string(" --no-preview-window") // --video-file-data-source
+      + (false/*useIMU*/ ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
+      + (verboseSIFTFD ? (std::string(" --verbose")) : "")
+    ;
+  }
+  else {
+    // Sleep
+    long long millis = std::stoll(timeAfterMainDeployment);
+    printf("Sleeping for %ll milliseconds before starting SIFT...\n", millis);
+    std::this_thread::sleep_for(std::chrono::milliseconds());
+    siftCommandLine = "XAUTHORITY=/home/pi/.Xauthority python3 driver/sift.py"
+  }
   
   // char hostname[HOST_NAME_MAX + 1];
   // if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
@@ -1140,6 +1149,9 @@ VADL2022::VADL2022(int argc, char** argv)
     }
     else if (strcmp(argv[i], "--start-sift-at-apogee") == 0) { // Starts SIFT at apogee instead of main deployment
       startSIFTAtApogee = true;
+    }
+    else if (strcmp(argv[i], "--python-sift") == 0) { // Uses Python SIFT backend instead of C++ SIFT
+      usePythonSIFT = true;
     }
     else if (strcmp(argv[i], "--main-descent-time") == 0) { // Time in milliseconds since main deployment at which to stop SIFT but as an upper bound (don't make it possibly too low, since time for descent varies a lot)
       if (i+1 < argc) {
