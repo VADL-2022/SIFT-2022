@@ -124,6 +124,6 @@ void enqueueSatelliteMatch(VADL2022* v) {
       // Enqueue self so we send on radio again in case of transmission error
       mainDispatchQueue.enqueue(enq, "satelliteImageMatching.py",QueuedFunctionType::Python);
     });
-  }
+  });
   mainDispatchQueue.enqueue(enq, "satelliteImageMatching.py",QueuedFunctionType::Python);
 }
