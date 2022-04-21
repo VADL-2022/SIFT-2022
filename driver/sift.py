@@ -20,6 +20,7 @@ import argparse
 from datetime import datetime
 
 shouldStop=videoCapture.AtomicInt(0)
+forceStop = False
 
 class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
     def __init__(self, origVideoCap=None):
@@ -45,6 +46,8 @@ def signal_handler(sig, frame):
     print('You pressed Ctrl+C! Stopping video capture thread...')
     #sys.exit(0)
     shouldStop.set(1)
+    if forceStop:
+        exit(0)
     customVideoCapture.q.put(None) # placeholder for stopping
 
 # Function to run on the video capture thread
@@ -108,6 +111,8 @@ frameSkip=namespace.frameskip
 shouldRunSkyDetection=not namespace.no_sky_detection
 videoFileDataSourcePath=namespace.video_file_data_source_path
 videoFileDataSource = namespace.video_file_data_source
+if videoFileDataSource:
+    forceStop=True
 def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
