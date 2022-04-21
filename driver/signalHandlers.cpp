@@ -35,7 +35,7 @@ void stopMain(bool backtrace) {
   
     if (backtrace) {
       printf_("Printing backtrace: ");
-      backtrace_on_terminate();
+      backtrace(std::cout);
     }
     printf_("Exiting\n");
     VADL2022::disconnect_Python();
@@ -44,7 +44,7 @@ void stopMain(bool backtrace) {
   else {
     if (backtrace) {
       printf_("Printing backtrace: ");
-      backtrace_on_terminate();
+      backtrace(std::cout);
     }
     
     // Tell python to sigint
