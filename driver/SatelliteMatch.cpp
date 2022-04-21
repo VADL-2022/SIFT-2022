@@ -111,7 +111,7 @@ void enqueueSatelliteMatch(VADL2022* v) {
       py::module_ match = py::module_::import("driver.satelliteImageMatching");
       py::int_ gridIdentifier = (py::tuple)(match.attr("run")(matrixFilename, firstImageFilename, 640/2, 480/2))[0]; // HACK: hardcoded 480p
 
-      auto enq1 = [=](){
+      auto enq1 = rec([=](auto&& enq1){
         nonthrowing_python_nolock([=](){
           // Send the grid ID on the radio
           const char *sendOnRadioScriptArgs[] = {NULL, NULL};
@@ -122,11 +122,13 @@ void enqueueSatelliteMatch(VADL2022* v) {
           { out_guard();
             std::cout << "sendOnRadio script execution for SIFT SatelliteMatch" << std::endl; }
           bool success = S_RunFile("driver/radio.py", 2, (char **)sendOnRadioScriptArgs);
+          
+          // Enqueue a send again so we send on radio again in case of transmission error
+          mainDispatchQueue.enqueue(enq1, "satelliteImageMatching.py enqueue again",QueuedFunctionType::Python);
         });
-      };
+      });
 
-      // Enqueue a send again so we send on radio again in case of transmission error
-      mainDispatchQueue.enqueue(enq1, "satelliteImageMatching.py enqueue again",QueuedFunctionType::Python);
+      enq1();
     });
   });
   mainDispatchQueue.enqueue(enq, "satelliteImageMatching.py",QueuedFunctionType::Python);
