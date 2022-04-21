@@ -8,10 +8,10 @@ import src.python.GridCell
 def run(filenameMatrixOrActualMatrixObject,
         filenameFirstImageOrActualMatrixObject,
         x,y,showPreviewWindow=False):
-    if isinstance(filenameFirstImageOrActualMatrixObject, str):
-        firstImage = cv2.imread(filenameFirstImageOrActualMatrixObject)
-    else:
-        firstImage = filenameFirstImageOrActualMatrixObject
+    # if isinstance(filenameFirstImageOrActualMatrixObject, str):
+    #     firstImage = cv2.imread(filenameFirstImageOrActualMatrixObject)
+    # else:
+    #     firstImage = filenameFirstImageOrActualMatrixObject
     p0=np.array([x,y])
     # Get matrix as python list
     # HACK: no quote handling for filenameMatrix below
@@ -25,7 +25,7 @@ def run(filenameMatrixOrActualMatrixObject,
     else:
         m0=filenameMatrixOrActualMatrixObject
     print("m0:",m0)
-    m1, firstImageWidth, firstImageHeight, firstImage_, firstImageOrig, firstImageFilename_ = oneShotMatch.run(firstImage, 'driver/vlcsnap-2022-04-05-15h36m34s616.png', showPreviewWindow)
+    m1, firstImageWidth, firstImageHeight, firstImage_, firstImageOrig, firstImageFilename_ = oneShotMatch.run(filenameFirstImageOrActualMatrixObject, 'driver/vlcsnap-2022-04-05-15h36m34s616.png', showPreviewWindow)
     print("m1:",m1)
     mc = np.matrix([[-0.18071, -0.77495, 573.08481],
                     [0.77063, 0.06183, -34.54974],

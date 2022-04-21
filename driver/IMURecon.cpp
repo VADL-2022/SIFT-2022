@@ -48,7 +48,7 @@ void enqueueIMURecon(VADL2022* v) {
       };
       
       // Enqueue a send again so we send on radio again in case of transmission error
-      mainDispatchQueue.enqueue(enq1,"IMURecon.py",QueuedFunctionType::Python);
+      mainDispatchQueue.enqueue(enq1,"IMURecon.py enqueue again",QueuedFunctionType::Python);
     });
 
     //PyGILState_Release(state); // TODO: implement properly
