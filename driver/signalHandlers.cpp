@@ -42,6 +42,11 @@ void stopMain(bool backtrace) {
     exit(1);
   }
   else {
+    if (backtrace) {
+      printf_("Printing backtrace: ");
+      backtrace_on_terminate();
+    }
+    
     // Tell python to sigint
     printf_("Telling Python to SIGINT\n");
     PyErr_SetInterrupt(); // PyErr_SetInterruptEx(SIGINT);
