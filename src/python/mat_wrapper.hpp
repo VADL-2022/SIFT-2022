@@ -26,6 +26,8 @@ py::array_t<unsigned char> cv_mat_uint8_1c_to_numpy(cv::Mat& input);
 
 py::array_t<unsigned char> cv_mat_uint8_3c_to_numpy(cv::Mat& input);
 
-py::array_t<float> cv_mat_float32_1c_to_numpy(cv::Mat& input);
+py::array_t<float> cv_mat_float32_1c_to_numpy(cv::Mat &input);
+
+py::array_t<double> cv_mat_float64_1c_to_numpy(cv::Mat& input);
 
 #endif /* mat_wrapper_hpp */

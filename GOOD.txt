@@ -418,7 +418,7 @@ mkdir /Volumes/MyTestVolume/Projects/DataRocket/fullscale2
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_44_15_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
  sshpass -p 'camjet2021' scp -r -p  pi@fore1.local:/home/pi/VanderbiltRocketTeam/dataOutput/2022_04_02_12_42_59_PM.video_caplog.txt   /Volumes/MyTestVolume/Projects/DataRocket/fullscale2/fore1
 
---
+-- fullscale3 preparation
 
 ORIGINAL TIMES:
 time to meco: 1.6s
@@ -426,7 +426,7 @@ time to main deployment 16.5s
 main descent time: 33.8s
 time to apogee: 9.5s
 
---
+-- fullscale3 preparation (cont.)
 
 # 1 degree is the launch angle for fullscale1
 ./subscale_exe_release --extra-sift-exe-args '--video-file-data-source --video-file-data-source-path Data/fullscale1/Derived/SIFT/output.mp4' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --time-to-main-deployment 67500 --time-for-main-stabilization 0 --takeoff-g-force 9 --main-descent-time 28500 --time-to-meco 2200 --landing-g-force 8 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/files_sift1_imuAndTemperatureOnly_fullscale1/LOG_20220219_104353.csv --imu-data-source-time-offset 2867000 --time-to-apogee 17600 --main-deployment-altitude 800 --start-sift-at-apogee --verbose --launch-box 1 --launch-angle 'deg2rad(1)'
@@ -439,3 +439,38 @@ real apogee: 4660 feet apogee
 
 # Testing
 ./subscale_exe_release         --time-to-main-deployment         17000         --time-for-main-stabilization         1000         --main-descent-time                                                                                                                                                                 33500                                                                                                                                                                               --emergency-main-deployment-g-force                                                                                                                                                 20                                                                                                                                                                                  --main-deployment-altitude                                                                                                                                                          800         --launch-box         1         --launch-angle         '__import__("numpy").deg2rad(1)'         --extra-sift-exe-args         '--no-sky-detection --fps 5 --no-preview-window --finish-rest-always --save-first-image'         --sift-params         '-C_edge 2 -delta_min 0.6 '        --takeoff-g-force         6         --landing-g-force         3         --backup-takeoff-time         0         --time-to-meco         1700         --time-to-apogee         9500         --takeoff-g-force         1         --landing-g-force         1
+
+sky detection enabled -> causes possible deadlocks. otherwise good
+
+
+grid box of launch rail: 190
+launch angle degrees: 2
+
+
+-- transfer commands (from cyberduck scp program: right click the multiple items -> copy -> sftp commands, then paste into emacs and put the cursor before them (can use C-x C-x to swap cursor to start of selection), then do: `M-x query-replace` and then `M-p` to get previous entry or just put: `
+sftp://sift1.local →  ` (C-q C-j to insert newline at the start of this string) to replace a newline and that text with a space and change sift1 to the pi needed. then press `!` to replace all occurrences after the cursor(current insertion point)) : https://github.com/iterate-ch/cyberduck , https://cyberduck.io/ )
+
+hostname=fore1
+ssh pi@$hostname.local stat /home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_16-12_02_52.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220416-120253.LIS331.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_16_12_02_51_PM.video_caplog.txt /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_12_08_33_ /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_12_08_24_ > Data/fullscale3/ctimes_$hostname.txt
+
+hostname=fore2
+ssh pi@$hostname.local stat /home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_16-12_01_16.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220416-120118.LIS331.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_16_12_01_16_PM.video_caplog.txt /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_10_47_58_CDT /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_10_47_53_CDT > Data/fullscale3/ctimes_$hostname.txt
+
+hostname=sift2
+ssh pi@$hostname.local stat /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220416_114053.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_16_11_40_52_AM.siftlog.txt /home/pi/VanderbiltRocketTeam/dataOutput/knnMatcher_04_16_2022_12_12_55 /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_12_08_35_CDT /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_12_08_25_ /home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_16-11_40_52.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220416-114053.gps.txt > Data/fullscale3/ctimes_$hostname.txt
+
+hostname=sift1
+ssh pi@$hostname.local stat /home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_16-11_39_37.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220416_113937.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_16_11_39_36_AM.siftlog.txt /home/pi/VanderbiltRocketTeam/dataOutput/knnMatcher_04_16_2022_12_10_09 /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_12_08_43_CDT /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_12_08_24_ /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220416-113937.gps.txt  > Data/fullscale3/ctimes_$hostname.txt
+
+
+# new commands: recursive stat
+hostname=sift1
+files="/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_16-11_39_37.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220416_113937.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_16_11_39_36_AM.siftlog.txt /home/pi/VanderbiltRocketTeam/dataOutput/knnMatcher_04_16_2022_12_10_09 /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_12_08_43_CDT /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-16_12_08_24_ /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220416-113937.gps.txt"
+ssh pi@$hostname.local find $files -exec 'stat {} \;' > Data/fullscale3/ctimes_all_$hostname.txt
+# better emacs command: M-x query-replace-regexp or replace-regexp and then do `
+sftp\:\/\/.*\.local →  `
+
+
+./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/output.mp4  --main-mission-interactive
+
+python3 knn_matcher2.py  1 1 0 0 Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/output.mp4  1

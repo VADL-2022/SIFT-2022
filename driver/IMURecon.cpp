@@ -12,7 +12,7 @@ namespace py = pybind11;
 #include "../pythonCommon.hpp"
 
 void enqueueIMURecon(VADL2022* v) {
-  mainDispatchQueue.enqueue([=](){
+  auto enq = rec([=](auto&& enq){
     //PyGILState_STATE state = PyGILState_Ensure(); // Only run this if no other python code is running now, otherwise wait for a lock // TODO: implement properly
     
     nonthrowing_python_nolock([=](){
@@ -44,5 +44,10 @@ void enqueueIMURecon(VADL2022* v) {
     });
 
     //PyGILState_Release(state); // TODO: implement properly
-  },"IMURecon.py",QueuedFunctionType::Python);
+
+    // Enqueue self so we send on radio again in case of transmission error
+    mainDispatchQueue.enqueue(enq,"IMURecon.py",QueuedFunctionType::Python);
+  });
+  
+  mainDispatchQueue.enqueue(enq,"IMURecon.py",QueuedFunctionType::Python);
 }
