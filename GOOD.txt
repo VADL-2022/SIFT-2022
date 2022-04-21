@@ -474,3 +474,5 @@ sftp\:\/\/.*\.local →  `
 ./sift_exe_release_commandLine --sift-params -delta_min 0.6 -C_edge 2 --video-file-data-source --video-file-data-source-path Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/output.mp4  --main-mission-interactive
 
 python3 knn_matcher2.py  1 1 0 0 Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/output.mp4  1
+
+./subscale_exe_release --extra-sift-exe-args '--save-first-image --video-file-data-source --video-file-data-source-path Data/fullscale1/Derived/SIFT/output.mp4 --no-sky-detection' --sift-params '-C_edge 2 -delta_min 0.6' --backup-takeoff-time 0 --time-to-main-deployment 67500 --time-for-main-stabilization 0 --takeoff-g-force 9 --main-descent-time 28500 --time-to-meco 2200 --landing-g-force 8 --emergency-main-deployment-g-force 16 --imu-data-source-path Data/files_sift1_imuAndTemperatureOnly_fullscale1/LOG_20220219_104353.csv --imu-data-source-time-offset 2867000 --time-to-apogee 17600 --main-deployment-altitude 800 --start-sift-at-apogee --launch-box 1 --launch-angle '__import__("numpy").deg2rad(1)' --python-sift

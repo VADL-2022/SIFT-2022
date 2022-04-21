@@ -13,6 +13,12 @@ from datetime import datetime
 from src.python import GridCell
 import re
 import timeit
+from enum import Enum
+
+class Action(Enum):
+    Break = 1
+    Continue = 2
+
 
 class EarlyExitException(Exception):
     pass
@@ -138,6 +144,10 @@ def grabImage(imgName, i, firstImage, skip=False):
     def grabInternal(imgName):
         if grabMode == 1:
             ret,frame = reader.read()
+            if frame is None:
+                print("knn matcher: Done processing images")
+                e = EarlyExitException()
+                raise e
             return frame
         else:
             if isinstance(imgName, bytes):
@@ -171,7 +181,7 @@ def grabImage(imgName, i, firstImage, skip=False):
             #print("image:",image,shouldRunSkyDetection)
             return image
 
-    for i in range(0,frameSkip):
+    for j in range(0,frameSkip):
         frame = grabInternal(imgName)
         if skip:
             return None, True, None
@@ -190,15 +200,20 @@ def grabImage(imgName, i, firstImage, skip=False):
             print("Error but continuing: incorrect dtype for frame:",frame.dtype)
         if frame.dtype != np.uint8:
             frame = np.uint8(frame)*scaling_factor
+        print("DTYPE &&&&&&&&&&&&&&&&&&&&&:", frame.dtype, "SHAPE:", frame.shape)
+    greyscaleOrig = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     if shouldRunUndistort:
         #frame = undisortImage(frame)
+        frameOrig = frame.copy()
         frame = src.python.General.undistortImg(frame)
+    else:
+        frameOrig = frame
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if shouldRunSkyDetection and shouldDiscardImage(greyscale, i):
+    if shouldRunSkyDetection and shouldDiscardImage(greyscaleOrig, i):
         print("Discarded image", i)
         return None, True, greyscale
     else:
-        return frame, False, greyscale
+        return (frame, frameOrig), False, greyscale
 
 
 # https://medium.com/swlh/youre-using-lerp-wrong-73579052a3c3
@@ -285,16 +300,19 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     key = cv2.waitKey(0)
     return img, key
     
-def run():
+def run(pSave=None):
     if not showPreviewWindow:
-        pSave="dataOutput"
+        if pSave is None:
+            pSave="dataOutput"
 
-        now = datetime.now() # current date and time
-        date_time = now.strftime("knnMatcher_%m_%d_%Y_%H_%M_%S")
-        pSave = os.path.join(pSave, date_time)
+            now = datetime.now() # current date and time
+            date_time = now.strftime("knnMatcher_%m_%d_%Y_%H_%M_%S")
+            pSave = os.path.join(pSave, date_time)
 
-        Path(pSave).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
-            
+            Path(pSave).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
+    else:
+        pSave=None
+    
     global imgs
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -302,9 +320,10 @@ def run():
     elif grabMode == 0 or grabMode == 3:
         imgs=p.stdout.split(b'\n')
     i = 0
-    img1 = None
+    img1Pair = None
     discarded = True # Assume True to start with
     greyscale = None
+    tr = None
     
     imgs_iter = iter(imgs)
     next(imgs_iter) # Skip first image
@@ -314,19 +333,24 @@ def run():
         for j in range(0, skip):
             i += 1
             #print('skip')
-            img1, discarded, greyscale = grabImage(imgs[i], i, None, True)
+            img1Pair, discarded, greyscale = grabImage(imgs[i], i, None, True)
         #exit(0)
 
-        while img1 is None or discarded:
+        while img1Pair is None or discarded:
             firstImageFilename=imgs[i]
-            img1, discarded, greyscale = grabImage(imgs[i], i, None)
+            img1Pair, discarded, greyscale = grabImage(imgs[i], i, None)
             i+=1
-        firstImage = img1
+        firstImage = img1Pair[0]
+        if not showPreviewWindow or __name__ == "__main__":
+            # Save first image
+            cv2.imwrite(os.path.join(pSave, "firstImage0.png"), firstImage)
+        firstImageOrig=img1Pair[1] # undistorted etc.
         if showPreviewWindow:
             cv2.imshow('firstImage (index ' + str(i-1) + ')', firstImage)
             cv2.waitKey(0)
         
         mask2 = np.zeros_like(greyscale)
+        img1=img1Pair[0]
         hOrig, wOrig = img1.shape[:2]
         hOrig_=hOrig
         wOrig_=wOrig
@@ -339,14 +363,44 @@ def run():
             cv2.waitKey(0)
     
         kp1, des1 = sift.detectAndCompute(img1,mask = test_mask) # Returns keypoints and descriptors
+        des2=None
     else:
         print("No images")
+
+    def flushMatAndScaledImage(pSave, i, tr, acc):
+        print(pSave, i, acc, "%%%%%%%%%%%%%%%%%%%%%%%")
+        if pSave is None:
+            return
+        if not showPreviewWindow or __name__ == "__main__":
+            if acc is not None:
+                # Save transformation
+                if tr is not None:
+                    cv2.imwrite(os.path.join(pSave, "scaled" + str(i) + ".png"), tr)
+                # Save matrix
+                path1=os.path.join(pSave, "scaled" + str(i) + ".matrix0.txt")
+                #cv2.imwrite(path1, acc)
+                with open(path1, 'w') as f:
+                    f.write("[" + str(np.array(acc[0])[0][0]) + ", " + str(np.array(acc[0])[0][1]) + ", " + str(np.array(acc[0])[0][2]) + ";\n")
+                    f.write(" " + str(np.array(acc[1])[0][0]) + ", " + str(np.array(acc[1])[0][1]) + ", " + str(np.array(acc[1])[0][2]) + ";\n")
+                    f.write(" " + str(np.array(acc[2])[0][0]) + ", " + str(np.array(acc[2])[0][1]) + ", " + str(np.array(acc[2])[0][2]) + "]\n")
+            else:
+                print("acc is None")
 
     #acc = np.matrix([[1,0,0],[0,1,0],[0,0,1]])
     acc = np.matrix([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]])
     #i = 1 # (Skipped first image)
     # For each image, run SIFT and match with previous image:
-    for imgName in imgs_iter:
+    def runInternal(imgNameOrImg):
+        imgName=imgNameOrImg
+        nonlocal acc
+        nonlocal hOrig
+        nonlocal wOrig
+        nonlocal i
+        nonlocal img1
+        nonlocal des1
+        nonlocal des2
+        nonlocal kp1
+        nonlocal greyscale
         def waitForInput(img2, firstImage, skipWaitKeyUsingKey=None):
             if not showPreviewWindow:
                 return
@@ -379,17 +433,28 @@ def run():
                 img, key = showLandingPos(firstImage, acc, showLandingPosKey)
                 if k & 0xFF == ord(applyMatKey):
                     waitForInput(img2, firstImage, applyMatKey)
-        
-        img2, discarded, greyscale = grabImage(imgName, i, firstImage)
-        if img2 is None and not discarded:
+
+        try:
+            img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
+            print(i,"$$$$$$$$$$$$$$$$$$$$$$$$$")
+            #input()
+        except EarlyExitException as e:
+                e.acc = acc
+                e.w=wOrig_
+                e.h=hOrig_
+                e.firstImage=firstImage
+                e.firstImageFilename=firstImageFilename
+                raise e
+        if img2Pair is None and not discarded:
             print("img2 was None")
             if showPreviewWindow:
                 cv2.waitKey(0)
-            break
-        if img2 is None and discarded:
+            return Action.Break
+        if img2Pair is None and discarded:
             waitForInput(None, firstImage)
             i += 1
-            continue # Keep img1 as the previous image so we can match it next time
+            return Action.Continue #  # Keep img1 as the previous image so we can match it next time
+        img2=img2Pair[0]
         hOrig, wOrig = img2.shape[:2]
 
         # find the keypoints and descriptors with SIFT
@@ -411,7 +476,8 @@ def run():
             nonlocal good
             nonlocal good_flatList
             nonlocal good_old
-            
+
+            #print(des2, des1)
             matches = bf.knnMatch(des2,des1, k=2) # Swap order of des1,des2 because want to find first image in the second
 
             # Apply ratio test
@@ -448,13 +514,13 @@ def run():
                 continue_=True  # Keep img1 as the previous image so we can match it next time
         print("find_homography took", timeit.timeit(lambda: fn3(), number=1), "seconds")
         if continue_:
-            continue
+            return Action.Continue
         
         if transformation_matrix is None:
             print("transformation_matrix was None")
             waitForInput(None, firstImage)
             i+=1
-            continue # Keep img1 as the previous image so we can match it next time
+            return Action.Continue # Keep img1 as the previous image so we can match it next time
             # cv2.waitKey(0)
             # break
         acc *= transformation_matrix
@@ -477,6 +543,13 @@ def run():
         if showPreviewWindow:
             cv2.imshow('acc',tr);
             waitForInput(img2, firstImage)
+            if i % 4 == 0:
+                print("Flushing matrix and scaled image")
+                flushMatAndScaledImage(pSave, i, tr, acc)
+        else:
+            if i % 4 == 0:
+                print("Flushing matrix")
+                flushMatAndScaledImage(pSave, i, None, acc)
         #plt.imshow(img3),plt.show()
         
         # Save current keypoints as {the prev keypoints for next iteration}
@@ -484,10 +557,26 @@ def run():
         des1=des2
         img1=img2
         i+=1
-    if not showPreviewWindow or __name__ == "__main__":
-        # Save transformation
-        cv2.imwrite(os.path.join(pSave, "scaled.png"), tr)
-    return acc, wOrig_, hOrig_, firstImage, firstImageFilename
+        return None
+    try:
+        if len(imgs) > 1:
+            for imgName in imgs_iter:
+                ret = runInternal(imgName)
+                if ret == Action.Continue:
+                    continue
+                elif ret == Action.Break:
+                    break
+        else:
+            # Must be real video capture object
+            while True:
+                ret = runInternal(reader.read())
+                if ret == Action.Continue:
+                    continue
+                elif ret == Action.Break:
+                    break
+    finally:
+        flushMatAndScaledImage(pSave, i, None, acc)
+    return acc, wOrig_, hOrig_, firstImage, firstImageOrig, firstImageFilename
 
 if __name__ == "__main__":
     run()

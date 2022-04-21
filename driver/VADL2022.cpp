@@ -56,7 +56,7 @@ float IMU_ACCEL_MAGNITUDE_THRESHOLD_MAIN_PARACHUTE_NO_DROGUE_MPS = MAIN_DEPLOYME
 float IMU_ACCEL_MAGNITUDE_THRESHOLD_LANDING_MPS = LANDING_G_FORCE * 9.81 /*is set in main() also*/; // Meters per second squared
 
 // Command Line Args
-bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false, failsafeVideo = false, startSIFTAtApogee = false;
+bool sendOnRadio_ = false, siftOnly = false, videoCapture = false, imuOnly = false, failsafeVideo = false, startSIFTAtApogee = false, usePythonSIFT = false;
 const char* lsm = "1";
 const char* l3g = "0";
 const char* useForeLandingDetection = "0";
@@ -327,19 +327,28 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   // signal-safety(7)) until such time as it calls execve(2).
   // "} ( https://man7.org/linux/man-pages/man2/fork.2.html )
   // and I don't think std::string is async-signal-safe because it could call malloc
-  siftCommandLine =
-      "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine " +
-    (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string("")) +
-      " --main-mission " +
-  (siftParams != nullptr
-	       ? ("--sift-params " + std::string(siftParams))
-	       : std::string("")) +
-	  std::string(" --sleep-before-running ") +
-    std::string(timeAfterMainDeployment) //+
-    //std::string(" --no-preview-window") // --video-file-data-source
-    + (false/*useIMU*/ ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
-    + (verboseSIFTFD ? (std::string(" --verbose")) : "")
-  ;
+  if (!usePythonSIFT) {
+    siftCommandLine =
+        "XAUTHORITY=/home/pi/.Xauthority ./sift_exe_release_commandLine " +
+      (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string("")) +
+        " --main-mission " +
+    (siftParams != nullptr
+                 ? ("--sift-params " + std::string(siftParams))
+                 : std::string("")) +
+            std::string(" --sleep-before-running ") +
+      std::string(timeAfterMainDeployment) //+
+      //std::string(" --no-preview-window") // --video-file-data-source
+      + (false/*useIMU*/ ? (std::string(" --subscale-driver-fd ") + std::to_string(fd[0])) : "")
+      + (verboseSIFTFD ? (std::string(" --verbose")) : "")
+    ;
+  }
+  else {
+    // Sleep
+    long long millis = std::stoll(timeAfterMainDeployment);
+    printf("Sleeping for %ll milliseconds before starting SIFT...\n", millis);
+    std::this_thread::sleep_for(std::chrono::milliseconds());
+    siftCommandLine = "XAUTHORITY=/home/pi/.Xauthority python3 driver/sift.py";
+  }
   
   // char hostname[HOST_NAME_MAX + 1];
   // if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
@@ -1141,6 +1150,9 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--start-sift-at-apogee") == 0) { // Starts SIFT at apogee instead of main deployment
       startSIFTAtApogee = true;
     }
+    else if (strcmp(argv[i], "--python-sift") == 0) { // Uses Python SIFT backend instead of C++ SIFT
+      usePythonSIFT = true;
+    }
     else if (strcmp(argv[i], "--main-descent-time") == 0) { // Time in milliseconds since main deployment at which to stop SIFT but as an upper bound (don't make it possibly too low, since time for descent varies a lot)
       if (i+1 < argc) {
 	backupSIFTStopTime = std::stoll(argv[i+1]); // Must be long long
@@ -1273,6 +1285,11 @@ VADL2022::VADL2022(int argc, char** argv)
     : "sudo pkill pigpiod ; " // SIFT pi needs to stop it in case it's running already
     ;
   #endif
+  // "export PYTHONUNBUFFERED='1'" // An extra for fixing python not showing output  // https://stackoverflow.com/questions/27534609/tee-does-not-show-output-or-write-to-file
+    if (putenv("PYTHONUNBUFFERED=1") != 0) { // Equivalent to running `export DISPLAY=:0.0` in bash.  // Needed to show windows with GTK/X11 correctly
+        perror("Failed to set PYTHONUNBUFFERED");
+        //exit(EXIT_FAILURE);
+    }
   gpioUserPermissionFixingCommands = startPigpio + std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
 						 // For good measure, even though the Makefile does it already (this won't take effect until another run of the executable, so that's why we do it in the Makefile) :
 						 "&& sudo setcap cap_sys_rawio+ep \"$1\""); // The chown and chmod for /var/run fixes `Can't lock /var/run/pigpio.pid` and it's ok to do this since /var/run is a tmpfs created at boot

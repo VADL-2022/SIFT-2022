@@ -66,6 +66,12 @@ num_worker_threads = 1 #<--due to use of mainThreadShouldFlush, we need to use 1
 
 def run(shouldStop # AtomicInt
         , verbose = False
+        , onFrame = None # handler function that accepts an image
+        , fps = 30
+        , frame_width=640
+        , frame_height=480
+        , onSetVideoCapture = None # handler for when video capture object changes
+        , outputFolderPath = None
         ):
     global mainThreadShouldFlush
     global dispatchQueue
@@ -82,6 +88,8 @@ def run(shouldStop # AtomicInt
     
     # Create a VideoCapture object
     cap = cv2.VideoCapture(0)
+    if onSetVideoCapture is not None:
+        onSetVideoCapture(cap)
 
     # Check if camera opened successfully
     if (cap.isOpened() == False): 
@@ -94,12 +102,11 @@ def run(shouldStop # AtomicInt
 
     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
     date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
-    fps = 30
     print("Old width,height:",frame_width,frame_height)
-    frame_width=640
-    frame_height=480
-    o1=now.strftime("%Y-%m-%d_%H_%M_%S_%Z")
-    p=os.path.join('.', 'dataOutput', o1,'outpy' + date_time + '.mp4')
+    if outputFolderPath is None:
+        o1=now.strftime("%Y-%m-%d_%H_%M_%S_%Z")
+        outputFolderPath=os.path.join('.', 'dataOutput', o1)
+    p=os.path.join(outputFolderPath,'outpy' + date_time + '.mp4')
     try:
       os.mkdir(os.path.dirname(p), mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     except FileExistsError:
@@ -118,6 +125,8 @@ def run(shouldStop # AtomicInt
                   print("out.write(frame) took", timeit.timeit(lambda: out.write(frame), number=1), "seconds")
               else:
                   out.write(frame)
+              if onFrame is not None:
+                  onFrame(frame)
 
               # Display the resulting frame    
               #cv2.imshow('frame',frame)
@@ -146,7 +155,7 @@ def run(shouldStop # AtomicInt
               out = None # If exception occurs after this, we know outMainThreadShouldFlush = the video writer object, and out = None, so the `"main thread flushing unflushed edge case"` should fire.
               mainThreadShouldFlush.decrementAndThenGet() # If exception/preemption occurs after we decrement this, we know `out` is None so main thread has nothing to flush, and the queue will handle it.
               date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
-              p=os.path.join('.', 'dataOutput',o1,'outpy' + date_time + '.mp4')
+              p=os.path.join(outputFolderPath,'outpy' + date_time + '.mp4')
               print("Making new VideoWriter at", p)
               out = cv2.VideoWriter(p,format, fps, (frame_width,frame_height))
               print("Made new VideoWriter at", p)

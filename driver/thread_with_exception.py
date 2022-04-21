@@ -9,16 +9,18 @@ import ctypes
 import time
   
 class thread_with_exception(threading.Thread):
-    def __init__(self, name, target, **kwargs):
+    def __init__(self, name, target, kwargs_, **kwargs):
         threading.Thread.__init__(self, None, kwargs)
         self.name = name
         self.target=target
+        self.kwargs_=kwargs_
              
     def run(self):
  
         # target function of the thread class
         try:
-            self.target(self.name)
+            #print(self.kwargs_)
+            self.target(self.name, **self.kwargs_)
             # while True:
             #     print('running ' + self.name)
         finally:
