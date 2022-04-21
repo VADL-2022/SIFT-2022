@@ -98,7 +98,7 @@ parser.add_argument('--video-file-data-source-path', type=str, nargs='+', defaul
                     help="")
 parser.add_argument('--no-sky-detection', action='store_true', default=False,
                     help='')
-videoFileDataSource = False
+videoFileDataSource = namespace.video_file_data_source
 videoFilename = None
 # https://stackoverflow.com/questions/12834785/having-options-in-argparse-with-a-dash
 namespace=parser.parse_args() #vars(parser.parse_args()) # default is from argv but can provide a list here
