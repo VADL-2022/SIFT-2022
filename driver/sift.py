@@ -19,6 +19,25 @@ import knn_matcher2
 import argparse
 
 shouldStop=videoCapture.AtomicInt(0)
+
+class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
+    def __init__(self, origVideoCap=None):
+        self.q = queue.Queue()
+        self.origVideoCap=origVideoCap
+    def setOrigVideoCap(self,origVideoCap):
+        self.origVideoCap=origVideoCap
+    def read(self):
+        if shouldStop.get() == 1:
+            return (False # TODO: correct?
+                    , None)
+        return (True # TODO: correct?
+                , self.q.get() # Blocks till frame ready
+                )
+    def get(self, attr):
+        if self.origVideoCap is None:
+            print("self.origVideoCap is None")
+            return 1
+        return self.origVideoCap.get(attr)
 customVideoCapture = CustomVideoCapture()
 
 def signal_handler(sig, frame):
@@ -56,24 +75,6 @@ def startVideoCapture(name, **kwargs):
     videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,), kwargs_=kwargs)
     videoCaptureThread.start()
 
-class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
-    def __init__(self, origVideoCap=None):
-        self.q = queue.Queue()
-        self.origVideoCap=origVideoCap
-    def setOrigVideoCap(self,origVideoCap):
-        self.origVideoCap=origVideoCap
-    def read(self):
-        if shouldStop.get() == 1:
-            return (False # TODO: correct?
-                    , None)
-        return (True # TODO: correct?
-                , self.q.get() # Blocks till frame ready
-                )
-    def get(self, attr):
-        if self.origVideoCap is None:
-            print("self.origVideoCap is None")
-            return 1
-        return self.origVideoCap.get(attr)
 def onSetVideoCapture(cap):
     customVideoCapture.setOrigVideoCap(cap)
 def onFrame(frame):
