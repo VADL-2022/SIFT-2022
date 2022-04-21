@@ -61,7 +61,8 @@ else:
 
 m0Res=cv2.warpPerspective(firstImage, np.linalg.pinv(accMat), (w,h))
 cv2.imshow('sift on the way down',m0Res)
-gridID, m0, m1, mc, firstImage_, firstImageFilename_=driver.satelliteImageMatching.run(accMat, firstImage, 640/2, 480/2, showPreviewWindow)
+gridID, m0, m1, mc, firstImage_, firstImageFilename_=driver.satelliteImageMatching.run(accMat, firstImageFilename # not undistorted
+                                                                                       , 640/2, 480/2, showPreviewWindow)
 #assert(m0==accMat)
 
 m1Res=cv2.warpPerspective(firstImage, np.linalg.pinv(accMat)*(m1), (w,h)) # FIXME: w,h correct? ask emfinger

@@ -56,17 +56,17 @@ if __name__ == "__main__":
     if grabMode==1:
         reader=cv2.VideoCapture(
             # Drone tests from 3-28-2022: #
-             '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4' # GOOD
-            # '/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4' # CHALLENGING; a bit offset
-            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_46_26_CDT/output.mp4' #<--!!!!!!!!!!!!!!! WOAH! shockingly accurate result
-            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_50_08_CDT/output.mp4' # also good, but recovery is a little late
-            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_54_34_CDT/output.mp4' # TOUGHEST ONE
+             'Data/DroneTests/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4' # GOOD
+            # 'Data/DroneTests/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4' # CHALLENGING; a bit offset
+            #'Data/DroneTests/DroneTest_3-28-2022/2022-03-28_18_46_26_CDT/output.mp4' #<--!!!!!!!!!!!!!!! WOAH! shockingly accurate result
+            #'Data/DroneTests/DroneTest_3-28-2022/2022-03-28_18_50_08_CDT/output.mp4' # also good, but recovery is a little late
+            #'Data/DroneTests/DroneTest_3-28-2022/2022-03-28_18_54_34_CDT/output.mp4' # TOUGHEST ONE
 
             # hard one:
-            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_19_00_01_CDT/output.mp4' # WOW... actually not bad even though it hits the tower thing. maybe its higher fps is the key for opencv sift?
+            #'Data/DroneTests/DroneTest_3-28-2022/2022-03-28_19_00_01_CDT/output.mp4' # WOW... actually not bad even though it hits the tower thing. maybe its higher fps is the key for opencv sift?
             # #
 
-            #'/Users/sebastianbond/Desktop/SeniorSemester2/RocketTeam/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4'
+            #'Data/DroneTests/DroneTest_3-28-2022/2022-03-28_18_39_25_CDT/output.mp4'
             #'quadcopterFlight/live2--.mp4' # our old standby
             #'/Volumes/MyTestVolume/Projects/DataRocket/files_sift1_videosTrimmedOnly_fullscale1/Derived/live18_downwards_test/output.mp4'
         ) if videoFilename is None else cv2.VideoCapture(videoFilename)
