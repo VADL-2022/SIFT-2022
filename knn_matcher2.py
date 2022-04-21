@@ -363,6 +363,7 @@ def run(pSave=None):
             cv2.waitKey(0)
     
         kp1, des1 = sift.detectAndCompute(img1,mask = test_mask) # Returns keypoints and descriptors
+        des2=None
     else:
         print("No images")
 
