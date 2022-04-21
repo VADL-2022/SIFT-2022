@@ -98,7 +98,6 @@ parser.add_argument('--video-file-data-source-path', type=str, nargs='+', defaul
                     help="")
 parser.add_argument('--no-sky-detection', action='store_true', default=False,
                     help='')
-videoFileDataSource = namespace.video_file_data_source
 videoFilename = None
 # https://stackoverflow.com/questions/12834785/having-options-in-argparse-with-a-dash
 namespace=parser.parse_args() #vars(parser.parse_args()) # default is from argv but can provide a list here
@@ -108,6 +107,7 @@ skip=namespace.skip
 frameSkip=namespace.frameskip
 shouldRunSkyDetection=not namespace.no_sky_detection
 videoFileDataSourcePath=namespace.video_file_data_source_path
+videoFileDataSource = namespace.video_file_data_source
 def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
