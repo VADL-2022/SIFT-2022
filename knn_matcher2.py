@@ -397,6 +397,7 @@ def run(pSave=None):
         nonlocal i
         nonlocal img1
         nonlocal des1
+        nonlocal des2
         nonlocal kp1
         nonlocal greyscale
         def waitForInput(img2, firstImage, skipWaitKeyUsingKey=None):
@@ -474,7 +475,7 @@ def run(pSave=None):
             nonlocal good_flatList
             nonlocal good_old
 
-            print(des2, des1)
+            #print(des2, des1)
             matches = bf.knnMatch(des2,des1, k=2) # Swap order of des1,des2 because want to find first image in the second
 
             # Apply ratio test
