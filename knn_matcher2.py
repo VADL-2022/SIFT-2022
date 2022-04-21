@@ -317,7 +317,7 @@ def run():
             img1, discarded, greyscale = grabImage(imgs[i], i, None, True)
         #exit(0)
 
-        while img1 is None and discarded:
+        while img1 is None or discarded:
             firstImageFilename=imgs[i]
             img1, discarded, greyscale = grabImage(imgs[i], i, None)
             i+=1
