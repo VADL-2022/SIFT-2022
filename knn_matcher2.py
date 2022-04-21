@@ -435,6 +435,7 @@ def run():
             nonlocal transformation_rigid_matrix
             nonlocal i
             nonlocal continue_
+            nonlocal good
             try:
                 good, transformation_matrix, transformation_rigid_matrix = find_homography(kp2, kp1, good_flatList) # Swap order of kp1, kp2 because want to find first image in the second
             except cv2.error:

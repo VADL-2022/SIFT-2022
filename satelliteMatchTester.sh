@@ -10,3 +10,5 @@ python3 satelliteMatchTester.py Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/ou
 #python3 satelliteMatchTester.py quadcopterFlight/Derived/live2--.reversed.mp4 '' '' 1 $((132*30-1)) 40
 
 #python3 satelliteMatchTester.py 'Data/DroneTests/DroneTest_3-28-2022/2022-03-28_18_34_07_CDT/output.mp4'
+
+# Ethan's hack: if the dark blue dot is in the 3x3 grid boxes then use it. else if the yellow one is in the 3x3 grid boxes then use it, else use the teal one
