@@ -112,11 +112,12 @@ void enqueueSatelliteMatch(VADL2022* v) {
       py::int_ gridIdentifier = (py::tuple)(match.attr("run")(matrixFilename, firstImageFilename, 640/2, 480/2))[0]; // HACK: hardcoded 480p
 
       auto enq1 = rec([=](auto&& enq1){
+        py::print("gridIdentifier@@@@@@@@@:");
+        py::print("gridIdentifier@@@@@@@@@:",gridIdentifier);
         nonthrowing_python_nolock([=](){
           // Send the grid ID on the radio
           const char *sendOnRadioScriptArgs[] = {NULL, NULL};
           sendOnRadioScriptArgs[0] = "0"; // 1 to use stdin
-          py::print("gridIdentifier@@@@@@@@@:",gridIdentifier);
           std::string gridBoxNumbers_str = py::str(gridIdentifier); // Cast the python list to std::string
           sendOnRadioScriptArgs[1] = gridBoxNumbers_str.c_str(); // String to send
           //sendOnRadioScriptArgs[2] = ""; // Send this file on the radio

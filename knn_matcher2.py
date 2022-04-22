@@ -301,6 +301,7 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     return img, key
     
 def run(pSave=None):
+    print("knn_matcher2.py run() starting up with SIFT settings:", nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma)
     if not showPreviewWindow:
         if pSave is None:
             pSave="dataOutput"
