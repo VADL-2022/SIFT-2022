@@ -30,7 +30,7 @@ void enqueueIMURecon(VADL2022* v) {
       }
       const bool USE_DEFAULT_ARGS = false;
       using namespace pybind11::literals; // to bring in the `_a` literal
-      py::list gridBoxNumbers = IMURecon.attr("calc_displacement2")(logFileName, USE_DEFAULT_ARGS ? ("launch_rail_box"_a="192") : py::arg("launch_rail_box")=py::eval(v->launchBox), "my_thresh"_a=py::eval("50"), "my_post_drogue_delay"_a=py::eval("0.85"), "my_signal_length"_a=py::eval("3"), "my_t_sim_landing"_a=py::eval("50"), USE_DEFAULT_ARGS ? ("ld_launch_angle"_a=py::eval("2*pi/180")) : py::arg("ld_launch_angle")=py::eval(v->launchAngle), "ld_ssm"_a=py::eval("3.2"), "ld_dry_base"_a=py::eval("15.89"));
+      py::list gridBoxNumbers = IMURecon.attr("calc_displacement2")(logFileName, USE_DEFAULT_ARGS ? ("launch_rail_box"_a="192") : py::arg("launch_rail_box")=py::eval(v->launchBox), "weather_station_stats_xy"_a=py::eval(v->windSpeed), "my_thresh"_a=py::eval("50"), "my_post_drogue_delay"_a=py::eval("0.85"), "my_signal_length"_a=py::eval("3"), "my_t_sim_landing"_a=py::eval("50"), USE_DEFAULT_ARGS ? ("ld_launch_angle"_a=py::eval("2*pi/180")) : py::arg("ld_launch_angle")=py::eval(v->launchAngle), "ld_ssm"_a=py::eval("3.2"), "ld_dry_base"_a=py::eval("15.89"));
       py::print("C++ got gridBoxNumbers:", gridBoxNumbers);
 
       auto enq1 = rec([=](auto&& enq1){

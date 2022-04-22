@@ -1222,6 +1222,9 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--launch-angle") == 0) { // angle of the launch rail
       launchAngle = /*std::stod*/(argv[i+1]); // PYTHON EXPRESSION
       i++;
+    } else if (strcmp(argv[i], "--wind-speed") == 0) { // speed of wind in x and y direction as a Python tuple
+      windSpeed = argv[i+1]; // PYTHON EXPRESSION
+      i++;
     }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
@@ -1256,7 +1259,7 @@ VADL2022::VADL2022(int argc, char** argv)
     exit(1);
   }
   if (backupTakeoffTime == -1 && !imuOnly) {
-    puts("Need to provide --backup-takeoff-time, using 60000 milliseconds (60 seconds) is recommended");
+    puts("Need to provide --backup-takeoff-time");
     exit(1);
   }
   if (mecoDuration == -1 && !imuOnly) {
@@ -1275,8 +1278,12 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --launch-box");
     exit(1);
   }
-   if (launchAngle == nullptr && !imuOnly && !videoCapture) {
+  if (launchAngle == nullptr && !imuOnly && !videoCapture) {
     puts("Need to provide --launch-angle");
+    exit(1);
+  }
+  if (windSpeed == nullptr && !imuOnly && !videoCapture) {
+    puts("Need to provide --wind-speed");
     exit(1);
   }
 

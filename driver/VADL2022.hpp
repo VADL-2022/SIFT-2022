@@ -33,6 +33,7 @@ public:
 
     const char* launchBox = nullptr;
     const char* launchAngle = nullptr;
+    const char* windSpeed = nullptr;
     
 private:
     void connect_GPIO(bool initCppGpio);
