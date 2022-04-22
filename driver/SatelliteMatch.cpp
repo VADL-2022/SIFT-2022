@@ -109,7 +109,9 @@ void enqueueSatelliteMatch(VADL2022* v) {
       std::string firstImageFilename = getOutputFirstImage();
 
       py::module_ match = py::module_::import("driver.satelliteImageMatching");
-      //py::int_ gridIdentifier = (py::tuple)(match.attr("run")(matrixFilename, firstImageFilename, 640/2, 480/2))[0]; // HACK: hardcoded 480p
+      std::cout << matrixFilename << std::endl;
+      std::cout << firstImageFilename << std::endl;
+      py::int_ gridIdentifier = (py::tuple)(match.attr("run")(matrixFilename, firstImageFilename, 640/2, 480/2))[0]; // HACK: hardcoded 480p
 
       std::cout << "grid@@@@@@@@@@@@@@@@@@@@@" << std::endl;
     });
