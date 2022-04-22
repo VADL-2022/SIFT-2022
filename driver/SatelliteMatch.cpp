@@ -114,7 +114,11 @@ void enqueueSatelliteMatch(VADL2022* v) {
       std::cout << "grid@@@@@@@@@@@@@@@@@@@@@" << std::endl;
       py::print("gridIdentifier@@@@@@@@@:");
       auto enq1 = rec([=](auto&& enq1){
-        nonthrowing_python_nolock([=](){
+        
+      });
+
+      //enq1();
+      nonthrowing_python_nolock([=](){
           py::print("gridIdentifier@@@@@@@@@2:");
           py::print("gridIdentifier@@@@@@@@@3:",gridIdentifier);
         
@@ -131,9 +135,6 @@ void enqueueSatelliteMatch(VADL2022* v) {
           // Enqueue a send again so we send on radio again in case of transmission error
           //mainDispatchQueue.enqueue(enq1, "satelliteImageMatching.py enqueue again",QueuedFunctionType::Python);
         });
-      });
-
-      enq1();
     });
   });
   mainDispatchQueue.enqueue(enq, "satelliteImageMatching.py",QueuedFunctionType::Python);
