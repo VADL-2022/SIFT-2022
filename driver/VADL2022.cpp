@@ -345,7 +345,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   else {
     // Sleep
     long long millis = std::stoll(timeAfterMainDeployment);
-    printf("Sleeping for %ll milliseconds before starting SIFT...\n", millis);
+    printf("Sleeping for %lld milliseconds before starting SIFT...\n", millis);
     std::this_thread::sleep_for(std::chrono::milliseconds());
     siftCommandLine = "XAUTHORITY=/home/pi/.Xauthority python3 driver/sift.py " + (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string(""));
   }
@@ -1409,7 +1409,7 @@ VADL2022::VADL2022(int argc, char** argv)
         IMUData imu;
         size_t i = 0;
         while (imu.timestamp / 1.0e9 < imuDataSourceOffset / 1000.0) {
-          printf("LOGFromFile scanRow: %zu , timestamp is %f, %f\n", i++, imu.timestamp / 1.0e9, imu.yprNed.x);
+          printf("LOGFromFile scanRow: %zu , timestamp is %f, yprNed.x is %f\n", i++, imu.timestamp / 1.0e9, imu.yprNed.x);
           ((LOGFromFile *)mLog)->scanRow(imu); // Seek past this row
         }
       }

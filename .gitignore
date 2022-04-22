@@ -13,5 +13,6 @@ xcuserdata
 *.gch
 __pycache__/
 .clangd
+/a.out
 
 /fl.txt
