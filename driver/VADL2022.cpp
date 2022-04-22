@@ -1222,7 +1222,7 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--launch-angle") == 0) { // angle of the launch rail
       launchAngle = /*std::stod*/(argv[i+1]); // PYTHON EXPRESSION
       i++;
-    } else if (strcmp(argv[i], "--wind-speed") == 0) { // speed of wind in x and y direction as a Python tuple
+    } else if (strcmp(argv[i], "--wind-speed") == 0) { // speed of wind in x and y direction as a Python tuple (wind speed negative is south and west is negative)
       windSpeed = argv[i+1]; // PYTHON EXPRESSION
       i++;
     }
