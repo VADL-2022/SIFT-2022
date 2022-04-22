@@ -116,7 +116,7 @@ void enqueueSatelliteMatch(VADL2022* v) {
           // Send the grid ID on the radio
           const char *sendOnRadioScriptArgs[] = {NULL, NULL};
           sendOnRadioScriptArgs[0] = "0"; // 1 to use stdin
-          std::cout << "gridIdentifier@@@@@@@@@:" << gridIdentifier << std::endl;
+          py::print("gridIdentifier@@@@@@@@@:",gridIdentifier);
           std::string gridBoxNumbers_str = py::str(gridIdentifier); // Cast the python list to std::string
           sendOnRadioScriptArgs[1] = gridBoxNumbers_str.c_str(); // String to send
           //sendOnRadioScriptArgs[2] = ""; // Send this file on the radio
