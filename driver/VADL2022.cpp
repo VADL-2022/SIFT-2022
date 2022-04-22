@@ -1409,7 +1409,7 @@ VADL2022::VADL2022(int argc, char** argv)
         IMUData imu;
         size_t i = 0;
         while (imu.timestamp / 1.0e9 < imuDataSourceOffset / 1000.0) {
-          printf("LOGFromFile scanRow: %zu , timestamp is %f\n", i++, imu.timestamp / 1.0e9);
+          printf("LOGFromFile scanRow: %zu , timestamp is %f, %f\n", i++, imu.timestamp / 1.0e9, imu.yprNed.x);
           ((LOGFromFile *)mLog)->scanRow(imu); // Seek past this row
         }
       }
