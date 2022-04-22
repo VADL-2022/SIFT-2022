@@ -268,9 +268,10 @@ def showLerpController(firstImage, M, key_='a', idMat=idMat):
             Mcurrent=M.copy()
         else:
             break
-def showLandingPos(firstImage, M, key_='l', idMat=idMat):
-    img = firstImage.copy()
-    # 4 corner points
+lastGoodM=None
+def computeLandingPos(img, M):
+    if M is None:
+        return None
     height,width=img.shape[:2]
     pts = np.array([[(0,0), (width,0), (width,height), (0,height)]], dtype=np.float32)
     dstPts = np.zeros_like(pts)
@@ -286,17 +287,45 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     dstMidpointUndist = src.python.General.undistortPoints(np.array([[dstMidpoint*(src.python.General.w/640)]], dtype=np.float32))[0][0]*(640/src.python.General.w)
     #dstMidpointUndist = undistortPoints(np.array([[dstMidpoint*(src.python.General.w/640)]], dtype=np.float32), src.python.General.k, src.python.General.dist)[0][0]*(640/src.python.General.w)
     print("dstMidpointUndist:",dstMidpointUndist)
-    cv2.circle(img, list(map(int, dstMidpoint)), 3, (255, 0, 0), 3)
-    cv2.circle(img, list(map(int, dstMidpointUndist)), 3, (255, 255, 0), 3)
-    cv2.circle(img, list(map(int, np.array([width/2,height/2])+dstMidpointUndist-dstMidpoint)), 3, (0, 255, 255), 3)
+    sentientAnilPoint = np.array([width/2,height/2])+dstMidpointUndist-dstMidpoint
+    isGood = np.linalg.norm(dstMidpointUndist-dstMidpoint) <= 200 # "semi-discard" here. np.linalg.norm is vector magnitude.
+    return width, height, dstPts, dstMidpoint, dstMidpointUndist, sentientAnilPoint, isGood
+def drawDstPoints(img, dstPts, color):
     if len(dstPts) > 1:
         for i in range(0, len(dstPts)-1):
             print(dstPts[i])
-            cv2.line(img, list(map(int, dstPts[i])), list(map(int, dstPts[i+1])), (255,0,0), 2)
-        cv2.line(img, list(map(int, dstPts[0])), list(map(int, dstPts[len(dstPts)-1])), (255,0,0), 2)
-    # Get landing grid cell #
-    cv2.putText(img,str(GridCell.getGridCellIdentifier(width, height, dstMidpoint[0], dstMidpoint[1])),(5,5+25),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)  #text,coordinate,font,size of text,color,thickness of font   # https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
+            cv2.line(img, list(map(int, dstPts[i])), list(map(int, dstPts[i+1])), color, 2)
+        cv2.line(img, list(map(int, dstPts[0])), list(map(int, dstPts[len(dstPts)-1])), color, 2)
+
+def showLandingPos(firstImage, M, key_='l', idMat=idMat):
+    img = firstImage.copy()
+    maybeNone = computeLandingPos(img, M)
+    if maybeNone is None:
+        return
+    width, height, dstPts, dstMidpoint, dstMidpointUndist, sentientAnilPoint, isGood = maybeNone
+    maybeNone = computeLandingPos(img, lastGoodM)
+    
+    # Possibly bad point #
+    cv2.circle(img, list(map(int, dstMidpoint)), 3, (255, 0, 0), 3)
+    cv2.circle(img, list(map(int, dstMidpointUndist)), 3, (255, 255, 0), 3)
+    cv2.circle(img, list(map(int, sentientAnilPoint)), 3, (0, 255, 255), 3)
+    drawDstPoints(img, dstPts, (255,0,0))
+    # Get landing grid cell: possibly bad #
+    cv2.putText(img,str(GridCell.getGridCellIdentifier(width, height, dstMidpoint[0], dstMidpoint[1])),(5,5+25),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0 if isGood else 255,255 if isGood else 0),2)  #text,coordinate,font,size of text,color,thickness of font   # https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
     # #
+
+    # Good point
+    if maybeNone is None:
+        return
+    width, height, dstPtsGood, dstMidpointGood, dstMidpointUndistGood, sentientAnilPointGood, isGoodGood = maybeNone
+    # Good point #
+    if not np.array_equal(dstMidpointGood, dstMidpoint):
+        drawDstPoints(img, dstPtsGood, (0,255,0))
+        cv2.circle(img, list(map(int, dstMidpoint)), 3, (255, 255, 255), 3)
+        # Get landing grid cell: good #
+        cv2.putText(img,"; " + str(GridCell.getGridCellIdentifier(width, height, dstMidpoint[0], dstMidpoint[1])),(5+100,5+25),cv2.FONT_HERSHEY_SIMPLEX,1,(255,0,0),2)  #text,coordinate,font,size of text,color,thickness of font   # https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
+        # #
+    
     cv2.imshow('landingPos', img)
     key = cv2.waitKey(0)
     return img, key
@@ -403,6 +432,7 @@ def run(pSave=None):
         nonlocal des2
         nonlocal kp1
         nonlocal greyscale
+        global lastGoodM
         def waitForInput(img2, firstImage, skipWaitKeyUsingKey=None):
             if not showPreviewWindow:
                 return
@@ -528,7 +558,14 @@ def run(pSave=None):
             return Action.Continue # Keep img1 as the previous image so we can match it next time
             # cv2.waitKey(0)
             # break
+        maybeNone = computeLandingPos(firstImage, acc)
+        if maybeNone is not None:
+            width, height, dstPts, dstMidpoint, dstMidpointUndist, anilPoint, isGood = maybeNone
+        else:
+            isGood = True
         acc *= transformation_matrix
+        if isGood:
+            lastGoodM = acc.copy() # if we ever recover, use the current matrix
         accOld = acc.copy()
         # #print(acc[0])
         # acc[0][0] *= 0.9
@@ -581,7 +618,8 @@ def run(pSave=None):
                     break
     finally:
         flushMatAndScaledImage(pSave, i, None, acc)
-    return acc, wOrig_, hOrig_, firstImage, firstImageOrig, firstImageFilename
+    return (#acc,
+        lastGoodM, wOrig_, hOrig_, firstImage, firstImageOrig, firstImageFilename)
 
 if __name__ == "__main__":
     run()

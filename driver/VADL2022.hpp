@@ -4,6 +4,7 @@
 #include "LOG.hpp"
 #include "LOGFromFile.hpp"
 #include "IMU.hpp"
+#include <chrono>
 
 using namespace std;
 
@@ -34,6 +35,8 @@ public:
     const char* launchBox = nullptr;
     const char* launchAngle = nullptr;
     const char* windSpeed = nullptr;
+    const char* launchRailGPSXYCoords = nullptr;
+    std::chrono::time_point<std::chrono::steady_clock> landingTime = std::chrono::steady_clock::now();
     
 private:
     void connect_GPIO(bool initCppGpio);

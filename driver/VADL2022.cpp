@@ -879,15 +879,16 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     float duration = fseconds - v->startTime;
     printf("Exceeded landing acceleration magnitude threshold for %f seconds\n", duration);
     if (duration >= LANDING_ACCEL_DURATION) {
-       puts("`````````````````````````````````````````````````````````\nLanded\n`````````````````````````````````````````````````````````");
-       v->startTime = -1; // Reset timer
-       reportStatus(Status::StoppingSIFTOrVideoCaptureOnLanding);
-       if (!isRunningPython) { // Stop SIFT since we assume SIFT must be running if !isRunningPython
-         raise(SIGINT);
-       }
-       // Also close main dispatch queue so the subscale driver terminates
-       mainDispatchQueueDrainThenStop = true;
-       ((LOG_T*)v->mLog)->userCallback = nullptr;
+      v->landingTime=std::chrono::steady_clock::now();
+      puts("`````````````````````````````````````````````````````````\nLanded\n`````````````````````````````````````````````````````````");
+      v->startTime = -1; // Reset timer
+      reportStatus(Status::StoppingSIFTOrVideoCaptureOnLanding);
+      if (!isRunningPython) { // Stop SIFT since we assume SIFT must be running if !isRunningPython
+        raise(SIGINT);
+      }
+      // Also close main dispatch queue so the subscale driver terminates
+      mainDispatchQueueDrainThenStop = true;
+      ((LOG_T*)v->mLog)->userCallback = nullptr;
     }
   }
 
@@ -1072,17 +1073,17 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    else if (strcmp(argv[i], "--main-deployment-altitude") == 0) {
-      if (i+1 < argc) {
-	mainDeploymentAltitude = std::stoll(argv[i+1]);
-	std::cout << "Set main deployment altitude to " << mainDeploymentAltitude << std::endl;
-      }
-      else {
-	puts("Expected main deployment altitude");
-	exit(1);
-      }
-      i++;
-    }
+    // else if (strcmp(argv[i], "--main-deployment-altitude") == 0) {
+    //   if (i+1 < argc) {
+    //     mainDeploymentAltitude = std::stoll(argv[i+1]);
+    //     std::cout << "Set main deployment altitude to " << mainDeploymentAltitude << std::endl;
+    //   }
+    //   else {
+    //     puts("Expected main deployment altitude");
+    //     exit(1);
+    //   }
+    //   i++;
+    // }
     else if (strcmp(argv[i], "--takeoff-g-force") == 0) { // Override thing
       if (i+1 < argc) {
 	TAKEOFF_G_FORCE = stof(argv[i+1]);
@@ -1226,6 +1227,10 @@ VADL2022::VADL2022(int argc, char** argv)
       windSpeed = argv[i+1]; // PYTHON EXPRESSION
       i++;
     }
+    else if (strcmp(argv[i], "--launch-rail-gps-coords") == 0) { // gps x and y coords
+      launchRailGPSXYCoords = argv[i+1]; // PYTHON EXPRESSION
+      i++;
+    }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
       siftParams = argv[i+1];
       i++;
@@ -1270,10 +1275,10 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --time-to-apogee");
     exit(1);
   }
-  if (mainDeploymentAltitude == -1 && !imuOnly && !videoCapture) {
-    puts("Need to provide --main-deployment-altitude");
-    exit(1);
-  }
+  // if (mainDeploymentAltitude == -1 && !imuOnly && !videoCapture) {
+  //   puts("Need to provide --main-deployment-altitude");
+  //   exit(1);
+  // }
   if (launchBox == nullptr && !imuOnly && !videoCapture) {
     puts("Need to provide --launch-box");
     exit(1);
@@ -1285,6 +1290,24 @@ VADL2022::VADL2022(int argc, char** argv)
   if (windSpeed == nullptr && !imuOnly && !videoCapture) {
     puts("Need to provide --wind-speed");
     exit(1);
+  }
+  if (launchRailGPSXYCoords == nullptr && !imuOnly && !videoCapture) {
+    puts("Need to provide --launch-rail-gps-coords");
+    exit(1);
+  }
+
+  char hostname[HOST_NAME_MAX + 1];
+  if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+    printf("hostname: %s\n", hostname);
+    if (strcmp(hostname, "sift1") == 0) {
+      mainDeploymentAltitude = 1400;
+    }
+    else {
+      mainDeploymentAltitude = 1500;
+    }
+  }
+  else {
+    mainDeploymentAltitude = 1500;
   }
 
 #ifdef USE_LIS331HH
