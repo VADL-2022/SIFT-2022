@@ -15,5 +15,6 @@ def getGridCellIdentifier(imgWidth, imgHeight, x, y):
     #xOfGridCell = gridCellX * gridCellWidth
 
     # Calculate the identifier (a zero-based index, so this is just converting 2D array access with x and y into 1D)
-    cellIdentifier = round(gridCellX) + round(gridCellY * gridCellWidth)
+    # WRONG: cellIdentifier = round(gridCellX) + round(gridCellY * gridCellWidth)
+    cellIdentifier = round(gridCellX) + round(gridCellY * gridWidthInGridCells)
     return cellIdentifier
