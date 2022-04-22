@@ -209,6 +209,7 @@ def grabImage(imgName, i, firstImage, skip=False):
     else:
         frameOrig = frame
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    print("(((((((((((((((((",shouldRunSkyDetection)
     if shouldRunSkyDetection and shouldDiscardImage(greyscaleOrig, i):
         print("Discarded image", i)
         return None, True, greyscale

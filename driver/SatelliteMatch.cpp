@@ -103,18 +103,39 @@ std::string getOutputFirstImage() {
 }
 
 void enqueueSatelliteMatch(VADL2022* v) {
-  auto enq = [=](){
+  auto enq = rec([=](auto&& enq){
     nonthrowing_python_nolock([=](){
       std::string matrixFilename = getOutputMatrix();
       std::string firstImageFilename = getOutputFirstImage();
 
       py::module_ match = py::module_::import("driver.satelliteImageMatching");
-      // std::cout << matrixFilename << std::endl;
-      // std::cout << firstImageFilename << std::endl;
-      match.attr("run")("dataOutput/2022-04-22_00_02_05_/scaled71.matrix0.txt", "dataOutput/2022-04-22_00_02_05_/firstImage0.png", 640/2, 480/2); // HACK: hardcoded 480p
+      py::tuple retval = (py::tuple)(match.attr("run")(matrixFilename, firstImageFilename, 640/2, 480/2)); // HACK: hardcoded 480p
+      py::int_ gridIdentifier = retval[0];
 
-      std::cout << "grid@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+      // std::cout << "grid@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+      // py::print("gridIdentifier@@@@@@@@@:");
+      auto enq1 = rec([=](auto&& enq1){
+        nonthrowing_python_nolock([=](){
+          // py::print("gridIdentifier@@@@@@@@@2:");
+          // py::print("gridIdentifier@@@@@@@@@3:",gridIdentifier);
+        
+          // Send the grid ID on the radio
+          const char *sendOnRadioScriptArgs[] = {NULL, NULL};
+          sendOnRadioScriptArgs[0] = "0"; // 1 to use stdin
+          std::string gridBoxNumbers_str = py::str(gridIdentifier); // Cast the python list to std::string
+          sendOnRadioScriptArgs[1] = gridBoxNumbers_str.c_str(); // String to send
+          //sendOnRadioScriptArgs[2] = ""; // Send this file on the radio
+          { out_guard();
+            std::cout << "sendOnRadio script execution for SIFT SatelliteMatch" << std::endl; }
+          bool success = S_RunFile("driver/radio.py", 2, (char **)sendOnRadioScriptArgs);
+          
+          // Enqueue a send again so we send on radio again in case of transmission error
+          //mainDispatchQueue.enqueue(enq1, "satelliteImageMatching.py enqueue again",QueuedFunctionType::Python);
+        });
+      });
+
+      enq1();
     });
-  };
+  });
   mainDispatchQueue.enqueue(enq, "satelliteImageMatching.py",QueuedFunctionType::Python);
 }
