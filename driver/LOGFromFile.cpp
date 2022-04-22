@@ -16,7 +16,7 @@ void LOGFromFile::scanRow(IMUData& out) {
     LOGFromFile* data = this;
     IMUData& imu = out;
     
-    if (!data->first) {
+    if (data->first) {
       //fscanf(data->mLog, "\n");
       printf("fscanf for first line: %d\n", fscanf(data->mLog, "Timestamp,Yaw,Pitch,Roll,Qtn[0], Qtn[1], Qtn[2], Qtn[3],Rate X,Rate Y,Rate Z,Accel X,Accel Y,Accel Z,Mag X,Mag Y,Mag Z,Temp,Pres,dTime,dTheta X,dTheta Y,dTheta Z,dVel X,dVel Y,dVel Z,MagNed X,MagNed Y,MagNed Z,AccelNed X,AccelNed Y,AccelNed Z,LinearAccel X,LinearAccel Y,LinearAccel Z,LinearAccelNed X,LinearAccelNed Y,LinearAccelNed Z,Amplitude,Distance,Light 1,Light 2,Light 3,Light 4,Comments\n"));
     }
