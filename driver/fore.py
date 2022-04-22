@@ -29,7 +29,7 @@ import socket
 # Forward declare all functions ###########################################
 
 # Function to run on the video capture thread
-def videoCaptureThreadFunction(name):
+def videoCaptureThreadFunction(name, **kwargs):
     global shouldStop
 
     # Check if video capture is already running
@@ -39,11 +39,11 @@ def videoCaptureThreadFunction(name):
 
     # Start the actual video capture
     logging.info("Thread %s: starting", name)
-    videoCapture.run(shouldStop, fps=15, frame_width=1280, frame_height=720)
+    videoCapture.run(shouldStop, fps=15, frame_width=1280, frame_height=720, **kwargs)
     logging.info("Thread %s: finishing", name)
 
 # Starts the video capture
-def startVideoCapture(name):
+def startVideoCapture(name, **kwargs):
     global videoCaptureThread
 
     # Check if a video capture thread is already running
@@ -52,7 +52,7 @@ def startVideoCapture(name):
         return
 
     # Start the video capture thread
-    videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,))
+    videoCaptureThread = thread_with_exception.thread_with_exception(name=name, target=videoCaptureThreadFunction, args=(name,), kwargs_=kwargs)
     videoCaptureThread.start()
 
 # Uses GPIO to swap cameras via camera multiplexer
