@@ -123,6 +123,14 @@ def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.showPreviewWindow = showPreviewWindow
     knn_matcher2.reader = capAPI if not videoFileDataSource else cv2.VideoCapture(videoFileDataSourcePath[0])
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
+
+    knn_matcher2.nfeatures = 0
+    knn_matcher2.nOctaveLayers = 9
+    knn_matcher2.contrastThreshold = 0.03
+    knn_matcher2.edgeThreshold = 10
+    knn_matcher2.sigma = 0.8
+    knn_matcher2.sift = cv2.xfeatures2d.SIFT_create(knn_matcher2.nfeatures, knn_matcher2.nOctaveLayers, knn_matcher2.contrastThreshold, knn_matcher2.edgeThreshold, knn_matcher2.sigma)
+    
     rets = knn_matcher2.run(pSave)
     return rets
 
