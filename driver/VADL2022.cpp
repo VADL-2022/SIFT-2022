@@ -1407,7 +1407,9 @@ VADL2022::VADL2022(int argc, char** argv)
       // Seek past times less than imuDataSourceOffset if any
       if (imuDataSourceOffset > 0) {
         IMUData imu;
+        size_t i = 0;
         while (imu.timestamp / 1.0e9 < imuDataSourceOffset / 1000.0) {
+          printf("LOGFromFile scanRow: %zu\n", i++);
           ((LOGFromFile *)mLog)->scanRow(imu); // Seek past this row
         }
       }
