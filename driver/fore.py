@@ -39,7 +39,7 @@ def videoCaptureThreadFunction(name):
 
     # Start the actual video capture
     logging.info("Thread %s: starting", name)
-    videoCapture.run(shouldStop, fps=15, frame_width=1920, frame_height=1080)
+    videoCapture.run(shouldStop, fps=15, frame_width=1280, frame_height=720)
     logging.info("Thread %s: finishing", name)
 
 # Starts the video capture
