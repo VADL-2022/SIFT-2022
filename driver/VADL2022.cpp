@@ -347,7 +347,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
     long long millis = std::stoll(timeAfterMainDeployment);
     printf("Sleeping for %ll milliseconds before starting SIFT...\n", millis);
     std::this_thread::sleep_for(std::chrono::milliseconds());
-    siftCommandLine = "XAUTHORITY=/home/pi/.Xauthority python3 driver/sift.py";
+    siftCommandLine = "XAUTHORITY=/home/pi/.Xauthority python3 driver/sift.py " + (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string(""));
   }
   
   // char hostname[HOST_NAME_MAX + 1];

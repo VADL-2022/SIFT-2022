@@ -20,6 +20,7 @@ import argparse
 from datetime import datetime
 
 shouldStop=videoCapture.AtomicInt(0)
+forceStop = False
 
 class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
     def __init__(self, origVideoCap=None):
@@ -45,6 +46,8 @@ def signal_handler(sig, frame):
     print('You pressed Ctrl+C! Stopping video capture thread...')
     #sys.exit(0)
     shouldStop.set(1)
+    if forceStop:
+        exit(0)
     customVideoCapture.q.put(None) # placeholder for stopping
 
 # Function to run on the video capture thread
@@ -83,13 +86,21 @@ def onFrame(frame):
 
 # https://docs.python.org/3/library/argparse.html
 parser = argparse.ArgumentParser(description='The bad boy SIFT but implemented in python..')
-parser.add_argument('--skip', metavar='N', type=int, nargs='+', default=0,
+parser.add_argument('--skip', type=int, nargs='+', default=0,
                     help="initial skip")
 parser.add_argument('--show-preview-window', action='store_true', default=False,
                     help='whether to show the preview window')
-parser.add_argument('--frameskip', metavar='N', type=int, nargs='+', default=1,
+parser.add_argument('--frameskip', type=int, nargs='+', default=1,
                     help="skip this number of frames after every frame processed")
-videoFileDataSource = False
+# --save-first-image --video-file-data-source --video-file-data-source-path Data/fullscale1/Derived/SIFT/output.mp4 --no-sky-detection
+parser.add_argument('--save-first-image', action='store_true', default=True,
+                    help='whether to save the first image')
+parser.add_argument('--video-file-data-source', action='store_true', default=True,
+                    help='')
+parser.add_argument('--video-file-data-source-path', type=str, nargs='+', default=1,
+                    help="")
+parser.add_argument('--no-sky-detection', action='store_true', default=False,
+                    help='')
 videoFilename = None
 # https://stackoverflow.com/questions/12834785/having-options-in-argparse-with-a-dash
 namespace=parser.parse_args() #vars(parser.parse_args()) # default is from argv but can provide a list here
@@ -97,15 +108,20 @@ print(namespace)
 showPreviewWindow=namespace.show_preview_window
 skip=namespace.skip
 frameSkip=namespace.frameskip
+shouldRunSkyDetection=not namespace.no_sky_detection
+videoFileDataSourcePath=namespace.video_file_data_source_path
+videoFileDataSource = namespace.video_file_data_source
+if videoFileDataSource:
+    forceStop=True
 def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
-    knn_matcher2.shouldRunSkyDetection = True
+    knn_matcher2.shouldRunSkyDetection = shouldRunSkyDetection
     knn_matcher2.shouldRunUndistort = True #False
     knn_matcher2.skip = skip
     knn_matcher2.videoFilename = None
     knn_matcher2.showPreviewWindow = showPreviewWindow
-    knn_matcher2.reader = capAPI
+    knn_matcher2.reader = capAPI if not videoFileDataSource else cv2.VideoCapture(videoFileDataSourcePath[0])
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
     rets = knn_matcher2.run(pSave)
     return rets

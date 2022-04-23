@@ -112,6 +112,8 @@ void enqueueSatelliteMatch(VADL2022* v) {
       py::int_ gridIdentifier = (py::tuple)(match.attr("run")(matrixFilename, firstImageFilename, 640/2, 480/2))[0]; // HACK: hardcoded 480p
 
       auto enq1 = rec([=](auto&& enq1){
+        py::print("gridIdentifier@@@@@@@@@:");
+        py::print("gridIdentifier@@@@@@@@@:",gridIdentifier);
         nonthrowing_python_nolock([=](){
           // Send the grid ID on the radio
           const char *sendOnRadioScriptArgs[] = {NULL, NULL};

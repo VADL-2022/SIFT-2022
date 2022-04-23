@@ -301,6 +301,7 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     return img, key
     
 def run(pSave=None):
+    print("knn_matcher2.py run() starting up with SIFT settings:", nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma)
     if not showPreviewWindow:
         if pSave is None:
             pSave="dataOutput"
@@ -478,6 +479,10 @@ def run(pSave=None):
             nonlocal good_old
 
             #print(des2, des1)
+            if des2 is None:
+                print("des2 is None, can't match")
+            if des1 is None:
+                print("des1 is None, can't match")
             matches = bf.knnMatch(des2,des1, k=2) # Swap order of des1,des2 because want to find first image in the second
 
             # Apply ratio test

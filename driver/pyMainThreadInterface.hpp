@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <functional>
 
 extern pid_t lastForkedPID;
 extern bool lastForkedPIDValid;
