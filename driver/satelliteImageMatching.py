@@ -17,6 +17,7 @@ def run(filenameMatrixOrActualMatrixObject,
         mc # constant matrix
         ,showPreviewWindow=False):
     imgPath=intermediateImagePath
+    print("intermediateImagePath:", intermediateImagePath, "mc:", mc)
     # if isinstance(filenameFirstImageOrActualMatrixObject, str):
     #     firstImage = cv2.imread(filenameFirstImageOrActualMatrixObject)
     # else:
