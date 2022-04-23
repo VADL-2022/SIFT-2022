@@ -29,18 +29,23 @@ class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
     def setOrigVideoCap(self,origVideoCap):
         self.origVideoCap=origVideoCap
     def read(self):
-        if shouldStop.get() == 1:
+        if shouldStop.get() == 1 and (not finishRestAlways and self.q.qsize() < 1 # if queue is empty
+                                      ):
             return (False # TODO: correct?
                     , None)
         return (True # TODO: correct?
                 , self.q.get() # Blocks till frame ready
                 )
     def get(self, attr):
-        if self.origVideoCap is None:
+        # if self.origVideoCap is None:
+        #     print("self.origVideoCap is None")
+        #     return 1
+        while self.origVideoCap is None:
             print("self.origVideoCap is None")
-            return 1
+            sleep(0.1)
         return self.origVideoCap.get(attr)
 customVideoCapture = CustomVideoCapture()
+finishRestAlways = True
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C! Stopping video capture thread...')
