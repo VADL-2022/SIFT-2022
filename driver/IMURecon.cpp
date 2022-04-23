@@ -29,7 +29,7 @@ void enqueueIMURecon(VADL2022* v) {
       }
       else {
         { out_guard();
-          "Sleeping for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds" << std::endl; }
+          std::cout << "Sleeping for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds" << std::endl; }
         std::this_thread::sleep_for(sleepTime);
       }
       puts("))))))))))))))))))))))))))))))))))))))))");
