@@ -39,6 +39,8 @@ public:
     std::chrono::time_point<std::chrono::steady_clock> landingTime = std::chrono::steady_clock::now();
     bool noIMUReconSleep = false;
     bool showLandingPosOnCompletion = false;
+    const char* intermediateImagePath = nullptr;
+    const char* mc = nullptr; // constant matrix for intermediate matching
     
 private:
     void connect_GPIO(bool initCppGpio);

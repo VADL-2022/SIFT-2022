@@ -111,8 +111,8 @@ frameSkip=namespace.frameskip[0] if isinstance(namespace.frameskip, list) else n
 shouldRunSkyDetection=not namespace.no_sky_detection
 videoFileDataSourcePath=namespace.video_file_data_source_path[0] if isinstance(namespace.video_file_data_source_path, list) else namespace.video_file_data_source_path # HACK
 videoFileDataSource = namespace.video_file_data_source
-# if videoFileDataSource:
-#     forceStop=True
+if videoFileDataSource:
+    forceStop=True
 def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
@@ -125,8 +125,14 @@ def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
     knn_matcher2.waitAmountStandard = 1 # (Only for showPreviewWindow == True)
 
+    # knn_matcher2.nfeatures = 0
+    # knn_matcher2.nOctaveLayers = 9
+    # knn_matcher2.contrastThreshold = 0.03
+    # knn_matcher2.edgeThreshold = 10
+    # knn_matcher2.sigma = 0.8
+    
     knn_matcher2.nfeatures = 0
-    knn_matcher2.nOctaveLayers = 9
+    knn_matcher2.nOctaveLayers = 8
     knn_matcher2.contrastThreshold = 0.03
     knn_matcher2.edgeThreshold = 10
     knn_matcher2.sigma = 0.8

@@ -135,8 +135,8 @@ if [ "$mode" == "sift" -a "$hostname" == "sift2" ]; then # -a is "and"..
     /usr/bin/python3 -c "$windTunnel" 0 "$quiet" &
 
     # for one sift pi: hostname: sift2: check for drogue or apogee instead and start at drogue
-    siftPayloadArgs="--start-sift-at-apogee"
-    fps=15
+    #siftPayloadArgs="--start-sift-at-apogee"
+    #fps=15
 else
     echo "@@@@ Starting pi temperature recording"
     #bash -c "while true; do vcgencmd measure_temp ; sleep 0.5; done" 2>&1 | sudo tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").temperature.log.txt" &
@@ -165,15 +165,12 @@ mainStabilizationTime=0 # Time to allow rocket to stabilize after main deploymen
 mainDescentTime=24000 
 launchBox=$1
 launchAngle=$2
-windx=$3
-windy=$4
-gps=$5
+wind=$3
+gps=$4
 siftAllowanceForStopping=0 # Time to take away from mainDescentTime for stopping SIFT in backupSIFTStopTime. Larger values stop SIFT sooner.
 backupSIFTStopTime="$(($mainDescentTime-$siftAllowanceForStopping))" # Originally we were going to stop SIFT on altitude data. But we're unsure about altitude data being reliable, so we don't use it to stop SIFT, and there's a fallback via backupSIFTStopTime.
 
 forePayloadArgs="--video-capture --LIS331HH-imu-calibration-file "driver/LIS331HH_calibration/LOG_20220129-183224.csv""
-
-siftPayloadArgs="$siftPayloadArgs --time-to-main-deployment $timeToMainDeployment --time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --emergency-main-deployment-g-force 20 --main-deployment-altitude $mainDeploymentAltitude --launch-box $launchBox --launch-angle $launchAngle --wind-speed-x $windx --wind-speed-y $windy --launch-rail-gps-coords $gps"
 
 realFlight="--takeoff-g-force $takeoffGForce --landing-g-force $landingGForce --backup-takeoff-time $backupTakeoffTime --time-to-meco $timeToMeco --time-to-apogee $timeToApogee"
 
@@ -188,7 +185,7 @@ extraArgs="$realFlight"
 
 
 if [ "$mode" == "sift" ]; then
-    ./$exe $siftPayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "driver/radio.py" 1)
+    ./$exe --time-to-main-deployment $timeToMainDeployment --time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --emergency-main-deployment-g-force 20 --main-deployment-altitude $mainDeploymentAltitude --launch-box $launchBox --launch-angle $launchAngle --wind-speed "$wind" --launch-rail-gps-coords $gps --intermediate-image-path 'undist0.png' --mc '__import__("numpy").matrix([[0.55821, 0.00044, 71.19720], [-0.68533, 1.26694, -30.37085], [-0.00054, -0.00024, 1.00000]])' $siftPayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "driver/radio.py" 1)
 else
     #./subscale_exe_release --video-capture --time-for-main-stabilization "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
     ./$exe $forePayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"

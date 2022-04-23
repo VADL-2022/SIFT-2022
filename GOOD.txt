@@ -484,10 +484,13 @@ python3 knn_matcher2.py  1 1 0 0 Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/o
 oldJunk="--imu-data-source-time-offset 1651040 --imu-data-source-path Data/fullscale3/sift2/LOG_20220416_114053.csv"
 newJunk="--imu-data-source-time-offset 0 --imu-data-source-path Data/fullscale3/sift2/Derived/Book1.csv"
 # $extrasNvm $extras
-extrasOldArgs="--main-deployment-altitude 800" extras="--frameskip 3" ./subscale_exe_release --extra-sift-exe-args '--show-preview-window --save-first-image --video-file-data-source --video-file-data-source-path Data/fullscale3/sift2/2022-04-16_12_08_35_CDT/output.mp4' --imu-data-source-time-offset 1651040 --imu-data-source-path Data/fullscale3/sift2/LOG_20220416_114053.csv  $newJunk --time-to-main-deployment 	17200 	--time-for-main-stabilization 	1000 	--main-descent-time 	33500 	--emergency-main-deployment-g-force 	20 	--main-deployment-altitude 800 	--launch-box 	149 	--launch-angle 	'__import__("numpy").deg2rad(2)' 	 	--sift-params 	'-C_edge 2 -delta_min 0.6' 	--takeoff-g-force 	6 	--landing-g-force 	3 	--backup-takeoff-time 	0 	--time-to-meco 	1700 	--time-to-apogee 	9500 --wind-speed '(-2,0)' --launch-rail-gps-coords "(36.189886, -86.155366)" --python-sift --no-imu-recon-sleep --show-landing-pos-on-completion
+extrasOldArgs="--main-deployment-altitude 800" extras="--frameskip 3" ./subscale_exe_release --extra-sift-exe-args '--show-preview-window --save-first-image --video-file-data-source --video-file-data-source-path Data/fullscale3/sift2/2022-04-16_12_08_35_CDT/output.mp4' --imu-data-source-time-offset 1651040 --imu-data-source-path Data/fullscale3/sift2/LOG_20220416_114053.csv  $newJunk --time-to-main-deployment 	17200 	--time-for-main-stabilization 	1000 	--main-descent-time 	33500 	--emergency-main-deployment-g-force 	20 	--main-deployment-altitude 800 	--launch-box 	149 	--launch-angle 	'__import__("numpy").deg2rad(5)' 	 	--sift-params 	'-C_edge 2 -delta_min 0.6' 	--takeoff-g-force 	6 	--landing-g-force 	3 	--backup-takeoff-time 	0 	--time-to-meco 	1700 	--time-to-apogee 	9500 --wind-speed '(10,-0.5)' --launch-rail-gps-coords "(34.8946331, -86.6166411)" --python-sift --no-imu-recon-sleep --show-landing-pos-on-completion --intermediate-image-path 'driver/vlcsnap-2022-04-05-15h36m34s616.png' --mc '__import__("numpy").matrix([[-0.18071, -0.77495, 573.08481], [0.77063, 0.06183, -34.54974], [-0.00005, -0.00003, 1.00000]])'
 # ^ Note: launch angle of 4 is only because oz does a weird thing. 2 degrees is actual.
 
 
 launch day:
+                                   v- change this wind speed
+guestimate: bash launch.sh 149 '__import__("numpy").deg2rad(5)' "(10,-0.5)" "(34.8946331, -86.6166411)"
+"(36.189886, -86.155366)"
 - oz launch day gps: "(34.8946331, -86.6166411)"
 - launch angle: 5 or whatever they say

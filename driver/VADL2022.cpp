@@ -1160,6 +1160,14 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--show-landing-pos-on-completion") == 0) {
       showLandingPosOnCompletion = true;
     }
+    else if (strcmp(argv[i], "--intermediate-image-path") == 0) {
+      intermediateImagePath = argv[i+1]; // PYTHON EXPRESSION
+      i++;
+    }
+    else if (strcmp(argv[i], "--mc") == 0) {
+      mc = argv[i+1]; // PYTHON EXPRESSION
+      i++;
+    }
     else if (strcmp(argv[i], "--main-descent-time") == 0) { // Time in milliseconds since main deployment at which to stop SIFT but as an upper bound (don't make it possibly too low, since time for descent varies a lot)
       if (i+1 < argc) {
 	backupSIFTStopTime = std::stoll(argv[i+1]); // Must be long long
@@ -1299,6 +1307,14 @@ VADL2022::VADL2022(int argc, char** argv)
   }
   if (launchRailGPSXYCoords == nullptr && !imuOnly && !videoCapture) {
     puts("Need to provide --launch-rail-gps-coords");
+    exit(1);
+  }
+  if (intermediateImagePath == nullptr && !imuOnly && !videoCapture) {
+    puts("Need to provide --intermediate-image-path");
+    exit(1);
+  }
+  if (mc == nullptr && !imuOnly && !videoCapture) {
+    puts("Need to provide --mc");
     exit(1);
   }
 
