@@ -1154,7 +1154,7 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--python-sift") == 0) { // Uses Python SIFT backend instead of C++ SIFT
       usePythonSIFT = true;
     }
-    else if (strcmp(argv[i], " --no-imu-recon-sleep") == 0) {
+    else if (strcmp(argv[i], "--no-imu-recon-sleep") == 0) {
       noIMUReconSleep = true;
     }
     else if (strcmp(argv[i], "--main-descent-time") == 0) { // Time in milliseconds since main deployment at which to stop SIFT but as an upper bound (don't make it possibly too low, since time for descent varies a lot)
