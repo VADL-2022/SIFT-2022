@@ -39,7 +39,6 @@ void LOGFromFile::scanRow(IMUData& out) {
 	   ",%f,%f,%f" // accelNed
 	   ",%f,%f,%f" // linearAccelBody
 	   ",%f,%f,%f" // linearAccelNed
-	   "," // Nothing after this comma on purpose.
 	   ,
 	   &timestampSeconds,
 	   &imu.yprNed.x, &imu.yprNed.y, &imu.yprNed.z,
@@ -54,6 +53,10 @@ void LOGFromFile::scanRow(IMUData& out) {
 	   &imu.accelNed.x, &imu.accelNed.y, &imu.accelNed.z,
 	   &imu.linearAccelBody.x, &imu.linearAccelBody.y, &imu.linearAccelBody.z,
 	   &imu.linearAccelNed.x, &imu.linearAccelNed.y, &imu.linearAccelNed.z
+	   );
+    // Optional trailing comma in some versions of the log that we recreate/copy/re-save with Excel
+    fscanf(data->mLog, 
+	   "," // Nothing after this comma on purpose.
 	   );
     imu.timestamp = timestampSeconds * 1e9; // Convert to nanoseconds
 }
