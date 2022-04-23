@@ -97,7 +97,7 @@ parser.add_argument('--save-first-image', action='store_true', default=True,
                     help='whether to save the first image')
 parser.add_argument('--video-file-data-source', action='store_true', default=True,
                     help='')
-parser.add_argument('--video-file-data-source-path', type=str, nargs='+', default=1,
+parser.add_argument('--video-file-data-source-path', type=str, nargs='+', default=None,
                     help="")
 parser.add_argument('--no-sky-detection', action='store_true', default=False,
                     help='')
