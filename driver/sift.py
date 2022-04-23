@@ -131,11 +131,18 @@ def runOnTheWayDown(capAPI, pSave):
     # knn_matcher2.edgeThreshold = 10
     # knn_matcher2.sigma = 0.8
     
-    knn_matcher2.nfeatures = 0
-    knn_matcher2.nOctaveLayers = 8
-    knn_matcher2.contrastThreshold = 0.03
-    knn_matcher2.edgeThreshold = 10
-    knn_matcher2.sigma = 0.8
+    # knn_matcher2.nfeatures = 0
+    # knn_matcher2.nOctaveLayers = 8
+    # knn_matcher2.contrastThreshold = 0.03
+    # knn_matcher2.edgeThreshold = 10
+    # knn_matcher2.sigma = 0.8
+
+    nfeatures = 0
+    nOctaveLayers = 3
+    contrastThreshold = 0.04
+    edgeThreshold = 10
+    sigma = 1.6
+    
     knn_matcher2.sift = cv2.xfeatures2d.SIFT_create(knn_matcher2.nfeatures, knn_matcher2.nOctaveLayers, knn_matcher2.contrastThreshold, knn_matcher2.edgeThreshold, knn_matcher2.sigma)
     
     rets = knn_matcher2.run(pSave)
