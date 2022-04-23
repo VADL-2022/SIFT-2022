@@ -30,6 +30,7 @@ class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
     def setOrigVideoCap(self,origVideoCap):
         self.origVideoCap=origVideoCap
     def read(self):
+        print("self.q.qsize():",self.q.qsize())
         if shouldStop.get() == 1 and (not finishRestAlways and self.q.qsize() < 1 # if queue is empty
                                       ):
             return (False # TODO: correct?
