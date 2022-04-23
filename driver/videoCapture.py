@@ -72,6 +72,7 @@ def run(shouldStop # AtomicInt
         , frame_height=480
         , onSetVideoCapture = None # handler for when video capture object changes
         , outputFolderPath = None
+        , capOrig=None
         ):
     global mainThreadShouldFlush
     global dispatchQueue
@@ -87,7 +88,7 @@ def run(shouldStop # AtomicInt
     lastFlush=now
     
     # Create a VideoCapture object
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0) if capOrig is None else capOrig
     cap.set(3, frame_width)
     cap.set(4, frame_height)
 
