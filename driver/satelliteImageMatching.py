@@ -5,9 +5,18 @@ import sys
 import subprocess
 import src.python.GridCell
 
+# fullscale3 #
+# imgPath='driver/vlcsnap-2022-04-05-15h36m34s616.png'
+# mc = np.matrix([[-0.18071, -0.77495, 573.08481],
+#                 [0.77063, 0.06183, -34.54974],
+#                 [-0.00005, -0.00003, 1.00000]])
+# #
 def run(filenameMatrixOrActualMatrixObject,
         filenameFirstImageOrActualMatrixObject,
-        x,y,showPreviewWindow=False):
+        x,y,intermediateImagePath,
+        mc # constant matrix
+        ,showPreviewWindow=False):
+    imgPath=intermediateImagePath
     # if isinstance(filenameFirstImageOrActualMatrixObject, str):
     #     firstImage = cv2.imread(filenameFirstImageOrActualMatrixObject)
     # else:
@@ -37,7 +46,7 @@ def run(filenameMatrixOrActualMatrixObject,
         knn_matcher2.waitAmountStandard = 0
         knn_matcher2.showLandingPos(firstImage, m0)
     try:
-        m1, firstImageWidth, firstImageHeight, firstImage_, firstImageOrig, firstImageFilename_ = oneShotMatch.run(filenameFirstImageOrActualMatrixObject, 'driver/vlcsnap-2022-04-05-15h36m34s616.png', showPreviewWindow)
+        m1, firstImageWidth, firstImageHeight, firstImage_, firstImageOrig, firstImageFilename_ = oneShotMatch.run(filenameFirstImageOrActualMatrixObject, imgPath, showPreviewWindow)
     except:
         print("satellite matcher handler exception, will use id matrix:")
         import traceback
@@ -57,9 +66,6 @@ def run(filenameMatrixOrActualMatrixObject,
         firstImageOrig = firstImage
         firstImageFilename_ = filenameFirstImageOrActualMatrixObject if isinstance(filenameFirstImageOrActualMatrixObject, str) else None
     print("m1:",m1)
-    mc = np.matrix([[-0.18071, -0.77495, 573.08481],
-                    [0.77063, 0.06183, -34.54974],
-                    [-0.00005, -0.00003, 1.00000]])
     # Reference for the below: pPrime = p0*np.linalg.pinv(m0)*m1*mc
     pPrime = cv2.perspectiveTransform(cv2.perspectiveTransform(cv2.perspectiveTransform(np.array([[p0]], dtype=np.float32), np.linalg.pinv(m0)),m1),mc)
     print("pPrime:", pPrime)
