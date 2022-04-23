@@ -158,12 +158,12 @@ if __name__ == '__main__':
     outputFolderPath=os.path.join('.', 'dataOutput', o1)
     pSave = outputFolderPath
     
-    startVideoCapture(name, onFrame=onFrame, fps=5, onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave)
-    
     try:
         # NOTE: first image given should match what the sky detector chooses so we re-set firstImage and firstImageFilename here
         if videoFileDataSource:
             onSetVideoCapture(cv2.VideoCapture(videoFileDataSourcePath))
+        else:
+            startVideoCapture(name, onFrame=onFrame, fps=5, onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave)
         accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(customVideoCapture
             #cv2.VideoCapture(videoFilename) if videoFileDataSource else customVideoCapture
             , pSave)
