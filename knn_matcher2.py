@@ -60,6 +60,7 @@ if __name__ == "__main__":
     showPreviewWindow=sys.argv[6] == '1' if len(sys.argv) > 6 else True
     frameSkip=int(sys.argv[7]) if len(sys.argv) > 7 else 1
     imgs=None
+    waitAmountStandard=None
     if grabMode==1:
         reader=cv2.VideoCapture(
             # Drone tests from 3-28-2022: #
@@ -436,8 +437,10 @@ def run(pSave=None):
         def waitForInput(img2, firstImage, skipWaitKeyUsingKey=None):
             if not showPreviewWindow:
                 return
-            #waitAmount = 1 if i < len(imgs) - 20 or not isinstance(reader, cv2.VideoCapture) else 0
-            waitAmount = 1
+            if waitAmountStandard is None:
+                waitAmount = 1 if i < len(imgs) - 20 or not isinstance(reader, cv2.VideoCapture) else 0
+            else:
+                waitAmount = waitAmountStandard
             if waitAmount == 0:
                 print("Press a key to continue")
                 if i == len(imgs) - 1:
