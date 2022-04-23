@@ -48,6 +48,7 @@ def signal_handler(sig, frame):
     shouldStop.set(1)
     if forceStop:
         exit(0)
+    # NOTE: this does finish rest always by default!
     customVideoCapture.q.put(None) # placeholder for stopping
 
 # Function to run on the video capture thread
@@ -132,8 +133,8 @@ def runOnTheWayDown(capAPI, pSave):
     # knn_matcher2.sigma = 0.8
     
     knn_matcher2.nfeatures = 0
-    knn_matcher2.nOctaveLayers = 9
-    knn_matcher2.contrastThreshold = 0.03
+    knn_matcher2.nOctaveLayers = 10
+    knn_matcher2.contrastThreshold = 0.02
     knn_matcher2.edgeThreshold = 10
     knn_matcher2.sigma = 0.8
     knn_matcher2.sift = cv2.xfeatures2d.SIFT_create(knn_matcher2.nfeatures, knn_matcher2.nOctaveLayers, knn_matcher2.contrastThreshold, knn_matcher2.edgeThreshold, knn_matcher2.sigma)
