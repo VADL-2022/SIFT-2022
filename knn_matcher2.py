@@ -468,6 +468,8 @@ def run(pSave=None):
                 img, key = showLandingPos(firstImage, acc, showLandingPosKey)
                 if k & 0xFF == ord(applyMatKey):
                     waitForInput(img2, firstImage, applyMatKey)
+            elif img2 is not None: # Show landing position
+                img, key = showLandingPos(firstImage, acc, showLandingPosKey)
 
         try:
             img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
