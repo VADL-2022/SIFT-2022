@@ -368,7 +368,8 @@ def run(pSave=None):
     
     if len(imgs) > 0 or totalFrames == -1:
         if totalFrames == -1:
-            imgs.append(None)
+            imgs.append('')
+            imgs.append('')
         # Skip images
         for j in range(0, skip):
             i += 1
