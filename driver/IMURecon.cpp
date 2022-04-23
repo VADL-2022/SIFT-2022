@@ -21,12 +21,17 @@ void enqueueIMURecon(VADL2022* v) {
       auto now = std::chrono::steady_clock::now();
       auto timeSinceLanding = v->landingTime - now;
       auto sleepTime = std::chrono::seconds(100) - timeSinceLanding;
-      if (v->landingTime < now) {
-        puts("sleepTime would be negative (overflow due to unsigned), no landing, so not sleeping!");
-      }
       { out_guard();
-        std::cout << "Time since landing: " << std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLanding).count() << " milliseconds.\nSleeping for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds" << std::endl; }
-      std::this_thread::sleep_for(sleepTime);
+        std::cout << "Time since landing: " << std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLanding).count() << " milliseconds" << std::endl; }
+      if (v->landingTime < now) {
+        { out_guard();
+          std::cout << "sleepTime would be negative (overflow due to unsigned), no landing, so not sleeping! (Would have been for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds)" << std::endl; }
+      }
+      else {
+        { out_guard();
+          "Sleeping for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds" << std::endl; }
+        std::this_thread::sleep_for(sleepTime);
+      }
       puts("))))))))))))))))))))))))))))))))))))))))");
       py::module_ IMURecon = py::module_::import("driver.IMURecon");
       const char* logFileName;
