@@ -47,9 +47,8 @@ void enqueueIMURecon(VADL2022* v) {
 	// IMU is from a file
 	logFileName = v->imuDataSourcePath;
       }
-      const bool USE_DEFAULT_ARGS = false;
       using namespace pybind11::literals; // to bring in the `_a` literal
-      py::tuple gridBoxNumbersAndOtherJunk = IMURecon.attr("calc_displacement2")(logFileName, USE_DEFAULT_ARGS ? ("launch_rail_box"_a="192") : py::arg("launch_rail_box")=py::eval(v->launchBox), "weather_station_stats_xy"_a=py::eval(v->windSpeed), "GPS_coords"_a=py::eval(v->launchRailGPSXYCoords), "my_thresh"_a=py::eval("50"), "my_post_drogue_delay"_a=py::eval("0.85"), "my_signal_length"_a=py::eval("3"), /*"my_t_sim_landing"_a=py::eval("50"),*/ USE_DEFAULT_ARGS ? ("ld_launch_angle"_a=py::eval("2*pi/180")) : py::arg("ld_launch_angle")=py::eval(v->launchAngle), "ld_ssm"_a=py::eval("3.2"), "ld_dry_base"_a=py::eval("15.89"));
+      py::tuple gridBoxNumbersAndOtherJunk = IMURecon.attr("calc_displacement2")(logFileName, py::arg("launch_rail_box")=py::eval(v->launchBox), "weather_station_stats_xy"_a=py::eval(v->windSpeed), "GPS_coords"_a=py::eval(v->launchRailGPSXYCoords), py::arg("ld_launch_angle")=py::eval(v->launchAngle));
       py::print("gridBoxNumbersAndOtherJunk:", gridBoxNumbersAndOtherJunk);
       py::list gridBoxNumbers = gridBoxNumbersAndOtherJunk[0]; // The first model
       py::print("C++ got gridBoxNumbers:", gridBoxNumbers);

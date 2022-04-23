@@ -47,7 +47,6 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     ## DETECT PARAMETERS
     take_off_threshold_g = my_thresh;
     landing_threshold_g = my_thresh;
-    landing_advance_time = 15;
 
     ## ALTITUDE PARAMETER
     B = 6.5e-3  # temperature lapse rate in troposphere in K/m
@@ -59,8 +58,8 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     dt = 0.001
     pi = 3.1415
     ft = 3.2884  # ft/m
-    ms2mph = 0.6818182*ft
-    gs2mph = ms2mph * g
+    
+    my_arbitrary_wind_threshold = 0.8
 
     ## IMU PROCESS
     # Read in the dataframe
@@ -85,7 +84,6 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     imu_alt = (T_0 - imu_temp)/B;
 
     ## FIND TAKEOFF AND UPDATE THE ARRAYS
-    #take_off_i = find(imu_a>take_off_threshold_g,1) - 3;
     take_off_i = np.argmax(np.array(imu_a)>take_off_threshold_g) - 3
 
     imu_t = imu_t[take_off_i:imu_N];
@@ -102,11 +100,6 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     imu_alt = [val if val>0 else 0 for val in imu_alt]
 
     take_off_i = 0
-
-    try:
-        temp_accel = imu_a[minIndex:maxIndex];
-    except:
-        temp_accel = [0]
 
     # NEW ALTITUDE BASED LANDING DETECTION
     lateLandingIndex = np.argmin((abs(imu_t - 150)))#[0][0]
@@ -186,9 +179,11 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     wx_ws_apogee, wy_ws_apogee = wx_ws*((z_0/2)**(1/7)), wy_ws*((z_0/2)**(1/7))
     
     # If we flip directions then just set it to zero, there wasn't actually any wind most likely
-    if wx_ws is not 0 and wx_ws*w0x < 0:
+    # IF THE SIGNS ARE OPPOSITE, WE TRUST THE WEATHER REPORT OVER THE IMU
+    #abs(wx_ws)>my_arbitrary_wind_threshold and 
+    if wx_ws*w0x < 0:
         w0x = wx_ws_apogee
-    if wy_ws is not 0 and wy_ws*w0y < 0:
+    if wy_ws*w0y < 0:
         w0y = wy_ws_apogee
     print(f"UPDATED WIND SPEEDS (weather report), X->{w0x} m/s and Y->{w0y} m/s")
     print()
@@ -196,7 +191,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     m1_final_x_displacements, m1_final_y_displacements = [0]*3, [0]*3
     m2_final_x_displacements, m2_final_y_displacements = [0]*3, [0]*3
     
-    if (abs(w0x) < 1 and abs(w0y) > 1):
+    if (abs(w0x) < my_arbitrary_wind_threshold and abs(w0y) > my_arbitrary_wind_threshold):
         w0x = 0
         # LOOP 1
         print("LOOP 1")
@@ -212,6 +207,9 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
             adj_wx = w0x
 
             # If we flip directions then just set it to zero, there wasn't actually any wind most likely
+            # SHOULD THIS BE GREATER OR LESS THAN THE THRESHOLD
+            # WHY ARE WE SETTING TO ZERO?
+            #abs(adj_wy) > my_arbitrary_wind_threshold and 
             if adj_wy*w0y < 0:
                 adj_wy = 0
 
@@ -239,7 +237,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
             m2_final_y_displacements[idx] = m2y + drogue_opening_displacement_y + total_y_displacement
 
             print(f"MODEL 1: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{m1_final_x_displacements[idx]:2f} m, Y->{m1_final_y_displacements[idx]:2f} m")
-            print(f"MODEL 2: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{0} m, Y->{m2_final_y_displacements[idx]} m")
+            print(f"MODEL 2: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{m2_final_x_displacements[idx]:2f} m, Y->{m2_final_y_displacements[idx]:2f} m")
             print()
 
     elif (abs(w0y) < 1 and abs(w0x) > 1):
@@ -270,7 +268,6 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
 
             # Oz's Other Ascent Model (Model 2) In Place of Marissa's Model
             landing_i -= 1
-            print(abs(adj_wx))
             m2x = oz_ascent_model2(abs(adj_wx), imu_alt, imu_t, my_theta=ld_launch_angle, my_ssm=ld_ssm, my_dry_base=ld_dry_base, my_max_sim_time=imu_t[landing_i], my_m_motor=ld_m_motor, my_t_burn=ld_t_burn, my_T_avg=ld_T_avg)[-1]
             m2y = 0
             print(f"Model2 x displacement: {m2x}")
@@ -288,7 +285,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
             m2_final_y_displacements[idx] = 0
 
             print(f"MODEL 1: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{m1_final_x_displacements[idx]:2f} m, Y->{m1_final_y_displacements[idx]:2f} m")
-            print(f"MODEL 2: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{m2_final_x_displacements[idx]} m, Y->{m2_final_y_displacements[idx]} m")
+            print(f"MODEL 2: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{m2_final_x_displacements[idx]:2f} m, Y->{m2_final_y_displacements[idx]:2f} m")
             print()  
         
     elif (abs(w0y) < 1 and abs(w0x) < 1):
@@ -364,7 +361,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
             m2_final_y_displacements[idx] = m2y + drogue_opening_displacement_y + total_y_displacement
 
             print(f"MODEL 1: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{m1_final_x_displacements[idx]:2f} m, Y->{m1_final_y_displacements[idx]:2f} m")
-            print(f"MODEL 2: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{m2_final_x_displacements[idx]} m, Y->{m2_final_y_displacements[idx]} m")
+            print(f"MODEL 2: TOTAL X AND Y DISPLACEMENTS, u={uncertainty}: X->{m2_final_x_displacements[idx]:2f} m, Y->{m2_final_y_displacements[idx]:2f} m")
             print()
 
     all_xs = []
@@ -396,7 +393,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     print("METHOD 1: Original (Center Assumed) Approach:")
         
     new_xbox = update_xboxes(-avg_x, launch_rail_box)
-    final_grid_number = update_yboxes(-avg_y, new_xbox)
+    final_grid_number = update_yboxes(avg_y, new_xbox)
     
     # Somewhat shoddy logic
     if (maxx-minx)/2 > 250/ft:
@@ -419,12 +416,9 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     else:
         print("METHOD 2: GPS Approach:")
         all_GPS_boxes = GPS_to_grid_box(maxx, minx, avg_x, maxy, miny, avg_y, input_longitude=GPS_coords[0], input_latitude=GPS_coords[1])
-        print(f"ALL GPS GRID BOXES: {all_xs}")
+        print(f"ALL GPS GRID BOXES: {all_GPS_boxes}")
         
-    # WHEN WE RETURN A LIST OF GRID BOXES, THE FIRST ELEMENT OF THE LIST IS THE AVERAGE AND THUS SHOULD PROBABLY BE USED
-    # Returns all possible grid boxes (OG Method), all possible grid boxes (GPS Method: note that all the rest after the first element are edge cases), the original wind speeds, the updated wind speeds, all displacements, and landing/signal times
-    return all_xs, all_GPS_boxes, [w0x, w0y], [adj_wx, adj_wy], [minx, maxx, avg_x, miny, maxy, avg_y], [imu_t[landing_i-1], imu_t[imu_start_time], imu_t[imu_end_time]]
-
+    return all_xs[0], all_GPS_boxes[0], round(adj_wx, 2), round(adj_wy, 2), round((maxx-minx)/2, 2), round((maxy-miny)/2, 2), round(imu_t[landing_i-1], 2)
 
 
 def GPS_to_grid_box(max_x, min_x, average_x, min_y, max_y, average_y, input_longitude=34.894277, input_latitude=-86.616216):
