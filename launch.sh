@@ -173,7 +173,7 @@ backupSIFTStopTime="$(($mainDescentTime-$siftAllowanceForStopping))" # Originall
 
 forePayloadArgs="--video-capture --LIS331HH-imu-calibration-file "driver/LIS331HH_calibration/LOG_20220129-183224.csv""
 
-siftPayloadArgs="$siftPayloadArgs --time-to-main-deployment $timeToMainDeployment --time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --emergency-main-deployment-g-force 20 --main-deployment-altitude $mainDeploymentAltitude --launch-box $launchBox --launch-angle $launchAngle --wind-speed-x $windx --wind-speed-y $windy --launch-rail-gps-coords $gps"
+siftPayloadArgs="$siftPayloadArgs --time-to-main-deployment $timeToMainDeployment --time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --emergency-main-deployment-g-force 20 --main-deployment-altitude $mainDeploymentAltitude --launch-box $launchBox --launch-angle $launchAngle --wind-speed '($windx, $windy) --launch-rail-gps-coords $gps"
 
 realFlight="--takeoff-g-force $takeoffGForce --landing-g-force $landingGForce --backup-takeoff-time $backupTakeoffTime --time-to-meco $timeToMeco --time-to-apogee $timeToApogee"
 
@@ -188,7 +188,7 @@ extraArgs="$realFlight"
 
 
 if [ "$mode" == "sift" ]; then
-    ./$exe $siftPayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "driver/radio.py" 1)
+    ./$exe --intermediate-image-path 'undist0.png' --mc '__import__("numpy").matrix([[0.55821, 0.00044, 71.19720], [-0.68533, 1.26694, -30.37085], [-0.00054, -0.00024, 1.00000]])' $siftPayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "driver/radio.py" 1)
 else
     #./subscale_exe_release --video-capture --time-for-main-stabilization "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
     ./$exe $forePayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
