@@ -367,6 +367,8 @@ def run(pSave=None):
     next(imgs_iter) # Skip first image
     
     if len(imgs) > 0 or totalFrames == -1:
+        if totalFrames == -1:
+            imgs.append(None)
         # Skip images
         for j in range(0, skip):
             i += 1
