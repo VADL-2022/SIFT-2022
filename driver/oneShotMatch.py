@@ -15,7 +15,7 @@ def run(img1PathOrImage, img2PathOrImage, showPreviewWindow=False):
     knn_matcher2.showPreviewWindow = showPreviewWindow
     knn_matcher2.imgs = [img1PathOrImage, img2PathOrImage]
     knn_matcher2.frameSkip = 1
-    knn_matcher2.waitAmountStandard = 1 # (Only for showPreviewWindow == True)
+    knn_matcher2.waitAmountStandard = 0 #1 # (Only for showPreviewWindow == True)
 
     # Crank up the settings -- takes longer but better result
     knn_matcher2.nfeatures = 0
