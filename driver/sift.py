@@ -162,6 +162,8 @@ if __name__ == '__main__':
     
     try:
         # NOTE: first image given should match what the sky detector chooses so we re-set firstImage and firstImageFilename here
+        if videoFileDataSource:
+            onSetVideoCapture(cv2.VideoCapture(videoFileDataSourcePath))
         accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(customVideoCapture
             #cv2.VideoCapture(videoFilename) if videoFileDataSource else customVideoCapture
             , pSave)
