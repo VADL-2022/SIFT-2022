@@ -352,6 +352,7 @@ def run(pSave=None):
     global imgs
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
+        print("totalFrames: ",totalFrames)
         imgs = [None]*totalFrames
     elif grabMode == 0 or grabMode == 3:
         imgs=p.stdout.split(b'\n')
