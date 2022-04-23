@@ -22,6 +22,7 @@ import time
 
 shouldStop=videoCapture.AtomicInt(0)
 forceStop = False
+videoFileDataSource=None
 
 class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
     def __init__(self, origVideoCap=None):
@@ -52,7 +53,8 @@ finishRestAlways = True
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C! Stopping video capture thread...')
     #sys.exit(0)
-    shouldStop.set(1)
+    if not videoFileDataSource:
+        shouldStop.set(1)
     if forceStop:
         exit(0)
     # NOTE: this does finish rest always by default!
