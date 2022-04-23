@@ -188,7 +188,7 @@ extraArgs="$realFlight"
 
 
 if [ "$mode" == "sift" ]; then
-    ./$exe $siftPayloadArgs --extra-sift-exe-args "--no-sky-detection --fps $fps --no-preview-window --finish-rest-always --save-first-image" --sift-params '-C_edge 2 -delta_min 0.6' $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "driver/radio.py" 1)
+    ./$exe $siftPayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt" #| tee <(python3 "driver/radio.py" 1)
 else
     #./subscale_exe_release --video-capture --time-for-main-stabilization "$siftStart" 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
     ./$exe $forePayloadArgs $extraArgs 2>&1 | tee "./dataOutput/$(date +"%Y_%m_%d_%I_%M_%S_%p").$mode""log.txt"
