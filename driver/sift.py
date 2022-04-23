@@ -122,7 +122,7 @@ def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.skip = skip
     knn_matcher2.videoFilename = None
     knn_matcher2.showPreviewWindow = showPreviewWindow
-    knn_matcher2.reader = capAPI if not videoFileDataSource else cv2.VideoCapture(videoFileDataSourcePath)
+    knn_matcher2.reader = capAPI #capAPI if not videoFileDataSource else cv2.VideoCapture(videoFileDataSourcePath)
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
     knn_matcher2.waitAmountStandard = 1 # (Only for showPreviewWindow == True)
 
@@ -156,7 +156,9 @@ if __name__ == '__main__':
     
     try:
         # NOTE: first image given should match what the sky detector chooses so we re-set firstImage and firstImageFilename here
-        accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(cv2.VideoCapture(videoFilename) if videoFileDataSource else customVideoCapture, pSave)
+        accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(customVideoCapture
+            #cv2.VideoCapture(videoFilename) if videoFileDataSource else customVideoCapture
+            , pSave)
     except knn_matcher2.EarlyExitException as e:
         accMat = e.acc
         w=e.w
