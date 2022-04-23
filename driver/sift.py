@@ -121,7 +121,7 @@ def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.skip = skip
     knn_matcher2.videoFilename = None
     knn_matcher2.showPreviewWindow = showPreviewWindow
-    knn_matcher2.reader = capAPI if not videoFileDataSource else cv2.VideoCapture(videoFileDataSourcePath[0])
+    knn_matcher2.reader = capAPI if not videoFileDataSource else cv2.VideoCapture(videoFileDataSourcePath)
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
 
     knn_matcher2.nfeatures = 0
