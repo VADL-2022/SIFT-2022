@@ -436,7 +436,8 @@ def run(pSave=None):
         def waitForInput(img2, firstImage, skipWaitKeyUsingKey=None):
             if not showPreviewWindow:
                 return
-            waitAmount = 1 if i < len(imgs) - 20 or not isinstance(reader, cv2.VideoCapture) else 0
+            #waitAmount = 1 if i < len(imgs) - 20 or not isinstance(reader, cv2.VideoCapture) else 0
+            waitAmount = 1
             if waitAmount == 0:
                 print("Press a key to continue")
                 if i == len(imgs) - 1:
