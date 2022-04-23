@@ -18,10 +18,11 @@ void enqueueIMURecon(VADL2022* v) {
     nonthrowing_python_nolock([=](){
       reportStatus(Status::RunningPython);
       puts("((((((((((((((((((((((((((((((((((((((((");
-      auto timeSinceLanding = v->landingTime - std::chrono::steady_clock::now();
+      auto now = std::chrono::steady_clock::now();
+      auto timeSinceLanding = v->landingTime - now;
       auto sleepTime = std::chrono::seconds(100) - timeSinceLanding;
-      if (sleepTime.count() < 0) {
-        puts("sleepTime was negative, no landing, so not sleeping!");
+      if (v->landingTime < now) {
+        puts("sleepTime would be negative (overflow due to unsigned), no landing, so not sleeping!");
       }
       { out_guard();
         std::cout << "Time since landing: " << std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLanding).count() << " milliseconds.\nSleeping for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds" << std::endl; }
