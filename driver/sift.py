@@ -125,8 +125,14 @@ def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
     knn_matcher2.waitAmountStandard = 1 # (Only for showPreviewWindow == True)
 
+    # knn_matcher2.nfeatures = 0
+    # knn_matcher2.nOctaveLayers = 9
+    # knn_matcher2.contrastThreshold = 0.03
+    # knn_matcher2.edgeThreshold = 10
+    # knn_matcher2.sigma = 0.8
+    
     knn_matcher2.nfeatures = 0
-    knn_matcher2.nOctaveLayers = 9
+    knn_matcher2.nOctaveLayers = 8
     knn_matcher2.contrastThreshold = 0.03
     knn_matcher2.edgeThreshold = 10
     knn_matcher2.sigma = 0.8

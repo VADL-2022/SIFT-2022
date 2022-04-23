@@ -3,7 +3,7 @@ from pandas import read_csv
 from math import sin, cos, pi, atan2, asin, sqrt, ceil
 
 
-def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_stats_xy, GPS_coords=0, my_thresh=45, my_post_drogue_delay=0.85, my_signal_length=3, ld_launch_angle=5*pi/180, ld_ssm=2.44, ld_dry_base=15.735, ld_m_motor=1.728187, ld_t_burn=2.05, ld_T_avg=1771):
+def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_stats_xy, GPS_coords=0, my_thresh=45, my_post_drogue_delay=0.5, my_signal_length=3, ld_launch_angle=5*pi/180, ld_ssm=2.44, ld_dry_base=15.735, ld_m_motor=1.728187, ld_t_burn=2.05, ld_T_avg=1771):
     '''
     This is the main function, the rest are all nested functions called by this one.
     
@@ -12,10 +12,16 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     launch_rail_box: grid box number that the launch rail is in.  Probably will only know this on launch day, so pass in argument
     weather_station_stats_xy: the wind speed of the x and y directions as given by the weather report
     
-    ######################
+    ########################################################################################
+    #######################    BIG RED FLAG DEPENDENCIES/NOTES    ##########################
+    ########################################################################################
+    HUGE DEPENDENCY ON THIS FUNCTION RUNNING 120 SECONDS AFTER TAKEOFF
+    IF IT IS CALLED BEFORE THAT, IT WILL THROW AN INDEX ERROR BECAUSE IT FINDS LANDING BY FINDING 
+     THE ALTITUDE AT TIME 120 AND WORKING BACKWARDS
+    
     IF YOU WANT THE GPS TO RUN, YOU MUST SET GPS_COORDS TO THE GPS VALUES, VIA [LONGITUDE, LATITUDE]
     IF YOU LEAVE GPS AS ITS DEFAULT PARAM THEN IT WILL NOT RUN
-    ######################
+    ########################################################################################
     
     YOU NEED TO UPDATE THESE ON LAUNCH DAY
     ld_launch_angle: launch day launch angle (e.g. angle of the launch rail)
@@ -28,6 +34,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     PROBABLY DONT NEED TO CHANGE THESE
     my_thresh: acceleration threshold to check for takeoff.  Currently 45 m/s2
     my_post_drogue_delay: time after apogee to wait for 0 acceleration transience to pass
+    ^ Use 0.5 for fullscale, 0.85 for subscales
     my_signal_length: length of analysis window, 3 seconds
     
     RETURNS
@@ -84,6 +91,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     imu_alt = (T_0 - imu_temp)/B;
 
     ## FIND TAKEOFF AND UPDATE THE ARRAYS
+    # Subtract 3 to slightly step back to make sure we capture the full spike
     take_off_i = np.argmax(np.array(imu_a)>take_off_threshold_g) - 3
 
     imu_t = imu_t[take_off_i:imu_N];
@@ -102,7 +110,9 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     take_off_i = 0
 
     # NEW ALTITUDE BASED LANDING DETECTION
-    lateLandingIndex = np.argmin((abs(imu_t - 150)))#[0][0]
+    # This really ought to propgate forward from like 50 seconds
+    # This introduces a big dependency on reading the file 120 seconds after takeoff...
+    lateLandingIndex = np.argmin((abs(imu_t - 120)))
 
     lateAltitude = imu_alt[lateLandingIndex]
     i = lateLandingIndex
@@ -195,6 +205,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
         w0x = 0
         # LOOP 1
         print("LOOP 1")
+        print("X too small, Y is big enough")
         print(f"UPDATED WIND SPEEDS (setting to 0), X->{w0x} m/s and Y->{w0y} m/s")
 
         drogue_opening_displacement_y = imu_y[imu_end_time] - imu_y[imu_start_time]
@@ -229,9 +240,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
             # The model and the actual windspeed need to have opposite signs
             if m2y*adj_wy > 0:
                 m2y *= -1
-
-            print("AFTER POSSIBLE SIGN FLIP")
-            print(f"Model2 y displacement: {m2y}")
+                print(f"SIGN FLIPPED: Model2 y displacement: {m2y}")
 
             m2_final_x_displacements[idx] = 0
             m2_final_y_displacements[idx] = m2y + drogue_opening_displacement_y + total_y_displacement
@@ -244,6 +253,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
         w0y = 0
         # LOOP 2
         print("LOOP 2")
+        print("Y too small, X is big enough")
         print(f"UPDATED WIND SPEEDS (setting to 0), X->{w0x} m/s and Y->{w0y} m/s")
         
         drogue_opening_displacement_x = imu_x[imu_end_time] - imu_x[imu_start_time]
@@ -276,10 +286,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
             # The model and the actual windspeed need to have opposite signs
             if m2x*adj_wx > 0:
                 m2x *= -1
-
-            print("AFTER POSSIBLE SIGN FLIP")
-            print(f"Model2 x displacement: {m2x}")
-            print(f"Model2 y displacement: {m2y}")
+                print(f"SIGN FLIPPED: Model2 x displacement: {m2x}")
 
             m2_final_x_displacements[idx] = m2x + drogue_opening_displacement_x + total_x_displacement
             m2_final_y_displacements[idx] = 0
@@ -291,11 +298,12 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     elif (abs(w0y) < 1 and abs(w0x) < 1):
         # LOOP 3
         print("LOOP 3")
+        print("X and Y both too small")
         
         adj_wx = 0
         adj_wy = 0
         
-        print(f"UPDATED WIND SPEEDS (setting to 0), X->{w0x} m/s and Y->{w0y} m/s")
+        print(f"UPDATED WIND SPEEDS (setting to 0), X->{adj_wx} m/s and Y->{adj_wy} m/s")
 
         for i in range(3):
             # Oz Ascent Model
@@ -309,7 +317,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     else:
         # LOOP 4
         print("LOOP 4")
-        print(f"UPDATED WIND SPEEDS (setting to 0), X->{w0x} m/s and Y->{w0y} m/s")
+        print("X and Y are acceptable")
         
         drogue_opening_displacement_x = imu_x[imu_end_time] - imu_x[imu_start_time]
         drogue_opening_displacement_y = imu_y[imu_end_time] - imu_y[imu_start_time]
@@ -327,8 +335,10 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
 
             # If we flip directions then just set it to zero, there wasn't actually any wind most likely
             if adj_wx*w0x < 0:
+                print("Adjusted adj_wx sign")
                 adj_wx = 0
             if adj_wy*w0y < 0:
+                print("Adjusted adj_wy sign")
                 adj_wy = 0
 
             for i in range(imu_end_time, landing_i):
@@ -349,13 +359,11 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
 
             # The model and the actual windspeed need to have opposite signs
             if m2x*adj_wx > 0:
+                print("Adjusted m2x sign")
                 m2x *= -1
             if m2y*adj_wy > 0:
+                print("Adjusted m2y sign")
                 m2y *= -1
-
-            print("AFTER POSSIBLE SIGN FLIP")
-            print(f"Model2 x displacement: {m2x}")
-            print(f"Model2 y displacement: {m2y}")
 
             m2_final_x_displacements[idx] = m2x + drogue_opening_displacement_x + total_x_displacement
             m2_final_y_displacements[idx] = m2y + drogue_opening_displacement_y + total_y_displacement
@@ -426,13 +434,12 @@ def GPS_to_grid_box(max_x, min_x, average_x, min_y, max_y, average_y, input_long
     
     ## DETERMINE LAUNCH GRID
     n = 20;
-    #index_matrix = np.array(range(n)) + n*np.transpose(np.array(range(n)))
     index_base = np.array(range(n*n))
     index_matrix = np.reshape(index_base, (n,n))
     
+    ## Hard code for OUR Braggs Farm image
     longitude_start = 34.900091;
     latitude_start = 86.624884;
-
     longitude_end = 34.886289;
     latitude_end = 86.608062;
 
@@ -455,9 +462,7 @@ def GPS_to_grid_box(max_x, min_x, average_x, min_y, max_y, average_y, input_long
     for i in range(n):
         for j in range(n):
             if ((longitude_matrix[i, j] >= input_longitude) and (input_longitude >= (longitude_matrix[i, j] - longitude_interval))) and ((latitude_matrix[i, j] >= input_latitude) and (input_latitude >= (latitude_matrix[i, j] - latitude_interval))):
-
                 launch_grid = index_matrix[i, j];
-
 
     print("Launch Grid: " + str(launch_grid));
 
