@@ -372,9 +372,9 @@ def run(pSave=None):
         #         imgs.append(None)
         # Skip images
         for j in range(0, skip):
-            i += 1
             #print('skip')
             img1Pair, discarded, greyscale = grabImage(imgs[i], i, None, True)
+            i += 1
         #exit(0)
 
         while img1Pair is None or discarded:
