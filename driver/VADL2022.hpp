@@ -38,6 +38,7 @@ public:
     const char* launchRailGPSXYCoords = nullptr;
     std::chrono::time_point<std::chrono::steady_clock> landingTime = std::chrono::steady_clock::now();
     bool noIMUReconSleep = false;
+    bool showLandingPosOnCompletion = false;
     
 private:
     void connect_GPIO(bool initCppGpio);

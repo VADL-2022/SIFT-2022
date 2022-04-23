@@ -25,6 +25,17 @@ def run(filenameMatrixOrActualMatrixObject,
     else:
         m0=filenameMatrixOrActualMatrixObject
     print("m0:",m0)
+    if showPreviewWindow:
+        if isinstance(filenameFirstImageOrActualMatrixObject, str):
+            firstImage = cv2.imread(filenameFirstImageOrActualMatrixObject)
+        else:
+            firstImage = filenameFirstImageOrActualMatrixObject
+        
+        # Show landing position
+        import knn_matcher2
+        knn_matcher2.showPreviewWindow = True
+        knn_matcher2.waitAmountStandard = 0
+        knn_matcher2.showLandingPos(firstImage, m0)
     try:
         m1, firstImageWidth, firstImageHeight, firstImage_, firstImageOrig, firstImageFilename_ = oneShotMatch.run(filenameFirstImageOrActualMatrixObject, 'driver/vlcsnap-2022-04-05-15h36m34s616.png', showPreviewWindow)
     except:
