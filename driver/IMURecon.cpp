@@ -23,7 +23,7 @@ void enqueueIMURecon(VADL2022* v) {
       auto sleepTime = std::chrono::seconds(100) - timeSinceLanding;
       { out_guard();
         std::cout << "Time since landing: " << std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLanding).count() << " milliseconds" << std::endl; }
-      if (now > v->landingTime) {
+      if (v->landingTime > now) {
         { out_guard();
           std::cout << "sleepTime would be negative (overflow due to unsigned), no landing, so not sleeping! (Would have been for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds)" << std::endl; }
       }
