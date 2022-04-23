@@ -180,8 +180,8 @@ if [ "$mode" == "video_cap" ]; then
     testing="$testing --time-to-apogee 5000 --fore-stop-time 5000"
 fi
 
-#extraArgs="$testing"
-extraArgs="$realFlight"
+extraArgs="$testing"
+#extraArgs="$realFlight"
 
 
 if [ "$mode" == "sift" ]; then
