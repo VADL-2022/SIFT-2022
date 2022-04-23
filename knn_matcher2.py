@@ -183,6 +183,7 @@ def grabImage(imgName, i, firstImage, skip=False):
             return image
 
     for j in range(0,frameSkip):
+        print("frameSkip:", frameSkip)
         frame = grabInternal(imgName)
         if skip:
             return None, True, None
