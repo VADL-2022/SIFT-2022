@@ -50,7 +50,8 @@ void enqueueIMURecon(VADL2022* v) {
       using namespace pybind11::literals; // to bring in the `_a` literal
       py::tuple gridBoxNumbersAndOtherJunk = IMURecon.attr("calc_displacement2")(logFileName, py::arg("launch_rail_box")=py::eval(v->launchBox), "weather_station_stats_xy"_a=py::eval(v->windSpeed), "GPS_coords"_a=py::eval(v->launchRailGPSXYCoords), py::arg("ld_launch_angle")=py::eval(v->launchAngle));
       py::print("gridBoxNumbersAndOtherJunk:", gridBoxNumbersAndOtherJunk);
-      py::list gridBoxNumbers = gridBoxNumbersAndOtherJunk[0]; // The first model
+      //py::list gridBoxNumbers = gridBoxNumbersAndOtherJunk[0]; // The first model
+      py::tuple gridBoxNumbers = gridBoxNumbersAndOtherJunk;
       py::print("C++ got gridBoxNumbers:", gridBoxNumbers);
 
       auto enq1 = rec([=](auto&& enq1){
