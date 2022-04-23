@@ -109,7 +109,7 @@ showPreviewWindow=namespace.show_preview_window
 skip=namespace.skip
 frameSkip=namespace.frameskip
 shouldRunSkyDetection=not namespace.no_sky_detection
-videoFileDataSourcePath=namespace.video_file_data_source_path
+videoFileDataSourcePath=namespace.video_file_data_source_path[0] if isinstance(namespace.video_file_data_source_path, list) else namespace.video_file_data_source_path # HACK
 videoFileDataSource = namespace.video_file_data_source
 if videoFileDataSource:
     forceStop=True
