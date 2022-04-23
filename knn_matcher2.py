@@ -248,7 +248,7 @@ def showLerpController(firstImage, M, key_='a', idMat=idMat):
                 y = x[j]
                 Mcurrent[i][j] = lerp(y, M[i][j], inc)
                 #inc*=1.5
-        key = cv2.waitKey(0)
+        key = cv2.waitKey(waitAmountStandard)
         if key & 0xFF == ord('q'):
             exit(0)
         elif key & 0xFF == ord(key_):
@@ -328,7 +328,7 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
         # #
     
     cv2.imshow('landingPos', img)
-    key = cv2.waitKey(0)
+    key = cv2.waitKey(waitAmountStandard)
     return img, key
     
 def run(pSave=None):
@@ -379,7 +379,7 @@ def run(pSave=None):
         firstImageOrig=img1Pair[1] # undistorted etc.
         if showPreviewWindow:
             cv2.imshow('firstImage (index ' + str(i-1) + ')', firstImage)
-            cv2.waitKey(0)
+            cv2.waitKey(waitAmountStandard)
         
         mask2 = np.zeros_like(greyscale)
         img1=img1Pair[0]
@@ -392,7 +392,7 @@ def run(pSave=None):
         test_mask=cv2.circle(mask2, (xc,yc), radius2, (255,255,255), -1) # https://stackoverflow.com/questions/42346761/opencv-python-feature-detection-how-to-provide-a-mask-sift
         if showPreviewWindow:
             cv2.imshow('test_mask', test_mask)
-            cv2.waitKey(0)
+            cv2.waitKey(waitAmountStandard)
     
         kp1, des1 = sift.detectAndCompute(img1,mask = test_mask) # Returns keypoints and descriptors
         des2=None
@@ -483,7 +483,7 @@ def run(pSave=None):
         if img2Pair is None and not discarded:
             print("img2 was None")
             if showPreviewWindow:
-                cv2.waitKey(0)
+                cv2.waitKey(waitAmountStandard)
             return Action.Break
         if img2Pair is None and discarded:
             waitForInput(None, firstImage)
@@ -560,7 +560,7 @@ def run(pSave=None):
             waitForInput(None, firstImage)
             i+=1
             return Action.Continue # Keep img1 as the previous image so we can match it next time
-            # cv2.waitKey(0)
+            # cv2.waitKey(waitAmountStandard)
             # break
         maybeNone = computeLandingPos(firstImage, acc)
         if maybeNone is not None:
