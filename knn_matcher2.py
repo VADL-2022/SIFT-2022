@@ -342,8 +342,8 @@ def run(pSave=None):
             pSave = os.path.join(pSave, date_time)
 
             Path(pSave).mkdir(parents=True, exist_ok=True) # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
-    else:
-        pSave=None
+    # else:
+    #     pSave=None
     
     global imgs
     if grabMode == 1:

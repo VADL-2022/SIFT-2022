@@ -22,6 +22,7 @@ def runOnTheWayDown(videoFilename):
     knn_matcher2.showPreviewWindow = showPreviewWindow
     knn_matcher2.reader = cv2.VideoCapture(videoFilename)
     knn_matcher2.frameSkip = frameSkip #40#1#5#10#20
+    knn_matcher2.waitAmountStandard = None
     rets = knn_matcher2.run()
     return rets
 videoFilename=sys.argv[1] if len(sys.argv) > 1 else 'Data/fullscale3/sift2/2022-04-16_12_08_35_CDT/output.mp4'
