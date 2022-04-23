@@ -368,7 +368,7 @@ def run(pSave=None):
     
     if len(imgs) > 0 or totalFrames == -1:
         if totalFrames == -1:
-            for i in range(0, frameSkip):
+            for i in range(0, frameSkip+1):
                 imgs.append(None)
         # Skip images
         for j in range(0, skip):
@@ -378,6 +378,7 @@ def run(pSave=None):
         #exit(0)
 
         while img1Pair is None or discarded:
+            print(i,len(imgs))
             firstImageFilename=imgs[i]
             img1Pair, discarded, greyscale = grabImage(imgs[i], i, None)
             i += frameSkip
