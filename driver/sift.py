@@ -121,8 +121,8 @@ frameSkip=namespace.frameskip[0] if isinstance(namespace.frameskip, list) else n
 shouldRunSkyDetection=not namespace.no_sky_detection
 videoFileDataSourcePath=namespace.video_file_data_source_path[0] if isinstance(namespace.video_file_data_source_path, list) else namespace.video_file_data_source_path # HACK
 videoFileDataSource = namespace.video_file_data_source
-if videoFileDataSource:
-    forceStop=True
+# if videoFileDataSource:
+#     forceStop=True
 def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
