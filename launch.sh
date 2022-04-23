@@ -151,26 +151,29 @@ fi
 
 echo "@@@@ Starting driver for $mode"
 if [ "$mode" == "sift" ]; then
-    takeoffGForce=6
+    takeoffGForce=9
 else
-    takeoffGForce=5
+    takeoffGForce=8
 fi
 landingGForce=3
 backupTakeoffTime=0
-timeToMeco=1700
-timeToApogee=9500
-timeToMainDeployment=17000 # Originally we were going to start SIFT on main deployment. But we use this instead since unsure about IMU trigger on 1 g of main deployment, and there's a fallback via --time-to-main-deployment for this.
-mainDeploymentAltitude=800
-mainStabilizationTime=1000 # Time to allow rocket to stabilize after main deployment, then running SIFT.
-mainDescentTime=33500 
+timeToMeco=2200
+timeToApogee=17300
+timeToMainDeployment=68200 # Originally we were going to start SIFT on main deployment. But we use this instead since unsure about IMU trigger on 1 g of main deployment, and there's a fallback via --time-to-main-deployment for this.
+mainDeploymentAltitude=550
+mainStabilizationTime=0 # Time to allow rocket to stabilize after main deployment, then running SIFT.
+mainDescentTime=24000 
 launchBox=$1
 launchAngle=$2
+windx=$3
+windy=$4
+gps=$5
 siftAllowanceForStopping=0 # Time to take away from mainDescentTime for stopping SIFT in backupSIFTStopTime. Larger values stop SIFT sooner.
 backupSIFTStopTime="$(($mainDescentTime-$siftAllowanceForStopping))" # Originally we were going to stop SIFT on altitude data. But we're unsure about altitude data being reliable, so we don't use it to stop SIFT, and there's a fallback via backupSIFTStopTime.
 
 forePayloadArgs="--video-capture --LIS331HH-imu-calibration-file "driver/LIS331HH_calibration/LOG_20220129-183224.csv""
 
-siftPayloadArgs="$siftPayloadArgs --time-to-main-deployment $timeToMainDeployment --time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --emergency-main-deployment-g-force 20 --main-deployment-altitude $mainDeploymentAltitude --launch-box $launchBox --launch-angle $launchAngle"
+siftPayloadArgs="$siftPayloadArgs --time-to-main-deployment $timeToMainDeployment --time-for-main-stabilization $mainStabilizationTime --main-descent-time $backupSIFTStopTime --emergency-main-deployment-g-force 20 --main-deployment-altitude $mainDeploymentAltitude --launch-box $launchBox --launch-angle $launchAngle --wind-speed-x $windx --wind-speed-y $windy --launch-rail-gps-coords $gps"
 
 realFlight="--takeoff-g-force $takeoffGForce --landing-g-force $landingGForce --backup-takeoff-time $backupTakeoffTime --time-to-meco $timeToMeco --time-to-apogee $timeToApogee"
 
