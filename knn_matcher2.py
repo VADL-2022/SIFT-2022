@@ -293,7 +293,7 @@ def computeLandingPos(img, M):
     #dstMidpointUndist = undistortPoints(np.array([[dstMidpoint*(src.python.General.w/640)]], dtype=np.float32), src.python.General.k, src.python.General.dist)[0][0]*(640/src.python.General.w)
     print("dstMidpointUndist:",dstMidpointUndist)
     sentientAnilPoint = np.array([width/2,height/2])+dstMidpointUndist-dstMidpoint
-    isGood = np.linalg.norm(dstMidpointUndist-dstMidpoint) <= 200 # "semi-discard" here. np.linalg.norm is vector magnitude.
+    isGood = np.linalg.norm(dstMidpointUndist-dstMidpoint) <= 100 # "semi-discard" here. np.linalg.norm is vector magnitude.
     return width, height, dstPts, dstMidpoint, dstMidpointUndist, sentientAnilPoint, isGood
 def drawDstPoints(img, dstPts, color):
     if len(dstPts) > 1:
