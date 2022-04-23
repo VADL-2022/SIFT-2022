@@ -88,6 +88,9 @@ def run(shouldStop # AtomicInt
     
     # Create a VideoCapture object
     cap = cv2.VideoCapture(0)
+    cap.set(3, frame_width)
+    cap.set(4, frame_height)
+
     if onSetVideoCapture is not None:
         onSetVideoCapture(cap)
 
@@ -97,12 +100,13 @@ def run(shouldStop # AtomicInt
 
     # Default resolutions of the frame are obtained.The default resolutions are system dependent.
     # We convert the resolutions from float to integer.
-    frame_width = int(cap.get(3))
-    frame_height = int(cap.get(4))
+    frame_width_ = int(cap.get(3))
+    frame_height_ = int(cap.get(4))
 
     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
     date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
-    print("Old width,height:",frame_width,frame_height)
+    print("Requested width, height:", frame_width,frame_height)
+    print("Current width,height:",frame_width_,frame_height_)
     if outputFolderPath is None:
         o1=now.strftime("%Y-%m-%d_%H_%M_%S_%Z")
         outputFolderPath=os.path.join('.', 'dataOutput', o1)
