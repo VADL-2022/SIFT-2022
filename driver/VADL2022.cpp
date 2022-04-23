@@ -1073,17 +1073,17 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    // else if (strcmp(argv[i], "--main-deployment-altitude") == 0) {
-    //   if (i+1 < argc) {
-    //     mainDeploymentAltitude = std::stoll(argv[i+1]);
-    //     std::cout << "Set main deployment altitude to " << mainDeploymentAltitude << std::endl;
-    //   }
-    //   else {
-    //     puts("Expected main deployment altitude");
-    //     exit(1);
-    //   }
-    //   i++;
-    // }
+    else if (strcmp(argv[i], "--main-deployment-altitude") == 0) {
+      if (i+1 < argc) {
+        mainDeploymentAltitude = std::stoll(argv[i+1]);
+        std::cout << "Set main deployment altitude to " << mainDeploymentAltitude << std::endl;
+      }
+      else {
+        puts("Expected main deployment altitude");
+        exit(1);
+      }
+      i++;
+    }
     else if (strcmp(argv[i], "--takeoff-g-force") == 0) { // Override thing
       if (i+1 < argc) {
 	TAKEOFF_G_FORCE = stof(argv[i+1]);
@@ -1296,18 +1296,21 @@ VADL2022::VADL2022(int argc, char** argv)
     exit(1);
   }
 
-  char hostname[HOST_NAME_MAX + 1];
-  if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
-    printf("hostname: %s\n", hostname);
-    if (strcmp(hostname, "sift1") == 0) {
-      mainDeploymentAltitude = 1400;
+  if (mainDeploymentAltitude == -1) {
+    // NOTE: mainDeploymentAltitude IS NO LONGER ACTUAL MAIN DEPLOYMENT ALTITUDE at this point of the code being reached. It is only for SIFT start.
+    char hostname[HOST_NAME_MAX + 1];
+    if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+      printf("hostname: %s\n", hostname);
+      if (strcmp(hostname, "sift1") == 0) {
+        mainDeploymentAltitude = 1400;
+      }
+      else {
+        mainDeploymentAltitude = 1500;
+      }
     }
     else {
       mainDeploymentAltitude = 1500;
     }
-  }
-  else {
-    mainDeploymentAltitude = 1500;
   }
 
 #ifdef USE_LIS331HH
