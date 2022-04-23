@@ -37,6 +37,7 @@ public:
     const char* windSpeed = nullptr;
     const char* launchRailGPSXYCoords = nullptr;
     std::chrono::time_point<std::chrono::steady_clock> landingTime = std::chrono::steady_clock::now();
+    bool noIMUReconSleep = false;
     
 private:
     void connect_GPIO(bool initCppGpio);

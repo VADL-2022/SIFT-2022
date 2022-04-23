@@ -27,10 +27,14 @@ void enqueueIMURecon(VADL2022* v) {
         { out_guard();
           std::cout << "sleepTime would be negative (overflow due to unsigned), no landing, so not sleeping! (Would have been for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds)" << std::endl; }
       }
-      else {
+      else if (!v->noIMUReconSleep) {
         { out_guard();
           std::cout << "Sleeping for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds" << std::endl; }
         std::this_thread::sleep_for(sleepTime);
+      }
+      else {
+        { out_guard();
+          std::cout << "Sleeping would have been for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime).count() << " milliseconds" << std::endl; }
       }
       puts("))))))))))))))))))))))))))))))))))))))))");
       py::module_ IMURecon = py::module_::import("driver.IMURecon");
