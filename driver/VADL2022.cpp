@@ -1160,6 +1160,9 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--show-landing-pos-on-completion") == 0) {
       showLandingPosOnCompletion = true;
     }
+    else if (strcmp(argv[i], "--interactive") == 0) {
+      interactive = true;
+    }
     else if (strcmp(argv[i], "--intermediate-image-path") == 0) {
       intermediateImagePath = argv[i+1]; // PYTHON EXPRESSION
       i++;

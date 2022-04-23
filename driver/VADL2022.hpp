@@ -41,6 +41,7 @@ public:
     bool showLandingPosOnCompletion = false;
     const char* intermediateImagePath = nullptr;
     const char* mc = nullptr; // constant matrix for intermediate matching
+    bool interactive = false;
     
 private:
     void connect_GPIO(bool initCppGpio);

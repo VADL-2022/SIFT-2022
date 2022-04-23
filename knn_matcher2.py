@@ -214,7 +214,7 @@ def grabImage(imgName, i, firstImage, skip=False):
         frameOrig = frame
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     print("(((((((((((((((((",shouldRunSkyDetection)
-    if shouldRunSkyDetection and shouldDiscardImage(greyscaleOrig, i):
+    if shouldRunSkyDetection and shouldDiscardImage(greyscaleOrig, i, showPreviewWindow=showPreviewWindow):
         print("Discarded image", i)
         return None, True, greyscale
     else:
@@ -374,7 +374,7 @@ def run(pSave=None):
         while img1Pair is None or discarded:
             firstImageFilename=imgs[i]
             img1Pair, discarded, greyscale = grabImage(imgs[i], i, None)
-            i+=1
+            i += frameSkip
         firstImage = img1Pair[0]
         if pSave is not None: #if not showPreviewWindow or __name__ == "__main__":
             # Save first image
@@ -476,6 +476,7 @@ def run(pSave=None):
 
         try:
             img2Pair, discarded, greyscale = grabImage(imgName, i, firstImage)
+            i += frameSkip
             print(i,"$$$$$$$$$$$$$$$$$$$$$$$$$")
             #input()
         except EarlyExitException as e:
@@ -492,7 +493,7 @@ def run(pSave=None):
             return Action.Break
         if img2Pair is None and discarded:
             waitForInput(None, firstImage)
-            i += 1
+            #i += 1
             return Action.Continue #  # Keep img1 as the previous image so we can match it next time
         img2=img2Pair[0]
         hOrig, wOrig = img2.shape[:2]
@@ -554,7 +555,7 @@ def run(pSave=None):
                 if showPreviewWindow:
                     cv2.imshow('bad',img2);
                 waitForInput(None, firstImage)
-                i+=1
+                #i+=1
                 continue_=True  # Keep img1 as the previous image so we can match it next time
         print("find_homography took", timeit.timeit(lambda: fn3(), number=1), "seconds")
         if continue_:
@@ -563,7 +564,7 @@ def run(pSave=None):
         if transformation_matrix is None:
             print("transformation_matrix was None")
             waitForInput(None, firstImage)
-            i+=1
+            #i+=1
             return Action.Continue # Keep img1 as the previous image so we can match it next time
             # cv2.waitKey(waitAmountStandard)
             # break
@@ -607,7 +608,7 @@ def run(pSave=None):
         kp1=kp2
         des1=des2
         img1=img2
-        i+=1
+        #i+=1
         return None
     try:
         if len(imgs) > 1:
