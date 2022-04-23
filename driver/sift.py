@@ -18,6 +18,7 @@ import signal
 import knn_matcher2
 import argparse
 from datetime import datetime
+import time
 
 shouldStop=videoCapture.AtomicInt(0)
 forceStop = False
@@ -42,7 +43,7 @@ class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
         #     return 1
         while self.origVideoCap is None:
             print("self.origVideoCap is None")
-            sleep(0.1)
+            time.sleep(0.1)
         return self.origVideoCap.get(attr)
 customVideoCapture = CustomVideoCapture()
 finishRestAlways = True
