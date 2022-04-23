@@ -21,7 +21,7 @@ void enqueueIMURecon(VADL2022* v) {
       auto timeSinceLanding = v->landingTime - std::chrono::steady_clock::now();
       auto sleepTime = std::chrono::seconds(100) - timeSinceLanding;
       { out_guard();
-        std::cout << "Time since landing: " << std::chrono::time_point_cast<std::chrono::milliseconds>(timeSinceLanding) << " milliseconds\n. Sleeping for " << std::chrono::time_point_cast<std::chrono::milliseconds>(sleepTime) << std::endl; }
+        std::cout << "Time since landing: " << std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLanding) << " milliseconds\n. Sleeping for " << std::chrono::duration_cast<std::chrono::milliseconds>(sleepTime) << std::endl; }
       std::this_thread::sleep_for(sleepTime);
       puts("))))))))))))))))))))))))))))))))))))))))");
       py::module_ IMURecon = py::module_::import("driver.IMURecon");
