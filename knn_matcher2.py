@@ -403,7 +403,7 @@ def run(pSave=None):
         print(pSave, i, acc, "%%%%%%%%%%%%%%%%%%%%%%%")
         if pSave is None:
             return
-        if not showPreviewWindow or __name__ == "__main__":
+        if True: #if not showPreviewWindow or __name__ == "__main__":
             if acc is not None:
                 # Save transformation
                 if tr is not None:
