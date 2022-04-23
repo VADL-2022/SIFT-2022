@@ -106,7 +106,7 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         else:
             # If the camera hasn't swapped, swap immediately and sleep for rest of flight
             print("IMU not detected, swapping cameras immediately")
-            stopVideoCaptureThread()
+            stopVideoCaptureThread(name)
             swapCameras()
         print("Sleeping 300 seconds (total worst case flight length)")
         sys.stdout.flush()
