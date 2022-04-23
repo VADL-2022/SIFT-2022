@@ -63,4 +63,7 @@ backtrace(std::ostream & _out) noexcept
         }
     }
     _out << std::flush;
+
+    // Restore printing mode to default
+    _out << std::dec << std::lowercase;
 }
