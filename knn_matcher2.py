@@ -356,6 +356,7 @@ def run(pSave=None):
         imgs = [None]*totalFrames
     elif grabMode == 0 or grabMode == 3:
         imgs=p.stdout.split(b'\n')
+        totalFrames=None
     i = 0
     img1Pair = None
     discarded = True # Assume True to start with
@@ -365,7 +366,7 @@ def run(pSave=None):
     imgs_iter = iter(imgs)
     next(imgs_iter) # Skip first image
     
-    if len(imgs) > 0:
+    if len(imgs) > 0 || totalFrames == -1:
         # Skip images
         for j in range(0, skip):
             i += 1
