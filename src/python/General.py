@@ -464,7 +464,7 @@ def undistortImg(img, balance=0.0, dim2=None, dim3=None):
         # def fn_thing():
         #     nonlocal img
         #     img = cv2.resize(img, (2592, 1944))
-        # print("undistortImg: cv2.resize took", timeit.timeit(fn_thing), "seconds")
+        # print("undistortImg: cv2.resize took", timeit.timeit(fn_thing, number=1), "seconds")
         pass
     if not dim2:
         dim2 = dim1

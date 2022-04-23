@@ -209,7 +209,7 @@ def grabImage(imgName, i, firstImage, skip=False):
         def fn_thing():
             nonlocal frame
             frame = src.python.General.undistortImg(frame)
-        print("undistortImg took", timeit.timeit(fn_thing), "seconds")
+        print("undistortImg took", timeit.timeit(fn_thing, number=1), "seconds")
     else:
         frameOrig = frame
     greyscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

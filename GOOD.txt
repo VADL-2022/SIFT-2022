@@ -483,8 +483,11 @@ python3 knn_matcher2.py  1 1 0 0 Data/fullscale3/sift1/2022-04-16_12_08_43_CDT/o
 #extrasNvm="--no-sky-detection --fps 15 --no-preview-window --finish-rest-always"
 oldJunk="--imu-data-source-time-offset 1651040 --imu-data-source-path Data/fullscale3/sift2/LOG_20220416_114053.csv"
 newJunk="--imu-data-source-time-offset 0 --imu-data-source-path Data/fullscale3/sift2/Derived/Book1.csv"
-extrasOldArgs="--main-deployment-altitude 800" extras="--frameskip 3" ./subscale_exe_release --extra-sift-exe-args '--show-preview-window --save-first-image --video-file-data-source --video-file-data-source-path Data/fullscale3/sift2/2022-04-16_12_08_35_CDT/output.mp4 $extrasNvm $extras' --imu-data-source-time-offset 1651040 --imu-data-source-path Data/fullscale3/sift2/LOG_20220416_114053.csv  $newJunk --time-to-main-deployment 	17200 	--time-for-main-stabilization 	1000 	--main-descent-time 	33500 	--emergency-main-deployment-g-force 	20 	--main-deployment-altitude 800 	--launch-box 	210 	--launch-angle 	'__import__("numpy").deg2rad(4)' 	 	--sift-params 	'-C_edge 2 -delta_min 0.6' 	--takeoff-g-force 	6 	--landing-g-force 	3 	--backup-takeoff-time 	0 	--time-to-meco 	1700 	--time-to-apogee 	9500 --wind-speed '(0,-1)' --launch-rail-gps-coords "(36.189886, -86.155366)" --python-sift --no-imu-recon-sleep --show-landing-pos-on-completion
+# $extrasNvm $extras
+extrasOldArgs="--main-deployment-altitude 800" extras="--frameskip 3" ./subscale_exe_release --extra-sift-exe-args '--show-preview-window --save-first-image --video-file-data-source --video-file-data-source-path Data/fullscale3/sift2/2022-04-16_12_08_35_CDT/output.mp4' --imu-data-source-time-offset 1651040 --imu-data-source-path Data/fullscale3/sift2/LOG_20220416_114053.csv  $newJunk --time-to-main-deployment 	17200 	--time-for-main-stabilization 	1000 	--main-descent-time 	33500 	--emergency-main-deployment-g-force 	20 	--main-deployment-altitude 800 	--launch-box 	149 	--launch-angle 	'__import__("numpy").deg2rad(2)' 	 	--sift-params 	'-C_edge 2 -delta_min 0.6' 	--takeoff-g-force 	6 	--landing-g-force 	3 	--backup-takeoff-time 	0 	--time-to-meco 	1700 	--time-to-apogee 	9500 --wind-speed '(-2,0)' --launch-rail-gps-coords "(36.189886, -86.155366)" --python-sift --no-imu-recon-sleep --show-landing-pos-on-completion
 # ^ Note: launch angle of 4 is only because oz does a weird thing. 2 degrees is actual.
 
 
-oz launch day gps: "(34.8946331, -86.6166411)"
+launch day:
+- oz launch day gps: "(34.8946331, -86.6166411)"
+- launch angle: 5 or whatever they say

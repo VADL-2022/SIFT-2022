@@ -95,7 +95,7 @@ parser.add_argument('--frameskip', type=int, nargs='+', default=1,
 # --save-first-image --video-file-data-source --video-file-data-source-path Data/fullscale1/Derived/SIFT/output.mp4 --no-sky-detection
 parser.add_argument('--save-first-image', action='store_true', default=True,
                     help='whether to save the first image')
-parser.add_argument('--video-file-data-source', action='store_true', default=True,
+parser.add_argument('--video-file-data-source', action='store_true', default=False,
                     help='')
 parser.add_argument('--video-file-data-source-path', type=str, nargs='+', default=None,
                     help="")
