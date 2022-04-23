@@ -353,7 +353,7 @@ def run(pSave=None):
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
         print("totalFrames: ",totalFrames)
-        imgs = [None]*(totalFrames if  totalFrames != -1 else 1)
+        imgs = [None]*(totalFrames if  totalFrames != -1 else 1 * frameSkip)
     elif grabMode == 0 or grabMode == 3:
         imgs=p.stdout.split(b'\n')
         totalFrames=None
@@ -368,8 +368,8 @@ def run(pSave=None):
     
     if len(imgs) > 0 or totalFrames == -1:
         if totalFrames == -1:
-            imgs.append('')
-            imgs.append('')
+            for i in range(0, frameSkip):
+                imgs.append(None)
         # Skip images
         for j in range(0, skip):
             i += 1
