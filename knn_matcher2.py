@@ -373,7 +373,7 @@ def run(pSave=None):
             img1Pair, discarded, greyscale = grabImage(imgs[i], i, None)
             i+=1
         firstImage = img1Pair[0]
-        if not showPreviewWindow or __name__ == "__main__":
+        if pSave is not None: #if not showPreviewWindow or __name__ == "__main__":
             # Save first image
             cv2.imwrite(os.path.join(pSave, "firstImage0.png"), firstImage)
         firstImageOrig=img1Pair[1] # undistorted etc.
