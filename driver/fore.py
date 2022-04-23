@@ -94,6 +94,10 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
     global descent
     global name
 
+    # Start the video capture on the first camera
+    name = "1stCam"
+    startVideoCapture(name)
+
     # Check if IMU has failed
     if my_accels is None:
         if switchedCameras:
@@ -102,35 +106,31 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         else:
             # If the camera hasn't swapped, swap immediately and sleep for rest of flight
             print("IMU not detected, swapping cameras immediately")
-            #stopVideoCaptureThread(name)
+            stopVideoCaptureThread(name)
             swapCameras()
-            print("Sleeping 300 seconds (total worst case flight length)")
-            sys.stdout.flush()
-            name = "2ndCam"
-            startVideoCapture(name)
-            time.sleep(300)
-            shouldStopMain.set(1)
-    else:
-        # Start the video capture on the first camera
-        name = "1stCam"
+        print("Sleeping 300 seconds (total worst case flight length)")
+        sys.stdout.flush()
+        name = "2ndCam"
         startVideoCapture(name)
-
+        time.sleep(300)
+        shouldStopMain.set(1)
+    else:
         # Wait till apogee time to swap cameras
         print("Waiting for camera switching time...")
         time.sleep(switchCamerasTime/1000.0)
         stopVideoCaptureThread(name)
 
-        # Swap the camera
-        swapCameras()
+    # Swap the camera
+    swapCameras()
 
-        # Start the video capture on the second camera
-        name = "2ndCam"
-        startVideoCapture(name)
+    # Start the video capture on the second camera
+    name = "2ndCam"
+    startVideoCapture(name)
 
-        # Record till the end of the flight
-        time.sleep(stoppingTime / 1000.0)
-        stopVideoCaptureThread(name)
-        shouldStopMain.set(1)
+    # Record till the end of the flight
+    time.sleep(stoppingTime / 1000.0)
+    stopVideoCaptureThread(name)
+    shouldStopMain.set(1)
 
 # Calibrate the IMU
 def calibrate(file):
