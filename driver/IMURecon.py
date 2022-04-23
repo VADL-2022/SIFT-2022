@@ -3,7 +3,7 @@ from pandas import read_csv
 from math import sin, cos, pi, atan2, asin, sqrt, ceil
 
 
-def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_stats_xy, my_thresh=45, my_post_drogue_delay=0.85, my_signal_length=3, ld_launch_angle=5*pi/180, ld_ssm=2.44, ld_dry_base=15.735, ld_m_motor=1.728187, ld_t_burn=2.05, ld_T_avg=1771):
+def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_stats_xy, GPS_coords=0, my_thresh=45, my_post_drogue_delay=0.85, my_signal_length=3, ld_launch_angle=5*pi/180, ld_ssm=2.44, ld_dry_base=15.735, ld_m_motor=1.728187, ld_t_burn=2.05, ld_T_avg=1771):
     '''
     This is the main function, the rest are all nested functions called by this one.
     
@@ -11,6 +11,11 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     imu_data_file_and_path: string containing the file name and location of the IMU CSV file.  E.g. "../../Data/VN_LOG_1234567.csv"
     launch_rail_box: grid box number that the launch rail is in.  Probably will only know this on launch day, so pass in argument
     weather_station_stats_xy: the wind speed of the x and y directions as given by the weather report
+    
+    ######################
+    IF YOU WANT THE GPS TO RUN, YOU MUST SET GPS_COORDS TO THE GPS VALUES, VIA [LONGITUDE, LATITUDE]
+    IF YOU LEAVE GPS AS ITS DEFAULT PARAM THEN IT WILL NOT RUN
+    ######################
     
     YOU NEED TO UPDATE THESE ON LAUNCH DAY
     ld_launch_angle: launch day launch angle (e.g. angle of the launch rail)
@@ -26,8 +31,9 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     my_signal_length: length of analysis window, 3 seconds
     
     RETURNS
-    final_grid_number: a LIST of grid numbers that we think we landed in.  First is the "average" NOT BEST, the rest are the uncertainty
+    all_xs: a LIST of grid numbers that we think we landed in.  First is the "average" NOT BEST, the rest are the uncertainty
     Now also returns:
+        all_GPS_boxes: a lits of all the grid numbers we could've landed in, using the GPS data directly (e.g. launch rail GPS)
         the original wind speeds
         the updated wind speeds
         all displacements
@@ -185,6 +191,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     if wy_ws is not 0 and wy_ws*w0y < 0:
         w0y = wy_ws_apogee
     print(f"UPDATED WIND SPEEDS (weather report), X->{w0x} m/s and Y->{w0y} m/s")
+    print()
     
     m1_final_x_displacements, m1_final_y_displacements = [0]*3, [0]*3
     m2_final_x_displacements, m2_final_y_displacements = [0]*3, [0]*3
@@ -202,6 +209,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
             total_y_displacement = 0
 
             adj_wy = w0y+uncertainty
+            adj_wx = w0x
 
             # If we flip directions then just set it to zero, there wasn't actually any wind most likely
             if adj_wy*w0y < 0:
@@ -246,6 +254,7 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
             #For end_time to landing
             total_x_displacement = 0
             adj_wx = w0x+uncertainty
+            adj_wy = w0y
 
             # If we flip directions then just set it to zero, there wasn't actually any wind most likely
             if adj_wx*w0x < 0:
@@ -285,6 +294,10 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     elif (abs(w0y) < 1 and abs(w0x) < 1):
         # LOOP 3
         print("LOOP 3")
+        
+        adj_wx = 0
+        adj_wy = 0
+        
         print(f"UPDATED WIND SPEEDS (setting to 0), X->{w0x} m/s and Y->{w0y} m/s")
 
         for i in range(3):
@@ -378,11 +391,13 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
 
     print(f"Avg X displacement: {avg_x} (m)") 
     print(f"Avg Y displacement: {avg_y} (m)") 
-
+    
+    print("---------------------------------------------------------------")
+    print("METHOD 1: Original (Center Assumed) Approach:")
+        
     new_xbox = update_xboxes(-avg_x, launch_rail_box)
     final_grid_number = update_yboxes(-avg_y, new_xbox)
-    print(f"Started in grid number {launch_rail_box}, ended in {final_grid_number} (average)")
-
+    
     # Somewhat shoddy logic
     if (maxx-minx)/2 > 250/ft:
         all_xs = [final_grid_number, final_grid_number+20, final_grid_number-20]
@@ -391,11 +406,138 @@ def calc_displacement2(imu_data_file_and_path, launch_rail_box, weather_station_
     if (maxy-miny)/2 > 250/ft:
         all_xs.append(final_grid_number+1)
         all_xs.append(final_grid_number-1)
+    
+    print(f"Started in grid number {launch_rail_box}, ended in {final_grid_number} (average)")
+    print(f"ALL OG GRID BOXES: {all_xs}")
+    
+    print()
+    
+    print("---------------------------------------------------------------")
+    if GPS_coords == 0:
+        print("DID NOT INPUT GPS COORDS, IGNORING MODEL 2")
+        all_GPS_boxes = -2
+    else:
+        print("METHOD 2: GPS Approach:")
+        all_GPS_boxes = GPS_to_grid_box(maxx, minx, avg_x, maxy, miny, avg_y, input_longitude=GPS_coords[0], input_latitude=GPS_coords[1])
+        print(f"ALL GPS GRID BOXES: {all_xs}")
+        
+    # WHEN WE RETURN A LIST OF GRID BOXES, THE FIRST ELEMENT OF THE LIST IS THE AVERAGE AND THUS SHOULD PROBABLY BE USED
+    # Returns all possible grid boxes (OG Method), all possible grid boxes (GPS Method: note that all the rest after the first element are edge cases), the original wind speeds, the updated wind speeds, all displacements, and landing/signal times
+    return all_xs, all_GPS_boxes, [w0x, w0y], [adj_wx, adj_wy], [minx, maxx, avg_x, miny, maxy, avg_y], [imu_t[landing_i-1], imu_t[imu_start_time], imu_t[imu_end_time]]
 
-    print(f"ALL GRID BOXES: {all_xs}")
 
-    # Returns all possible grid boxes, the original wind speeds, the updated wind speeds, all displacements, and landing/signal times
-    return all_xs, [w0x, w0y], [adj_wx, adj_wy], [minx, maxx, avg_x, miny, maxy, avg_y], [imu_t[landing_i-1], imu_t[imu_start_time], imu_t[imu_end_time]]
+
+def GPS_to_grid_box(max_x, min_x, average_x, min_y, max_y, average_y, input_longitude=34.894277, input_latitude=-86.616216):
+    input_latitude = abs(input_latitude)
+    
+    ## DETERMINE LAUNCH GRID
+    n = 20;
+    #index_matrix = np.array(range(n)) + n*np.transpose(np.array(range(n)))
+    index_base = np.array(range(n*n))
+    index_matrix = np.reshape(index_base, (n,n))
+    
+    longitude_start = 34.900091;
+    latitude_start = 86.624884;
+
+    longitude_end = 34.886289;
+    latitude_end = 86.608062;
+
+    longitude_interval = abs(longitude_start-longitude_end)/n;
+    latitude_interval = abs(latitude_start-latitude_end)/n;
+
+    longitude_matrix = np.zeros((n,n));
+    latitude_matrix = np.zeros((n,n));
+
+    temp_long = longitude_start;
+
+    for i in range(n):
+        for j in range(n):
+            longitude_matrix[i, j] = temp_long;
+            latitude_matrix[i, j] = latitude_start - (j)*latitude_interval;
+        temp_long = temp_long - longitude_interval;
+
+    launch_grid = -1;
+
+    for i in range(n):
+        for j in range(n):
+            if ((longitude_matrix[i, j] >= input_longitude) and (input_longitude >= (longitude_matrix[i, j] - longitude_interval))) and ((latitude_matrix[i, j] >= input_latitude) and (input_latitude >= (latitude_matrix[i, j] - latitude_interval))):
+
+                launch_grid = index_matrix[i, j];
+
+
+    print("Launch Grid: " + str(launch_grid));
+
+    grid_dimension = 1524;
+    long_to_gps = abs(longitude_start-longitude_end)/grid_dimension; 
+    lat_to_gps = abs(latitude_start-latitude_end)/grid_dimension; 
+
+    average_x_gps = long_to_gps*average_x + input_longitude; 
+    average_y_gps = -lat_to_gps*average_y + input_latitude; 
+
+    max_x_gps = long_to_gps*max_x + input_longitude; 
+    max_y_gps = lat_to_gps*max_y + input_latitude; 
+
+    min_x_gps = long_to_gps*min_x + input_longitude; 
+    min_y_gps = lat_to_gps*min_y + input_latitude; 
+
+    average_landing_grid = -1;
+
+    # AVERAGE
+    for i in range(n):
+        for j in range(n):
+            if ((longitude_matrix[i, j] >= average_x_gps) and (average_x_gps >= (longitude_matrix[i, j] - longitude_interval))) and ((latitude_matrix[i, j] >= average_y_gps) and (average_y_gps >= (latitude_matrix[i, j] - latitude_interval))):
+
+                average_landing_grid = index_matrix[i, j];
+                
+    ## CALCULATE THE UNCERTAINTIES
+    x_u = abs(max_x - min_x)/2
+    y_u = abs(max_y - min_y)/2
+    
+    north_x_gps = long_to_gps*x_u + average_x_gps; 
+    north_y_gps = average_y_gps; 
+
+    west_x_gps = average_x_gps; 
+    west_y_gps = average_y_gps + lat_to_gps*y_u;
+    
+    south_x_gps = -long_to_gps*x_u + average_x_gps;  
+    south_y_gps = average_y_gps;  
+
+    east_x_gps = average_x_gps; 
+    east_y_gps = average_y_gps - lat_to_gps*y_u;
+    
+    north_landing_grid = -1;
+    west_landing_grid = -1;
+    south_landing_grid = -1;
+    east_landing_grid = -1;
+    
+    # NORTH            
+    for i in range(n):
+        for j in range(n):
+            if ((longitude_matrix[i, j] >= north_x_gps) and (north_x_gps >= (longitude_matrix[i, j] - longitude_interval))) and ((latitude_matrix[i, j] >= north_y_gps) and (north_y_gps >= (latitude_matrix[i, j] - latitude_interval))):
+                north_landing_grid = index_matrix[i, j];
+    # WEST          
+    for i in range(n):
+        for j in range(n):
+            if ((longitude_matrix[i, j] >= west_x_gps) and (west_x_gps >= (longitude_matrix[i, j] - longitude_interval))) and ((latitude_matrix[i, j] >= west_y_gps) and (west_y_gps >= (latitude_matrix[i, j] - latitude_interval))):
+                west_landing_grid = index_matrix[i, j];
+    # SOUTH          
+    for i in range(n):
+        for j in range(n):
+            if ((longitude_matrix[i, j] >= south_x_gps) and (south_x_gps >= (longitude_matrix[i, j] - longitude_interval))) and ((latitude_matrix[i, j] >= south_y_gps) and (south_y_gps >= (latitude_matrix[i, j] - latitude_interval))):
+                south_landing_grid = index_matrix[i, j];
+    # EAST          
+    for i in range(n):
+        for j in range(n):
+            if ((longitude_matrix[i, j] >= east_x_gps) and (east_x_gps >= (longitude_matrix[i, j] - longitude_interval))) and ((latitude_matrix[i, j] >= east_y_gps) and (east_y_gps >= (latitude_matrix[i, j] - latitude_interval))):
+                east_landing_grid = index_matrix[i, j];
+
+    print("Average Landing Grid: " + str(average_landing_grid));
+    print("North Landing Grid: " + str(north_landing_grid));
+    print("West Landing Grid: " + str(west_landing_grid));
+    print("South Landing Grid: " + str(south_landing_grid));
+    print("East Landing Grid: " + str(east_landing_grid));
+    
+    return [average_landing_grid, north_landing_grid, west_landing_grid, south_landing_grid, east_landing_grid]
 
 
 def update_xboxes(avg_x, launch_rail_box):

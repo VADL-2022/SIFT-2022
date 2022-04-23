@@ -345,7 +345,7 @@ bool startDelayedSIFT_fork(const char *sift_args[], size_t sift_args_size, bool 
   else {
     // Sleep
     long long millis = std::stoll(timeAfterMainDeployment);
-    printf("Sleeping for %ll milliseconds before starting SIFT...\n", millis);
+    printf("Sleeping for %lld milliseconds before starting SIFT...\n", millis);
     std::this_thread::sleep_for(std::chrono::milliseconds());
     siftCommandLine = "XAUTHORITY=/home/pi/.Xauthority python3 driver/sift.py " + (extraSIFTArgs != nullptr ? std::string(extraSIFTArgs) : std::string(""));
   }
@@ -879,15 +879,16 @@ void passIMUDataToSIFTCallback(LOG_T *log, float fseconds) {
     float duration = fseconds - v->startTime;
     printf("Exceeded landing acceleration magnitude threshold for %f seconds\n", duration);
     if (duration >= LANDING_ACCEL_DURATION) {
-       puts("`````````````````````````````````````````````````````````\nLanded\n`````````````````````````````````````````````````````````");
-       v->startTime = -1; // Reset timer
-       reportStatus(Status::StoppingSIFTOrVideoCaptureOnLanding);
-       if (!isRunningPython) { // Stop SIFT since we assume SIFT must be running if !isRunningPython
-         raise(SIGINT);
-       }
-       // Also close main dispatch queue so the subscale driver terminates
-       mainDispatchQueueDrainThenStop = true;
-       ((LOG_T*)v->mLog)->userCallback = nullptr;
+      v->landingTime=std::chrono::steady_clock::now();
+      puts("`````````````````````````````````````````````````````````\nLanded\n`````````````````````````````````````````````````````````");
+      v->startTime = -1; // Reset timer
+      reportStatus(Status::StoppingSIFTOrVideoCaptureOnLanding);
+      if (!isRunningPython) { // Stop SIFT since we assume SIFT must be running if !isRunningPython
+        raise(SIGINT);
+      }
+      // Also close main dispatch queue so the subscale driver terminates
+      mainDispatchQueueDrainThenStop = true;
+      ((LOG_T*)v->mLog)->userCallback = nullptr;
     }
   }
 
@@ -1072,17 +1073,17 @@ VADL2022::VADL2022(int argc, char** argv)
       }
       i++;
     }
-    else if (strcmp(argv[i], "--main-deployment-altitude") == 0) {
-      if (i+1 < argc) {
-	mainDeploymentAltitude = std::stoll(argv[i+1]);
-	std::cout << "Set main deployment altitude to " << mainDeploymentAltitude << std::endl;
-      }
-      else {
-	puts("Expected main deployment altitude");
-	exit(1);
-      }
-      i++;
-    }
+    // else if (strcmp(argv[i], "--main-deployment-altitude") == 0) {
+    //   if (i+1 < argc) {
+    //     mainDeploymentAltitude = std::stoll(argv[i+1]);
+    //     std::cout << "Set main deployment altitude to " << mainDeploymentAltitude << std::endl;
+    //   }
+    //   else {
+    //     puts("Expected main deployment altitude");
+    //     exit(1);
+    //   }
+    //   i++;
+    // }
     else if (strcmp(argv[i], "--takeoff-g-force") == 0) { // Override thing
       if (i+1 < argc) {
 	TAKEOFF_G_FORCE = stof(argv[i+1]);
@@ -1222,8 +1223,12 @@ VADL2022::VADL2022(int argc, char** argv)
     else if (strcmp(argv[i], "--launch-angle") == 0) { // angle of the launch rail
       launchAngle = /*std::stod*/(argv[i+1]); // PYTHON EXPRESSION
       i++;
-    } else if (strcmp(argv[i], "--wind-speed") == 0) { // speed of wind in x and y direction as a Python tuple
+    } else if (strcmp(argv[i], "--wind-speed") == 0) { // speed of wind in x and y direction as a Python tuple (wind speed negative is south and west is negative)
       windSpeed = argv[i+1]; // PYTHON EXPRESSION
+      i++;
+    }
+    else if (strcmp(argv[i], "--launch-rail-gps-coords") == 0) { // gps x and y coords
+      launchRailGPSXYCoords = argv[i+1]; // PYTHON EXPRESSION
       i++;
     }
     else if (i+1 < argc && strcmp(argv[i], "--sift-params") == 0) {
@@ -1259,7 +1264,7 @@ VADL2022::VADL2022(int argc, char** argv)
     exit(1);
   }
   if (backupTakeoffTime == -1 && !imuOnly) {
-    puts("Need to provide --backup-takeoff-time");
+    puts("Need to provide --backup-takeoff-time, using 0 milliseconds is recommended");
     exit(1);
   }
   if (mecoDuration == -1 && !imuOnly) {
@@ -1270,10 +1275,10 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --time-to-apogee");
     exit(1);
   }
-  if (mainDeploymentAltitude == -1 && !imuOnly && !videoCapture) {
-    puts("Need to provide --main-deployment-altitude");
-    exit(1);
-  }
+  // if (mainDeploymentAltitude == -1 && !imuOnly && !videoCapture) {
+  //   puts("Need to provide --main-deployment-altitude");
+  //   exit(1);
+  // }
   if (launchBox == nullptr && !imuOnly && !videoCapture) {
     puts("Need to provide --launch-box");
     exit(1);
@@ -1286,6 +1291,24 @@ VADL2022::VADL2022(int argc, char** argv)
     puts("Need to provide --wind-speed");
     exit(1);
   }
+  if (launchRailGPSXYCoords == nullptr && !imuOnly && !videoCapture) {
+    puts("Need to provide --launch-rail-gps-coords");
+    exit(1);
+  }
+
+  char hostname[HOST_NAME_MAX + 1];
+  if (gethostname(hostname, HOST_NAME_MAX + 1) == 0) { // success
+    printf("hostname: %s\n", hostname);
+    if (strcmp(hostname, "sift1") == 0) {
+      mainDeploymentAltitude = 1400;
+    }
+    else {
+      mainDeploymentAltitude = 1500;
+    }
+  }
+  else {
+    mainDeploymentAltitude = 1500;
+  }
 
 #ifdef USE_LIS331HH
   std::string startPigpio = videoCapture ? "! sudo pgrep pigpiod && sudo pigpiod; " // video capture needs to start pigpiod if it's not already running ("!" negates the return code, and "&&" runs the next one only if return value of ! pgrep (not the return value of pgrep) is 0. pgrep returns 1 if not running. so not pgrep returns 0 if running!
@@ -1295,6 +1318,10 @@ VADL2022::VADL2022(int argc, char** argv)
   // "export PYTHONUNBUFFERED='1'" // An extra for fixing python not showing output  // https://stackoverflow.com/questions/27534609/tee-does-not-show-output-or-write-to-file
     if (putenv("PYTHONUNBUFFERED=1") != 0) { // Equivalent to running `export DISPLAY=:0.0` in bash.  // Needed to show windows with GTK/X11 correctly
         perror("Failed to set PYTHONUNBUFFERED");
+        //exit(EXIT_FAILURE);
+    }
+    if (putenv("DISPLAY=:0.0") != 0) {
+        perror("Failed to set X11 display");
         //exit(EXIT_FAILURE);
     }
   gpioUserPermissionFixingCommands = startPigpio + std::string("sudo usermod -a -G gpio pi && sudo usermod -a -G i2c pi && sudo chown root:gpio /dev/mem && sudo chmod g+w /dev/mem && sudo chown root:gpio /var/run && sudo chmod g+w /var/run && sudo chown root:gpio /dev && sudo chmod g+w /dev"
@@ -1414,7 +1441,9 @@ VADL2022::VADL2022(int argc, char** argv)
       // Seek past times less than imuDataSourceOffset if any
       if (imuDataSourceOffset > 0) {
         IMUData imu;
+        size_t i = 0;
         while (imu.timestamp / 1.0e9 < imuDataSourceOffset / 1000.0) {
+          //printf("LOGFromFile scanRow: %zu , timestamp is %f, yprNed.x is %f\n", i++, imu.timestamp / 1.0e9, imu.yprNed.x);
           ((LOGFromFile *)mLog)->scanRow(imu); // Seek past this row
         }
       }
