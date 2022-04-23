@@ -20,7 +20,7 @@ void enqueueIMURecon(VADL2022* v) {
       puts("((((((((((((((((((((((((((((((((((((((((");
       auto timeSinceLanding = v->landingTime - std::chrono::steady_clock::now();
       auto sleepTime = std::chrono::seconds(100) - timeSinceLanding;
-      if (sleepTime < 0) {
+      if (sleepTime.count() < 0) {
         puts("sleepTime was negative, no landing, so not sleeping!");
       }
       { out_guard();
