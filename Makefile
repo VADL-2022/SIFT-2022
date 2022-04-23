@@ -91,7 +91,7 @@ SIFT_IMPL=SIFTAnatomy
 #SIFT_IMPL=SIFTGPU
 
 # If not using this, need to avoid linking jemalloc too:
-USE_JEMALLOC=1
+USE_JEMALLOC=0
 #1
 
 USE_PTR_INC_MALLOC=0
@@ -133,7 +133,7 @@ CFLAGS += -Wall -pedantic $(disabledWarnings) `pkg-config --cflags opencv4 libpn
 #CFLAGS += -MD -MP # `-MD -MP` : https://stackoverflow.com/questions/8025766/makefile-auto-dependency-generation
 $(info $(OS))
 ifeq ($(OS),Darwin)
-CFLAGS += -target x86_64-apple-macos10.15 #-isysroot $(shell xcrun --sdk macosx --show-sdk-path)
+CFLAGS += -isystem /nix/store/n30ys187nz1q4imnf72yza410b7sfbqq-backward-1.6/include #-isysroot $(shell xcrun --sdk macosx --show-sdk-path)
 CFLAGS += -I/nix/store/kqqwh1xz3ri47dvg8ikj7w2yl344amw3-python3-3.7.11/include -I/nix/store/690a3qx1w73vd86aawgih3fv5bn393lf-python3.7-pybind11-2.7.0/include
 endif
 CXXFLAGS += -std=c++17 $(CFLAGS)
@@ -141,7 +141,7 @@ CLANGVERSION = $(shell clang --version | head -n 1 | sed -E 's/clang version (.*
 $(info $(CLANGVERSION)) # Example: "7.1.0 "
 #ifeq ($(shell foo="$(CLANGVERSION)"; if [ "$${foo//./}" -le 710 ]; then echo 0; fi),0) #ifeq ($(shell foo="$(CLANGVERSION)"; test ${foo//./} -le 710; echo $$?),0) # TODO: check if version less than or equal to this
 ifeq ($(OS),Darwin)
-    LFLAGS += -lc++fs
+    #LFLAGS += -lc++fs
 endif
 #endif
 ifeq ($(OS),Darwin)
@@ -258,7 +258,7 @@ ADDITIONAL_CFLAGS_ALL_COMMANDLINE = -DUSE_COMMAND_LINE_ARGS -no-pie -fno-PIE -fn
 # release target
 # NOTE: -DNDEBUG turns off assertions (only for the code being compiled from source, not for libraries, including those from Nix like OpenCV unless we set it explicitly..).
 # NOTE: -g is needed for stack traces for https://github.com/bombela/backward-cpp
-ADDITIONAL_CFLAGS_RELEASE = -march=native -mtune=native -Ofast -g -DNDEBUG -fno-stack-protector # -fno-stack-protector for speedup but possible stack corruption with no segfaults indicating it happened (it might be -fno-stack-protector by default though) at the cost of security.   #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
+ADDITIONAL_CFLAGS_RELEASE = -mtune=native -Ofast -g -DNDEBUG -fno-stack-protector # -fno-stack-protector for speedup but possible stack corruption with no segfaults indicating it happened (it might be -fno-stack-protector by default though) at the cost of security.   #-O3 # TODO: check -Osize ( https://stackoverflow.com/questions/19470873/why-does-gcc-generate-15-20-faster-code-if-i-optimize-for-size-instead-of-speed )
 # ^ `-mtune=native` optimizes for the machine being compiled on
 $(eval $(call C_AND_CXX_FLAGS_template,release,$(ADDITIONAL_CFLAGS_RELEASE),,$(PCH_C),$(PCH_CPP)))
 

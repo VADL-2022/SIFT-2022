@@ -12,10 +12,11 @@ import knn_matcher2
 showPreviewWindow = sys.argv[4] == '1' if len(sys.argv) > 4 else True
 skip=int(sys.argv[5]) if len(sys.argv) > 5 else 0
 frameSkip=int(sys.argv[6]) if len(sys.argv) > 6 else 1
+sky_detection = sys.argv[7] == '1' if len(sys.argv) > 7 else False
 def runOnTheWayDown(videoFilename):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
-    knn_matcher2.shouldRunSkyDetection = True
+    knn_matcher2.shouldRunSkyDetection = sky_detection
     knn_matcher2.shouldRunUndistort = True #False
     knn_matcher2.skip = skip
     knn_matcher2.videoFilename = None
