@@ -498,3 +498,17 @@ bash launch.sh 149 '__import__("numpy").deg2rad(5)' "(10,-0.5)" "(34.8946331, -8
 "(36.189886, -86.155366)"
 - oz launch day gps: "(34.8946331, -86.6166411)"
 - launch angle: 5 or whatever they say
+
+---- nasa launch results
+
+hostname=sift1
+files="/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220423_112129.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_23_11_21_29_AM.siftlog.txt /home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_23-11_21_29.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/knnMatcher_04_23_2022_14_26_04 /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-23_13_43_26_ /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-23_13_42_22_ /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220423-112129.gps.txt"
+ssh pi@$hostname.local find $files -exec 'stat {} \;' > Data/nasa/ctimes_all_$hostname.txt
+
+hostname=sift2
+files="/home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220423_112132.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_23_11_21_31_AM.siftlog.txt /home/pi/VanderbiltRocketTeam/dataOutput/knnMatcher_04_23_2022_14_38_49 /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-23_13_43_21_ /home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_23-11_21_31.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-23_13_42_17_ /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220423-112132.gps.txt"
+ssh pi@$hostname.local find $files -exec 'stat {} \;' > Data/nasa/ctimes_all_$hostname.txt
+
+hostname=fore1
+files="/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_23-12_21_54.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220423-122155.LIS331.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_23_12_21_53_PM.video_caplog.txt /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-23_13_42_35_ /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-23_13_42_18_"
+ssh pi@10.16.137.194 find $files -exec 'stat {} \;' > Data/nasa/ctimes_all_$hostname.txt

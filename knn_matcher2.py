@@ -306,7 +306,8 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     img = firstImage.copy()
     maybeNone = computeLandingPos(img, M)
     if maybeNone is None:
-        return
+        print("No landing pos")
+        return None
     width, height, dstPts, dstMidpoint, dstMidpointUndist, sentientAnilPoint, isGood = maybeNone
     maybeNone = computeLandingPos(img, lastGoodM)
     
@@ -320,17 +321,16 @@ def showLandingPos(firstImage, M, key_='l', idMat=idMat):
     # #
 
     # Good point
-    if maybeNone is None:
-        return
-    width, height, dstPtsGood, dstMidpointGood, dstMidpointUndistGood, sentientAnilPointGood, isGoodGood = maybeNone
-    # Good point #
-    if not np.array_equal(dstMidpointGood, dstMidpoint):
-        drawDstPoints(img, dstPtsGood, (0,255,0))
-        cv2.circle(img, list(map(int, dstMidpoint)), 3, (255, 255, 255), 3)
-        # Get landing grid cell: good #
-        cv2.putText(img,"; " + str(GridCell.getGridCellIdentifier(width, height, dstMidpoint[0], dstMidpoint[1])),(5+100,5+25),cv2.FONT_HERSHEY_SIMPLEX,1,(255,0,0),2)  #text,coordinate,font,size of text,color,thickness of font   # https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
-        # #
-    
+    if maybeNone is not None:
+        width, height, dstPtsGood, dstMidpointGood, dstMidpointUndistGood, sentientAnilPointGood, isGoodGood = maybeNone
+        # Good point #
+        if not np.array_equal(dstMidpointGood, dstMidpoint):
+            drawDstPoints(img, dstPtsGood, (0,255,0))
+            cv2.circle(img, list(map(int, dstMidpoint)), 3, (255, 255, 255), 3)
+            # Get landing grid cell: good #
+            cv2.putText(img,"; " + str(GridCell.getGridCellIdentifier(width, height, dstMidpoint[0], dstMidpoint[1])),(5+100,5+25),cv2.FONT_HERSHEY_SIMPLEX,1,(255,0,0),2)  #text,coordinate,font,size of text,color,thickness of font   # https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
+            # #
+
     cv2.imshow('landingPos', img)
     key = cv2.waitKey(waitAmountStandard)
     return img, key

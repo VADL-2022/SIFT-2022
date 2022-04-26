@@ -73,22 +73,25 @@ def run(shouldStop # AtomicInt
         , onSetVideoCapture = None # handler for when video capture object changes
         , outputFolderPath = None
         , capOrig=None
+        , noWriter=False
         ):
     global mainThreadShouldFlush
     global dispatchQueue
     mainThreadShouldFlush = AtomicInt(0)
     dispatchQueue = Queue()
 
-    for i in range(num_worker_threads):
-        t = threading.Thread(target=dispatchQueueThreadFunc, args=('dispatchQueueThreadFunc',shouldStop))
-        t.daemon = True
-        t.start()
+    if not noWriter:
+        for i in range(num_worker_threads):
+            t = threading.Thread(target=dispatchQueueThreadFunc, args=('dispatchQueueThreadFunc',shouldStop))
+            t.daemon = True
+            t.start()
      
     now = datetime.now() # current date and time
     lastFlush=now
     
     # Create a VideoCapture object
     cap = cv2.VideoCapture(0) if capOrig is None else capOrig
+    #print("Total frames in cap:",cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.set(3, frame_width)
     cap.set(4, frame_height)
 
@@ -116,8 +119,12 @@ def run(shouldStop # AtomicInt
       os.mkdir(os.path.dirname(p), mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     except FileExistsError:
       pass
-    out = cv2.VideoWriter(p, format, fps, (frame_width,frame_height))
-    outMainThreadShouldFlush = out
+    if not noWriter:
+        out = cv2.VideoWriter(p, format, fps, (frame_width,frame_height))
+        outMainThreadShouldFlush = out
+    else:
+        out = None
+        outMainThreadShouldFlush = None
 
     try:
         while(shouldStop.get() == 0):
@@ -128,7 +135,7 @@ def run(shouldStop # AtomicInt
               # Write the frame into the file 'output.avi'
               if verbose:
                   print("out.write(frame) took", timeit.timeit(lambda: out.write(frame), number=1), "seconds")
-              else:
+              elif not noWriter:
                   out.write(frame)
               if onFrame is not None:
                   onFrame(frame)
@@ -146,7 +153,7 @@ def run(shouldStop # AtomicInt
 
           now = datetime.now()
           duration=now-lastFlush
-          if duration.total_seconds() >= 2:
+          if duration.total_seconds() >= 2 and not noWriter:
               lastFlush = now
               # Flush video
               out2=out

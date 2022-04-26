@@ -23,6 +23,7 @@ import time
 shouldStop=videoCapture.AtomicInt(0)
 forceStop = False
 videoFileDataSource=None
+customArgsNamespace = None
 
 class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
     def __init__(self, origVideoCap=None):
@@ -111,23 +112,13 @@ parser.add_argument('--video-file-data-source-path', type=str, nargs='+', defaul
                     help="")
 parser.add_argument('--no-sky-detection', action='store_true', default=False,
                     help='')
-videoFilename = None
-# https://stackoverflow.com/questions/12834785/having-options-in-argparse-with-a-dash
-namespace=parser.parse_args() #vars(parser.parse_args()) # default is from argv but can provide a list here
-print(namespace)
-showPreviewWindow=namespace.show_preview_window
-skip=namespace.skip
-frameSkip=namespace.frameskip[0] if isinstance(namespace.frameskip, list) else namespace.frameskip # HACK
-shouldRunSkyDetection=not namespace.no_sky_detection
-videoFileDataSourcePath=namespace.video_file_data_source_path[0] if isinstance(namespace.video_file_data_source_path, list) else namespace.video_file_data_source_path # HACK
-videoFileDataSource = namespace.video_file_data_source
-# if videoFileDataSource:
-#     forceStop=True
-def runOnTheWayDown(capAPI, pSave):
+parser.add_argument('--no-undistort', action='store_true', default=False,
+                    help='')
+def runOnTheWayDown(capAPI, pSave, shouldRunSkyDetection, skip, showPreviewWindow, frameSkip, shouldRunUndistort):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
     knn_matcher2.shouldRunSkyDetection = shouldRunSkyDetection
-    knn_matcher2.shouldRunUndistort = True #False
+    knn_matcher2.shouldRunUndistort = shouldRunUndistort #False
     knn_matcher2.skip = skip
     knn_matcher2.videoFilename = None
     knn_matcher2.showPreviewWindow = showPreviewWindow
@@ -151,7 +142,23 @@ def runOnTheWayDown(capAPI, pSave):
     rets = knn_matcher2.run(pSave)
     return rets
 
-if __name__ == '__main__':
+def run():
+    videoFilename = None
+    # https://stackoverflow.com/questions/12834785/having-options-in-argparse-with-a-dash
+    namespace=(parser.parse_args() #vars(parser.parse_args()) # default is from argv but can provide a list here
+               if customArgsNamespace is None else customArgsNamespace)
+    print(namespace)
+    showPreviewWindow=namespace.show_preview_window
+    skip=namespace.skip
+    frameSkip=namespace.frameskip[0] if isinstance(namespace.frameskip, list) else namespace.frameskip # HACK
+    shouldRunSkyDetection=not namespace.no_sky_detection
+    videoFileDataSourcePath=namespace.video_file_data_source_path[0] if isinstance(namespace.video_file_data_source_path, list) else namespace.video_file_data_source_path # HACK
+    videoFileDataSource = namespace.video_file_data_source
+    shouldRunUndistort = not namespace.no_undistort
+    # if videoFileDataSource:
+    #     forceStop=True
+
+    
     name = "SIFT_Cam"
     signal.signal(signal.SIGINT, signal_handler)
     
@@ -165,16 +172,20 @@ if __name__ == '__main__':
         # NOTE: first image given should match what the sky detector chooses so we re-set firstImage and firstImageFilename here
         if videoFileDataSource:
             capOrig=cv2.VideoCapture(videoFileDataSourcePath)
-            startVideoCapture(name, capOrig=capOrig, onFrame=onFrame, fps=capOrig.get(cv2.CAP_PROP_FPS), onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave)
+            startVideoCapture(name, capOrig=capOrig, onFrame=onFrame, fps=capOrig.get(cv2.CAP_PROP_FPS), onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave, noWriter=True)
         else:
             startVideoCapture(name, onFrame=onFrame, fps=5, onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave)
         
         accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(customVideoCapture
             #cv2.VideoCapture(videoFilename) if videoFileDataSource else customVideoCapture
-            , pSave)
+            , pSave
+                                                                                       , shouldRunSkyDetection, skip, showPreviewWindow, frameSkip, shouldRunUndistort)
     except knn_matcher2.EarlyExitException as e:
         accMat = e.acc
         w=e.w
         h=e.h
         firstImage=e.firstImage
         firstImageFilename=e.firstImageFilename
+
+if __name__ == '__main__':
+    run()
