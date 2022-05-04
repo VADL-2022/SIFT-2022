@@ -512,3 +512,7 @@ ssh pi@$hostname.local find $files -exec 'stat {} \;' > Data/nasa/ctimes_all_$ho
 hostname=fore1
 files="/home/pi/VanderbiltRocketTeam/dataOutput/temperature_2022_04_23-12_21_54.log.csv /home/pi/VanderbiltRocketTeam/dataOutput/LOG_20220423-122155.LIS331.csv /home/pi/VanderbiltRocketTeam/dataOutput/2022_04_23_12_21_53_PM.video_caplog.txt /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-23_13_42_35_ /home/pi/VanderbiltRocketTeam/dataOutput/2022-04-23_13_42_18_"
 ssh pi@10.16.137.194 find $files -exec 'stat {} \;' > Data/nasa/ctimes_all_$hostname.txt
+
+-- imu code testing
+
+python3 -c "import driver.IMURecon as IMURecon; import numpy as np; IMURecon.calc_displacement2(imu_data_file_and_path='./dataOutput/LOG_20220423_112132.csv', launch_rail_box=149, weather_station_stats_xy=(13,2), GPS_coords= (34.89470, 86.61663),my_thresh=45,my_post_drogue_delay=0.5, my_signal_length=3, ld_launch_angle=5*np.pi/180, ld_ssm=2.44, ld_dry_base=15.735, ld_m_motor=1.728187, ld_t_burn=2.05, ld_T_avg=1771)"
