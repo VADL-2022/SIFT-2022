@@ -58,17 +58,17 @@ def startVideoCapture(name, **kwargs):
 # Uses GPIO to swap cameras via camera multiplexer
 def swapCameras():
     global switchedCameras
-    print("Switching cameras")
-    print("GPIO changing...")
+    #print("Switching cameras")
+    #print("GPIO changing...")
 
     # Set GPIO pin 26 to pull down resistor to swap to upward camera
-    pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
-    pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
-    time.sleep(100.0 / 1000.0)
+    #pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
+    #pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
+    #time.sleep(100.0 / 1000.0)
 
-    print("GPIO done")
-    print("Switched cameras")
-    switchedCameras = True
+    #print("GPIO done")
+    #print("Switched cameras")
+    #switchedCameras = True
 
 def stopVideoCaptureThread(name):
     print("Stopping %s video capture", name)
@@ -119,7 +119,19 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         print("Waiting for camera switching time...")
         time.sleep(switchCamerasTime/1000.0)
         stopVideoCaptureThread(name)
-
+        
+    
+        
+    # ---------------------------------------------------
+    # Andrew and Tom edit 8/16/22 9:30pm
+    # We only want the downward facing camera, so we are adding these lines to mission sequence
+    # We will also comment out the bulk of swapCameras() to avoid swapping in-flight
+        
+    pi.set_pull_up_down(26, pigpio.PUD_OFF) # Clear pull down resistor on pin 26
+    pi.set_mode(26, pigpio.OUTPUT) # Set pin 26 to output
+    pi.write(26, 1) # Set pin 26 to high
+        
+    # ---------------------------------------------------
     # Swap the camera
     swapCameras()
 

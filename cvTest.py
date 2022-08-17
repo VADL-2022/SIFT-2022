@@ -2,7 +2,7 @@ import cv2
 import time
 from os import path
 
-cap = cv2.VideoCapture(0) #0 or -1
+cap = cv2.VideoCapture(-1) #0 or -1
 if cap.isOpened():
     ret, img = cap.read()
     if ret:

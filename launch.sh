@@ -87,7 +87,7 @@ gitBranch="nasa"
 # if [ -z "$gitBranch" ]; then
 #     gitBranch="fullscale3"
 # fi
-git checkout "$gitBranch"
+#git checkout "$gitBranch"
 # Checkout submodules from the above commit as well:
 git submodule update --init --recursive
 if [ "$mode" == "sift" ]; then
