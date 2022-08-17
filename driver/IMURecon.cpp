@@ -67,7 +67,7 @@ void enqueueIMURecon(VADL2022* v) {
           bool success = S_RunFile("driver/radio.py", 2, (char **)sendOnRadioScriptArgs);
           
           // Enqueue a send again so we send on radio again in case of transmission error
-          //mainDispatchQueue.enqueue(enq1,"IMURecon.py enqueue again",QueuedFunctionType::Python);
+          mainDispatchQueue.enqueue(enq1,"IMURecon.py enqueue again",QueuedFunctionType::Python);
         });
       });
         

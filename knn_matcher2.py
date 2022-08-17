@@ -293,7 +293,7 @@ def computeLandingPos(img, M):
     #dstMidpointUndist = undistortPoints(np.array([[dstMidpoint*(src.python.General.w/640)]], dtype=np.float32), src.python.General.k, src.python.General.dist)[0][0]*(640/src.python.General.w)
     print("dstMidpointUndist:",dstMidpointUndist)
     sentientAnilPoint = np.array([width/2,height/2])+dstMidpointUndist-dstMidpoint
-    isGood = np.linalg.norm(dstMidpointUndist-dstMidpoint) <= 200 # "semi-discard" here. np.linalg.norm is vector magnitude.
+    isGood = np.linalg.norm(dstMidpointUndist-dstMidpoint) <= 100 # "semi-discard" here. np.linalg.norm is vector magnitude.
     return width, height, dstPts, dstMidpoint, dstMidpointUndist, sentientAnilPoint, isGood
 def drawDstPoints(img, dstPts, color):
     if len(dstPts) > 1:
@@ -352,9 +352,11 @@ def run(pSave=None):
     global imgs
     if grabMode == 1:
         totalFrames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
-        imgs = [None]*totalFrames
+        print("totalFrames: ",totalFrames)
+        imgs = [None]*(totalFrames if  totalFrames != -1 else 1000000)
     elif grabMode == 0 or grabMode == 3:
         imgs=p.stdout.split(b'\n')
+        totalFrames=None
     i = 0
     img1Pair = None
     discarded = True # Assume True to start with
@@ -364,15 +366,19 @@ def run(pSave=None):
     imgs_iter = iter(imgs)
     next(imgs_iter) # Skip first image
     
-    if len(imgs) > 0:
+    if len(imgs) > 0 or totalFrames == -1:
+        # if totalFrames == -1:
+        #     for i in range(0, frameSkip+1):
+        #         imgs.append(None)
         # Skip images
         for j in range(0, skip):
-            i += 1
             #print('skip')
             img1Pair, discarded, greyscale = grabImage(imgs[i], i, None, True)
+            i += 1
         #exit(0)
 
         while img1Pair is None or discarded:
+            print(i,len(imgs))
             firstImageFilename=imgs[i]
             img1Pair, discarded, greyscale = grabImage(imgs[i], i, None)
             i += frameSkip

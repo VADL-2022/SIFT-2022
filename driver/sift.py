@@ -18,9 +18,11 @@ import signal
 import knn_matcher2
 import argparse
 from datetime import datetime
+import time
 
 shouldStop=videoCapture.AtomicInt(0)
 forceStop = False
+videoFileDataSource=None
 
 class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
     def __init__(self, origVideoCap=None):
@@ -29,23 +31,30 @@ class CustomVideoCapture: # Tries to implement cv2.VideoCapture's interface.
     def setOrigVideoCap(self,origVideoCap):
         self.origVideoCap=origVideoCap
     def read(self):
-        if shouldStop.get() == 1:
+        print("self.q.qsize():",self.q.qsize())
+        if shouldStop.get() == 1 and (not finishRestAlways and self.q.qsize() < 1 # if queue is empty
+                                      ):
             return (False # TODO: correct?
                     , None)
         return (True # TODO: correct?
                 , self.q.get() # Blocks till frame ready
                 )
     def get(self, attr):
-        if self.origVideoCap is None:
+        # if self.origVideoCap is None:
+        #     print("self.origVideoCap is None")
+        #     return 1
+        while self.origVideoCap is None:
             print("self.origVideoCap is None")
-            return 1
+            time.sleep(0.1)
         return self.origVideoCap.get(attr)
 customVideoCapture = CustomVideoCapture()
+finishRestAlways = True
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C! Stopping video capture thread...')
     #sys.exit(0)
-    shouldStop.set(1)
+    if not videoFileDataSource:
+        shouldStop.set(1)
     if forceStop:
         exit(0)
     # NOTE: this does finish rest always by default!
@@ -112,8 +121,8 @@ frameSkip=namespace.frameskip[0] if isinstance(namespace.frameskip, list) else n
 shouldRunSkyDetection=not namespace.no_sky_detection
 videoFileDataSourcePath=namespace.video_file_data_source_path[0] if isinstance(namespace.video_file_data_source_path, list) else namespace.video_file_data_source_path # HACK
 videoFileDataSource = namespace.video_file_data_source
-if videoFileDataSource:
-    forceStop=True
+# if videoFileDataSource:
+#     forceStop=True
 def runOnTheWayDown(capAPI, pSave):
     knn_matcher2.mode = 1
     knn_matcher2.grabMode = 1
@@ -152,10 +161,14 @@ if __name__ == '__main__':
     outputFolderPath=os.path.join('.', 'dataOutput', o1)
     pSave = outputFolderPath
     
-    startVideoCapture(name, onFrame=onFrame, fps=5, onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave)
-    
     try:
         # NOTE: first image given should match what the sky detector chooses so we re-set firstImage and firstImageFilename here
+        if videoFileDataSource:
+            capOrig=cv2.VideoCapture(videoFileDataSourcePath)
+            startVideoCapture(name, capOrig=capOrig, onFrame=onFrame, fps=capOrig.get(cv2.CAP_PROP_FPS), onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave)
+        else:
+            startVideoCapture(name, onFrame=onFrame, fps=5, onSetVideoCapture=onSetVideoCapture, outputFolderPath=pSave)
+        
         accMat, w, h, firstImage, firstImageOrig, firstImageFilename = runOnTheWayDown(customVideoCapture
             #cv2.VideoCapture(videoFilename) if videoFileDataSource else customVideoCapture
             , pSave)
