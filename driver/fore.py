@@ -39,7 +39,7 @@ def videoCaptureThreadFunction(name, **kwargs):
 
     # Start the actual video capture
     logging.info("Thread %s: starting", name)
-    videoCapture.run(shouldStop, fps=15, frame_width=1280, frame_height=720, **kwargs)
+    videoCapture.run(shouldStop, fps=30, frame_width=640, frame_height=480, **kwargs)
     logging.info("Thread %s: finishing", name)
 
 # Starts the video capture
@@ -58,17 +58,17 @@ def startVideoCapture(name, **kwargs):
 # Uses GPIO to swap cameras via camera multiplexer
 def swapCameras():
     global switchedCameras
-    print("Switching cameras")
-    print("GPIO changing...")
+    #print("Switching cameras")
+    #print("GPIO changing...")
 
     # Set GPIO pin 26 to pull down resistor to swap to upward camera
-    pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
-    pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
-    time.sleep(100.0 / 1000.0)
+    #pi.set_mode(26, pigpio.INPUT) # Set pin 26 to input
+    #pi.set_pull_up_down(26, pigpio.PUD_DOWN) # Set pin 26 to pull down resistor
+    #time.sleep(100.0 / 1000.0)
 
-    print("GPIO done")
-    print("Switched cameras")
-    switchedCameras = True
+    #print("GPIO done")
+    #print("Switched cameras")
+    #switchedCameras = True
 
 def stopVideoCaptureThread(name):
     print("Stopping %s video capture", name)
@@ -112,14 +112,26 @@ def startMissionSequence(switchCamerasTime, magnitude, xAccl, yAccl, zAccl, my_a
         sys.stdout.flush()
         name = "2ndCam"
         startVideoCapture(name)
-        time.sleep(300)
+        time.sleep(60000)
         shouldStopMain.set(1)
     else:
         # Wait till apogee time to swap cameras
         print("Waiting for camera switching time...")
         time.sleep(switchCamerasTime/1000.0)
         stopVideoCaptureThread(name)
-
+        
+    
+        
+    # ---------------------------------------------------
+    # Andrew and Tom edit 8/16/22 9:30pm
+    # We only want the downward facing camera, so we are adding these lines to mission sequence
+    # We will also comment out the bulk of swapCameras() to avoid swapping in-flight
+        
+    pi.set_pull_up_down(26, pigpio.PUD_OFF) # Clear pull down resistor on pin 26
+    pi.set_mode(26, pigpio.OUTPUT) # Set pin 26 to output
+    pi.write(26, 1) # Set pin 26 to high
+        
+    # ---------------------------------------------------
     # Swap the camera
     swapCameras()
 
@@ -383,7 +395,7 @@ calibrationFile = (sys.argv[4]) if len(sys.argv) > 4 else None
 if calibrationFile is None:
     print("Must provide calibrationFile")
     exit(1)
-stoppingTime = float(sys.argv[5]) if len(sys.argv) > 5 else None
+stoppingTime = float(60000) if len(sys.argv) > 5 else None
 if not logOnly and stoppingTime is None:
     print("Must provide stoppingTime (usually worst-case flight time) in milliseconds")
     exit(1)
